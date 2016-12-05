@@ -24,17 +24,6 @@ if (h.which_perturbation.Value)
     end      
 end
 
-%% Transfer Function Randomization
-if (rand(1) < h.transfer_function_probability.Data(1))
-    new_TF = randi(size(h.transfer_functions.String,1));
-    if new_TF ~= h.transfer_functions.Value
-        h.transfer_functions.Value = new_TF;
-        if callUpdate<2
-            callUpdate = 1;
-        end
-    end
-end
-
 if callUpdate
     display('params modified by new trial call');
     if callUpdate == 2

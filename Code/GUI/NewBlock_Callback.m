@@ -16,7 +16,10 @@ h.RewardStatus.Data(2) = 0; % reset 'rewards given in block'
 %% update target level
 h.TargetDefinition.Data(2) = ...
     h.target_level_array.Data( 1 + mod(block_num-1,length(h.target_level_array.Data)) );
-h.target_level_array.Data( 1 + mod(block_num-1,length(h.target_level_array.Data)) )
+% Update current target level radio button
+h.(['TargetLevel',num2str( 1 + mod(block_num-1,length(h.target_level_array.Data)) )]).Value = 1;
+    
+%h.target_level_array.Data( 1 + mod(block_num-1,length(h.target_level_array.Data)) )
 
 %% switch target and distractor if needed
 if h.is_distractor_on.Value
@@ -29,5 +32,4 @@ end
 guidata(h.hObject, h);
 display('params modified by new block call');
 OdorLocator('ZoneLimitSettings_CellEditCallback',h.hObject,[],h);
-
 

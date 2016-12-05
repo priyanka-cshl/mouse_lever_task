@@ -12,8 +12,11 @@ switch caller
         % convert to integers for Arduino communication purpose
         not_ints = [not_ints 4];
         
-        legend(5:7) = {'RewardHoldTime' 'RewardDuration' 'MaxPerBlock'};
-        param(5:7) = h.RewardControls.Data(1:3);
+        legend(5:6) = {'RewardHoldTime' 'RewardDuration'};
+        param(5:6) = h.RewardControls.Data;
+        
+        legend(7) = {'MaxPerBlock'};
+        param(7) = h.TransferFunction.Data(3);
         
         legend(8) = {'PerturbationProbability'};
         param(8) = h.PertubationSettings.Data(1);
@@ -41,32 +44,33 @@ switch caller
         legend(6) = {'Stage'};
         param(6) = h.which_stage.Value;
         
-        legend(7) = {'TransferFuction'};
-        param(7) = h.transfer_functions.Value;
+        legend(7:8) = {'TF_locations' 'TF_steepness'};
+        param(7:8) = h.TransferFunction.Data(1:2);
+        not_ints = [not_ints 8];
         
-        legend(8) = {'StimulusDelay'};
+        legend(9) = {'StimulusDelay'};
         if (h.is_stimulus_on.Value)
             if h.current_trial_block.Data(3) == 1 && h.which_perturbation.Value == 2
-                param(8) = 1 + h.PertubationSettings.Data(2);
+                param(9) = 1 + h.PertubationSettings.Data(2);
             else
-                param(8) = 1;
+                param(9) = 1;
             end
-        else
-            param(8) = 0;
-        end
-        
-        legend(9) = {'DistractorDelay'};
-        if (h.is_distractor_on.Value)
-            param(9) = 1 + h.delay_distractor_by.Data;
         else
             param(9) = 0;
         end
         
-        legend(10:12) = {'FakeHighLim' 'FakeTarget' 'FakeLowLim'};
-        if h.which_perturbation.Value == 3
-            param(10:12) = h.PertubationSettings.Data(3:5);
+        legend(10) = {'DistractorDelay'};
+        if (h.is_distractor_on.Value)
+            param(10) = 1 + h.delay_distractor_by.Data;
         else
-            param(10:12) = [0 0 0];
+            param(10) = 0;
+        end
+        
+        legend(11:13) = {'FakeHighLim' 'FakeTarget' 'FakeLowLim'};
+        if h.which_perturbation.Value == 3
+            param(11:13) = h.PertubationSettings.Data(3:5);
+        else
+            param(11:13) = [0 0 0];
         end
         % convert to integers for Arduino communication purpose
         %not_ints = [not_ints 3:5];

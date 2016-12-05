@@ -18,7 +18,7 @@ while (sent == 0) && (sending_attempts <=8 )
         trash = fread(h.Arduino, h.Arduino.BytesAvailable);
         clear trash;
     end
-    fwrite(h.Arduino, char(60)); % tell Arduino how many params are going to be written
+    fwrite(h.Arduino, char(20)); % tell Arduino how many params are going to be written
     fwrite(h.Arduino,length(ParamArray),'uint16'); % if the write fails, Arduino writes back -1
     if (h.Arduino.BytesAvailable)==0 % Arduino did not write back
         % write the params

@@ -29,6 +29,9 @@ call_new_block = 0;
 %% populate TotalTime with newly available timestamps
 TotalTime = [ TotalTime(num_new_samples+1:end); event.TimeStamps ];
 
+%% update MFC setpoints
+h.MFC_setpoints_IN.Data = round(mean(event.Data(:,h.NIchannels+1:h.NIchannels+4)),2,'significant')';
+
 %% populate TotalData with newly available data
 for i = 1:reward_channel-1
     TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); event.Data(:,i) ];
@@ -50,8 +53,7 @@ if TotalTime(end)>2
     if any(TotalData(end-num_new_samples+1:end,reward_channel))
         h.RewardStatus.Data(1:2) = h.RewardStatus.Data(1:2) + 1; % increment 'total rewards' and 'rewards in block'
         h.RewardStatus.Data(3) = round(TotalTime(end)); % update 'last reward'
-        row = find(ismember(h.RewardControls.RowName,'Max per block')==1);
-        if h.RewardStatus.Data(2) == h.RewardControls.Data(row) %#ok<*FNDSB> % rewards in block == max rewards allowed per block
+        if h.RewardStatus.Data(2) == h.TransferFunction.Data(3) %#ok<*FNDSB> % rewards in block == max rewards allowed per block
                 h.RewardStatus.Data(2) = 0; % reset rewards in block
                 call_new_block = 1;
         end
@@ -75,11 +77,9 @@ indices_to_plot = find( TotalTime>TotalTime(end)-xwin & TotalTime>=0 );
 % lever positions, motor locations 
 set(h.lever_DAC_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,1));
 set(h.lever_raw_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,2));
-%set(h.stimulus_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,3));
 set(h.stimulus_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    h.Rotary_Enc_1.Data(1)*(TotalData(indices_to_plot,3) - h.Rotary_Enc_1.Data(2)) );
-
-set(h.distractor_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,4));
+    -1*h.Rotary_Enc_1.Data(1,1)*(TotalData(indices_to_plot,3) - h.Rotary_Enc_1.Data(2,1)) );
+% set(h.distractor_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,4));
 
 % trial_on
 [h.trial_on] = PlotToPatch(h.trial_on, TotalData(:,trial_channel), TotalTime, [0 5]);

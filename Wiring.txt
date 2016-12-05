@@ -1,0 +1,28 @@
+-------------------------------------
+Rotary encoder (Arduino due, COM6)
+-------------------------------------
+53	black	(OUT A)
+51	white	(OUT B)
+49	grey	(OUT Z)
++5V	Red	(Brown)
+GND	Brown	(Smeld, Blue)
+-------------------------------------
+DAC0	To NI
+DAC1	To NI
+-------------------------------------
+
+
+-------------------------------------
+Motor (Arduino mega, COM10)
+-------------------------------------
+2	end_stop_L_interrupt
+3	end_stop_R_interrupt
+23	enable motor
+25	dir motor
+27	step motor
+29	feedback motor (Not used)
+51	Home sensor
+20	I2C
+21	I2C
+-------------------------------------
+

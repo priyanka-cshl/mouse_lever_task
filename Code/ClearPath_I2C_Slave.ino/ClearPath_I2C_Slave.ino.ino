@@ -17,7 +17,7 @@ bool motor_ON = false;
 int home_location = 0;
 
 // motor position variables
-int desired_location = 101;
+int desired_location = 0;
 int current_location = 101;
 int delta_steps = 0;
 volatile int current_direction = 1; // CW
@@ -108,22 +108,6 @@ void FindHome(bool which_direction)
   // enable motor again
   digitalWrite(enable_pin, true);
 
-  if (digitalRead(home_pin)) 
-  {
-    // if home pin is already blocked
-    // reverse direction and take 80 steps 
-    digitalWrite(dir_pin, !which_direction);
-    delay(5000);
-    for (int h = 0; h < 100; h++)
-    {
-      digitalWrite(step_pin, HIGH);
-      digitalWrite(step_pin, LOW);
-      delay(1000);
-    }
-    digitalWrite(dir_pin, which_direction);
-    delay(5000);
-  }
-  
   // move until it reaches home OR hits the other switch
   while (!digitalRead(home_pin) && digitalRead(end_stop_pin_left + (int)which_direction))
   {
@@ -163,13 +147,110 @@ void FindHome(bool which_direction)
     digitalWrite(dir_pin, !which_direction);
     current_direction = (int)!which_direction;
     delay(5000);
-    
+
     // actual home location is midway
     for (int h = home_location; h >= (home_location / 2); h--)
     {
       digitalWrite(step_pin, HIGH);
       digitalWrite(step_pin, LOW);
       delay(1000);
+    }
+
+    // send AtHome signal to the rotary encoder Arduino
+    digitalWrite(home_out, HIGH);
+    delay(1000);
+    digitalWrite(home_out, LOW);
+    delay(1000);
+
+    // update location and release motor for directed movements
+    
+    current_location = 101;
+    desired_location = 101;
+    // overwite all values in buffer to home location
+    for (int h = 0; h < 10; h++)
+    {
+       motor_positions[h] = 101 + 10; 
+    }
+    digitalWrite(enable_pin, motor_ON); // turn On if motor was ON before
+    busy = 0;
+    attachInterrupt(digitalPinToInterrupt(end_stop_pin_left), SafetyStopLeft, LOW);
+    attachInterrupt(digitalPinToInterrupt(end_stop_pin_right), SafetyStopRight, LOW);
+    //interrupts();
+  }
+}
+
+void FindHomeOld(bool which_direction)
+{
+  busy = 1;
+  digitalWrite(enable_pin, false);
+
+  // set direction accordingly
+  digitalWrite(dir_pin, which_direction);
+  current_direction = (int)which_direction;
+  delay(5000);
+
+  // enable motor again
+  digitalWrite(enable_pin, true);
+
+  // move until it reaches home OR hits the other switch
+  while (!digitalRead(home_pin) && digitalRead(end_stop_pin_left + (int)which_direction))
+  {
+    digitalWrite(step_pin, HIGH);
+    digitalWrite(step_pin, LOW);
+    delay(1000);
+  }
+
+  // if the other switch was hit, give up
+  if (!digitalRead(end_stop_pin_left + (int)which_direction))
+  {
+    digitalWrite(enable_pin, false); // turn OFF motor
+    busy = 0;
+    attachInterrupt(digitalPinToInterrupt(end_stop_pin_left), SafetyStopLeft, LOW);
+    attachInterrupt(digitalPinToInterrupt(end_stop_pin_right), SafetyStopRight, LOW);
+  }
+  else
+  {
+    home_location = 0;
+    // advance 100 more steps (to cross over the photoswitch)
+    for (int h = 0; h < 100; h++)
+    {
+      digitalWrite(step_pin, HIGH);
+      digitalWrite(step_pin, LOW);
+      home_location = home_location + 1;
+      delay(1000);
+    }
+
+    // reverse direction
+    digitalWrite(dir_pin, !which_direction);
+    current_direction = (int)!which_direction;
+    delay(5000);
+
+    // find home again
+    while (!digitalRead(home_pin))
+    {
+      digitalWrite(step_pin, HIGH);
+      digitalWrite(step_pin, LOW);
+      home_location = home_location - 1;
+      delay(1000);
+    }
+
+    // actual home location is midway
+    for (int h = 0; h < (home_location / 2); h++)
+    {
+      digitalWrite(step_pin, HIGH);
+      digitalWrite(step_pin, LOW);
+      delay(1000);
+    }
+
+    if (which_direction)
+    {
+      digitalWrite(dir_pin, which_direction);
+      current_direction = (int)which_direction;
+      delay(5000);
+
+      digitalWrite(step_pin, HIGH);
+      digitalWrite(step_pin, LOW);
+      delay(10000);
     }
 
     // send AtHome signal to the rotary encoder Arduino
