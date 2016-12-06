@@ -55,6 +55,7 @@ tic
 while (Arduino_Serial.BytesAvailable == 0 && toc < 2)
 end
 if(Arduino_Serial.BytesAvailable == 0)
+    fclose(instrfind);
     error('arduino: arduino did not send confirmation byte in time')
 end
 fread(Arduino_Serial, Arduino_Serial.BytesAvailable);

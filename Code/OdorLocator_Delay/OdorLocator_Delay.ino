@@ -162,11 +162,11 @@ void setup()
   {
     stimulus_position_array[i] = 101;
   }
-  
+
   // Timer for motor update
   Timer3.attachInterrupt(MoveMotor);
   Timer3.start(1000 * motor_timer_period); // Calls every 10 msec
-  
+
   // analog read - lever position
   analogReadResolution(12);
   Serial.begin(115200);
@@ -178,59 +178,61 @@ void setup()
 
 void loop()
 {
+  //----------------------------------------------------------------------------
+  // 1) process the incoming lever position data - and resend to DAC
+  //----------------------------------------------------------------------------
+  // read lever position as analog val
+  lever_position = analogRead(lever_in);
+  // remap from 12-bit to 16-bit
+  lever_position = map(lever_position, 0, 4095, 0, 65534);
+  // rescale linearly using lever dcoffset and gain to better utilize the
+  // available sensor range: assume units are mvolts
+  lever_rescaled = (lever_rescale_params[0] * 0.0001) * (lever_position - lever_rescale_params[1]);
+  // constrain position values between 0 and 65534
+  lever_position = constrain(lever_rescaled, 0, 65534);
+  // write lever position to DAC
   if (close_loop_mode)
   {
-    //----------------------------------------------------------------------------
-    // 1) process the incoming lever position data - and resend to DAC
-    //----------------------------------------------------------------------------
-    // read lever position as analog val
-    lever_position = analogRead(lever_in);
-    // remap from 12-bit to 16-bit
-    lever_position = map(lever_position, 0, 4095, 0, 65534);
-    // rescale linearly using lever dcoffset and gain to better utilize the
-    // available sensor range: assume units are mvolts
-    lever_rescaled = (lever_rescale_params[0] * 0.0001) * (lever_position - lever_rescale_params[1]);
-    // constrain position values between 0 and 65534
-    lever_position = constrain(lever_rescaled, 0, 65534);
-    // write lever position to DAC
     SPIWriter(dac_spi_pin, lever_position);
-    //----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
-    //----------------------------------------------------------------------------
-    // 2) convert lever position to stimuli given current target zone definition
-    //----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+// 2) convert lever position to stimuli given current target zone definition
+//----------------------------------------------------------------------------
+
     // stimulus_state[1] = LeverToStimulus.WhichZone(1, lever_position);
     motor_location = map(lever_position, 0, 65534, 0, num_of_locations - 1);
     stimulus_state[1] = transfer_function[motor_location];
-
-    // in reward zone or not : if in, odor location ranges between 17 and 48
-    for (i = 0; i < 2; i++)
-    {
-      in_target_zone[i] = (lever_position == constrain(lever_position, target_params[2], target_params[0]));
-    }
-    // do the same for the fake target zone condition
-    // used only if water delivery is uncoupled from stimulus state
-    if (decouple_reward_and_stimulus)
-    {
-      // fake_stimulus_state[1] = LeverToStimulus.WhichZone(2, lever_position);
-      motor_location = map(lever_position, 0, 65534, 0, num_of_locations - 1);
-      fake_stimulus_state[1] = transfer_function[motor_location];
-      for (i = 0; i < 2; i++)
-      {
-        in_fake_target_zone[i] = (lever_position == constrain(lever_position, target_params[2], target_params[0]));
-      }
-    }
-    //----------------------------------------------------------------------------
   }
-  else // open loop mode
+  else
   {
+    // write motor command position to DAC
+    SPIWriter(dac_spi_pin, 600 * (motor_location-100));
     //----------------------------------------------------------------------------
     // 1,2) convert the current entry in TF array to lever position and send to DAC
     //----------------------------------------------------------------------------
     motor_location = transfer_function[transfer_function_pointer];
-    lever_position = map(motor_location, 0, num_of_locations - 1, 0, 65534);
     stimulus_state[1] = motor_location;
   }
+
+  // in reward zone or not : if in, odor location ranges between 17 and 48
+  for (i = 0; i < 2; i++)
+  {
+    in_target_zone[i] = (lever_position == constrain(lever_position, target_params[2], target_params[0]));
+  }
+  // do the same for the fake target zone condition
+  // used only if water delivery is uncoupled from stimulus state
+  if (decouple_reward_and_stimulus)
+  {
+    // fake_stimulus_state[1] = LeverToStimulus.WhichZone(2, lever_position);
+    motor_location = map(lever_position, 0, 65534, 0, num_of_locations - 1);
+    fake_stimulus_state[1] = transfer_function[motor_location];
+    for (i = 0; i < 2; i++)
+    {
+      in_fake_target_zone[i] = (lever_position == constrain(lever_position, target_params[2], target_params[0]));
+    }
+  }
+  //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
   // 3) update stimulus state, direction etc. if the stimulus_state has changed
@@ -259,19 +261,6 @@ void loop()
 
       // update stimulus state
       stimulus_state[0] = stimulus_state[1];
-      if (!close_loop_mode)
-      {
-        // roll over the TF array pointer
-        transfer_function_pointer = (transfer_function_pointer + 1) % (num_of_locations - 1);
-        SPIWriter(dac_spi_pin, 600 * motor_location);
-      }
-
-      // execute stimulus, if needed
-      // call Motor1 Arduino
-      if (!motor_override)
-      {
-        //I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
-      }
     }
   }
   //----------------------------------------------------------------------------
@@ -309,21 +298,17 @@ void loop()
   if (reward_override > 0)
   {
     reward_state = 3;
-    if (reward_override == 1) // only do this on first call after reward override
+    if (reward_override == 1) // DRAIN; only do this on first call after reward override
     {
       reward_on_timestamp = reward_override_timestamp;
       reward_override = 4;
       digitalWrite(reward_valve_pin, HIGH);
     }
-    if (reward_override == 2) // only do this on first call after reward override
+    if (reward_override == 2) // REWARD; only do this on first call after reward override
     {
       reward_on_timestamp = micros();
-      reward_override = 3;
+      reward_override = 0; //3
       digitalWrite(reward_valve_pin, HIGH);
-    }
-    if (reward_override == 2) // only do this on first call after reward override
-    {
-      reward_on_timestamp = micros();
     }
   }
   if (reward_state == 2 & (micros() - reward_zone_timestamp) > 1000 * reward_params[0])
@@ -333,7 +318,7 @@ void loop()
     digitalWrite(reward_valve_pin, HIGH);
     digitalWrite(reward_reporter_pin, HIGH);
   }
-  if (reward_state == 3 & (micros() - reward_on_timestamp) > 1000 * reward_params[1])
+  if (reward_state == 3 & reward_override < 4 & (micros() - reward_on_timestamp) > 1000 * reward_params[1])
   {
     digitalWrite(reward_valve_pin, LOW);
     digitalWrite(reward_reporter_pin, LOW);
@@ -378,20 +363,20 @@ void loop()
     {
       case 10: // opening/closing handshake
         switch (FSMheader - 10)
-          {
-            case 0: // opening handshake
-              Serial.write(5);
-              break;
-            case 1: // Acquisition start handshake
-              Serial.write(6);
-              stimulus_writepointer = 0;
-              timer_override = true;
-              break;
-            case 2: // Acquisition stop handshake
-              Serial.write(7);
-              timer_override = false;
-              break;
-          }
+        {
+          case 0: // opening handshake
+            Serial.write(5);
+            break;
+          case 1: // Acquisition start handshake
+            Serial.write(6);
+            stimulus_writepointer = 0;
+            timer_override = true;
+            break;
+          case 2: // Acquisition stop handshake
+            Serial.write(7);
+            timer_override = false;
+            break;
+        }
         break;
       case 20: // update variables
         serial_clock = millis();
@@ -441,11 +426,14 @@ void loop()
               num_of_locations = SerialIntReader(); // get number of params to be updated
               min_time_since_last_motor_call = min_time_since_last_motor_call_default;
               close_loop_mode = 1;
+              //timer_override = timer_state;
               break;
             case 1: // open loop
               num_of_locations = num_of_locations;
               min_time_since_last_motor_call = SerialIntReader();
               close_loop_mode = 0;
+              //timer_state = timer_override;
+              //timer_override = true;
               break;
           }
           while (i < num_of_locations)
@@ -543,39 +531,39 @@ void loop()
           case 1: // center the motor
             motor_override = true;
             I2Cwriter(motor1_i2c_address, 1); // enable motors
-//            if (distractor)
-//            {
-//              I2Cwriter(motor2_i2c_address, 1);
-//            }
+            //            if (distractor)
+            //            {
+            //              I2Cwriter(motor2_i2c_address, 1);
+            //            }
             delay(10);
             //I2Cwriter(motor1_i2c_address, (motor_zone_limits[1] + (motor_zone_limits[3] - motor_zone_limits[2]) / 2) ); // move to target
-//            if (distractor)
-//            {
-//              I2Cwriter(motor2_i2c_address, (motor_zone_limits[1] + (motor_zone_limits[3] - motor_zone_limits[2]) / 2) );
-//            }
+            //            if (distractor)
+            //            {
+            //              I2Cwriter(motor2_i2c_address, (motor_zone_limits[1] + (motor_zone_limits[3] - motor_zone_limits[2]) / 2) );
+            //            }
             break;
           case 2:
             motor_override = true;
             I2Cwriter(motor1_i2c_address, 1);  // enable motors
-//            if (distractor)
-//            {
-//              I2Cwriter(motor2_i2c_address, 1);
-//            }
+            //            if (distractor)
+            //            {
+            //              I2Cwriter(motor2_i2c_address, 1);
+            //            }
             delay(10);
             I2Cwriter(motor1_i2c_address, 0); // move to target
-//            if (distractor)
-//            {
-//              I2Cwriter(motor2_i2c_address, 0);
-//            }
+            //            if (distractor)
+            //            {
+            //              I2Cwriter(motor2_i2c_address, 0);
+            //            }
             break;
         }
         break;
       case 70: // motor related
         I2Cwriter(motor1_i2c_address, int(FSMheader - 70));
-//        if (distractor)
-//        {
-//          I2Cwriter(motor2_i2c_address, int(FSMheader - 70));
-//        }
+        //        if (distractor)
+        //        {
+        //          I2Cwriter(motor2_i2c_address, int(FSMheader - 70));
+        //        }
         break;
       case 80: // reward valve related
         switch (FSMheader - 80)
@@ -588,7 +576,7 @@ void loop()
             reward_override_timestamp = micros();
             break;
           case 2: // open reward valve for reward valve duration
-            reward_override = 1;
+            reward_override = 2;
             reward_override_timestamp = micros();
             break;
           case 3: // for reward calibration
@@ -612,7 +600,8 @@ void loop()
 
     if (timer_override)
     {
-      Timer3.start(1000 * motor_timer_period); // Calls every 10 msec
+      //Timer3.start(1000 * motor_timer_period); // Calls every 10 msec
+      Timer3.start(1000 * min_time_since_last_motor_call); // Calls every 10 msec
     }
   }
   //----------------------------------------------------------------------------
@@ -703,23 +692,22 @@ void UpdateMotorParams()
 void MoveMotor()
 {
   // read 'delayed' state
-  //I2Cwriter(motor1_i2c_address, 10 + stimulus_position_array[stimulus_readpointer]);
   if (!motor_override)
   {
     stimulus_readpointer = (stimulus_writepointer + delay_feedback_by) % stimulus_array_size;
-    if (stimulus_position_array[stimulus_readpointer]>0)
-      {
-        I2Cwriter(motor1_i2c_address, 10 + stimulus_position_array[stimulus_readpointer]);
-      }
-    //I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
-    //I2Cwriter(motor1_i2c_address, 10 + transfer_function[check]);
-    //check = (check + 1) % 100;
-    //I2Cwriter(motor1_i2c_address, 101);
-    //SPIWriter(dac_spi_pin, 600*stimulus_position_array[stimulus_readpointer]);
+    if (stimulus_position_array[stimulus_readpointer] > 0)
+    {
+      I2Cwriter(motor1_i2c_address, 10 + stimulus_position_array[stimulus_readpointer]);
+    }
   }
-
   // write the new state
   stimulus_writepointer = (stimulus_writepointer + 1) % stimulus_array_size;
   stimulus_position_array[stimulus_writepointer] = stimulus_state[1];
+  
+  if (!close_loop_mode)
+  {
+    // roll over the TF array pointer
+    transfer_function_pointer = (transfer_function_pointer + 1) % num_of_locations;
+  }
 }
 

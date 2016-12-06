@@ -1,38 +1,30 @@
-function Update_LocationSequence(h)
-%Update_TransferFunction(h);
-%pause(1);
-
-% % get current transfer function
-% target_limits = [h.TrialSettings.Data(2) h.TargetDefinition.Data(3:-1:1)' h.TrialSettings.Data(1)];
-% [TF, TF_plot] = LeverTransferFunction(target_limits,h.TransferFunction.Data(1),h.TransferFunction.Data(2));
+function Update_TransferFunction_temp(h)
 
 % get current transfer function
 target_limits = [h.TrialSettings.Data(2) h.TargetDefinition.Data(3:-1:1)' h.TrialSettings.Data(1)];
 DAC_limits = h.DAC_levels.Data;
-Zone_limits = h.locations_per_zone.Data;
-[TF] = LeverTransferFunction_discrete(target_limits,DAC_limits,Zone_limits,...
+Zone_limits = [h.ZoneL.Data h.ZoneC.Data h.ZoneR.Data];
+[TF, TF_plot] = LeverTransferFunction_discrete(target_limits,DAC_limits,Zone_limits,...
     h.TransferFunction.Data(1));
 
-TF = TF'+101;
-TF = TF(randperm(length(TF)));
 
-if h.location_update_params(2) == 0
-    TF = sort(TF);
-    %TF = TF(length(TF):-1:1);
-    %TF = mod(TF,20);
-end
+TF = TF';
 
 sent = 0;
 sending_attempts = 0;
+% lever positions, motor locations
+l = length(TF_plot);
+set(h.TF_left_plot,'XData',TF_plot(1:floor(l/2)+mod(l,2),2),'YData',TF_plot(1:floor(l/2)+mod(l,2),1));
+set(h.TF_right_plot,'XData',TF_plot(floor(l/2)+1:end,2),'YData',TF_plot(floor(l/2)+1:end,1));
 
-%% send Location sequence to Arduino
+%% send TF to Arduino
 while (sent == 0) && (sending_attempts <=8 )
     if h.Arduino.BytesAvailable
         trash = fread(h.Arduino, h.Arduino.BytesAvailable);
         clear trash;
     end
-    fwrite(h.Arduino, char(31)); % tell Arduino how many locations are being written
-    fwrite(h.Arduino,h.location_update_params(1),'uint16'); % if the write fails, Arduino writes back -1
+    fwrite(h.Arduino, char(30)); % tell Arduino how many locations are being written
+    fwrite(h.Arduino,length(TF),'uint16'); % if the write fails, Arduino writes back -1
     if (h.Arduino.BytesAvailable)==0 % Arduino did not write back
         % write the params
         fwrite(h.Arduino,TF,'uint16');
@@ -41,8 +33,8 @@ while (sent == 0) && (sending_attempts <=8 )
         if (h.Arduino.BytesAvailable)>1
             TF_returned = fread(h.Arduino,h.Arduino.BytesAvailable/2,'uint16');
             if length(TF_returned) >= length(TF)
-                if all(TF_returned(1:end-1) == TF) && TF_returned(end) == 83
-                    disp(['arduino: location sequence updated: attempts = ' num2str(sending_attempts+1)])
+                if all(TF_returned(1:end-1) == TF') && TF_returned(end) == 83
+                    disp(['arduino: transfer function updated: attempts = ' num2str(sending_attempts+1)])
                     sent = 1;
                 else
                     pause(.1);
@@ -63,5 +55,6 @@ while (sent == 0) && (sending_attempts <=8 )
 end
 
 if sending_attempts == 9
-         error('arduino: failed to update location sequence')
+         error('arduino: failed to update transfer function')
 end
+
