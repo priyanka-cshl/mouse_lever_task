@@ -210,7 +210,7 @@ if get(handles.startAcquisition,'value')
         
         % dynamic settings - change within a session
         handles.settingsfileID = fid2;
-        fwrite(fid2,params,'double');
+        fwrite(fid2,[settings.params_main params],'double');
         handles.TransferFunctionfileID = fid3;
         
         handles.hObject = hObject;
@@ -326,8 +326,9 @@ if usrans == 1
     
     % read settings log
     f = fopen('C:\temp_data_files\settings_log.bin');
-    [~,params] = Current_Settings(handles,1);
-    b = fread(f,[length(params) 10800000],'double');
+    [~,params1] = Current_Settings(handles,0);
+    [~,params2] = Current_Settings(handles,1);
+    b = fread(f,[length(params1)+length(params2) 10800000],'double');
     fclose(f);
     
     % read TF log

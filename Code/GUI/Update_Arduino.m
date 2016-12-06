@@ -55,5 +55,5 @@ end
 
 %% if acquisition is Running and params were sent - update settings file
 if get(h.startAcquisition,'value') && (sent == 1)
-    fwrite(h.settingsfileID,params2,'double');
+    fwrite(h.settingsfileID,[params1 params2],'double');
 end
