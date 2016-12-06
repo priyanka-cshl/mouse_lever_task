@@ -41,12 +41,15 @@ switch caller
         % convert to integers for Arduino communication purpose
         not_ints = [not_ints 3:5];
         
-        legend(6) = {'Stage'};
-        param(6) = h.which_stage.Value;
-        
-        legend(7:8) = {'TF_locations' 'TF_steepness'};
-        param(7:8) = h.TransferFunction.Data(1:2);
-        not_ints = [not_ints 8];
+%         legend(6) = {'Stage'};
+%         param(6) = h.which_stage.Value;
+%         
+%         legend(7:8) = {'TF_locations' 'TF_steepness'};
+%         param(7:8) = h.TransferFunction.Data(1:2);
+%         not_ints = [not_ints 8];
+
+        legend(6:8) = {'target_locations' 'skip_locations' 'offtarget_locations'};
+        param(6:8) = h.locations_per_zone.Data(1:3);
         
         legend(9) = {'StimulusDelay'};
         if (h.is_stimulus_on.Value)
