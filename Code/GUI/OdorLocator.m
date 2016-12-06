@@ -61,6 +61,8 @@ if strcmp(handles.computername,'PRIYANKA-PC')
     % motor location settings
     handles.motor_params = 4;
     handles.TrialSettings.Data(2) = 0.5;
+    % disable transfer function calibrator
+    handles.calibrate_transfer_function.enable = 'off';
 end
 
 % defaults
@@ -236,7 +238,10 @@ if get(handles.startAcquisition,'value')
         elseif (fread(handles.Arduino, handles.Arduino.BytesAvailable)==6)
             disp('arduino: Motor Timer Started');
         end
-   
+        
+        % enable transfer function calibrator
+        handles.calibrate_transfer_function.enable = 'on';
+    
         guidata(hObject,handles);
         if isfield(handles,'lis')
             handles.lis.delete
@@ -266,6 +271,15 @@ else
    elseif (fread(handles.Arduino, handles.Arduino.BytesAvailable)==7)
        disp('arduino: Motor Timer Stopped');
    end
+   
+   % stop TF calibration if running
+   if handles. calibrate_transfer_function.Value
+       handles. calibrate_transfer_function.Value = 0;
+        calibrate_transfer_function_Callback(hObject, eventdata, handles);
+   end
+   
+   % disable transfer function calibrator
+    handles.calibrate_transfer_function.enable = 'off';
 end
 
 handles.traces = TotalData;
@@ -695,7 +709,7 @@ function calibrate_transfer_function_Callback(hObject, eventdata, handles)
 % hObject    handle to calibrate_transfer_function (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if get(hObject,'Value')
+if get(hObject,'Value') 
     prompt = {'Enter time at each location (ms):', 'Randomize locations (1 = yes/ 0 = no):'};
     dlg_title = 'Transfer function relay settings';
     num_lines = 1;

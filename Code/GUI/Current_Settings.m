@@ -16,7 +16,7 @@ switch caller
         param(5:6) = h.RewardControls.Data;
         
         legend(7) = {'MaxPerBlock'};
-        param(7) = h.TransferFunction.Data(3);
+        param(7) = h.TransferFunction.Data(2);
         
         legend(8) = {'PerturbationProbability'};
         param(8) = h.PertubationSettings.Data(1);
@@ -45,7 +45,7 @@ switch caller
 %         param(6) = h.which_stage.Value;
 %         
 %         legend(7:8) = {'TF_locations' 'TF_steepness'};
-%         param(7:8) = h.TransferFunction.Data(1:2);
+%         param(7:8) = h.TransferFunction.Data(1:NaN);
 %         not_ints = [not_ints 8];
 
         legend(6:8) = {'target_locations' 'skip_locations' 'offtarget_locations'};
