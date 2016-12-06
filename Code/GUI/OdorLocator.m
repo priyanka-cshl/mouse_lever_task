@@ -726,6 +726,7 @@ if get(hObject,'Value')
     end
 else
     %Update_TransferFunction(handles);
+    Update_Arduino(handles);
     Update_TransferFunction_discrete(handles);
 end
 
@@ -827,6 +828,7 @@ function update_zones_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % update transfer function
+Update_Arduino(handles);
 Update_TransferFunction_discrete(handles);
 handles.locations_per_zone.ForegroundColor = 'k';
 % Hint: get(hObject,'Value') returns toggle state of update_zones
