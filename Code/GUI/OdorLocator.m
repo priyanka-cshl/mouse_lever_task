@@ -199,6 +199,7 @@ if get(handles.startAcquisition,'value')
         end
         fid1 = fopen('C:\temp_data_files\log.bin','w');
         fid2 = fopen('C:\temp_data_files\settings_log.bin','w');
+        fid3 = fopen('C:\temp_data_files\transferfunction_log.bin','w');
         
         % main settings - only change in the beginning of each session
         [settings.legends_main, settings.params_main] = Current_Settings(handles,0);
@@ -208,6 +209,7 @@ if get(handles.startAcquisition,'value')
         % dynamic settings - change within a session
         handles.settingsfileID = fid2;
         fwrite(fid2,params,'double');
+        handles.TransferFunctionfileID = fid3;
         
         handles.hObject = hObject;
         handles.traces = zeros(6000,handles.NIchannels); %???500*60*60*4
@@ -314,6 +316,12 @@ if usrans == 1
     b = fread(f,[length(params) 10800000],'double');
     fclose(f);
     
+    % read TF log
+    f = fopen('C:\temp_data_files\transferfunction_log.bin');
+    %[~,params] = Current_Settings(handles,1);
+    c = fread(f,[(2+handles.TransferFunction.Data(1)) 10800000],'double');
+    fclose(f);
+    
     % filename for writing data
     animal_name = char(handles.file_names.Data(1));
     foldername_local = char(handles.file_names.Data(2));
@@ -345,6 +353,7 @@ if usrans == 1
     session_data.trace = a(2:handles.NIchannels+1,:)';
     session_data.trace_legend = Connections_list();
     session_data.params = b';
+    session_data.TF = c';
     
     save(filename,'session_data*');
     save(server_file_name,'session_data*');
