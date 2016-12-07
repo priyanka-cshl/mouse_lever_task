@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 25-Nov-2016 15:27:39
+% Last Modified by GUIDE v2.5 06-Dec-2016 21:05:45
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -62,7 +62,7 @@ if strcmp(handles.computername,'PRIYANKA-PC')
     handles.motor_params = 4;
     handles.TrialSettings.Data(2) = 0.5;
     % disable transfer function calibrator
-    handles.calibrate_transfer_function.enable = 'off';
+    handles.calibrate_transfer_function.Enable = 'off';
 end
 
 % defaults
@@ -240,7 +240,7 @@ if get(handles.startAcquisition,'value')
         end
         
         % enable transfer function calibrator
-        handles.calibrate_transfer_function.enable = 'on';
+        handles.calibrate_transfer_function.Enable = 'on';
     
         guidata(hObject,handles);
         if isfield(handles,'lis')
@@ -279,7 +279,7 @@ else
    end
    
    % disable transfer function calibrator
-    handles.calibrate_transfer_function.enable = 'off';
+    handles.calibrate_transfer_function.Enable = 'off';
 end
 
 handles.traces = TotalData;
