@@ -330,8 +330,10 @@ void loop()
   //----------------------------------------------------------------------------
   // 8) manage reporter pins, valves etc based on time elapsed since last event
   //----------------------------------------------------------------------------
-  digitalWrite(target_valves[0], (target_valve_state || (trialstate[0] == 4)) ); // open odor valve
-  digitalWrite(target_valves[1], (target_valve_state || (trialstate[0] == 4)) ); // open air valve
+  digitalWrite(target_valves[0], target_valve_state); // open odor valve
+  digitalWrite(target_valves[1], target_valve_state); // open air valve
+  //digitalWrite(target_valves[0], (target_valve_state || (trialstate[0] == 4)) ); // open odor valve
+  //digitalWrite(target_valves[1], (target_valve_state || (trialstate[0] == 4)) ); // open air valve
   digitalWrite(trial_reporter_pin, (trialstate[0] == 4)); // active trial?
   digitalWrite(in_target_zone_reporter_pin, in_target_zone[1]); // in_target_zone?
   digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2)); // in_reward_zone?
@@ -483,10 +485,16 @@ void loop()
             }
             break;
           case 4: // target valves
-            target_valve_state = !target_valve_state;
+            target_valve_state = false;
             break;
-          case 5: // distractor valves
-            distractor_valve_state = !distractor_valve_state;
+          case 5: // target valves
+            target_valve_state = true;
+            break;
+          case 6: // distractor valves
+            distractor_valve_state = false;
+            break;
+          case 7: // target valves
+            distractor_valve_state = true;
             break;
         }
         break;

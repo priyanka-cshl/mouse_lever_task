@@ -68,5 +68,5 @@ end
 
 %% if acquisition is Running and TF was sent - update TF log file
 if get(h.startAcquisition,'value') && (sent == 1)
-    fwrite(handles.TransferFunctionfileID, [h.timestamp.Data h.location_update_params(1) TF] ,'double');
+    fwrite(h.TransferFunctionfileID, [h.timestamp.Data h.location_update_params(1) TF'] ,'double');
 end

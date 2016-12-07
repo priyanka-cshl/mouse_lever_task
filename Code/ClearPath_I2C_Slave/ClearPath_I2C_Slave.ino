@@ -21,7 +21,7 @@ int desired_location = 101;
 int current_location = 101;
 int delta_steps = 0;
 volatile int current_direction = 1; // CW
-int stepsize = 4; // motor location is between 1-50, steps allowed = 200 = quarter turn for the motor
+int stepsize = 1; // motor location is between 1-50, steps allowed = 200 = quarter turn for the motor
 
 // motor timing variables
 int dir_wait = 100; // in uS - time to wait before executing a step, after direction is switched

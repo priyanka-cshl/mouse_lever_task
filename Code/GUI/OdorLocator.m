@@ -66,7 +66,7 @@ if strcmp(handles.computername,'PRIYANKA-PC')
 end
 
 % defaults
-handles.target_level_array.Data = [1 2 3]';
+handles.target_level_array.Data = [1 2.5 3]';
 handles.DAQrates.Data = [500 20]';
 handles.which_perturbation.Value = 1;
 
@@ -751,14 +751,14 @@ function valve_odor_A_Callback(hObject, eventdata, handles)
 % hObject    handle to valve_odor_A (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-fwrite(handles.Arduino, char(44));
+fwrite(handles.Arduino, char(44 + handles.valve_odor_A.Value));
 
 % --- Executes on button press in valve_odor_B.
 function valve_odor_B_Callback(hObject, eventdata, handles)
 % hObject    handle to valve_odor_B (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-fwrite(handles.Arduino, char(45));
+fwrite(handles.Arduino, char(46 + handles.valve_odor_B.Value));
 
 % --- Executes on button press in startStopCamera.
 function startStopCamera_Callback(hObject, eventdata, handles)
@@ -829,11 +829,21 @@ function update_zones_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% safety - turn motor off
+fwrite(handles.Arduino, char(70));
+set(handles.motor_status,'String','OFF')
+set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
+
 % update transfer function
 Update_Arduino(handles);
 Update_TransferFunction_discrete(handles);
 handles.locations_per_zone.ForegroundColor = 'k';
 % Hint: get(hObject,'Value') returns toggle state of update_zones
+
+% turn motor on
+fwrite(handles.Arduino, char(71));
+set(handles.motor_status,'String','ON')
+set(handles.motor_status,'BackgroundColor',[0.5 0.94 0.94]);
 
 function change_in_zones_Callback(hObject, eventdata, handles)
 hObject.ForegroundColor = 'r';
