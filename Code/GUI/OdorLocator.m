@@ -76,7 +76,7 @@ handles.current_trial_block.Data = [1 1 0]';
 
 % set up NI acquisition and reset Arduino
 handles.sampling_rate_array = handles.DAQrates.Data;
-[handles.NI,handles.Arduino,handles.MFC] = configure_NI_and_Arduino(handles);
+[handles.NI,handles.Arduino,handles.MFC] = configure_NI_and_Arduino_ArCOM(handles);
 
 % initiate plots
 axes(handles.axes1); % main plot
@@ -223,13 +223,14 @@ if get(handles.startAcquisition,'value')
         samplenum = handles.samplenum;
         
         % enable the motors
-        fwrite(handles.Arduino, char(71));
-        fwrite(handles.Arduino, char(60));
+        handles.Arduino.write(71, 'uint16'); % fwrite(handles.Arduino, char(71));
+        handles.Arduino.write(60, 'uint16'); %fwrite(handles.Arduino, char(60));
+        
         set(handles.motor_status,'String','ON')
         set(handles.motor_status,'BackgroundColor',[0.5 0.94 0.94]);
         
         % start the Arduino timer
-        fwrite(handles.Arduino, char(11));
+        handles.Arduino.write(11, 'uint16'); %fwrite(handles.Arduino, char(11));
         tic
         while (handles.Arduino.BytesAvailable == 0 && toc < 2)
         end
@@ -258,11 +259,11 @@ else
    set(handles.startAcquisition,'String','Acquire');
    set(hObject,'BackgroundColor',[0.94 0.94 0.94]);
    % disable the motors
-   fwrite(handles.Arduino, char(70));
+   handles.Arduino.write(70, 'uint16'); %fwrite(handles.Arduino, char(70));
    set(handles.motor_status,'String','OFF')
    set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
    % stop the Arduino timer
-   fwrite(handles.Arduino, char(12));
+   handles.Arduino.write(12, 'uint16'); %fwrite(handles.Arduino, char(12));
    tic
    while (handles.Arduino.BytesAvailable == 0 && toc < 2)
    end
@@ -396,14 +397,14 @@ function open_valve_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 %fwrite(handles.Arduino, char(80 + abs(handles.open_valve.Value - 1)));
-fwrite(handles.Arduino, char(80 + handles.open_valve.Value));
+handles.Arduino.write(80 + handles.open_valve.Value, 'uint16'); %fwrite(handles.Arduino, char(80 + handles.open_valve.Value));
 
 % --- Executes on button press in reward_now.
 function reward_now_Callback(hObject, eventdata, handles)
 % hObject    handle to reward_now (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-fwrite(handles.Arduino, char(82));
+handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
 handles.RewardStatus.Data(3) = handles.RewardStatus.Data(3) + 1; 
 
 % --- Executes on button press in water_calibrate.
@@ -411,7 +412,7 @@ function water_calibrate_Callback(hObject, eventdata, handles)
 % hObject    handle to water_calibrate (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-fwrite(handles.Arduino, char(83));
+handles.Arduino.write(83, 'uint16'); %fwrite(handles.Arduino, char(83));
 
 % --- Executes when entered data in editable cell(s) in RewardControls.
 function RewardControls_CellEditCallback(hObject, eventdata, handles)
@@ -508,7 +509,7 @@ function DAC_settings_CellEditCallback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % safety - turn motor off
-fwrite(handles.Arduino, char(70));
+handles.Arduino.write(70, 'uint16'); %fwrite(handles.Arduino, char(70));
 set(handles.motor_status,'String','OFF')
 set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
     
@@ -516,7 +517,7 @@ Update_Arduino(handles);
 Update_TransferFunction_discrete(handles);
 
 % turn motor on
-fwrite(handles.Arduino, char(71));
+handles.Arduino.write(71, 'uint16'); %fwrite(handles.Arduino, char(71));
 set(handles.motor_status,'String','ON')
 set(handles.motor_status,'BackgroundColor',[0.5 0.94 0.94]);
     
@@ -531,7 +532,7 @@ handles.NI.DurationInSeconds = 0.5;
 if isfield(handles,'lis')
     delete(handles.lis);
 end
-fwrite(handles.Arduino, char(90));
+handles.Arduino.write(90, 'uint16'); %fwrite(handles.Arduino, char(90));
 guidata(hObject, handles);
 data = startForeground(handles.NI);
 handles.DAC_levels.Data = round([min(data(:,1)) max(data(:,1))]',4,'significant');
@@ -646,11 +647,11 @@ function motor_toggle_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if isequal(handles.motor_status.String,'ON')
-    fwrite(handles.Arduino, char(70));
+    handles.Arduino.write(70, 'uint16'); %fwrite(handles.Arduino, char(70));
     set(handles.motor_status,'String','OFF')
     set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
 else    
-    fwrite(handles.Arduino, char(71));
+    handles.Arduino.write(71, 'uint16'); %fwrite(handles.Arduino, char(71));
     set(handles.motor_status,'String','ON')
     set(handles.motor_status,'BackgroundColor',[0.5 0.94 0.94]);
 end
@@ -662,12 +663,12 @@ function motor_center_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 pause(0.01);
 if get(hObject,'Value')
-    fwrite(handles.Arduino, char(61));
+    handles.Arduino.write(61, 'uint16'); %fwrite(handles.Arduino, char(61));
     set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
     set(handles.motor_status,'String','ON')
     set(handles.motor_status,'BackgroundColor',[0.5 0.94 0.94]);
 else
-    fwrite(handles.Arduino, char(60));
+    handles.Arduino.write(60, 'uint16'); %fwrite(handles.Arduino, char(60));
     set(hObject,'BackgroundColor',[0.94 0.94 0.94]);
 end
 
@@ -679,12 +680,12 @@ function motor_home_Callback(hObject, eventdata, handles)
 % fwrite(handles.Arduino, char(75));
 pause(0.01);
 if get(hObject,'Value')
-    fwrite(handles.Arduino, char(62));
+    handles.Arduino.write(62, 'uint16'); %fwrite(handles.Arduino, char(62));
     set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
     set(handles.motor_status,'String','ON')
     set(handles.motor_status,'BackgroundColor',[0.5 0.94 0.94]);
 else
-    fwrite(handles.Arduino, char(60));
+    handles.Arduino.write(60, 'uint16'); %fwrite(handles.Arduino, char(60));
     set(hObject,'BackgroundColor',[0.94 0.94 0.94]);
 end
 
@@ -702,7 +703,7 @@ if ~isempty(userans)
     handles.motor_params = str2num(char(userans(2)))+1;
     guidata(hObject, handles);
     stepsize = handles.motor_params + 70;
-    fwrite(h.Arduino, char(stepsize));
+    handles.Arduino.write(stepsize, 'uint16'); %fwrite(h.Arduino, char(stepsize));
     %Update_Motor_Params(handles);
 end
 
@@ -751,14 +752,14 @@ function valve_odor_A_Callback(hObject, eventdata, handles)
 % hObject    handle to valve_odor_A (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-fwrite(handles.Arduino, char(44 + handles.valve_odor_A.Value));
+handles.Arduino.write(44 + handles.valve_odor_A.Value, 'uint16'); %fwrite(handles.Arduino, char(44 + handles.valve_odor_A.Value));
 
 % --- Executes on button press in valve_odor_B.
 function valve_odor_B_Callback(hObject, eventdata, handles)
 % hObject    handle to valve_odor_B (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-fwrite(handles.Arduino, char(46 + handles.valve_odor_B.Value));
+handles.Arduino.write(46 + handles.valve_odor_A.Value, 'uint16'); %fwrite(handles.Arduino, char(46 + handles.valve_odor_B.Value));
 
 % --- Executes on button press in startStopCamera.
 function startStopCamera_Callback(hObject, eventdata, handles)
@@ -799,7 +800,7 @@ function close_gui_Callback(hObject, eventdata, handles)
 global mycam %#ok<*NUSED>
 clear -global mycam
 outputSingleScan(handles.MFC,0*handles.MFC_table.Data');
-fwrite(handles.Arduino, char(11));
+handles.Arduino.write(11, 'uint16'); %fwrite(handles.Arduino, char(11));
 tic
 while (handles.Arduino.BytesAvailable == 0 && toc < 2)
 end
@@ -830,7 +831,7 @@ function update_zones_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % safety - turn motor off
-fwrite(handles.Arduino, char(70));
+handles.Arduino.write(70, 'uint16'); %fwrite(handles.Arduino, char(70));
 set(handles.motor_status,'String','OFF')
 set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
 
@@ -841,7 +842,7 @@ handles.locations_per_zone.ForegroundColor = 'k';
 % Hint: get(hObject,'Value') returns toggle state of update_zones
 
 % turn motor on
-fwrite(handles.Arduino, char(71));
+handles.Arduino.write(71, 'uint16'); %fwrite(handles.Arduino, char(71));
 set(handles.motor_status,'String','ON')
 set(handles.motor_status,'BackgroundColor',[0.5 0.94 0.94]);
 
