@@ -25,6 +25,7 @@ lastsample = samplenum + num_new_samples - 1;
 % flags for event calls
 trial_just_ended = 0;
 call_new_block = 0;
+callreward = 0;
 
 %% populate TotalTime with newly available timestamps
 TotalTime = [ TotalTime(num_new_samples+1:end); event.TimeStamps ];
@@ -63,6 +64,13 @@ if TotalTime(end)>2
     if h.NIchannels >= lick_channel
         TotalData(:,lick_channel) = [ TotalData(num_new_samples+1:end,lick_channel); ...
         diff([last_data_value(lick_channel); event.Data(:,lick_channel)])==1 ];
+    end
+    
+    if ~isempty(find(diff([last_data_value(lick_channel); event.Data(:,lick_channel)])==1,1))
+        if h.which_stage.Value==1
+                %h.lastrewardtime = round(TotalTime(end)); % update 'last reward'
+                callreward = 1;
+        end
     end
 
 else % for calls to function earlier than 2 seconds from session start
@@ -149,4 +157,8 @@ end
 %% for next round
 samplenum = samplenum + num_new_samples;
 last_data_value = event.Data(end,:);
+
+if callreward
+    OdorLocator('reward_now_Callback',h.hObject,[],h);
+end
 

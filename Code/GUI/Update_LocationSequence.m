@@ -7,6 +7,7 @@ Zone_limits = h.locations_per_zone.Data;
 [TF] = LeverTransferFunction_discrete(target_limits,DAC_limits,Zone_limits,...
     h.TransferFunction.Data(1));
 
+TF = unique(TF);
 TF = TF'+101;
 TF = TF(randperm(length(TF)));
 
@@ -27,6 +28,7 @@ while (sent == 0) && (sending_attempts <=8 )
     end
     h.Arduino.write(31,'uint16'); % handler code for location sequence update
     h.Arduino.write(length(TF),'uint16'); % tell Arduino the size of the TF vector
+    h.Arduino.write(h.location_update_params(1),'uint16'); % tell Arduino the time to stop between locations
     % if the write fails, Arduino writes back -1
     if (h.Arduino.Port.BytesAvailable)==0 % Arduino did not write back
         % write the TF

@@ -10,6 +10,7 @@
 // ---- initialize function calls ---------------------------------------------
 trialstates trialstates;
 // LeverToStimulus LeverToStimulus;
+//ArCOM myUSB(Serial); // Create an ArCOM wrapper for the SerialUSB interface
 ArCOM myUSB(SerialUSB); // Create an ArCOM wrapper for the SerialUSB interface
 // ----------------------------------------------------------------------------
 
@@ -19,11 +20,11 @@ int trial_reporter_pin = 41;
 int in_target_zone_reporter_pin = 43;
 int in_reward_zone_reporter_pin = 45;
 int reward_reporter_pin = 47;
-int reward_valve_pin = 39;
-int target_MFC[] = {23, 25};
-int target_valves[] = {27, 29};
-int distractor_MFC[] = {31, 33};
-int distractor_valves[] = {35, 37};
+int reward_valve_pin = 8;
+//int target_MFC[] = {23, 25};
+int target_valves[] = {9, 10};
+//int distractor_MFC[] = {39, 33};
+//int distractor_valves[] = {35, 39};
 int dac_spi_pin = 22;
 const byte SDA_pin = 20;
 const byte SCL_pin = 21;
@@ -118,16 +119,19 @@ int param_value = 0;
 
 void setup()
 {
+  SerialUSB.begin(115200);
+  //Serial.begin(115200);
+  
   for (i = 0; i < 2; i++)
   {
-    pinMode(target_MFC[i], OUTPUT);
-    digitalWrite(target_MFC[i], LOW);
-    pinMode(distractor_MFC[i], OUTPUT);
-    digitalWrite(distractor_MFC[i], LOW);
+//    pinMode(target_MFC[i], OUTPUT);
+//    digitalWrite(target_MFC[i], LOW);
+//    pinMode(distractor_MFC[i], OUTPUT);
+//    digitalWrite(distractor_MFC[i], LOW);
     pinMode(target_valves[i], OUTPUT);
     digitalWrite(target_valves[i], LOW);
-    pinMode(distractor_valves[i], OUTPUT);
-    digitalWrite(distractor_valves[i], LOW);
+//    pinMode(distractor_valves[i], OUTPUT);
+//    digitalWrite(distractor_valves[i], LOW);
   }
   pinMode(reward_valve_pin, OUTPUT);
   digitalWrite(reward_valve_pin, LOW);
@@ -174,8 +178,7 @@ void setup()
 
   // analog read - lever position
   analogReadResolution(12);
-  SerialUSB.begin(115200);
-
+  
   // first call to set up params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
 }
@@ -314,6 +317,7 @@ void loop()
       reward_on_timestamp = micros();
       reward_override = 0; //3
       digitalWrite(reward_valve_pin, HIGH);
+      //digitalWrite(39, HIGH);
     }
   }
   if (reward_state == 2 & (micros() - reward_zone_timestamp) > 1000 * reward_params[0])
@@ -335,10 +339,10 @@ void loop()
   //----------------------------------------------------------------------------
   // 8) manage reporter pins, valves etc based on time elapsed since last event
   //----------------------------------------------------------------------------
-  digitalWrite(target_valves[0], target_valve_state); // open odor valve
-  digitalWrite(target_valves[1], target_valve_state); // open air valve
-  //digitalWrite(target_valves[0], (target_valve_state || (trialstate[0] == 4)) ); // open odor valve
-  //digitalWrite(target_valves[1], (target_valve_state || (trialstate[0] == 4)) ); // open air valve
+  //digitalWrite(target_valves[0], target_valve_state); // open odor valve
+  //digitalWrite(target_valves[1], target_valve_state); // open air valve
+  digitalWrite(target_valves[0], (target_valve_state || (trialstate[0] == 4) || !close_loop_mode) ); // open odor valve
+  digitalWrite(target_valves[1], (target_valve_state || (trialstate[0] == 4) || !close_loop_mode) ); // open air valve
   digitalWrite(trial_reporter_pin, (trialstate[0] == 4)); // active trial?
   digitalWrite(in_target_zone_reporter_pin, in_target_zone[1]); // in_target_zone?
   digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2)); // in_reward_zone?
@@ -404,15 +408,14 @@ void loop()
         break;
       case 30: // update transfer function or calibrate transfer function
         serial_clock = millis();
-        while ( myUSB.available() < 2 && (millis() - serial_clock) < 1000 )
+        while ( myUSB.available() < 2 && (millis() - serial_clock) < 10000 )
         { } // wait for serial input or time-out
-        if (Serial.available() < 2)
+        if (myUSB.available() < 2)
         {
           myUSB.writeInt16(-1);
         }
         else
         {
-          i = 0;
           switch (FSMheader - 30)
           {
             case 0: // close loop
@@ -422,7 +425,7 @@ void loop()
               //timer_override = timer_state;
               break;
             case 1: // open loop
-              num_of_locations = num_of_locations;
+              num_of_locations = myUSB.readUint16();
               min_time_since_last_motor_call = myUSB.readUint16();
               close_loop_mode = 0;
               //timer_state = timer_override;
@@ -441,25 +444,25 @@ void loop()
           case 0: // MFCs OFF
             for (i = 0; i < 2; i++)
             {
-              digitalWrite(target_MFC[i], LOW);
+              //digitalWrite(target_MFC[i], LOW);
             }
             break;
           case 1: // MFCs ON
             for (i = 0; i < 2; i++)
             {
-              digitalWrite(target_MFC[i], HIGH);
+              //digitalWrite(target_MFC[i], HIGH);
             }
             break;
           case 2: // MFCs OFF
             for (i = 0; i < 2; i++)
             {
-              digitalWrite(distractor_MFC[i], LOW);
+              //digitalWrite(distractor_MFC[i], LOW);
             }
             break;
           case 3: // MFCs ON
             for (i = 0; i < 2; i++)
             {
-              digitalWrite(distractor_MFC[i], HIGH);
+              //digitalWrite(distractor_MFC[i], HIGH);
             }
             break;
           case 4: // target valves
@@ -480,7 +483,7 @@ void loop()
         serial_clock = millis();
         while ( myUSB.available() < 2 && (millis() - serial_clock) < 1000 )
         { } // wait for serial input or time-out
-        if (Serial.available() < 2)
+        if (myUSB.available() < 2)
         {
           myUSB.writeInt16(-1);
         }
@@ -578,21 +581,6 @@ void loop()
   //----------------------------------------------------------------------------
 
 } // end of loop()
-
-int SerialIntReader ()
-{
-  int UpdatedVariable = 0;
-  byte inByte1 = Serial.read();
-  byte inByte2 = Serial.read();
-  UpdatedVariable = (int)word(inByte2, inByte1);
-  return UpdatedVariable;
-}
-
-void SerialIntWriter (int VariableToWrite)
-{
-  Serial.write(lowByte(VariableToWrite));
-  Serial.write(highByte(VariableToWrite));
-}
 
 void SPIWriter (int spi_pin, int ValueToWrite)
 {

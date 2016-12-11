@@ -22,7 +22,7 @@ while (sent == 0) && (sending_attempts <=8 )
     h.Arduino.write(20,'uint16'); % handler code for parameter update
     h.Arduino.write(length(ParamArray),'uint16'); % tell Arduino how many params are going to be written
     % if the write fails, Arduino writes back -1
-    if (h.Arduino.BytesAvailable)==0 % Arduino did not write back
+    if (h.Arduino.Port.BytesAvailable)==0 % Arduino did not write back
         % write the params
         ParamArray = uint16(ParamArray);
         h.Arduino.write(ParamArray, 'uint16');

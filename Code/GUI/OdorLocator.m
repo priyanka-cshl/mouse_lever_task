@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 06-Dec-2016 21:05:45
+% Last Modified by GUIDE v2.5 11-Dec-2016 15:11:21
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -63,6 +63,10 @@ if strcmp(handles.computername,'PRIYANKA-PC')
     handles.TrialSettings.Data(2) = 0.5;
     % disable transfer function calibrator
     handles.calibrate_transfer_function.Enable = 'off';
+    % MFC settings
+    handles.MFC_table.Data = [0 2.5 0.5 0.5]';
+    % training stage 
+    handles.which_stage.Value = 2;
 end
 
 % defaults
@@ -121,15 +125,19 @@ handles.camera_available = 0;
 global mycam;
 if ~isempty(webcamlist)
     
-    mycam = webcam(1);
+    handles.mycam = webcam(1);
     % mycam.Resolution = '320x240';
-    mycam.Resolution = mycam.AvailableResolutions{1};
+    handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
     handles.camera_available = 1;
+    handles.focus_mode.Value = 1;
+    handles.mycam.FocusMode = 'auto';
+    handles.focus_value.Data = handles.mycam.Focus;
+    handles.mycam.Zoom = 100;
 end
 % display webcam image, if available
 axes(handles.cameraAxes);
 if handles.camera_available
-    handles.cam_image = image(snapshot(mycam),'parent',handles.cameraAxes);
+    handles.cam_image = image(snapshot(handles.mycam),'parent',handles.cameraAxes);
 end
 set(handles.cameraAxes,'XTick',[],'XTickLabel',' ','XTickMode','manual','XTickLabelMode','manual');
 set(handles.cameraAxes,'YTick',[],'YTickLabel',' ','YTickMode','manual','YTickLabelMode','manual');
@@ -145,7 +153,7 @@ handles.update_call = 0;
 % Update handles structure
 guidata(hObject, handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
-ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Update_Arduino
+ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Update_Params
 outputSingleScan(handles.MFC,handles.MFC_table.Data');
 %Update_Motor_Params(handles);
 
@@ -175,6 +183,7 @@ if get(handles.startAcquisition,'value')
     handles.current_trial_block.Data = [1 1 0]';
     handles.update_call = 1;
     handles.timestamp.Data = 0;
+    handles.lastrewardtime = 0;
     
     % clear plots
     handles.trial_on.Vertices = [];
@@ -229,15 +238,17 @@ if get(handles.startAcquisition,'value')
         set(handles.motor_status,'String','ON')
         set(handles.motor_status,'BackgroundColor',[0.5 0.94 0.94]);
         
-        % start the Arduino timer
-        handles.Arduino.write(11, 'uint16'); %fwrite(handles.Arduino, char(11));
-        tic
-        while (handles.Arduino.BytesAvailable == 0 && toc < 2)
-        end
-        if(handles.Arduino.BytesAvailable == 0)
-            error('arduino: Motor Timer Start did not send confirmation byte')
-        elseif (fread(handles.Arduino, handles.Arduino.BytesAvailable)==6)
-            disp('arduino: Motor Timer Started');
+        if handles.which_stage.Value>1
+            % start the Arduino timer
+            handles.Arduino.write(11, 'uint16'); %fwrite(handles.Arduino, char(11));
+            tic
+            while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
+            end
+            if(handles.Arduino.Port.BytesAvailable == 0)
+                error('arduino: Motor Timer Start did not send confirmation byte')
+            elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==6
+                disp('arduino: Motor Timer Started');
+            end
         end
         
         % enable transfer function calibrator
@@ -265,11 +276,11 @@ else
    % stop the Arduino timer
    handles.Arduino.write(12, 'uint16'); %fwrite(handles.Arduino, char(12));
    tic
-   while (handles.Arduino.BytesAvailable == 0 && toc < 2)
+   while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
    end
-   if(handles.Arduino.BytesAvailable == 0)
+   if(handles.Arduino.Port.BytesAvailable == 0)
        error('arduino: Motor Timer Stop did not send confirmation byte')
-   elseif (fread(handles.Arduino, handles.Arduino.BytesAvailable)==7)
+   elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==7
        disp('arduino: Motor Timer Stopped');
    end
    
@@ -389,7 +400,7 @@ function TrialSettings_CellEditCallback(hObject, eventdata, handles)
 %	NewData: EditData or its converted form set on the Data property. Empty if Data was not changed
 %	Error: error string when failed to convert EditData to appropriate value for Data
 % handles    structure with handles and user data (see GUIDATA)
-Update_Arduino(handles);
+Update_Params(handles);
 
 % --- Executes on button press in open_valve.
 function open_valve_Callback(hObject, eventdata, handles)
@@ -404,8 +415,20 @@ function reward_now_Callback(hObject, eventdata, handles)
 % hObject    handle to reward_now (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
-handles.RewardStatus.Data(3) = handles.RewardStatus.Data(3) + 1; 
+if handles.which_stage.Value==1
+    if ((handles.timestamp.Data - handles.lastrewardtime) > 20)
+        handles.lastrewardtime = handles.timestamp.Data; % update 'last reward'
+        handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
+        handles.RewardStatus.Data(3) = handles.RewardStatus.Data(3) + 1;
+    end
+else
+    handles.lastrewardtime = handles.timestamp.Data; % update 'last reward'
+    handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
+    handles.RewardStatus.Data(3) = handles.RewardStatus.Data(3) + 1;
+end
+
+handles.lastrewardtime = handles.timestamp.Data;
+guidata(hObject, handles);
 
 % --- Executes on button press in water_calibrate.
 function water_calibrate_Callback(hObject, eventdata, handles)
@@ -424,7 +447,7 @@ function RewardControls_CellEditCallback(hObject, eventdata, handles)
 %	NewData: EditData or its converted form set on the Data property. Empty if Data was not changed
 %	Error: error string when failed to convert EditData to appropriate value for Data
 % handles    structure with handles and user data (see GUIDATA)
-Update_Arduino(handles);
+Update_Params(handles);
 
 
 % --- Executes when entered data in editable cell(s) in ZoneLimitSettings.
@@ -451,8 +474,10 @@ handles.PertubationSettings.Data(3) = handles.PertubationSettings.Data(4) +...
 handles.PertubationSettings.Data(5) = handles.PertubationSettings.Data(4) -...
     handles.ZoneLimitSettings.Data(1)-...
     handles.PertubationSettings.Data(4)*handles.ZoneLimitSettings.Data(2);
-Update_Arduino(handles);
+%Update_TransferFunction_discrete(handles);
+Update_Params(handles);
 %Update_TransferFunction(handles);
+% pause(0.1);
 Update_TransferFunction_discrete(handles);
 
 
@@ -513,7 +538,7 @@ handles.Arduino.write(70, 'uint16'); %fwrite(handles.Arduino, char(70));
 set(handles.motor_status,'String','OFF')
 set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
     
-Update_Arduino(handles);
+Update_Params(handles);
 Update_TransferFunction_discrete(handles);
 
 % turn motor on
@@ -556,7 +581,7 @@ function is_stimulus_on_Callback(hObject, eventdata, handles)
 % hObject    handle to is_stimulus_on (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Update_Arduino(handles);
+Update_Params(handles);
 
 % --- Executes on button press in is_distractor_on.
 function is_distractor_on_Callback(hObject, eventdata, handles)
@@ -580,14 +605,14 @@ function delay_distractor_by_CellEditCallback(hObject, eventdata, handles)
 %	NewData: EditData or its converted form set on the Data property. Empty if Data was not changed
 %	Error: error string when failed to convert EditData to appropriate value for Data
 % handles    structure with handles and user data (see GUIDATA)
-Update_Arduino(handles);
+Update_Params(handles);
 
 % --- Executes on button press in stimulus_map.
 function stimulus_map_Callback(hObject, eventdata, handles)
 % hObject    handle to stimulus_map (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Update_Arduino(handles);
+Update_Params(handles);
 
 
 % --- Executes on selection change in which_stage.
@@ -604,7 +629,7 @@ switch get(hObject,'Value')
         
     case 3
 end
-update_Arduino(handles);
+Update_Params(handles);
 
 % --- Executes during object creation, after setting all properties.
 function which_stage_CreateFcn(hObject, eventdata, handles) %#ok<*INUSD>
@@ -729,7 +754,7 @@ if get(hObject,'Value')
     end
 else
     %Update_TransferFunction(handles);
-    Update_Arduino(handles);
+    Update_Params(handles);
     Update_TransferFunction_discrete(handles);
 end
 
@@ -753,6 +778,14 @@ function valve_odor_A_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.Arduino.write(44 + handles.valve_odor_A.Value, 'uint16'); %fwrite(handles.Arduino, char(44 + handles.valve_odor_A.Value));
+if handles.valve_odor_A.Value
+    set(handles.valve_odor_A,'String','ON')
+    set(handles.valve_odor_A,'BackgroundColor',[0.5 0.94 0.94]);
+else
+    set(handles.valve_odor_A,'String','OFF')
+    set(handles.valve_odor_A,'BackgroundColor',[0.94 0.94 0.94]);
+end
+
 
 % --- Executes on button press in valve_odor_B.
 function valve_odor_B_Callback(hObject, eventdata, handles)
@@ -760,6 +793,13 @@ function valve_odor_B_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.Arduino.write(46 + handles.valve_odor_A.Value, 'uint16'); %fwrite(handles.Arduino, char(46 + handles.valve_odor_B.Value));
+if handles.valve_odor_A.Value
+    set(handles.valve_odor_B,'String','ON')
+    set(handles.valve_odor_B,'BackgroundColor',[0.5 0.94 0.94]);
+else
+    set(handles.valve_odor_B,'String','OFF')
+    set(handles.valve_odor_B,'BackgroundColor',[0.94 0.94 0.94]);
+end
 
 % --- Executes on button press in startStopCamera.
 function startStopCamera_Callback(hObject, eventdata, handles)
@@ -770,11 +810,11 @@ global mycam
 if get(hObject,'Value')
     set(hObject,'String','Cam ON');
     set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
-    preview(mycam,handles.cam_image);
+    preview(handles.mycam,handles.cam_image);
 else
     set(hObject,'String','Cam OFF');
     set(hObject,'BackgroundColor',[0.94 0.94 0.94]);
-    closePreview(mycam);
+    closePreview(handles.mycam);
 end
 
 % Hint: get(hObject,'Value') returns toggle state of startStopCamera
@@ -786,7 +826,7 @@ function grab_camera_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 global mycam
 if get(hObject,'Value') && handles.startStopCamera.Value
-    closePreview(mycam);
+    closePreview(handles.mycam);
     set(handles.startStopCamera,'String','Cam OFF');
     set(handles.startStopCamera,'BackgroundColor',[0.94 0.94 0.94]);
 end
@@ -797,25 +837,33 @@ function close_gui_Callback(hObject, eventdata, handles)
 % hObject    handle to close_gui (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+% close valves and MFCs
+outputSingleScan(handles.MFC,0*handles.MFC_table.Data');
+handles.Arduino.write(44, 'uint16');
+
 global mycam %#ok<*NUSED>
 clear -global mycam
 outputSingleScan(handles.MFC,0*handles.MFC_table.Data');
-handles.Arduino.write(11, 'uint16'); %fwrite(handles.Arduino, char(11));
+delete(handles.figure1);
+handles.Arduino.write(12, 'uint16'); %fwrite(handles.Arduino, char(11));
 tic
-while (handles.Arduino.BytesAvailable == 0 && toc < 2)
+while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
 end
-if(handles.Arduino.BytesAvailable == 0)
-    fclose(instrfind);
+if(handles.Arduino.Port.BytesAvailable == 0)
+    handles.Arduino.close;%fclose(instrfind);
     error('arduino: arduino did not send confirmation byte in time')
 end
-if (fread(handles.Arduino, handles.Arduino.BytesAvailable)==7)
-    fclose(instrfind);
+if handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==7
+    handles.Arduino.close;%fclose(instrfind);
     disp('arduino: disconnected, handshake successful');
 else
-    fclose(instrfind);
+    handles.Arduino.close;%fclose(instrfind);
     disp('arduino: disconnected, handshake unsuccessful');
 end
-delete(handles.figure1);
+% if exist(handles)
+%     delete(handles.figure1);
+% end
 
 % --- Executes during object deletion, before destroying properties.
 function figure1_DeleteFcn(hObject, eventdata, handles)
@@ -836,7 +884,7 @@ set(handles.motor_status,'String','OFF')
 set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
 
 % update transfer function
-Update_Arduino(handles);
+Update_Params(handles);
 Update_TransferFunction_discrete(handles);
 handles.locations_per_zone.ForegroundColor = 'k';
 % Hint: get(hObject,'Value') returns toggle state of update_zones
@@ -848,3 +896,81 @@ set(handles.motor_status,'BackgroundColor',[0.5 0.94 0.94]);
 
 function change_in_zones_Callback(hObject, eventdata, handles)
 hObject.ForegroundColor = 'r';
+
+
+% --- Executes on selection change in focus_mode.
+function focus_mode_Callback(hObject, eventdata, handles)
+% hObject    handle to focus_mode (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+contents = cellstr(get(hObject,'String')); % returns focus_mode contents as cell array
+handles.mycam.FocusMode = contents{get(hObject,'Value')}; %returns selected item from focus_mode
+handles.focus_value.Data = handles.mycam.Focus;
+if get(hObject,'Value') == 1
+    handles.focus_value.Enable = 'off';
+else
+    handles.focus_value.Enable = 'on';
+end
+
+% --- Executes during object creation, after setting all properties.
+function focus_mode_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to focus_mode (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+% --- Executes on slider movement.
+function Adjust_Zoom_Callback(hObject, eventdata, handles)
+% hObject    handle to Adjust_Zoom (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.mycam.Zoom = hObject.Value;;
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+
+
+% --- Executes during object creation, after setting all properties.
+function Adjust_Zoom_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to Adjust_Zoom (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor',[.9 .9 .9]);
+end
+
+
+% --- Executes when entered data in editable cell(s) in focus_value.
+function focus_value_CellEditCallback(hObject, eventdata, handles)
+% hObject    handle to focus_value (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
+%	Indices: row and column indices of the cell(s) edited
+%	PreviousData: previous data for the cell(s) edited
+%	EditData: string(s) entered by the user
+%	NewData: EditData or its converted form set on the Data property. Empty if Data was not changed
+%	Error: error string when failed to convert EditData to appropriate value for Data
+% handles    structure with handles and user data (see GUIDATA)
+if (hObject.Data>=0) && (hObject.Data<=250)
+    %handles.mycam.Focus = hObject.Data;
+elseif (hObject.Data<0)
+    hObject.Data = 0;
+else
+    hObject.Data = 250;
+end
+handles.mycam.Focus = hObject.Data;
+
+
+% --- Executes on button press in Zero_MFC.
+function Zero_MFC_Callback(hObject, eventdata, handles)
+% hObject    handle to Zero_MFC (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.MFC_table.Data = 0*handles.MFC_table.Data;
+outputSingleScan(handles.MFC,handles.MFC_table.Data');
+% Hint: get(hObject,'Value') returns toggle state of Zero_MFC

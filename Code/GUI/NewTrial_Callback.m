@@ -29,7 +29,7 @@ if callUpdate
     if callUpdate == 2
         OdorLocator('ZoneLimitSettings_CellEditCallback',h.hObject,[],h);
     else
-        Update_Arduino(h);
+        Update_Params(h);
     end
 end
 
