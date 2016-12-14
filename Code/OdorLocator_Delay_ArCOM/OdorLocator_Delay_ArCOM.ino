@@ -327,11 +327,7 @@ void loop()
   //----------------------------------------------------------------------------
   // 6) determine trial mode
   //----------------------------------------------------------------------------
-  if (training_stage>2)
-  {
-    trialstate[1] = trialstates.WhichState(trialstate[0], lever_position, (micros() - trial_timestamp));
-  }
-  else
+  if (training_stage == 2)
   {
     trialstate[1] = 4*in_target_zone[1];
     if (!in_target_zone[1])
@@ -340,6 +336,10 @@ void loop()
       digitalWrite(reward_valve_pin, LOW);
       digitalWrite(reward_reporter_pin, LOW);
     }
+  }
+  else
+  {
+    trialstate[1] = trialstates.WhichState(trialstate[0], lever_position, (micros() - trial_timestamp));
   }
   if (trialstate[1] != trialstate[0])
   {
