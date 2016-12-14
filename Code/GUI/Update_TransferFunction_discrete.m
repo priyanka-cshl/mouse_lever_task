@@ -16,6 +16,8 @@ Height = scalefactor*abs(DAC_limits(2) - DAC_limits(1));
 h.axes9.Position(2) = Y_position;
 h.axes9.Position(4) = Height;
 
+h.all_locations.String = num2str(unique(TF)');
+
 TF = TF'+101; % get rid of negative values
 
 sent = 0;
@@ -29,11 +31,11 @@ while (sent == 0) && (sending_attempts <=8 )
     end
     h.Arduino.write(30,'uint16'); % handler code for transfer function update
     h.Arduino.write(length(TF),'uint16'); % tell Arduino the size of the TF vector
-    % if the write fails, Arduino writes back -1
-    if (h.Arduino.BytesAvailable)==0 % Arduino did not write back
+    %if the write fails, Arduino writes back -1
+    if (h.Arduino.Port.BytesAvailable)==0 % Arduino did not write back
         % write the TF
         TF = uint16(TF);
-        h.Arduino.write(TF, 'uint16');
+        h.Arduino.write(TF', 'uint16');
         pause(.05);
         % for every param Arduino writes back the param value
         if (h.Arduino.Port.BytesAvailable)>1
@@ -59,7 +61,6 @@ while (sent == 0) && (sending_attempts <=8 )
         sending_attempts = sending_attempts+1';
     end
 end
-
 
 if sending_attempts == 9
     error('arduino: failed to update transfer function')

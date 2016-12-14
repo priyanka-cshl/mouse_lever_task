@@ -7,7 +7,7 @@ end
 
 % find out which port Arduino is connected to
 if nargin<1
-    port_num = 5;
+    port_num = 31;
 end
     
 wrong_port = 1;
@@ -16,13 +16,16 @@ while wrong_port
         Arduino_Serial = ArCOMObject(['COM' num2str(port_num)], 115200); % Create and open the serial port
         wrong_port=0; % found the right one - exit while loop
     catch
-        wrong_port = 1 ; % to keep trying... 
-        port_num = port_num + 1;
+        wrong_port = wrong_port + 1 ; % to keep trying... 
+        %port_num = port_num + 1;
         try
             fclose(instrfind);
         end
     end
-    if port_num == 22
+%     if port_num == 40
+%         error('Arduino is not connected');
+%     end
+    if wrong_port == 5
         error('Arduino is not connected');
     end
 end

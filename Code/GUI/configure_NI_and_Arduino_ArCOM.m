@@ -8,7 +8,7 @@ stop(NI_session);
 
 % configure analog channels (4)
 if  strcmp(handles.computername,'PRIYANKA-PC')
-    DAQchannels = addAnalogInputChannel(NI_session,'Dev2',{'ai0','ai1','ai2','ai11'},'Voltage');
+    DAQchannels = addAnalogInputChannel(NI_session,'Dev2',{'ai0','ai1','ai2','ai3'},'Voltage');
 end
 % configure all analog channels as single ended and voltage range [-5 to 5]
 for i = 1:4
@@ -48,13 +48,15 @@ addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 6, 'Voltage');
 
 %% ------------------------------------------------------------------------------------------------------------
 % initialize Arduino as Serial Object
-[Arduino_Serial,portNum] = Start_Arduino_ArCOM;
+[Arduino_Serial,portNum] = Start_Arduino_ArCOM(30);
+pause(5);
 Arduino_Serial.write(10, 'uint16'); % opening handshake - should return 5 as confirmation
+%Arduino_Serial.Port.BytesAvailable
 tic
 while (Arduino_Serial.Port.BytesAvailable == 0 && toc < 2)
 end
 if(Arduino_Serial.Port.BytesAvailable == 0)
-    fclose(instrfind);
+    Arduino_Serial.close;%fclose(instrfind);
     error('arduino: arduino did not send confirmation byte in time')
 end
 if (Arduino_Serial.read(1, 'uint16')==5)
