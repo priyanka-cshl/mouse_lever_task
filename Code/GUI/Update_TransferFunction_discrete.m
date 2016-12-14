@@ -62,7 +62,6 @@ while (sent == 0) && (sending_attempts <=8 )
     end
 end
 
-
 if sending_attempts == 9
     error('arduino: failed to update transfer function')
 end

@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 11-Dec-2016 22:03:19
+% Last Modified by GUIDE v2.5 12-Dec-2016 10:20:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -64,19 +64,22 @@ if strcmp(handles.computername,'PRIYANKA-PC')
     % disable transfer function calibrator
     handles.calibrate_transfer_function.Enable = 'off';
     % MFC settings
-    handles.MFC_table.Data = [0 2.5 0.5 0.5]';
+    handles.MFC_table.Data = [0 4 0.9 0.4]';
     % training stage 
     handles.which_stage.Value = 2;
+    % TF - locations per zone
+    handles.locations_per_zone.Data = [20 0 80]';
 end
 
 % defaults
-handles.target_level_array.Data = [1 2.5 3]';
+handles.target_level_array.Data = [1 2 3]';
 handles.DAQrates.Data = [500 20]';
 handles.which_perturbation.Value = 1;
 
 % clear indicators
 handles.RewardStatus.Data = [0 0 0]';
 handles.current_trial_block.Data = [1 1 0]';
+handles.water_received.Data = 0;
 
 % set up NI acquisition and reset Arduino
 handles.sampling_rate_array = handles.DAQrates.Data;
@@ -122,7 +125,6 @@ set(handles.axes9,'YLim',[0 100]);
 
 % for webcam
 handles.camera_available = 0;
-;
 if ~isempty(webcamlist)
     
     handles.mycam = webcam(1);
@@ -155,7 +157,9 @@ guidata(hObject, handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
 ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Update_Params
 outputSingleScan(handles.MFC,handles.MFC_table.Data');
-%Update_Motor_Params(handles);
+% disable motor override
+handles.motor_override.Value = 0;
+motor_override_Callback(hObject, eventdata, handles);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = OdorLocator_OutputFcn(hObject, eventdata, handles)  %#ok<*INUSL>
@@ -180,6 +184,7 @@ if get(handles.startAcquisition,'value')
     
     % clear indicators
     handles.RewardStatus.Data = [0 0 0]';
+    handles.water_received.Data = 0;
     handles.current_trial_block.Data = [1 1 0]';
     handles.update_call = 1;
     handles.timestamp.Data = 0;
@@ -231,13 +236,13 @@ if get(handles.startAcquisition,'value')
         TotalTime = handles.timestamps;
         samplenum = handles.samplenum;
         
-        % enable the motors
-        handles.Arduino.write(71, 'uint16'); % fwrite(handles.Arduino, char(71));
-        handles.Arduino.write(60, 'uint16'); %fwrite(handles.Arduino, char(60));
+        % disable motor override
+        handles.motor_override.Value = 0;
+        motor_override_Callback(hObject, eventdata, handles);
         
-        set(handles.motor_status,'String','ON')
-        set(handles.motor_status,'BackgroundColor',[0.5 0.94 0.94]);
-        handles.motor_home.Enable = 'on';
+        % enable the motors
+        set(handles.motor_status,'String','OFF')
+        motor_toggle_Callback(hObject, eventdata, handles);
         
         if handles.which_stage.Value>1
             % start the Arduino timer
@@ -271,10 +276,9 @@ else
    set(handles.startAcquisition,'String','Acquire');
    set(hObject,'BackgroundColor',[0.94 0.94 0.94]);
    % disable the motors
-   handles.Arduino.write(70, 'uint16'); %fwrite(handles.Arduino, char(70));
-   set(handles.motor_status,'String','OFF')
-   set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
-   handles.motor_home.Enable = 'off';
+   set(handles.motor_status,'String','ON')
+   motor_toggle_Callback(hObject, eventdata, handles);
+   
    % stop the Arduino timer
    handles.Arduino.write(12, 'uint16'); %fwrite(handles.Arduino, char(12));
    tic
@@ -334,7 +338,7 @@ if usrans == 1
     % read TF log
     f = fopen('C:\temp_data_files\transferfunction_log.bin');
     %[~,params] = Current_Settings(handles,1);
-    c = fread(f,[(2+handles.TransferFunction.Data(1)) 10800000],'double');
+    c = fread(f,[(3+handles.TransferFunction.Data(1)) 10800000],'double');
     fclose(f);
     
     % filename for writing data
@@ -399,7 +403,7 @@ else
     handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
     handles.RewardStatus.Data(3) = handles.RewardStatus.Data(3) + 1;
 end
-
+handles.water_received.Data = handles.RewardStatus.Data(3)*(0.28);
 handles.lastrewardtime = handles.timestamp.Data;
 guidata(hObject, handles);
 
@@ -576,47 +580,52 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+% --- Executes on button press in motor_override.
+function motor_override_Callback(hObject, eventdata, handles)
+% hObject    handle to motor_override (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Arduino.write(60 + handles.motor_override.Value, 'uint16');
+set(handles.motor_override,'BackgroundColor',[(0.94 - 0.44*handles.motor_override.Value) 0.94 0.94]);
+if handles.motor_override.Value
+    % enable direct motor controls
+    handles.motor_move.Enable = 'on';
+    handles.motor_home.Enable = 'on';
+    handles.change_motor_params.Enable = 'on';
+else
+    % disable direct motor controls
+    handles.motor_move.Enable = 'off';
+    handles.motor_home.Enable = 'off';
+    handles.change_motor_params.Enable = 'off';
+end
+    
+
 % --- Executes on button press in motor_toggle.
 function motor_toggle_Callback(hObject, eventdata, handles)
 if isequal(handles.motor_status.String,'ON')
     handles.Arduino.write(70, 'uint16'); %fwrite(handles.Arduino, char(70));
     set(handles.motor_status,'String','OFF')
     set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
-    handles.motor_home.Enable = 'off';
 else    
     handles.Arduino.write(71, 'uint16'); %fwrite(handles.Arduino, char(71));
     set(handles.motor_status,'String','ON')
     set(handles.motor_status,'BackgroundColor',[0.5 0.94 0.94]);
-    handles.motor_home.Enable = 'on';
 end
 
-% % --- Executes on button press in motor_center.
-% function motor_center_Callback(hObject, eventdata, handles)
-% pause(0.01);
-% if get(hObject,'Value')
-%     handles.Arduino.write(61, 'uint16'); %fwrite(handles.Arduino, char(61));
-%     set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
-%     set(handles.motor_status,'String','ON')
-%     set(handles.motor_status,'BackgroundColor',[0.5 0.94 0.94]);
-% else
-%     handles.Arduino.write(60, 'uint16'); %fwrite(handles.Arduino, char(60));
-%     set(hObject,'BackgroundColor',[0.94 0.94 0.94]);
-% end
+% --- Executes on button press in motor_move.
+function motor_move_Callback(hObject, eventdata, handles)
+pause(0.01);
+handles.Arduino.write(62, 'uint16'); % handler - move motor to specific location
+% get chosen location
+contents = cellstr(get(handles.all_locations,'String'));
+my_location = str2num(char(contents(handles.all_locations.Value)));
+handles.Arduino.write(my_location+101, 'uint16'); % which location
 
 % --- Executes on button press in motor_home.
 function motor_home_Callback(hObject, eventdata, handles)
 pause(0.01);
-if get(hObject,'Value')
-    handles.Arduino.write(61, 'uint16'); % handler - move motor to specific location
-    set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
-    set(handles.motor_status,'String','ON')
-    set(handles.motor_status,'BackgroundColor',[0.5 0.94 0.94]);
-    %my_location = handles.all_locations.Value
-    %handles.Arduino.write(61, 'uint16'); % which location    
-else
-    handles.Arduino.write(60, 'uint16'); %fwrite(handles.Arduino, char(60));
-    set(hObject,'BackgroundColor',[0.94 0.94 0.94]);
-end
+handles.Arduino.write(62, 'uint16'); % handler - move motor to specific location
+handles.Arduino.write(101, 'uint16'); % home location       
 
 % --- Executes on button press in change_motor_params.
 function change_motor_params_Callback(hObject, eventdata, handles)
@@ -690,7 +699,7 @@ function valve_odor_B_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.Arduino.write(46 + handles.valve_odor_A.Value, 'uint16'); %fwrite(handles.Arduino, char(46 + handles.valve_odor_B.Value));
-if handles.valve_odor_A.Value
+if handles.valve_odor_B.Value
     set(handles.valve_odor_B,'String','ON')
     set(handles.valve_odor_B,'BackgroundColor',[0.5 0.94 0.94]);
 else
@@ -791,5 +800,3 @@ end
 
 % --- Executes during object deletion, before destroying properties.
 function figure1_DeleteFcn(hObject, eventdata, handles)
-
-

@@ -59,6 +59,7 @@ if TotalTime(end)>2
                 call_new_block = 1;
         end
     end
+    h.water_received.Data = h.RewardStatus.Data(3)*(0.28);
     
     % lick channel
     if h.NIchannels >= lick_channel
@@ -87,7 +88,7 @@ set(h.lever_DAC_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indice
 set(h.lever_raw_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,2));
 set(h.stimulus_plot,'XData',TotalTime(indices_to_plot),'YData',...
     -1*h.Rotary_Enc_1.Data(1,1)*(TotalData(indices_to_plot,3) - h.Rotary_Enc_1.Data(2,1)) );
-set(h.distractor_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,4));
+% set(h.distractor_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,4));
 
 % trial_on
 [h.trial_on] = PlotToPatch(h.trial_on, TotalData(:,trial_channel), TotalTime, [0 5]);

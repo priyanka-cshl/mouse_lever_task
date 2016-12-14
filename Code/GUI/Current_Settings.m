@@ -77,5 +77,11 @@ switch caller
         end
         % convert to integers for Arduino communication purpose
         %not_ints = [not_ints 3:5];
+        
+        legend(14) = {'TFsize'};
+        param(14) = h.TransferFunction.Data(1);
+        
+        legend(15) = {'Stage'};
+        param(15) = h.which_stage.Value;
 end
 end

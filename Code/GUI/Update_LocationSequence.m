@@ -7,6 +7,8 @@ Zone_limits = h.locations_per_zone.Data;
 [TF] = LeverTransferFunction_discrete(target_limits,DAC_limits,Zone_limits,...
     h.TransferFunction.Data(1));
 
+TF_to_write = 0*(TF);
+
 TF = unique(TF);
 TF = TF'+101;
 TF = TF(randperm(length(TF)));
@@ -16,6 +18,9 @@ if h.location_update_params(2) == 0
     %TF = TF(length(TF):-1:1);
     %TF = mod(TF,20);
 end
+
+TF_to_write(1:length(TF)) = TF-101;
+TF_to_write = [length(TF) TF_to_write];
 
 sent = 0;
 sending_attempts = 0;
@@ -66,5 +71,5 @@ end
 
 %% if acquisition is Running and TF was sent - update TF log file
 if get(h.startAcquisition,'value') && (sent == 1)
-    fwrite(h.TransferFunctionfileID, [h.timestamp.Data h.location_update_params(1) TF'] ,'double');
+    fwrite(h.TransferFunctionfileID, [h.timestamp.Data h.location_update_params(1) TF_to_write] ,'double');
 end

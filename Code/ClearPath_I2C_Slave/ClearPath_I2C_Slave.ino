@@ -7,6 +7,7 @@ int i = 0;
 const byte enable_pin = 23;
 const byte dir_pin = 25;
 const byte step_pin = 27;
+const byte servoON_pin = 29;
 const byte home_pin = 51;
 const byte end_stop_pin_left = 2;
 const byte end_stop_pin_right = 3;
@@ -50,7 +51,8 @@ void setup ()
   pinMode(home_out, OUTPUT);
   digitalWrite(home_out, LOW);
   pinMode(home_pin, INPUT_PULLUP);
-
+  pinMode(servoON_pin, INPUT_PULLUP);
+  
   // I2C setup
   Wire_received = 0; //edited
   readpointer = 0;
@@ -81,18 +83,18 @@ void receiveEvent(int howmany) // I2C interrupt routine
 
 void SafetyStopLeft()
 {
-    //noInterrupts();
-    detachInterrupt(end_stop_pin_left);
-    detachInterrupt(end_stop_pin_right);
-    FindHome(true);
+  //noInterrupts();
+      detachInterrupt(end_stop_pin_left);
+      detachInterrupt(end_stop_pin_right);
+      FindHome(true);
 }
 
 void SafetyStopRight()
 {
     //noInterrupts();
-    detachInterrupt(end_stop_pin_right);
-    detachInterrupt(end_stop_pin_left);
-    FindHome(false);
+      detachInterrupt(end_stop_pin_right);
+      detachInterrupt(end_stop_pin_left);
+      FindHome(false);
 }
 
 void FindHome(bool which_direction)

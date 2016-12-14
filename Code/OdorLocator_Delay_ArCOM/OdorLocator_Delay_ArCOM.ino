@@ -51,6 +51,7 @@ int stimulus_readpointer = 0;
 int delay_feedback_by = 0; // in timer periods (max = 1200)
 bool in_target_zone[2] = {false, false};
 bool timer_override = false; // to disable timer start after serial communication
+int training_stage = 2; 
 
 ////variables : distractor related
 //bool distractor = false;
@@ -238,10 +239,10 @@ void loop()
             reward_state = 2;
           }
         }
-        else if (trialstate[0] == 4)
-        {
-          reward_state = 1; // exited reward zone
-        }
+//        else if (trialstate[0] == 4)
+//        {
+//          reward_state = 1; // exited reward zone
+//        }
       }
 
       // update stimulus state
@@ -320,13 +321,26 @@ void loop()
   digitalWrite(target_valves[1], (target_valve_state[1] || (trialstate[0] == 4) || !close_loop_mode) ); // open air valve
   digitalWrite(trial_reporter_pin, (trialstate[0] == 4)); // active trial?
   digitalWrite(in_target_zone_reporter_pin, in_target_zone[1]); // in_target_zone?
-  digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2)); // in_reward_zone?
+  digitalWrite(in_reward_zone_reporter_pin, (reward_state==2)); // in_reward_zone?
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
   // 6) determine trial mode
   //----------------------------------------------------------------------------
-  trialstate[1] = trialstates.WhichState(trialstate[0], lever_position, (micros() - trial_timestamp));
+  if (training_stage>2)
+  {
+    trialstate[1] = trialstates.WhichState(trialstate[0], lever_position, (micros() - trial_timestamp));
+  }
+  else
+  {
+    trialstate[1] = 4*in_target_zone[1];
+    if (!in_target_zone[1])
+    {
+      reward_state = 1;
+      digitalWrite(reward_valve_pin, LOW);
+      digitalWrite(reward_reporter_pin, LOW);
+    }
+  }
   if (trialstate[1] != trialstate[0])
   {
     reward_state = (int)(trialstate[1] == 4); // trial was just activated, rewards can be triggered now
@@ -386,7 +400,7 @@ void loop()
         { } // wait for serial input or time-out
         if (myUSB.available() < 2)
         {
-          myUSB.writeInt16(-1);
+          myUSB.writeInt16(300);
         }
         else
         {
@@ -472,8 +486,10 @@ void loop()
           case 0: // disable override
             motor_override = false;
             break;
-          case 1: // move to specific location
+          case 1: // enable override
             motor_override = true;
+            break;
+          case 2: // move to specific location
             my_location = myUSB.readUint16(); // location to move to
             I2Cwriter(motor1_i2c_address, my_location+10); // home request
             break;
@@ -563,7 +579,7 @@ void UpdateAllParams()
   {
     target_params[i] = param_array[16 + i]; // high lim, target, low lim
   }
-  // params[19-21] = stage, transfer function locations, steepness
+  // params[19-21] = 'target_locations' 'skip_locations' 'offtarget_locations'
   target_on = (param_array[22] > 0);
   delay_feedback_by = ((int)target_on) * (param_array[22] - 1) / min_time_since_last_motor_call;
   // ensure that the dlay does not exceed buffer size
@@ -576,7 +592,8 @@ void UpdateAllParams()
     fake_target_params[i] = param_array[24 + i]; // high lim, target, low lim
   }
   decouple_reward_and_stimulus = (fake_target_params[1] > 0);
-
+  //param_array[27] = TF size;
+  training_stage = param_array[28];
   // update motor targets
   // LeverToStimulus.UpdateTargetParams(target_params, fake_target_params, trial_trigger_level[1]);
 
