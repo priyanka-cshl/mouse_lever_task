@@ -127,7 +127,8 @@ void FindHome(bool which_direction)
   }
   
   // move until it reaches home OR hits the other switch
-  while (!digitalRead(home_pin) && digitalRead(end_stop_pin_left + (int)which_direction))
+  //while (!digitalRead(home_pin) && digitalRead(end_stop_pin_left + (int)which_direction))
+  while (!digitalRead(home_pin) && digitalRead(end_stop_pin_left) && digitalRead(end_stop_pin_right))
   {
     digitalWrite(step_pin, HIGH);
     digitalWrite(step_pin, LOW);
@@ -135,7 +136,8 @@ void FindHome(bool which_direction)
   }
 
   // if the other switch was hit, give up
-  if (!digitalRead(end_stop_pin_left + (int)which_direction))
+  //if (!digitalRead(end_stop_pin_left + (int)which_direction))
+  if (!digitalRead(end_stop_pin_left) || !digitalRead(end_stop_pin_righft))
   {
     digitalWrite(enable_pin, false); // turn OFF motor
     busy = 0;
