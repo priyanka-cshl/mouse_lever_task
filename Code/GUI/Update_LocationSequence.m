@@ -25,7 +25,7 @@ while (sent == 0) && (sending_attempts <=8 )
         trash = h.Arduino.read(h.Arduino.Port.BytesAvailable/2,'uint16');
         clear trash;
     end
-    h.Arduino.write(31,'uint16'); % handler code for location sequence update
+    h.Arduino.write(20,'uint16'); % handler code for location sequence update
     h.Arduino.write(length(TF),'uint16'); % tell Arduino the size of the TF vector
     % if the write fails, Arduino writes back -1
     if (h.Arduino.Port.BytesAvailable)==0 % Arduino did not write back
