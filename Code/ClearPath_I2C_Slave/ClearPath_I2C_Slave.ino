@@ -137,7 +137,7 @@ void FindHome(bool which_direction)
 
   // if the other switch was hit, give up
   //if (!digitalRead(end_stop_pin_left + (int)which_direction))
-  if (!digitalRead(end_stop_pin_left) || !digitalRead(end_stop_pin_righft))
+  if (!digitalRead(end_stop_pin_left) || !digitalRead(end_stop_pin_right))
   {
     digitalWrite(enable_pin, false); // turn OFF motor
     busy = 0;

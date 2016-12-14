@@ -128,13 +128,13 @@ handles.camera_available = 0;
 if ~isempty(webcamlist)
     
     handles.mycam = webcam(1);
-    % mycam.Resolution = '320x240';
-    handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
+     mycam.Resolution = '320x240';
+    %handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
     handles.camera_available = 1;
-    handles.focus_mode.Value = 1;
-    handles.mycam.FocusMode = 'auto';
-    handles.focus_value.Data = handles.mycam.Focus;
-    handles.mycam.Zoom = 100;
+%     handles.focus_mode.Value = 1;
+%     handles.mycam.FocusMode = 'auto';
+%     handles.focus_value.Data = handles.mycam.Focus;
+%     handles.mycam.Zoom = 100;
 end
 % display webcam image, if available
 axes(handles.cameraAxes);
