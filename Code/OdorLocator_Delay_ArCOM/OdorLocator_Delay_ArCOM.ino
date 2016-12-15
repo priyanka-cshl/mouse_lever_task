@@ -203,7 +203,7 @@ void loop()
 
   // in reward zone or not : if in, odor location ranges between 17 and 48
   for (i = 0; i < 2; i++)
-  {
+  {                                         
     in_target_zone[i] = (lever_position == constrain(lever_position, target_params[2], target_params[0]));
   }
   // do the same for the fake target zone condition
@@ -311,7 +311,7 @@ void loop()
     digitalWrite(reward_reporter_pin, LOW);
     reward_state = 0;
     reward_override = 0;
-  }
+  }                                                                        
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
@@ -341,9 +341,11 @@ void loop()
   {
     trialstate[1] = trialstates.WhichState(trialstate[0], lever_position, (micros() - trial_timestamp));
   }
-  if (trialstate[1] != trialstate[0])
-  {
-    reward_state = (int)(trialstate[1] == 4); // trial was just activated, rewards can be triggered now
+
+  if (training_stage == 2) // no trial structure
+    if (trialstate[1] != trialstate[0]) 
+    {
+      reward_state = (int)(trialstate[1] == 4); // trial was just activated, rewards can be triggered now
     if (trialstate[1] > trialstate[0])
     {
       trial_timestamp = micros();
