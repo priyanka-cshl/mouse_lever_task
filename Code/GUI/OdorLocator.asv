@@ -66,7 +66,7 @@ if strcmp(handles.computername,'PRIYANKA-PC')
     % MFC settings
     handles.MFC_table.Data = [0 4 0.9 0.4]';
     % training stage 
-    handles.which_stage.Value = 3;
+    handles.which_stage.Value = 2;
     % TF - locations per zone
     handles.locations_per_zone.Data = [20 0 80]';
 end
@@ -80,9 +80,7 @@ handles.which_perturbation.Value = 1;
 handles.RewardStatus.Data = [0 0 0]';
 handles.current_trial_block.Data = [1 1 0]';
 handles.water_received.Data = 0;
-handles.StartTime.Visible = 'off';
-handles.StopTime.Visible = 'off';
-
+handles.StartTime 
 % set up NI acquisition and reset Arduino
 handles.sampling_rate_array = handles.DAQrates.Data;
 [handles.NI,handles.Arduino,handles.MFC] = configure_NI_and_Arduino_ArCOM(handles);
@@ -159,7 +157,7 @@ guidata(hObject, handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
 ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Update_Params
 % ramp up MFCs
-%MFC_ramp(handles); %outputSingleScan(handles.MFC,handles.MFC_table.Data');
+MFC_ramp(handles); %outputSingleScan(handles.MFC,handles.MFC_table.Data');
 % disable motor override
 handles.motor_override.Value = 0;
 motor_override_Callback(hObject, eventdata, handles);
@@ -184,10 +182,6 @@ if get(handles.startAcquisition,'value')
        
     set(handles.startAcquisition,'String','Running');
     set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
-    time = regexp(char(datetime('now')),' ','split');
-    handles.StartTime.String = char(time(2));
-    handles.StartTime.Visible = 'on';
-    handles.StopTime.Visible = 'off';
     
     % clear indicators
     handles.RewardStatus.Data = [0 0 0]';
@@ -282,10 +276,6 @@ else
    fclose('all');
    set(handles.startAcquisition,'String','Acquire');
    set(hObject,'BackgroundColor',[0.94 0.94 0.94]);
-   time = regexp(char(datetime('now')),' ','split');
-   handles.StopTime.String = char(time(2));
-   handles.StopTime.Visible = 'on';
-    
    % disable the motors
    set(handles.motor_status,'String','ON')
    motor_toggle_Callback(hObject, eventdata, handles);
@@ -343,13 +333,13 @@ if usrans == 1
     f = fopen('C:\temp_data_files\settings_log.bin');
     [~,params1] = Current_Settings(handles,0);
     [~,params2] = Current_Settings(handles,1);
-    b = fread(f,[1 + length(params1)+length(params2) 10000],'double'); % params vector + timestamp
+    b = fread(f,[1 + length(params1)+length(params2) 10800000],'double'); % params vector + timestamp
     fclose(f);
     
     % read TF log
     f = fopen('C:\temp_data_files\transferfunction_log.bin');
     %[~,params] = Current_Settings(handles,1);
-    c = fread(f,[(3+handles.TransferFunction.Data(1)) 10000],'double');
+    c = fread(f,[(3+handles.TransferFunction.Data(1)) 10800000],'double');
     fclose(f);
     
     % filename for writing data
@@ -387,7 +377,7 @@ if usrans == 1
     
     save(filename,'session_data*');
     save(server_file_name,'session_data*');
-    clear a b c session_data
+    clear a b session_data
     display(['saved to ' filename])
     display(['saved to ' server_file_name])
     guidata(hObject, handles);
@@ -414,7 +404,7 @@ else
     handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
     handles.RewardStatus.Data(3) = handles.RewardStatus.Data(3) + 1;
 end
-handles.water_received.Data = handles.water_received.Data + 10*(handles.RewardControls.Data(2)*0.015 - 0.042);
+handles.water_received.Data = handles.water_received.Data + 10*(h.RewardControls.Data(2)*0.015 - 0.042);
 handles.lastrewardtime = handles.timestamp.Data;
 guidata(hObject, handles);
 

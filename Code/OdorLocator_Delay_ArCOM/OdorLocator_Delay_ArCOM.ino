@@ -51,7 +51,7 @@ int stimulus_readpointer = 0;
 int delay_feedback_by = 0; // in timer periods (max = 1200)
 bool in_target_zone[2] = {false, false};
 bool timer_override = false; // to disable timer start after serial communication
-int training_stage = 2; 
+int training_stage = 2;
 
 ////variables : distractor related
 //bool distractor = false;
@@ -82,6 +82,7 @@ int reward_params[] = {100, 40}; // {hold for, duration} in ms
 long reward_on_timestamp = micros();
 int reward_override = 0;
 long reward_override_timestamp = micros();
+byte reward_call = 1;
 
 //variables : perturbation related - water delivery decoupled from stimulus
 bool decouple_reward_and_stimulus = false;
@@ -108,17 +109,17 @@ unsigned short param_array[30] = {0}; // ArCOM aray needs unsigned shorts
 void setup()
 {
   SerialUSB.begin(115200);
-  
+
   for (i = 0; i < 2; i++)
   {
-      pinMode(target_valves[i], OUTPUT);
-      digitalWrite(target_valves[i], LOW);
-//    pinMode(target_MFC[i], OUTPUT);
-//    digitalWrite(target_MFC[i], LOW);
-//    pinMode(distractor_MFC[i], OUTPUT);
-//    digitalWrite(distractor_MFC[i], LOW);
-//    pinMode(distractor_valves[i], OUTPUT);
-//    digitalWrite(distractor_valves[i], LOW);
+    pinMode(target_valves[i], OUTPUT);
+    digitalWrite(target_valves[i], LOW);
+    //    pinMode(target_MFC[i], OUTPUT);
+    //    digitalWrite(target_MFC[i], LOW);
+    //    pinMode(distractor_MFC[i], OUTPUT);
+    //    digitalWrite(distractor_MFC[i], LOW);
+    //    pinMode(distractor_valves[i], OUTPUT);
+    //    digitalWrite(distractor_valves[i], LOW);
   }
   pinMode(reward_valve_pin, OUTPUT);
   digitalWrite(reward_valve_pin, LOW);
@@ -154,9 +155,13 @@ void setup()
   Timer3.attachInterrupt(MoveMotor);
   Timer3.start(1000 * min_time_since_last_motor_call_default); // Calls every 10 msec
 
+  // Timer for reward delivery
+  Timer4.attachInterrupt(RewardOFF);
+  //Timer3.start(1000 * min_time_since_last_motor_call_default); // Calls every 10 msec
+  
   // analog read - lever position
   analogReadResolution(12);
-  
+
   // first call to set up params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
 }
@@ -180,11 +185,11 @@ void loop()
   if (close_loop_mode)
   {
     SPIWriter(dac_spi_pin, lever_position);
-//----------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
 
-//----------------------------------------------------------------------------
-// 2) convert lever position to stimuli given current target zone definition
-//----------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
+    // 2) convert lever position to stimuli given current target zone definition
+    //----------------------------------------------------------------------------
 
     // stimulus_state[1] = LeverToStimulus.WhichZone(1, lever_position);
     motor_location = map(lever_position, 0, 65534, 0, num_of_locations - 1);
@@ -193,7 +198,7 @@ void loop()
   else
   {
     // write motor command position to DAC
-    SPIWriter(dac_spi_pin, 600 * (motor_location-100));
+    SPIWriter(dac_spi_pin, 600 * (motor_location - 100));
     //----------------------------------------------------------------------------
     // 1,2) convert the current entry in TF array to lever position and send to DAC
     //----------------------------------------------------------------------------
@@ -203,7 +208,7 @@ void loop()
 
   // in reward zone or not : if in, odor location ranges between 17 and 48
   for (i = 0; i < 2; i++)
-  {                                         
+  {
     in_target_zone[i] = (lever_position == constrain(lever_position, target_params[2], target_params[0]));
   }
   // do the same for the fake target zone condition
@@ -239,10 +244,10 @@ void loop()
             reward_state = 2;
           }
         }
-//        else if (trialstate[0] == 4)
-//        {
-//          reward_state = 1; // exited reward zone
-//        }
+        else if ((trialstate[0] == 4) & (reward_state !=0))
+        {
+          reward_state = 1; // exited reward zone
+        }
       }
 
       // update stimulus state
@@ -264,7 +269,7 @@ void loop()
         if (reward_state == 1 & trialstate[0] == 4)
         { // just entered reward zone
           reward_zone_timestamp = micros();
-          reward_state = 2;
+          //reward_state = 2;
         }
       }
       else if (trialstate[0] == 4)
@@ -295,7 +300,6 @@ void loop()
       reward_on_timestamp = micros();
       reward_override = 0; //3
       digitalWrite(reward_valve_pin, HIGH);
-      //digitalWrite(39, HIGH);
     }
   }
   if (reward_state == 2 & (micros() - reward_zone_timestamp) > 1000 * reward_params[0])
@@ -304,14 +308,20 @@ void loop()
     reward_on_timestamp = micros();
     digitalWrite(reward_valve_pin, HIGH);
     digitalWrite(reward_reporter_pin, HIGH);
+    if (training_stage > 2)
+      {
+        Timer4.start(1000 * reward_params[1]); // call reward timer
+        reward_call = 1;
+      }
   }
-  if (reward_state == 3 & reward_override < 4 & (micros() - reward_on_timestamp) > 1000 * reward_params[1])
+  // CHECK
+  if (reward_state == 3 & training_stage <= 2 & reward_override < 4 & (micros() - reward_on_timestamp) > 1000 * reward_params[1])
   {
     digitalWrite(reward_valve_pin, LOW);
     digitalWrite(reward_reporter_pin, LOW);
     reward_state = 0;
     reward_override = 0;
-  }                                                                        
+  }
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
@@ -321,7 +331,7 @@ void loop()
   digitalWrite(target_valves[1], (target_valve_state[1] || (trialstate[0] == 4) || !close_loop_mode) ); // open air valve
   digitalWrite(trial_reporter_pin, (trialstate[0] == 4)); // active trial?
   digitalWrite(in_target_zone_reporter_pin, in_target_zone[1]); // in_target_zone?
-  digitalWrite(in_reward_zone_reporter_pin, (reward_state==2)); // in_reward_zone?
+  digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2)); // in_reward_zone?
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
@@ -329,7 +339,7 @@ void loop()
   //----------------------------------------------------------------------------
   if (training_stage == 2)
   {
-    trialstate[1] = 4*in_target_zone[1];
+    trialstate[1] = 4 * in_target_zone[1];
     if (!in_target_zone[1])
     {
       reward_state = 1;
@@ -342,10 +352,11 @@ void loop()
     trialstate[1] = trialstates.WhichState(trialstate[0], lever_position, (micros() - trial_timestamp));
   }
 
-  if (training_stage == 2) // no trial structure
-    if (trialstate[1] != trialstate[0]) 
-    {
-      reward_state = (int)(trialstate[1] == 4); // trial was just activated, rewards can be triggered now
+  if (trialstate[1] != trialstate[0])
+  {
+    reward_state = (int)(trialstate[1] == 4); // trial was just activated, rewards can be triggered now
+    digitalWrite(reward_valve_pin, LOW);
+    digitalWrite(reward_reporter_pin, LOW);
     if (trialstate[1] > trialstate[0])
     {
       trial_timestamp = micros();
@@ -493,7 +504,7 @@ void loop()
             break;
           case 2: // move to specific location
             my_location = myUSB.readUint16(); // location to move to
-            I2Cwriter(motor1_i2c_address, my_location+10); // home request
+            I2Cwriter(motor1_i2c_address, my_location + 10); // home request
             break;
         }
         break;
@@ -622,11 +633,26 @@ void MoveMotor()
   // write the new state
   stimulus_writepointer = (stimulus_writepointer + 1) % stimulus_array_size;
   stimulus_position_array[stimulus_writepointer] = stimulus_state[1];
-  
+
   if (!close_loop_mode)
   {
     // roll over the TF array pointer
     transfer_function_pointer = (transfer_function_pointer + 1) % num_of_locations;
+  }
+}
+
+void RewardOFF()
+{
+  if (reward_call == 1)
+  {
+    reward_call = reward_call + 1;
+  }
+  else
+  {
+    Timer4.stop();
+    digitalWrite(reward_valve_pin, LOW);
+    digitalWrite(reward_reporter_pin, LOW);
+    reward_state = 0;
   }
 }
 
