@@ -159,7 +159,7 @@ guidata(hObject, handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
 ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Update_Params
 % ramp up MFCs
-%MFC_ramp(handles); %outputSingleScan(handles.MFC,handles.MFC_table.Data');
+MFC_ramp(handles); %outputSingleScan(handles.MFC,handles.MFC_table.Data');
 % disable motor override
 handles.motor_override.Value = 0;
 motor_override_Callback(hObject, eventdata, handles);
