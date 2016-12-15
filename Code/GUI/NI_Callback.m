@@ -53,13 +53,13 @@ if TotalTime(end)>2
     % check if there were any rewards and update block accordingly
     if any(TotalData(end-num_new_samples+1:end,reward_channel))
         h.RewardStatus.Data(1:2) = h.RewardStatus.Data(1:2) + 1; % increment 'total rewards' and 'rewards in block'
+        h.water_received.Data = h.water_received.Data + 10*(h.RewardControls.Data(2)*0.015 - 0.042);
         %h.RewardStatus.Data(3) = round(TotalTime(end)); % update 'last reward'
         if h.RewardStatus.Data(2) == h.TransferFunction.Data(2) %#ok<*FNDSB> % rewards in block == max rewards allowed per block
                 h.RewardStatus.Data(2) = 0; % reset rewards in block
                 call_new_block = 1;
         end
     end
-    h.water_received.Data = h.RewardStatus.Data(3)*(0.28);
     
     % lick channel
     if h.NIchannels >= lick_channel

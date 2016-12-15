@@ -128,13 +128,13 @@ handles.camera_available = 0;
 if ~isempty(webcamlist)
     
     handles.mycam = webcam(1);
-     mycam.Resolution = '320x240';
-    %handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
+     %mycam.Resolution = '320x240';
+    handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
     handles.camera_available = 1;
-%     handles.focus_mode.Value = 1;
-%     handles.mycam.FocusMode = 'auto';
-%     handles.focus_value.Data = handles.mycam.Focus;
-%     handles.mycam.Zoom = 100;
+    handles.focus_mode.Value = 1;
+    handles.mycam.FocusMode = 'auto';
+    handles.focus_value.Data = handles.mycam.Focus;
+    handles.mycam.Zoom = 100;
 end
 % display webcam image, if available
 axes(handles.cameraAxes);
@@ -403,7 +403,7 @@ else
     handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
     handles.RewardStatus.Data(3) = handles.RewardStatus.Data(3) + 1;
 end
-handles.water_received.Data = handles.RewardStatus.Data(3)*(0.28);
+handles.water_received.Data = handles.water_received.Data + 10*(h.RewardControls.Data(2)*0.015 - 0.042);
 handles.lastrewardtime = handles.timestamp.Data;
 guidata(hObject, handles);
 
