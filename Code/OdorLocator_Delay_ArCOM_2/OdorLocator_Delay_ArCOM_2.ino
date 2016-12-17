@@ -13,7 +13,8 @@ ArCOM myUSB(SerialUSB); // Create an ArCOM wrapper for the SerialUSB interface
 // ----------------------------------------------------------------------------
 
 //pins
-int lever_in = A0; // A0-A8, changed briefly to get signal generator IN
+int lever_in = A0; // 
+int fake_lever_in = A8; // signal generator
 int trial_reporter_pin = 41;
 int in_target_zone_reporter_pin = 43;
 int in_reward_zone_reporter_pin = 45;
@@ -38,6 +39,7 @@ long lever_rescale_params[] = {25000, 13380}; // {gain, offset}
 int target_params[] = {30000, 25000, 20000}; // {upper bound, target, lower bound}
 int fake_target_params[] = {30000, 25000, 20000}; // {upper bound, target, lower bound}
 int close_loop_mode = 1; // motor moves in sync with lever/analog signal
+int fake_lever = 0;
 
 //variables : stimulus related
 int target_which = 1; // stim A is target
@@ -169,7 +171,14 @@ void loop()
   // 1) process the incoming lever position data - and resend to DAC
   //----------------------------------------------------------------------------
   // read lever position as analog val
-  lever_position = analogRead(lever_in);
+  if (fake_lever==0)
+  {
+    lever_position = analogRead(lever_in);
+  }
+  else
+  {
+    lever_position = analogRead(fake_lever_in);
+  }
   // remap from 12-bit to 16-bit
   lever_position = map(lever_position, 0, 4095, 0, 65534);
   // rescale linearly using lever dcoffset and gain to better utilize the
@@ -367,7 +376,7 @@ void loop()
         { } // wait for serial input or time-out
         if (myUSB.available() < 2)
         {
-          myUSB.writeInt16(300);
+          myUSB.writeInt16(-1);
         }
         else
         {
@@ -386,7 +395,7 @@ void loop()
           }
           myUSB.readUint16Array(transfer_function, num_of_locations);
           myUSB.writeUint16Array(transfer_function, num_of_locations);
-          myUSB.writeUint16(unsigned int (83));
+          myUSB.writeUint16(83);
           transfer_function_pointer = 0;
         }
         break;
@@ -526,7 +535,7 @@ void I2Cwriter (int wire_address, int DataToWrite)
 
 void UpdateAllParams()
 {
-  myUSB.writeUint16(unsigned int (89));
+  myUSB.writeUint16(89);
   // parse param array to variable names
   // param_array[0-1] : [sample_rate refresh_rate]
   lever_rescale_params[0] = param_array[2]; // gain, offset
@@ -564,6 +573,8 @@ void UpdateAllParams()
   // update motor targets
   // LeverToStimulus.UpdateTargetParams(target_params, fake_target_params, trial_trigger_level[1]);
 
+  fake_lever = param_array[29];
+  
   // update trial state params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
 }

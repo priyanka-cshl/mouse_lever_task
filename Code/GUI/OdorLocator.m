@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 12-Dec-2016 10:20:01
+% Last Modified by GUIDE v2.5 17-Dec-2016 11:39:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -50,6 +50,8 @@ function OdorLocator_OpeningFcn(hObject, eventdata, handles, varargin)
 % basic housekeeping
 handles.output = hObject;
 handles.mfilename = mfilename;
+handles.Zero_MFC.Value = 0;
+handles.startAcquisition.Enable = 'off';
 
 % rig specific settings
 handles.computername = textread('hostname.txt','%s'); %#ok<*DTXTRD>
@@ -158,11 +160,13 @@ handles.update_call = 0;
 guidata(hObject, handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
 ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Update_Params
-% ramp up MFCs
-MFC_ramp(handles); %outputSingleScan(handles.MFC,handles.MFC_table.Data');
+% Zero MFCs
+Zero_MFC_Callback(hObject, eventdata, handles);
 % disable motor override
 handles.motor_override.Value = 0;
 motor_override_Callback(hObject, eventdata, handles);
+handles.startAcquisition.Enable = 'on';
+
 
 % --- Outputs from this function are returned to the command line.
 function varargout = OdorLocator_OutputFcn(hObject, eventdata, handles)  %#ok<*INUSL>
@@ -444,6 +448,7 @@ handles.PertubationSettings.Data(5) = handles.PertubationSettings.Data(4) -...
     handles.PertubationSettings.Data(4)*handles.ZoneLimitSettings.Data(2);
 
 Update_Params(handles);
+pause(0.1);
 Update_TransferFunction_discrete(handles);
 % --------------------------------------------------------------------
 
@@ -490,6 +495,13 @@ handles.motor_home.Enable = 'on';
 
 function change_in_zones_Callback(hObject, eventdata, handles)
 hObject.ForegroundColor = 'r';
+
+% --- Executes on button press in fake_lever_signal.
+function fake_lever_signal_Callback(hObject, eventdata, handles)
+% hObject    handle to fake_lever_signal (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Update_Params(handles);
 
 % --- Executes when entered data in editable cell(s) in DAC_settings.
 function DAC_settings_CellEditCallback(hObject, eventdata, handles)
@@ -566,15 +578,6 @@ switch get(hObject,'Value')
 end
 Update_Params(handles);
 
-% --- Executes during object creation, after setting all properties.
-function which_stage_CreateFcn(hObject, eventdata, handles) %#ok<*INUSD>
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 % --- Executes on selection change in which_perturbation.
 function which_perturbation_Callback(hObject, eventdata, handles)
 % hObject    handle to which_perturbation (see GCBO)
@@ -583,13 +586,6 @@ function which_perturbation_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns which_perturbation contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from which_perturbation
-
-
-% --- Executes during object creation, after setting all properties.
-function which_perturbation_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 % --- Executes on button press in motor_override.
 function motor_override_Callback(hObject, eventdata, handles)
@@ -678,16 +674,25 @@ end
 
 % --- Executes when entered data in editable cell(s) in MFC_table.
 function MFC_table_CellEditCallback(hObject, eventdata, handles)
-outputSingleScan(handles.MFC,handles.MFC_table.Data');
+%outputSingleScan(handles.MFC,handles.MFC_table.Data');
 
 % --- Executes on button press in Zero_MFC.
 function Zero_MFC_Callback(hObject, eventdata, handles)
 % hObject    handle to Zero_MFC (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.MFC_table.Data = 0*handles.MFC_table.Data;
-outputSingleScan(handles.MFC,handles.MFC_table.Data');
-% Hint: get(hObject,'Value') returns toggle state of Zero_MFC
+if handles.Zero_MFC.Value
+    if strcmp(handles.Zero_MFC.String,'MFCs OFF')
+        % ramp up MFCs
+        handles.Zero_MFC.String = '.......';
+        MFC_ramp(handles); %outputSingleScan(handles.MFC,handles.MFC_table.Data');
+        handles.Zero_MFC.String = 'MFCs ON';
+    end
+else
+    %handles.MFC_table.Data = 0*handles.MFC_table.Data;
+    outputSingleScan(handles.MFC,0*handles.MFC_table.Data');
+    handles.Zero_MFC.String = 'MFCs OFF';
+end
 
 % --- Executes on button press in valve_odor_A.
 function valve_odor_A_Callback(hObject, eventdata, handles)
@@ -755,21 +760,9 @@ else
     handles.focus_value.Enable = 'on';
 end
 
-% --- Executes during object creation, after setting all properties.
-function focus_mode_CreateFcn(hObject, eventdata, handles)
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 % --- Executes on slider movement.
 function Adjust_Zoom_Callback(hObject, eventdata, handles)
 handles.mycam.Zoom = hObject.Value;
-
-% --- Executes during object creation, after setting all properties.
-function Adjust_Zoom_CreateFcn(hObject, eventdata, handles)
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
-end
 
 % --- Executes when entered data in editable cell(s) in focus_value.
 function focus_value_CellEditCallback(hObject, eventdata, handles)

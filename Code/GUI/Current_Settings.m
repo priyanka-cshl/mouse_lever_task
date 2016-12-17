@@ -83,5 +83,8 @@ switch caller
         
         legend(15) = {'Stage'};
         param(15) = h.which_stage.Value;
+        
+        legend(16) = {'signal_generator'};
+        param(16) = h.fake_lever_signal.Value;
 end
 end
