@@ -8,17 +8,18 @@ stop(NI_session);
 
 % configure analog channels (4)
 if  strcmp(handles.computername,'PRIYANKA-PC')
-    DAQchannels = addAnalogInputChannel(NI_session,'Dev2',{'ai0','ai1','ai2','ai11'},'Voltage');
+    DAQchannels = addAnalogInputChannel(NI_session,'Dev2',{'ai0','ai1','ai2','ai3','ai11','ai12'},'Voltage');
 end
 % configure all analog channels as single ended and voltage range [-5 to 5]
 for i = 1:3
     DAQchannels(i).TerminalConfig = 'SingleEnded';
     DAQchannels(i).Range = [-5 5];
 end
-% configure respiration channel as -10 to 10 V
-    DAQchannels(4).TerminalConfig = 'SingleEnded';
-    DAQchannels(4).Range = [-10 10];
-
+% configure respiration channels as -10 to 10 V
+for i = 4:5
+    DAQchannels(i).TerminalConfig = 'SingleEnded';
+    DAQchannels(i).Range = [-10 10];
+end
 % configure digital channels
 for i = handles.NIchannels-4:handles.NIchannels
     DAQchannels(i)= addDigitalChannel(NI_session,'Dev2',['Port0/Line',num2str(i-5)],'InputOnly');

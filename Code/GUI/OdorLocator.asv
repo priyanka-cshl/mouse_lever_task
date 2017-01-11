@@ -58,7 +58,7 @@ handles.computername = textread('hostname.txt','%s'); %#ok<*DTXTRD>
 if strcmp(handles.computername,'PRIYANKA-PC')
     handles.file_names.Data(2) = {'C:\Data\Behavior'};
     handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\Behavior'};
-    handles.NIchannels = 11;
+    handles.NIchannels = 10;
     handles.DAC_settings.Data = [1 0]';
     % motor location settings
     handles.motor_params = 4;
@@ -97,9 +97,9 @@ handles.trial_on.EdgeColor = 'none';
 handles.lever_DAC_plot = plot(NaN, NaN,'k','linewidth',1); %lever rescaled
 handles.lever_raw_plot = plot(NaN, NaN, 'color',Plot_Colors('b')); %lever raw
 handles.stimulus_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor location
-handles.distractor_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % distractor location
+%handles.distractor_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % distractor location
 handles.respiration_1_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % respiration sensor 1
-handles.respiration_2_plot = plot(NaN, NaN, 'color',Plot_Colors('p')); % respiration sensor 2
+handles.respiration_2_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % respiration sensor 2
 handles.in_target_zone_plot = fill(NaN,NaN,Plot_Colors('r'));
 handles.in_target_zone_plot.EdgeColor = 'none';
 handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
@@ -214,8 +214,6 @@ if get(handles.startAcquisition,'value')
     set(handles.reward_plot,'XData',NaN,'YData',NaN);
     set(handles.stimulus_plot,'XData',NaN,'YData',NaN);
     set(handles.distractor_plot,'XData',NaN,'YData',NaN);
-    set(handles.respiration_1_plot,'XData',NaN,'YData',NaN);
-    set(handles.respiration_2_plot,'XData',NaN,'YData',NaN);
     set(handles.lick_plot,'XData',NaN,'YData',NaN);
     
     % checks whether last file was saved and enable quiting if not

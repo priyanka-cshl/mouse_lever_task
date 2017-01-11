@@ -15,9 +15,9 @@ h = varargin{1}; % handles
 h.timestamp.Data = event.TimeStamps(end);
 
 % channel map %
-trial_channel = 5;
-reward_channel = 8;
-lick_channel = 9;
+trial_channel = 7;
+reward_channel = trial_channel + 3; %10;
+lick_channel = trial_channel + 4; %11;
 
 num_new_samples = length(event.TimeStamps); 
 lastsample = samplenum + num_new_samples - 1;
@@ -88,16 +88,23 @@ set(h.lever_DAC_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indice
 set(h.lever_raw_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,2));
 set(h.stimulus_plot,'XData',TotalTime(indices_to_plot),'YData',...
     -1*h.Ai_scaling.Data(1,1)*(TotalData(indices_to_plot,3) - h.Ai_scaling.Data(2,1)) );
-set(h.distractor_plot,'XData',TotalTime(indices_to_plot),'YData',...
-     -1*h.Ai_scaling.Data(1,2)*(TotalData(indices_to_plot,4) - h.Ai_scaling.Data(2,2)) );
+if h.is_distractor_on.Value
+    set(h.distractor_plot,'XData',TotalTime(indices_to_plot),'YData',...
+         -1*h.Ai_scaling.Data(1,2)*(TotalData(indices_to_plot,4) - h.Ai_scaling.Data(2,2)) );
+end
+% respiration sensors
+set(h.respiration_1_plot,'XData',TotalTime(indices_to_plot),'YData',...
+    -1*h.Ai_scaling.Data(1,3)*TotalData(indices_to_plot,5) + h.Ai_scaling.Data(2,3) );
+set(h.respiration_2_plot,'XData',TotalTime(indices_to_plot),'YData',...
+    -1*h.Ai_scaling.Data(1,4)*TotalData(indices_to_plot,6) + h.Ai_scaling.Data(2,4) );
 
 % trial_on
 [h.trial_on] = PlotToPatch(h.trial_on, TotalData(:,trial_channel), TotalTime, [0 5]);
 
 % in_target_zone, in_reward_zone
-[h.in_target_zone_plot] = PlotToPatch(h.in_target_zone_plot, TotalData(:,6), TotalTime, [-1 0]);
+[h.in_target_zone_plot] = PlotToPatch(h.in_target_zone_plot, TotalData(:,trial_channel+1), TotalTime, [-1 0]);
 %set(h.in_target_zone_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,6)-1);
-[h.in_reward_zone_plot] = PlotToPatch(h.in_reward_zone_plot, TotalData(:,7), TotalTime, [-1 -0.2]);
+[h.in_reward_zone_plot] = PlotToPatch(h.in_reward_zone_plot, TotalData(:,trial_channel+2), TotalTime, [-1 -0.2]);
 %set(h.in_reward_zone_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,7)-1.2);
 
 % rewards
