@@ -7,7 +7,7 @@ end
 x = '.';
 for i = 1:10
     outputSingleScan(handles.MFC,MFC_values(i,:));
-    pause(5);
+    pause(0.1);
     x = [x,'.'];
     disp(x)
 end

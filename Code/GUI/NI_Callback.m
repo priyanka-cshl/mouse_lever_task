@@ -19,7 +19,7 @@ trial_channel = 7;
 reward_channel = trial_channel + 3; %10;
 lick_channel = trial_channel + 4; %11;
 
-num_new_samples = length(event.TimeStamps); 
+num_new_samples = length(event.TimeStamps);
 lastsample = samplenum + num_new_samples - 1;
 
 % flags for event calls
@@ -155,6 +155,7 @@ end
 
 %% write data to disk
 data = [TotalTime(end-num_new_samples+1:end) TotalData(end-num_new_samples+1:end,:)]';
+data(trial_channel+1,:) = h.current_trial_block.Data(4)*data(trial_channel+1,:);
 fwrite(fid1,data,'double');
 
 

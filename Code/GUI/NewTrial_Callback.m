@@ -4,6 +4,15 @@ function NewTrial_Callback(h)
 
 callUpdate = 0; % whether to update Arduino or not?
 
+%% update odor
+% shuffle odor list
+odor_list = randperm(length(h.Odor_list.Value));
+h.current_trial_block.Data(4) = h.Odor_list.Value(odor_list(1));
+odor_states = [0 0 0];
+odor_states(odor_list(1)) = 1;
+% set all odor valves
+outputSingleScan(h.Odors,odor_states);
+
 %% feedback perturbation settings
 if (h.which_perturbation.Value)
     % bsed on the user set probability,

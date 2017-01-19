@@ -4,12 +4,12 @@ function NewBlock_Callback(h)
 
 display('New Block');
 
-%% shuffle arrays of targets on first run
+%% shuffle arrays of targets after all targets have been uused
 block_num = h.current_trial_block.Data(1);
-if block_num == 0
+block_num = block_num + 1;
+if mod(block_num,length(h.target_level_array.Data)) == 0
     h.target_level_array.Data = h.target_level_array.Data(randperm(length(h.target_level_array.Data)) );
 end
-block_num = block_num + 1;
 h.current_trial_block.Data(1) = block_num; % update 'block number'
 h.RewardStatus.Data(2) = 0; % reset 'rewards given in block'
 

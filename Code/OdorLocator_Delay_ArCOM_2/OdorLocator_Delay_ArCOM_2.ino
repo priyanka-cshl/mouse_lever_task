@@ -203,7 +203,7 @@ void loop()
   else
   {
     // write motor command position to DAC
-    SPIWriter(dac_spi_pin, 600 * (motor_location - 100));
+    SPIWriter(dac_spi_pin, 300 * (motor_location));
     //----------------------------------------------------------------------------
     // 1,2) convert the current entry in TF array to lever position and send to DAC
     //----------------------------------------------------------------------------

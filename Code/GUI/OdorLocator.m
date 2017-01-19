@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 17-Dec-2016 11:39:08
+% Last Modified by GUIDE v2.5 16-Jan-2017 14:16:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -66,11 +66,17 @@ if strcmp(handles.computername,'PRIYANKA-PC')
     % disable transfer function calibrator
     handles.calibrate_transfer_function.Enable = 'off';
     % MFC settings
-    handles.MFC_table.Data = [0 4 0.9 0.4]';
+    handles.MFC_table.Data = [0 0 1.55 0.4]';
     % training stage 
     handles.which_stage.Value = 3;
     % TF - locations per zone
-    handles.locations_per_zone.Data = [20 0 80]';
+    handles.locations_per_zone.Data = [50 0 50]'; % [20 0 80]'
+    % Trial settings
+    handles.TrialSettings.Data = [4.5 0.2 10 20 600 3000]';
+    % zone width
+    handles.ZoneLimitSettings.Data = [0.4 0.1]'; 
+    % reward settings
+    handles.RewardControls.Data = [150 40]';
 end
 
 % defaults
@@ -80,14 +86,14 @@ handles.which_perturbation.Value = 1;
 
 % clear indicators
 handles.RewardStatus.Data = [0 0 0]';
-handles.current_trial_block.Data = [1 1 0]';
+handles.current_trial_block.Data = [1 1 0 0]';
 handles.water_received.Data = 0;
 handles.StartTime.Visible = 'off';
 handles.StopTime.Visible = 'off';
 
 % set up NI acquisition and reset Arduino
 handles.sampling_rate_array = handles.DAQrates.Data;
-[handles.NI,handles.Arduino,handles.MFC] = configure_NI_and_Arduino_ArCOM(handles);
+[handles.NI,handles.Arduino,handles.MFC,handles.Odors] = configure_NI_and_Arduino_ArCOM(handles);
 
 % initiate plots
 axes(handles.axes1); % main plot
@@ -164,6 +170,8 @@ calibrate_DAC_Callback(hObject,eventdata,handles);
 ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Update_Params
 % Zero MFCs
 Zero_MFC_Callback(hObject, eventdata, handles);
+% set all odor valves to default state
+outputSingleScan(handles.Odors,[0, 0, 0]);
 % disable motor override
 handles.motor_override.Value = 0;
 motor_override_Callback(hObject, eventdata, handles);
@@ -198,7 +206,7 @@ if get(handles.startAcquisition,'value')
     % clear indicators
     handles.RewardStatus.Data = [0 0 0]';
     handles.water_received.Data = 0;
-    handles.current_trial_block.Data = [1 1 0]';
+    handles.current_trial_block.Data = [1 1 0 0]';
     handles.update_call = 1;
     handles.timestamp.Data = 0;
     handles.lastrewardtime = 0;
@@ -259,6 +267,11 @@ if get(handles.startAcquisition,'value')
         set(handles.motor_status,'String','OFF')
         motor_toggle_Callback(hObject, eventdata, handles);
         
+        % turn ON MFCs
+        handles.Zero_MFC.Value = 1;
+        handles.Zero_MFC.String = 'MFCs OFF';
+        Zero_MFC_Callback(hObject, eventdata, handles);
+        
         if handles.which_stage.Value>1
             % start the Arduino timer
             handles.Arduino.write(11, 'uint16'); %fwrite(handles.Arduino, char(11));
@@ -297,6 +310,11 @@ else
    % disable the motors
    set(handles.motor_status,'String','ON')
    motor_toggle_Callback(hObject, eventdata, handles);
+   
+   % turn OFF MFCs
+   handles.Zero_MFC.Value = 0;
+   %handles.Zero_MFC.String = 'MFCs OFF';
+   Zero_MFC_Callback(hObject, eventdata, handles);
    
    % stop the Arduino timer
    handles.Arduino.write(12, 'uint16'); %fwrite(handles.Arduino, char(12));
@@ -691,11 +709,14 @@ if handles.Zero_MFC.Value
         handles.Zero_MFC.String = '.......';
         MFC_ramp(handles); %outputSingleScan(handles.MFC,handles.MFC_table.Data');
         handles.Zero_MFC.String = 'MFCs ON';
+        odor_vial_Callback(hObject, eventdata, handles);
     end
 else
     %handles.MFC_table.Data = 0*handles.MFC_table.Data;
     outputSingleScan(handles.MFC,0*handles.MFC_table.Data');
     handles.Zero_MFC.String = 'MFCs OFF';
+    % also turn OFF valves
+    outputSingleScan(handles.Odors,[0, 0, 0]);
 end
 
 % --- Executes on button press in valve_odor_A.
@@ -718,7 +739,7 @@ function valve_odor_B_Callback(hObject, eventdata, handles)
 % hObject    handle to valve_odor_B (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Arduino.write(46 + handles.valve_odor_A.Value, 'uint16'); %fwrite(handles.Arduino, char(46 + handles.valve_odor_B.Value));
+handles.Arduino.write(46 + handles.valve_odor_B.Value, 'uint16'); %fwrite(handles.Arduino, char(46 + handles.valve_odor_B.Value));
 if handles.valve_odor_B.Value
     set(handles.valve_odor_B,'String','ON')
     set(handles.valve_odor_B,'BackgroundColor',[0.5 0.94 0.94]);
@@ -726,6 +747,26 @@ else
     set(handles.valve_odor_B,'String','OFF')
     set(handles.valve_odor_B,'BackgroundColor',[0.94 0.94 0.94]);
 end
+
+% --- Executes on button press in odor_vial.
+function odor_vial_Callback(hObject, eventdata, handles)
+% hObject    handle to odor_vial (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if handles.odor_vial.Value && length(handles.Odor_list.Value)==1
+    MyVial = handles.Odor_list.Value;
+    set(handles.odor_vial,'String',['Vial',num2str(MyVial),' ON'])
+    set(handles.odor_vial,'BackgroundColor',[0.5 0.94 0.94]);
+    odor_states = [0 0 0];
+    odor_states(MyVial) = 1;
+    outputSingleScan(handles.Odors,odor_states);
+else
+    set(handles.odor_vial,'String','Vial1 ON')
+    set(handles.odor_vial,'BackgroundColor',[0.94 0.94 0.94]);
+    outputSingleScan(handles.Odors,[1, 0, 0]);
+end
+
+% Hint: get(hObject,'Value') returns toggle state of odor_vial
 
 % --- Executes on button press in startStopCamera.
 function startStopCamera_Callback(hObject, eventdata, handles)
@@ -783,6 +824,7 @@ handles.mycam.Focus = hObject.Data;
 function close_gui_Callback(hObject, eventdata, handles)
 % close valves and MFCs
 outputSingleScan(handles.MFC,0*handles.MFC_table.Data');
+outputSingleScan(handles.Odors,[0, 0, 0]);
 handles.Arduino.write(44, 'uint16');
 delete(handles.figure1);
 handles.Arduino.write(12, 'uint16'); %fwrite(handles.Arduino, char(11));
@@ -806,3 +848,4 @@ end
 
 % --- Executes during object deletion, before destroying properties.
 function figure1_DeleteFcn(hObject, eventdata, handles)
+

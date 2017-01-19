@@ -1,4 +1,4 @@
-function [NI_session,Arduino_Serial,MFC_session]=configure_NI_and_Arduino_ArCOM(handles)
+function [NI_session,Arduino_Serial,MFC_session,Odor_session]=configure_NI_and_Arduino_ArCOM(handles)
 
 %% ------------------------------------------------------------------------------------------------------------
 % configure NI DAQ
@@ -48,6 +48,17 @@ addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 0, 'Voltage');
 addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 2, 'Voltage');
 addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 4, 'Voltage');
 addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 6, 'Voltage');
+%% ------------------------------------------------------------------------------------------------------------
+
+%% ------------------------------------------------------------------------------------------------------------
+% configure NI DAQ - digital output (valves)
+Odor_session = daq.createSession('ni');
+release(Odor_session);
+stop(Odor_session);
+addDigitalChannel(Odor_session,'Dev2','Port0/Line5','OutputOnly');
+addDigitalChannel(Odor_session,'Dev2','Port0/Line6','OutputOnly');
+addDigitalChannel(Odor_session,'Dev2','Port0/Line7','OutputOnly');
+%addDigitalChannel(Odor_session,'Dev2','Port1/Line0','OutputOnly');
 %% ------------------------------------------------------------------------------------------------------------
 
 %% ------------------------------------------------------------------------------------------------------------
