@@ -192,7 +192,8 @@ varargout{1} = handles.output;
 function startAcquisition_Callback(hObject, eventdata, handles)
 global TotalData;
 global TotalTime;
-global samplenum;   
+global samplenum;  
+global TargetZoneHistory;
 
 if get(handles.startAcquisition,'value')
        

@@ -9,6 +9,7 @@ global TotalData; % matrix containing data from the current callback (refreshed 
 global TotalTime; % matrix containing timestamps from the current callback
 global mycam; % for webcam
 persistent last_data_value; % event.Data(end,:) from last call
+global TargetZoneHistory;
 
 fid1 = varargin{3}; % C:\temp_data_files\log.bin
 h = varargin{1}; % handles
@@ -37,12 +38,18 @@ h.MFC_setpoints_IN.Data = round(mean(event.Data(:,h.NIchannels+1:h.NIchannels+4)
 for i = 1:reward_channel-1
     TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); event.Data(:,i) ];
 end
-             
+    % populate target zone history with new info
+    TargetZoneHistory(:,1) =  [ TargetZoneHistory(num_new_samples+1:end,1); TargetDefinition.Data(3)+0*event.Data(:,1) ];
+    TargetZoneHistory(:,2) =  [ TargetZoneHistory(num_new_samples+1:end,2); TargetDefinition.Data(1)+0*event.Data(:,1) ];
+    
 if TotalTime(end)>2 
 
     % register if the trial was turned ON or OFF
     if any(diff(TotalData(end-num_new_samples:end,trial_channel)) == -1)
         trial_just_ended = 1;
+        if h.TransferFunction.Data(2) == 1
+            call_new_block = 1; % to update target zone irrespective of whether the trial was success or fail
+        end
     elseif any(diff(TotalData(end-num_new_samples:end,trial_channel)) == 1) % trial just turned ON
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1; % increment 'trial number'
     end
