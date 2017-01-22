@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 16-Jan-2017 14:16:58
+% Last Modified by GUIDE v2.5 21-Jan-2017 18:36:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -85,9 +85,8 @@ handles.DAQrates.Data = [500 20]';
 handles.which_perturbation.Value = 1;
 
 % clear indicators
-handles.RewardStatus.Data = [0 0 0]';
+handles.RewardStatus.Data = [0 0 0 0]';
 handles.current_trial_block.Data = [1 1 0 0]';
-handles.water_received.Data = 0;
 handles.StartTime.Visible = 'off';
 handles.StopTime.Visible = 'off';
 
@@ -162,12 +161,15 @@ handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
 handles.traces = zeros(5,5);
 handles.timestamps = ones(5,1)*-1;
 handles.samplenum = 1;
+handles.targetlevel = zeros(2,2);
 handles.update_call = 0;
 
 % Update handles structure
 guidata(hObject, handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
-ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Update_Params
+Update_Params(handles);
+handles = Update_TransferFunctions(handles);
+ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles);
 % Zero MFCs
 Zero_MFC_Callback(hObject, eventdata, handles);
 % set all odor valves to default state
@@ -176,6 +178,7 @@ outputSingleScan(handles.Odors,[0, 0, 0]);
 handles.motor_override.Value = 0;
 motor_override_Callback(hObject, eventdata, handles);
 handles.startAcquisition.Enable = 'on';
+guidata(hObject,handles);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -193,7 +196,7 @@ function startAcquisition_Callback(hObject, eventdata, handles)
 global TotalData;
 global TotalTime;
 global samplenum;  
-global TargetZoneHistory;
+global TargetLevel; 
 
 if get(handles.startAcquisition,'value')
        
@@ -205,8 +208,7 @@ if get(handles.startAcquisition,'value')
     handles.StopTime.Visible = 'off';
     
     % clear indicators
-    handles.RewardStatus.Data = [0 0 0]';
-    handles.water_received.Data = 0;
+    handles.RewardStatus.Data = [0 0 0 0]';
     handles.current_trial_block.Data = [1 1 0 0]';
     handles.update_call = 1;
     handles.timestamp.Data = 0;
@@ -255,10 +257,12 @@ if get(handles.startAcquisition,'value')
         handles.traces = zeros(6000,handles.NIchannels); %???500*60*60*4
         handles.timestamps = -ones(6000,1);
         handles.samplenum = 1;
+        handles.targetlevel = zeros(6000,2);
         handles.write = 1;
         TotalData = handles.traces;
         TotalTime = handles.timestamps;
         samplenum = handles.samplenum;
+        TargetLevel = handles.targetlevel;
         
         % disable motor override
         handles.motor_override.Value = 0;
@@ -341,6 +345,7 @@ end
 handles.traces = TotalData;
 handles.timestamps = TotalTime;
 handles.samplenum = samplenum;
+handles.targetlevel = TargetLevel;
 guidata(hObject,handles);
 
 % --- Executes when entered data in editable cell(s) in Plot_YLim.
@@ -441,7 +446,7 @@ else
     handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
     handles.RewardStatus.Data(3) = handles.RewardStatus.Data(3) + 1;
 end
-handles.water_received.Data = handles.water_received.Data + 10*(handles.RewardControls.Data(2)*0.015 - 0.042);
+handles.RewardStatus.Data(4) = handles.RewardStatus.Data(4) + 10*(handles.RewardControls.Data(2)*0.015 - 0.042);
 handles.lastrewardtime = handles.timestamp.Data;
 guidata(hObject, handles);
 
@@ -469,9 +474,6 @@ handles.PertubationSettings.Data(3) = handles.PertubationSettings.Data(4) +...
 handles.PertubationSettings.Data(5) = handles.PertubationSettings.Data(4) -...
     handles.ZoneLimitSettings.Data(1)-...
     handles.PertubationSettings.Data(4)*handles.ZoneLimitSettings.Data(2);
-
-Update_Params(handles);
-pause(0.1);
 Update_TransferFunction_discrete(handles);
 % --------------------------------------------------------------------
 
@@ -484,7 +486,8 @@ ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles);
 % --- Executes on button press in min_width_up.
 function min_width_up_Callback(hObject, eventdata, handles)
 handles.ZoneLimitSettings.Data(1) = handles.ZoneLimitSettings.Data(1) + 0.05;
-ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles);
+handles = Update_TransferFunctions(handles);
+guidata(hObject,handles);
 
 
 % --- Executes on button press in min_width_down.
@@ -494,7 +497,8 @@ if ((handles.ZoneLimitSettings.Data(1) - 0.05) >= 0)
 else
     handles.ZoneLimitSettings.Data(1) = 0;
 end
-ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles);
+handles = Update_TransferFunctions(handles);
+guidata(hObject,handles);
 
 % --- Executes on button press in update_zones.
 function update_zones_Callback(hObject, eventdata, handles)
@@ -564,6 +568,19 @@ if get(hObject,'Value')
 else
     set(hObject,'BackgroundColor',[0.94 0.94 0.94]);
     set(handles.lever_raw_plot,'LineStyle','-');
+end
+guidata(hObject, handles);
+
+% --- Executes on button press in hide_resp.
+function hide_resp_Callback(hObject, eventdata, handles)
+if get(hObject,'Value')
+    set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
+    set(handles.respiration_1_plot,'LineStyle','none');
+    set(handles.respiration_2_plot,'LineStyle','none');
+else
+    set(hObject,'BackgroundColor',[0.94 0.94 0.94]);
+    set(handles.respiration_1_plot,'LineStyle','-');
+    set(handles.respiration_2_plot,'LineStyle','-');
 end
 guidata(hObject, handles);
 
@@ -849,4 +866,3 @@ end
 
 % --- Executes during object deletion, before destroying properties.
 function figure1_DeleteFcn(hObject, eventdata, handles)
-
