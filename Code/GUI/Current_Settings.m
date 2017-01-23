@@ -16,7 +16,7 @@ switch caller
         param(5:6) = h.RewardControls.Data;
         
         legend(7) = {'MaxPerBlock'};
-        param(7) = h.TransferFunction.Data(2);
+        param(7) = h.ZoneLimitSettings.Data(3);
         
         legend(8) = {'PerturbationProbability'};
         param(8) = h.PertubationSettings.Data(1);

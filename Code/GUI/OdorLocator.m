@@ -74,7 +74,7 @@ if strcmp(handles.computername,'PRIYANKA-PC')
     % Trial settings
     handles.TrialSettings.Data = [4.5 0.2 10 20 600 3000]';
     % zone width
-    handles.ZoneLimitSettings.Data = [0.4 0.1]'; 
+    handles.ZoneLimitSettings.Data = [0.4 0.1 1]'; 
     % reward settings
     handles.RewardControls.Data = [150 40]';
 end
@@ -446,7 +446,7 @@ else
     handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
     handles.RewardStatus.Data(3) = handles.RewardStatus.Data(3) + 1;
 end
-handles.RewardStatus.Data(4) = handles.RewardStatus.Data(4) + 10*(handles.RewardControls.Data(2)*0.015 - 0.042);
+handles.RewardStatus.Data(4) = round(handles.RewardStatus.Data(4) + 10*(handles.RewardControls.Data(2)*0.015 - 0.042),2);
 handles.lastrewardtime = handles.timestamp.Data;
 guidata(hObject, handles);
 

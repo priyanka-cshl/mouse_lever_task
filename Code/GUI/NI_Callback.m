@@ -45,7 +45,7 @@ if TotalTime(end)>2
     % register if the trial was turned ON or OFF
     if any(diff(TotalData(end-num_new_samples:end,trial_channel)) == -1)
         trial_just_ended = 1;
-        if  mod(h.current_trial_block.Data(2),h.TransferFunction.Data(2)) == 0 && h.randomize_targets.Value == 1
+        if  mod(h.current_trial_block.Data(2),h.ZoneLimitSettings.Data(3)) == 0 && h.randomize_targets.Value == 1
             call_new_block = 1; % to update target zone irrespective of whether the trial was success or fail
         end
     elseif any(diff(TotalData(end-num_new_samples:end,trial_channel)) == 1) % trial just turned ON
@@ -58,9 +58,9 @@ if TotalTime(end)>2
     % check if there were any rewards and update block accordingly
     if any(TotalData(end-num_new_samples+1:end,reward_channel))
         h.RewardStatus.Data(1:2) = h.RewardStatus.Data(1:2) + 1; % increment 'total rewards' and 'rewards in block'
-        h.RewardStatus.Data(4) = h.RewardStatus.Data(4) + 10*(h.RewardControls.Data(2)*0.015 - 0.042);
+        h.RewardStatus.Data(4) = round(h.RewardStatus.Data(4) + 10*(h.RewardControls.Data(2)*0.015 - 0.042),2);
         %h.RewardStatus.Data(3) = round(TotalTime(end)); % update 'last reward'
-        if h.RewardStatus.Data(2) == h.TransferFunction.Data(2) %#ok<*FNDSB> % rewards in block == max rewards allowed per block
+        if h.RewardStatus.Data(2) == h.ZoneLimitSettings.Data(3) %#ok<*FNDSB> % rewards in block == max rewards allowed per block
                 h.RewardStatus.Data(2) = 0; % reset rewards in block
                 call_new_block = 1;
         end
@@ -92,16 +92,16 @@ indices_to_plot = find( TotalTime>TotalTime(end)-xwin & TotalTime>=0 );
 set(h.lever_DAC_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,1));
 set(h.lever_raw_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,2));
 set(h.stimulus_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    -1*h.Ai_scaling.Data(1,1)*(TotalData(indices_to_plot,3) - h.Ai_scaling.Data(2,1)) );
+    -1*h.RE_scaling.Data(1,1)*(TotalData(indices_to_plot,3) - h.RE_scaling.Data(2,1)) );
 if h.is_distractor_on.Value
     set(h.distractor_plot,'XData',TotalTime(indices_to_plot),'YData',...
-         -1*h.Ai_scaling.Data(1,2)*(TotalData(indices_to_plot,4) - h.Ai_scaling.Data(2,2)) );
+         -1*h.RE_scaling.Data(1,2)*(TotalData(indices_to_plot,4) - h.RE_scaling.Data(2,2)) );
 end
 % respiration sensors
 set(h.respiration_1_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    -1*h.Ai_scaling.Data(1,3)*TotalData(indices_to_plot,5) + h.Ai_scaling.Data(2,3) );
+    -1*h.RS_scaling.Data(1,1)*TotalData(indices_to_plot,5) + h.RS_scaling.Data(2,1) );
 set(h.respiration_2_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    -1*h.Ai_scaling.Data(1,4)*TotalData(indices_to_plot,6) + h.Ai_scaling.Data(2,4) );
+    -1*h.RS_scaling.Data(1,2)*TotalData(indices_to_plot,6) + h.RS_scaling.Data(2,2) );
 
 % trial_on
 [h.trial_on] = PlotToPatch(h.trial_on, TotalData(:,trial_channel), TotalTime, [0 5]);
