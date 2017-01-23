@@ -111,7 +111,7 @@ handles.in_target_zone_plot.EdgeColor = 'none';
 handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
 handles.in_reward_zone_plot.EdgeColor = 'none';
 %handles.reward_plot = plot(NaN, NaN,'o','MarkerFaceColor',Plot_Colors('t'),'MarkerSize',10,'MarkerEdgeColor','none'); %rewards
-handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.5); %rewards
+handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1); %licks
 handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1); %licks
 handles.fake_target_plot = plot(NaN, NaN, 'color',[.7 .7 .7]);
 handles.targetzone = fill(NaN,NaN,[1 1 0],'FaceAlpha',0.2);
@@ -566,13 +566,9 @@ function lever_raw_on_Callback(hObject, eventdata, handles)
 if get(hObject,'Value')
     set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
     set(handles.lever_raw_plot,'LineStyle','none');
-    set(handles.respiration_1_plot,'LineStyle','none');
-    set(handles.respiration_2_plot,'LineStyle','none');
 else
     set(hObject,'BackgroundColor',[0.94 0.94 0.94]);
     set(handles.lever_raw_plot,'LineStyle','-');
-    set(handles.respiration_1_plot,'LineStyle','-');
-    set(handles.respiration_2_plot,'LineStyle','-');
 end
 guidata(hObject, handles);
 

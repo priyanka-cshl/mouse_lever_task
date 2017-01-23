@@ -9,6 +9,7 @@ global TotalData; % matrix containing data from the current callback (refreshed 
 global TotalTime; % matrix containing timestamps from the current callback
 global mycam; % for webcam
 persistent last_data_value; % event.Data(end,:) from last call
+global TargetLevel;
 
 fid1 = varargin{3}; % C:\temp_data_files\log.bin
 h = varargin{1}; % handles
@@ -29,7 +30,7 @@ callreward = 0;
 
 %% populate TotalTime with newly available timestamps
 TotalTime = [ TotalTime(num_new_samples+1:end); event.TimeStamps ];
-
+TargetLevel = [TargetLevel(num_new_samples+1:end,:); h.TargetDefinition.Data(3)+0*event.Data(:,1) h.TargetDefinition.Data(1)+0*event.Data(:,1)];
 %% update MFC setpoints
 h.MFC_setpoints_IN.Data = round(mean(event.Data(:,h.NIchannels+1:h.NIchannels+4)),2,'significant')';
 
@@ -43,6 +44,9 @@ if TotalTime(end)>2
     % register if the trial was turned ON or OFF
     if any(diff(TotalData(end-num_new_samples:end,trial_channel)) == -1)
         trial_just_ended = 1;
+        if mod(h.current_trial_block.Data(2),h.TransferFunction.Data(2)) == 0
+            call_new_block = 1;
+        end
     elseif any(diff(TotalData(end-num_new_samples:end,trial_channel)) == 1) % trial just turned ON
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1; % increment 'trial number'
     end
@@ -57,7 +61,7 @@ if TotalTime(end)>2
         %h.RewardStatus.Data(3) = round(TotalTime(end)); % update 'last reward'
         if h.RewardStatus.Data(2) == h.TransferFunction.Data(2) %#ok<*FNDSB> % rewards in block == max rewards allowed per block
                 h.RewardStatus.Data(2) = 0; % reset rewards in block
-                call_new_block = 1;
+                %call_new_block = 1;
         end
     end
     
@@ -100,6 +104,7 @@ set(h.respiration_2_plot,'XData',TotalTime(indices_to_plot),'YData',...
 
 % trial_on
 [h.trial_on] = PlotToPatch(h.trial_on, TotalData(:,trial_channel), TotalTime, [0 5]);
+[h.targetzone] = PlotToPatch_TargetZone(h.targetzone, TargetLevel, TotalTime);
 
 % in_target_zone, in_reward_zone
 [h.in_target_zone_plot] = PlotToPatch(h.in_target_zone_plot, TotalData(:,trial_channel+1), TotalTime, [-1 0]);
@@ -107,9 +112,20 @@ set(h.respiration_2_plot,'XData',TotalTime(indices_to_plot),'YData',...
 [h.in_reward_zone_plot] = PlotToPatch(h.in_reward_zone_plot, TotalData(:,trial_channel+2), TotalTime, [-1 -0.2]);
 %set(h.in_reward_zone_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,7)-1.2);
 
+% % rewards
+% reward_timestamps = TotalTime(TotalData(:,reward_channel)==1);
+% set(h.reward_plot,'XData',reward_timestamps,'YData',5.2+(0*reward_timestamps));
+
 % rewards
-reward_timestamps = TotalTime(TotalData(:,reward_channel)==1);
-set(h.reward_plot,'XData',reward_timestamps,'YData',5.2+(0*reward_timestamps));
+if reward_channel<=size(TotalData,2)
+    tick_timestamps = TotalTime(TotalData(:,reward_channel)==1);
+    tick_x = [tick_timestamps'; tick_timestamps'; ...
+        NaN(1,numel(tick_timestamps))]; % creates timestamp1 timestamp1 NaN timestamp2 timestamp2..
+    tick_x = tick_x(:);
+    tick_y = repmat( [0; 5.2; NaN],...
+        numel(tick_timestamps),1); % creates y1 y2 NaN y1 timestamp2..
+    set(h.reward_plot,'XData',tick_x,'YData',tick_y);
+end
 
 % licks
 if lick_channel<=size(TotalData,2)
@@ -117,18 +133,18 @@ if lick_channel<=size(TotalData,2)
     tick_x = [tick_timestamps'; tick_timestamps'; ...
         NaN(1,numel(tick_timestamps))]; % creates timestamp1 timestamp1 NaN timestamp2 timestamp2..
     tick_x = tick_x(:);
-    tick_y = repmat( [5.5; 6; NaN],...
+    tick_y = repmat( [5.5; 6.5; NaN],...
         numel(tick_timestamps),1); % creates y1 y2 NaN y1 timestamp2..
     set(h.lick_plot,'XData',tick_x,'YData',tick_y);
 end
 
 
 % target zone demarcation plots
-h.targetzone.Vertices = [ [TotalTime(indices_to_plot(1)) TotalTime(indices_to_plot(end)) ...
-    TotalTime(indices_to_plot(end)) TotalTime(indices_to_plot(1))]; ...
-[h.TargetDefinition.Data(3) h.TargetDefinition.Data(3) ...
-    h.TargetDefinition.Data(1) h.TargetDefinition.Data(1)] ]';
-    h.targetzone.Faces = 1:4;
+% h.targetzone.Vertices = [ [TotalTime(indices_to_plot(1)) TotalTime(indices_to_plot(end)) ...
+%     TotalTime(indices_to_plot(end)) TotalTime(indices_to_plot(1))]; ...
+% [h.TargetDefinition.Data(3) h.TargetDefinition.Data(3) ...
+%     h.TargetDefinition.Data(1) h.TargetDefinition.Data(1)] ]';
+%     h.targetzone.Faces = 1:4;
 set(h.minlim,'XData',TotalTime(indices_to_plot),'YData',...
     h.TrialSettings.Data(2) + 0*TotalTime(indices_to_plot));
 if h.current_trial_block.Data(3) == 1 && h.which_perturbation.Value == 3
