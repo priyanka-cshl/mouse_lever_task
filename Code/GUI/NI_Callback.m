@@ -62,7 +62,7 @@ if TotalTime(end)>2
         %h.RewardStatus.Data(3) = round(TotalTime(end)); % update 'last reward'
         if h.RewardStatus.Data(2) == h.ZoneLimitSettings.Data(3) %#ok<*FNDSB> % rewards in block == max rewards allowed per block
                 h.RewardStatus.Data(2) = 0; % reset rewards in block
-                call_new_block = 1;
+                %call_new_block = 1;
         end
     end
     

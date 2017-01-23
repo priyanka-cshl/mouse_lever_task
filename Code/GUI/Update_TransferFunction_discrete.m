@@ -13,6 +13,9 @@ if highlim>2^16-1
     highlim = 2^16-1;
 end
 lowlim = round(lowlim*voltage_to_int);
+if lowlim>2^16-1
+    lowlim = 2^16-1;
+end
 
 %update transfer function colormap
 TF = h.(['TF',num2str(which_TF)]);
