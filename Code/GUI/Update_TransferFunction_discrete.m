@@ -1,4 +1,4 @@
-function Update_TransferFunction_discrete(h)
+function [sent] = Update_TransferFunction_discrete(h)
 
 % get current transfer function
 target_limits = [h.TrialSettings.Data(2) h.TargetDefinition.Data(3:-1:1)' h.TrialSettings.Data(1)];
