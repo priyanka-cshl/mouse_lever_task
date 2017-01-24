@@ -37,7 +37,7 @@ switch caller
         param(2) = h.stimulus_map.Value;
         
         legend(3:5) = {'HighLim' 'Target' 'LowLim'};
-        param(3:5) = h.TargetDefinition.Data;
+        param(3:5) = h.NewTargetDefinition.Data;
         % convert to integers for Arduino communication purpose
         not_ints = [not_ints 3:5];
         

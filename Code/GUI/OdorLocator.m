@@ -86,6 +86,7 @@ handles.target_level_array.Data = [1 2 3]';
 handles.DAQrates.Data = [500 20]';
 handles.which_perturbation.Value = 1;
 handles.TransferFunction.Data(2) = 1;
+handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
 
 % clear indicators
 handles.RewardStatus.Data = [0 0 0]';
@@ -194,6 +195,7 @@ outputSingleScan(handles.Odors,[0, 0, 0]);
 handles.motor_override.Value = 0;
 motor_override_Callback(hObject, eventdata, handles);
 handles.startAcquisition.Enable = 'on';
+warning('off','MATLAB:callback:error');
 
 
 % --- Outputs from this function are returned to the command line.
@@ -485,6 +487,8 @@ function ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles)
 Update_TransferFunction_discrete(handles);
 pause(0.1);
 Update_Params(handles);
+handles.TargetDefinition.Data = handles.NewTargetDefinition.Data;
+handles.(['TargetLevel',num2str( 1 + mod(handles.current_trial_block.Data(1)-1,length(handles.target_level_array.Data)) )]).Value = 1;
 % --------------------------------------------------------------------
 
 function update_current_target_level_Callback(hObject, eventdata, handles)

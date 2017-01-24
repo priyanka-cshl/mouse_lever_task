@@ -24,9 +24,9 @@ num_new_samples = length(event.TimeStamps);
 lastsample = samplenum + num_new_samples - 1;
 
 % flags for event calls
-%trial_just_ended = 0;
-%call_new_block = 0;
-update_trial = 0;
+trial_just_ended = 0;
+call_new_block = 0;
+% update_trial = 0;
 callreward = 0;
 
 %% populate TotalTime with newly available timestamps
@@ -51,11 +51,11 @@ if TotalTime(end)>2
 
     % register if the trial was turned ON or OFF
     if any(diff(TotalData(end-num_new_samples:end,trial_channel)) < 0)
-        %trial_just_ended = 1;
-       % if mod(h.current_trial_block.Data(2),h.TransferFunction.Data(2)) == 0
-            %call_new_block = 1;
-            update_trial = 1;
-        %end
+        trial_just_ended = 1;
+        if mod(h.current_trial_block.Data(2),h.TransferFunction.Data(2)) == 0
+            call_new_block = 1;
+            %update_trial = 1;
+        end
     elseif any(diff(TotalData(end-num_new_samples:end,trial_channel)) > 0) % trial just turned ON
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1; % increment 'trial number'
     end
@@ -174,15 +174,15 @@ set(h.axes1,'XLim',[TotalTime(indices_to_plot(1)) TotalTime(indices_to_plot(end)
 if get(h.startAcquisition,'value') == 0
     src.stop();
 end
-% if call_new_block
-%     NewBlock_Callback(h);
-% end
-% if trial_just_ended
-%     NewTrial_Callback(h);
-% end
-if update_trial
-    UpdateTrial_Callback(h);
+if call_new_block
+    NewBlock_Callback(h);
 end
+if trial_just_ended
+    NewTrial_Callback(h);
+end
+% if update_trial
+%     UpdateTrial_Callback(h);
+% end
 
 %% write data to disk
 data = [TotalTime(end-num_new_samples+1:end) TotalData(end-num_new_samples+1:end,:)]';
