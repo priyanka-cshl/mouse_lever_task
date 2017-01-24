@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 16-Jan-2017 14:16:58
+% Last Modified by GUIDE v2.5 23-Jan-2017 17:28:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -66,7 +66,7 @@ if strcmp(handles.computername,'PRIYANKA-PC')
     % disable transfer function calibrator
     handles.calibrate_transfer_function.Enable = 'off';
     % MFC settings
-    handles.MFC_table.Data = [0 0 1.55 0.4]';
+    handles.MFC_table.Data = [1.55 0.4]';
     % training stage 
     handles.which_stage.Value = 3;
     % TF - locations per zone
@@ -77,12 +77,15 @@ if strcmp(handles.computername,'PRIYANKA-PC')
     handles.ZoneLimitSettings.Data = [0.4 0.1]'; 
     % reward settings
     handles.RewardControls.Data = [150 40]';
+    % odor panel
+    handles.Odor_list.Value = [1 2 3]';
 end
 
 % defaults
 handles.target_level_array.Data = [1 2 3]';
 handles.DAQrates.Data = [500 20]';
 handles.which_perturbation.Value = 1;
+handles.TransferFunction.Data(2) = 1;
 
 % clear indicators
 handles.RewardStatus.Data = [0 0 0]';
@@ -111,7 +114,7 @@ handles.in_target_zone_plot.EdgeColor = 'none';
 handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
 handles.in_reward_zone_plot.EdgeColor = 'none';
 %handles.reward_plot = plot(NaN, NaN,'o','MarkerFaceColor',Plot_Colors('t'),'MarkerSize',10,'MarkerEdgeColor','none'); %rewards
-handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.5); %rewards
+handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.25); %rewards
 handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1); %licks
 handles.fake_target_plot = plot(NaN, NaN, 'color',[.7 .7 .7]);
 handles.targetzone = fill(NaN,NaN,[1 1 0],'FaceAlpha',0.2);
@@ -146,7 +149,10 @@ if ~isempty(webcamlist)
     handles.camera_available = 1;
     handles.focus_mode.Value = 1;
     handles.mycam.FocusMode = 'auto';
+    handles.mycam.ExposureMode = 'auto';
+    handles.exposure_mode.Value = 1;
     handles.focus_value.Data = handles.mycam.Focus;
+    handles.exposure_value.Data = handles.mycam.Exposure;
     handles.mycam.Zoom = 100;
 end
 % display webcam image, if available
@@ -422,6 +428,9 @@ if usrans == 1
     clear a b c session_data
     display(['saved to ' filename])
     display(['saved to ' server_file_name])
+    set(gcf,'PaperPositionMode','auto')
+    print(gcf,'GUI_screenshot','-dpng','-r0');
+    display(['saved GUI screen shot at ' (pwd)])
     guidata(hObject, handles);
 end
 
@@ -736,10 +745,10 @@ function valve_odor_A_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.Arduino.write(44 + handles.valve_odor_A.Value, 'uint16'); %fwrite(handles.Arduino, char(44 + handles.valve_odor_A.Value));
 if handles.valve_odor_A.Value
-    set(handles.valve_odor_A,'String','ON')
+    set(handles.valve_odor_A,'String','odor ON')
     set(handles.valve_odor_A,'BackgroundColor',[0.5 0.94 0.94]);
 else
-    set(handles.valve_odor_A,'String','OFF')
+    set(handles.valve_odor_A,'String','odor OFF')
     set(handles.valve_odor_A,'BackgroundColor',[0.94 0.94 0.94]);
 end
 
@@ -751,10 +760,10 @@ function valve_odor_B_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.Arduino.write(46 + handles.valve_odor_B.Value, 'uint16'); %fwrite(handles.Arduino, char(46 + handles.valve_odor_B.Value));
 if handles.valve_odor_B.Value
-    set(handles.valve_odor_B,'String','ON')
+    set(handles.valve_odor_B,'String','Air ON')
     set(handles.valve_odor_B,'BackgroundColor',[0.5 0.94 0.94]);
 else
-    set(handles.valve_odor_B,'String','OFF')
+    set(handles.valve_odor_B,'String','Air OFF')
     set(handles.valve_odor_B,'BackgroundColor',[0.94 0.94 0.94]);
 end
 
@@ -815,6 +824,17 @@ else
     handles.focus_value.Enable = 'on';
 end
 
+% --- Executes on selection change in exposure_mode.
+function exposure_mode_Callback(hObject, eventdata, handles)
+contents = cellstr(get(hObject,'String')); % returns focus_mode contents as cell array
+handles.mycam.ExposureMode = contents{get(hObject,'Value')}; %returns selected item from focus_mode
+handles.Exposure.Data = handles.mycam.Exposure;
+if get(hObject,'Value') == 1
+    handles.focus_value.Enable = 'off';
+else
+    handles.focus_value.Enable = 'on';
+end
+
 % --- Executes on slider movement.
 function Adjust_Zoom_Callback(hObject, eventdata, handles)
 handles.mycam.Zoom = hObject.Value;
@@ -829,6 +849,18 @@ else
     hObject.Data = 250;
 end
 handles.mycam.Focus = hObject.Data;
+
+
+% --- Executes when entered data in editable cell(s) in exposure_value.
+function exposure_value_CellEditCallback(hObject, eventdata, handles)
+if (hObject.Data>=-11) && (hObject.Data<=-2)
+    %handles.mycam.Focus = hObject.Data;
+elseif (hObject.Data<-11)
+    hObject.Data = -11;
+else
+    hObject.Data = -2;
+end
+handles.mycam.Exposure = hObject.Data;
 
 % --- Executes on button press in close_gui.
 function close_gui_Callback(hObject, eventdata, handles)
@@ -858,4 +890,3 @@ end
 
 % --- Executes during object deletion, before destroying properties.
 function figure1_DeleteFcn(hObject, eventdata, handles)
-

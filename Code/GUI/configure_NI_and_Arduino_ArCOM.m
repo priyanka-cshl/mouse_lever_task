@@ -26,8 +26,8 @@ for i = handles.NIchannels-4:handles.NIchannels
 end
 
 % configure MFC channels (2)
-for j = 1:4
-    DAQchannels(i+j) = addAnalogInputChannel(NI_session,'Dev2',{['ai',num2str(3+j)]},'Voltage');
+for j = 1:2
+    DAQchannels(i+j) = addAnalogInputChannel(NI_session,'Dev2',{['ai',num2str(5+j)]},'Voltage');
     DAQchannels(i+j).TerminalConfig = 'SingleEnded';
     DAQchannels(i+j).Range = [-5 5];
 end
@@ -44,8 +44,8 @@ NI_session.NotifyWhenDataAvailableExceeds = handles.sampling_rate_array(1)/handl
 MFC_session = daq.createSession('ni');
 release(MFC_session);
 stop(MFC_session);
-addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 0, 'Voltage');
-addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 2, 'Voltage');
+% addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 0, 'Voltage');
+% addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 2, 'Voltage');
 addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 4, 'Voltage');
 addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 6, 'Voltage');
 %% ------------------------------------------------------------------------------------------------------------

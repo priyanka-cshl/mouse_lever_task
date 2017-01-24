@@ -32,7 +32,7 @@ callreward = 0;
 TotalTime = [ TotalTime(num_new_samples+1:end); event.TimeStamps ];
 TargetLevel = [TargetLevel(num_new_samples+1:end,:); h.TargetDefinition.Data(3)+0*event.Data(:,1) h.TargetDefinition.Data(1)+0*event.Data(:,1)];
 %% update MFC setpoints
-h.MFC_setpoints_IN.Data = round(mean(event.Data(:,h.NIchannels+1:h.NIchannels+4)),2,'significant')';
+h.MFC_setpoints_IN.Data = round(mean(event.Data(:,h.NIchannels+1:h.NIchannels+2)),2,'significant')';
 
 %% populate TotalData with newly available data
 for i = 1:reward_channel-1
@@ -122,7 +122,7 @@ if reward_channel<=size(TotalData,2)
     tick_x = [tick_timestamps'; tick_timestamps'; ...
         NaN(1,numel(tick_timestamps))]; % creates timestamp1 timestamp1 NaN timestamp2 timestamp2..
     tick_x = tick_x(:);
-    tick_y = repmat( [0; 5.2; NaN],...
+    tick_y = repmat( [0; 6.5; NaN],...
         numel(tick_timestamps),1); % creates y1 y2 NaN y1 timestamp2..
     set(h.reward_plot,'XData',tick_x,'YData',tick_y);
 end
@@ -133,7 +133,7 @@ if lick_channel<=size(TotalData,2)
     tick_x = [tick_timestamps'; tick_timestamps'; ...
         NaN(1,numel(tick_timestamps))]; % creates timestamp1 timestamp1 NaN timestamp2 timestamp2..
     tick_x = tick_x(:);
-    tick_y = repmat( [5.5; 6.5; NaN],...
+    tick_y = repmat( [5.5; 6; NaN],...
         numel(tick_timestamps),1); % creates y1 y2 NaN y1 timestamp2..
     set(h.lick_plot,'XData',tick_x,'YData',tick_y);
 end
