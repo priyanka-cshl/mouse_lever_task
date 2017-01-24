@@ -52,6 +52,9 @@ if TotalTime(end)>2
     elseif any(diff(TotalData(end-num_new_samples:end,trial_channel)) == 1) % trial just turned ON
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1; % increment 'trial number'
     end
+    % Multiply by odor index
+    TotalData(end-num_new_samples:end,trial_channel) = ...
+        h.current_trial_block.Data(4)*TotalData(end-num_new_samples:end,trial_channel);
     
     % reward channel
     TotalData(:,reward_channel) = [ TotalData(num_new_samples+1:end,reward_channel); ...
@@ -105,7 +108,7 @@ set(h.respiration_2_plot,'XData',TotalTime(indices_to_plot),'YData',...
     -1*h.Ai_scaling.Data(1,4)*TotalData(indices_to_plot,6) + h.Ai_scaling.Data(2,4) );
 
 % trial_on
-[h.trial_on] = PlotToPatch(h.trial_on, TotalData(:,trial_channel), TotalTime, [0 5]);
+[h] = PlotToPatch_Trial(h, TotalData(:,trial_channel), TotalTime, [0 5]);
 [h.targetzone] = PlotToPatch_TargetZone(h.targetzone, TargetLevel, TotalTime);
 
 % in_target_zone, in_reward_zone

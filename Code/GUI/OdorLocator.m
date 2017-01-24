@@ -100,9 +100,19 @@ handles.sampling_rate_array = handles.DAQrates.Data;
 
 % initiate plots
 axes(handles.axes1); % main plot
-handles.trial_on = fill(NaN,NaN,[.8 .8 .8]);
+% handles.trial_on = fill(NaN,NaN,[.8 .8 .8]);
+% hold on;
+% handles.trial_on.EdgeColor = 'none';
+
+% three different trial plots - for different odor
+handles.trial_on_1 = fill(NaN,NaN,[.8 .8 .8]);
 hold on;
-handles.trial_on.EdgeColor = 'none';
+handles.trial_on_1.EdgeColor = 'none';
+handles.trial_on_2 = fill(NaN,NaN,[.7 .7 .7]);
+handles.trial_on_2.EdgeColor = 'none';
+handles.trial_on_3 = fill(NaN,NaN,[.6 .6 .6]);
+handles.trial_on_3.EdgeColor = 'none';
+
 handles.lever_DAC_plot = plot(NaN, NaN,'k','linewidth',1); %lever rescaled
 handles.lever_raw_plot = plot(NaN, NaN, 'color',Plot_Colors('b')); %lever raw
 handles.stimulus_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor location
