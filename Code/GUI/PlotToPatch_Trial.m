@@ -2,9 +2,8 @@ function [handle_in] = PlotToPatch_Trial(handle_in, trial_in, timestamp_in, offs
 % data_in must be a column vector
 for i = 1:3 % three odors
     f = find(trial_in(:,1)==i);
-    data_in = zeros(length(trial_in,1));
+    data_in = zeros(length(trial_in),1);
     data_in(f,1) = 1;
-    
     on_indices = timestamp_in( find(diff(data_in)==1) +1 );
     off_indices = timestamp_in( find(diff(data_in)==-1) +1 );
     if any(on_indices)
@@ -19,6 +18,5 @@ for i = 1:3 % three odors
             handle_in.(['trial_on_',num2str(i)]).Faces = 1:length(ts_on_X);
         end
     end
-    
 end
 end

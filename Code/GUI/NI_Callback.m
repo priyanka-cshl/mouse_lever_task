@@ -35,26 +35,33 @@ TargetLevel = [TargetLevel(num_new_samples+1:end,:); h.TargetDefinition.Data(3)+
 %% update MFC setpoints
 h.MFC_setpoints_IN.Data = round(mean(event.Data(:,h.NIchannels+1:h.NIchannels+2)),2,'significant')';
 
+% multiply trial_channel by odor value
+odorID = h.current_trial_block.Data(4);
+
 %% populate TotalData with newly available data
 for i = 1:reward_channel-1
-    TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); event.Data(:,i) ];
+    samples_new = event.Data(:,i);
+    if i == trial_channel
+        samples_new = samples_new*odorID;
+    end
+    TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];
 end
              
 if TotalTime(end)>2 
 
     % register if the trial was turned ON or OFF
-    if any(diff(TotalData(end-num_new_samples:end,trial_channel)) == -1)
+    if any(diff(TotalData(end-num_new_samples:end,trial_channel)) < 0)
         %trial_just_ended = 1;
        % if mod(h.current_trial_block.Data(2),h.TransferFunction.Data(2)) == 0
             %call_new_block = 1;
             update_trial = 1;
         %end
-    elseif any(diff(TotalData(end-num_new_samples:end,trial_channel)) == 1) % trial just turned ON
+    elseif any(diff(TotalData(end-num_new_samples:end,trial_channel)) > 0) % trial just turned ON
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1; % increment 'trial number'
     end
-    % Multiply by odor index
-    TotalData(end-num_new_samples:end,trial_channel) = ...
-        h.current_trial_block.Data(4)*TotalData(end-num_new_samples:end,trial_channel);
+%     % Multiply by odor index
+%     TotalData(end-num_new_samples:end,trial_channel) = ...
+%         h.current_trial_block.Data(4)*TotalData(end-num_new_samples:end,trial_channel);
     
     % reward channel
     TotalData(:,reward_channel) = [ TotalData(num_new_samples+1:end,reward_channel); ...

@@ -89,7 +89,7 @@ handles.TransferFunction.Data(2) = 1;
 
 % clear indicators
 handles.RewardStatus.Data = [0 0 0]';
-handles.current_trial_block.Data = [1 1 0 0]';
+handles.current_trial_block.Data = [1 1 0 1]';
 handles.water_received.Data = 0;
 handles.StartTime.Visible = 'off';
 handles.StopTime.Visible = 'off';
@@ -108,9 +108,9 @@ axes(handles.axes1); % main plot
 handles.trial_on_1 = fill(NaN,NaN,[.8 .8 .8]);
 hold on;
 handles.trial_on_1.EdgeColor = 'none';
-handles.trial_on_2 = fill(NaN,NaN,[.7 .7 .7]);
+handles.trial_on_2 = fill(NaN,NaN,[0.8941    0.9412    0.9020]);
 handles.trial_on_2.EdgeColor = 'none';
-handles.trial_on_3 = fill(NaN,NaN,[.6 .6 .6]);
+handles.trial_on_3 = fill(NaN,NaN,[0.8706    0.9216    0.9804]);
 handles.trial_on_3.EdgeColor = 'none';
 
 handles.lever_DAC_plot = plot(NaN, NaN,'k','linewidth',1); %lever rescaled
@@ -225,7 +225,7 @@ if get(handles.startAcquisition,'value')
     % clear indicators
     handles.RewardStatus.Data = [0 0 0]';
     handles.water_received.Data = 0;
-    handles.current_trial_block.Data = [1 1 0 0]';
+    handles.current_trial_block.Data = [1 1 0 1]';
     handles.update_call = 1;
     handles.timestamp.Data = 0;
     handles.lastrewardtime = 0;
