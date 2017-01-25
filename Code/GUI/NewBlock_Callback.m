@@ -2,7 +2,7 @@ function NewBlock_Callback(h)
 % this function updates anything changes on a block-by-block basis
 % called by NI_Callback when rewards_in_block == max_per_block
 
-display('---New Block---');
+display('----------New Block------------------------------');
 
 %% shuffle arrays of targets after all targets have been uused
 block_num = h.current_trial_block.Data(1);
