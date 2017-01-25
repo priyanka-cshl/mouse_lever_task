@@ -103,16 +103,16 @@ indices_to_plot = find( TotalTime>TotalTime(end)-xwin & TotalTime>=0 );
 set(h.lever_DAC_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,1));
 set(h.lever_raw_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,2));
 set(h.stimulus_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    -1*h.Ai_scaling.Data(1,1)*(TotalData(indices_to_plot,3) - h.Ai_scaling.Data(2,1)) );
+    -1*h.RE_scaling.Data(1)*(TotalData(indices_to_plot,3) - h.RE_scaling.Data(2)) );
 if h.is_distractor_on.Value
     set(h.distractor_plot,'XData',TotalTime(indices_to_plot),'YData',...
-         -1*h.Ai_scaling.Data(1,2)*(TotalData(indices_to_plot,4) - h.Ai_scaling.Data(2,2)) );
+         -1*h.RE_scaling.Data(1)*(TotalData(indices_to_plot,4) - h.RE_scaling.Data(2)) );
 end
 % respiration sensors
 set(h.respiration_1_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    -1*h.Ai_scaling.Data(1,3)*TotalData(indices_to_plot,5) + h.Ai_scaling.Data(2,3) );
+    -1*h.RS_scaling.Data(1)*TotalData(indices_to_plot,5) + h.RS_scaling.Data(2) );
 set(h.respiration_2_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    -1*h.Ai_scaling.Data(1,4)*TotalData(indices_to_plot,6) + h.Ai_scaling.Data(2,4) );
+    -1*h.RS_scaling.Data(1)*TotalData(indices_to_plot,6) + h.RS_scaling.Data(2) );
 
 % trial_on
 [h] = PlotToPatch_Trial(h, TotalData(:,trial_channel), TotalTime, [0 5]);
