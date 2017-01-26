@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 23-Jan-2017 17:28:35
+% Last Modified by GUIDE v2.5 25-Jan-2017 19:55:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -502,6 +502,15 @@ function min_width_up_Callback(hObject, eventdata, handles)
 handles.ZoneLimitSettings.Data(1) = handles.ZoneLimitSettings.Data(1) + 0.05;
 ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles);
 
+% --- Executes on button press in stay_time_up.
+function stay_time_up_Callback(hObject, eventdata, handles)
+handles.RewardControls.Data(1) = handles.RewardControls.Data(1) + 5;
+handles.RewardControls.ForegroundColor = 'r';
+
+% --- Executes on button press in stay_time_down.
+function stay_time_down_Callback(hObject, eventdata, handles)
+handles.RewardControls.Data(1) = handles.RewardControls.Data(1) - 5;
+handles.RewardControls.ForegroundColor = 'r';
 
 % --- Executes on button press in min_width_down.
 function min_width_down_Callback(hObject, eventdata, handles)
@@ -511,6 +520,8 @@ else
     handles.ZoneLimitSettings.Data(1) = 0;
 end
 ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles);
+
+
 
 % --- Executes on button press in update_zones.
 function update_zones_Callback(hObject, eventdata, handles)
@@ -892,3 +903,5 @@ end
 
 % --- Executes during object deletion, before destroying properties.
 function figure1_DeleteFcn(hObject, eventdata, handles)
+
+
