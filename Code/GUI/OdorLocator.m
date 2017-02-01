@@ -92,6 +92,7 @@ handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
 handles.RewardStatus.Data = [0 0 0]';
 handles.current_trial_block.Data = [1 1 0 1]';
 handles.water_received.Data = 0;
+handles.Date.String = datestr(now, 'mm-dd-yy');
 handles.StartTime.Visible = 'off';
 handles.StopTime.Visible = 'off';
 
@@ -220,6 +221,7 @@ if get(handles.startAcquisition,'value')
     set(handles.startAcquisition,'String','Running');
     set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
     time = regexp(char(datetime('now')),' ','split');
+    handles.Date.String = datestr(now, 'mm-dd-yy');
     handles.StartTime.String = char(time(2));
     handles.StartTime.Visible = 'on';
     handles.StopTime.Visible = 'off';
@@ -441,7 +443,8 @@ if usrans == 1
     display(['saved to ' filename])
     display(['saved to ' server_file_name])
     set(gcf,'PaperPositionMode','auto')
-    print(gcf,'GUI_screenshot','-dpng','-r0');
+    print(gcf,['GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
+        '-dpng','-r0');
     display(['saved GUI screen shot at ' (pwd)])
     guidata(hObject, handles);
 end
