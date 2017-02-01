@@ -608,7 +608,7 @@ void MoveMotor()
 
 void RewardNow()
 {
-  if (reward_state == 3)
+  if ((reward_state == 3) && timer_override)
   {
     digitalWrite(reward_valve_pin, HIGH);
     digitalWrite(reward_reporter_pin, HIGH);
