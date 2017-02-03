@@ -13,7 +13,8 @@ switch caller
         not_ints = [not_ints 4];
         
         legend(5:6) = {'RewardHoldTime' 'RewardDuration'};
-        param(5:6) = h.RewardControls.Data;
+        param(5) = h.current_trial_block.Data(5);
+        param(6) = h.RewardControls.Data;
         
         legend(7) = {'MaxPerBlock'};
         param(7) = h.TransferFunction.Data(2);

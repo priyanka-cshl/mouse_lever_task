@@ -76,7 +76,7 @@ if strcmp(handles.computername,'PRIYANKA-PC')
     % zone width
     handles.ZoneLimitSettings.Data = [0.4 0.1]'; 
     % reward settings
-    handles.RewardControls.Data = [150 40]';
+    handles.RewardControls.Data = 30;
     % odor panel
     handles.Odor_list.Value = [1 2 3]';
 end
@@ -89,8 +89,8 @@ handles.TransferFunction.Data(2) = 1;
 handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
 
 % clear indicators
-handles.RewardStatus.Data = [0 0 0]';
-handles.current_trial_block.Data = [1 1 0 1]';
+handles.RewardStatus.Data = [0 0]';
+handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
 handles.water_received.Data = 0;
 handles.Date.String = datestr(now, 'mm-dd-yy');
 handles.StartTime.Visible = 'off';
@@ -227,9 +227,9 @@ if get(handles.startAcquisition,'value')
     handles.StopTime.Visible = 'off';
     
     % clear indicators
-    handles.RewardStatus.Data = [0 0 0]';
+    handles.RewardStatus.Data = [0 0]';
     handles.water_received.Data = 0;
-    handles.current_trial_block.Data = [1 1 0 1]';
+    handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
     handles.update_call = 1;
     handles.timestamp.Data = 0;
     handles.lastrewardtime = 0;
@@ -463,14 +463,14 @@ if handles.which_stage.Value==1
     if ((handles.timestamp.Data - handles.lastrewardtime) > 20)
         handles.lastrewardtime = handles.timestamp.Data; % update 'last reward'
         handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
-        handles.RewardStatus.Data(3) = handles.RewardStatus.Data(3) + 1;
+        handles.RewardStatus.Data(2) = handles.RewardStatus.Data(2) + 1;
     end
 else
     handles.lastrewardtime = handles.timestamp.Data; % update 'last reward'
     handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
-    handles.RewardStatus.Data(3) = handles.RewardStatus.Data(3) + 1;
+    handles.RewardStatus.Data(2) = handles.RewardStatus.Data(2) + 1;
 end
-handles.water_received.Data = handles.water_received.Data + 10*(handles.RewardControls.Data(2)*0.015 - 0.042);
+handles.water_received.Data = handles.water_received.Data + 10*(handles.RewardControls.Data*0.015 - 0.042);
 handles.lastrewardtime = handles.timestamp.Data;
 guidata(hObject, handles);
 
@@ -507,13 +507,13 @@ ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles);
 
 % --- Executes on button press in stay_time_up.
 function stay_time_up_Callback(hObject, eventdata, handles)
-handles.RewardControls.Data(1) = handles.RewardControls.Data(1) + 5;
-handles.RewardControls.ForegroundColor = 'r';
+handles.TargetHold.Data(1) = handles.TargetHold.Data(1) + 5;
+handles.TargetHold.ForegroundColor = 'r';
 
 % --- Executes on button press in stay_time_down.
 function stay_time_down_Callback(hObject, eventdata, handles)
-handles.RewardControls.Data(1) = handles.RewardControls.Data(1) - 5;
-handles.RewardControls.ForegroundColor = 'r';
+handles.TargetHold.Data(1) = handles.TargetHold.Data(1) - 5;
+handles.TargetHold.ForegroundColor = 'r';
 
 % --- Executes on button press in min_width_down.
 function min_width_down_Callback(hObject, eventdata, handles)

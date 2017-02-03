@@ -11,7 +11,7 @@ if mod(block_num,length(h.target_level_array.Data)) == 0
     h.target_level_array.Data = h.target_level_array.Data(randperm(length(h.target_level_array.Data)) );
 end
 h.current_trial_block.Data(1) = block_num; % update 'block number'
-h.RewardStatus.Data(2) = 0; % reset 'rewards given in block'
+%h.RewardStatus.Data(2) = 0; % reset 'rewards given in block'
 
 %% update target level
 h.NewTargetDefinition.Data(2) = ...

@@ -34,7 +34,7 @@ while (sent == 0) && (sending_attempts <=8 )
                 if all(params_returned(1:end-1) == ParamArray') && params_returned(end) == 89
                     disp(['arduino: params updated: attempts = ' num2str(sending_attempts+1)])
                     sent = 1;
-                    h.RewardControls.ForegroundColor = 'k';
+                    h.TargetHold.ForegroundColor = 'k';
                 else
                     pause(.1);
                     sending_attempts = sending_attempts + 1';
