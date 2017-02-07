@@ -55,7 +55,8 @@ switch caller
         legend(9) = {'StimulusDelay'};
         if (h.is_stimulus_on.Value)
             if h.current_trial_block.Data(3) == 1 && h.which_perturbation.Value == 2
-                param(9) = 1 + h.PertubationSettings.Data(2);
+                param(9) = 1 + 1000*h.PertubationSettings.Data(2);
+                %param(9) = 1 + h.PertubationSettings.Data(2);
             else
                 param(9) = 1;
             end

@@ -59,7 +59,7 @@ if strcmp(handles.computername,'PRIYANKA-PC')
     handles.file_names.Data(2) = {'C:\Data\Behavior'};
     handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\Behavior'};
     handles.NIchannels = 11;
-    handles.DAC_settings.Data = [2 0.8]';
+    handles.DAC_settings.Data = [2 0.7]';
     % motor location settings
     handles.motor_params = 4;
     handles.TrialSettings.Data(2) = 0.5;
@@ -72,7 +72,7 @@ if strcmp(handles.computername,'PRIYANKA-PC')
     % TF - locations per zone
     handles.locations_per_zone.Data = [50 0 50]'; % [20 0 80]'
     % Trial settings
-    handles.TrialSettings.Data = [4.5 0.2 10 20 600 3000]';
+    handles.TrialSettings.Data = [4.5 0.2 100 20 600 3000]';
     % zone width
     handles.ZoneLimitSettings.Data = [0.4 0.1]'; 
     % reward settings
@@ -184,8 +184,12 @@ handles.samplenum = 1;
 handles.targetLevel = zeros(2,2);
 handles.update_call = 0;
 
+% hide extra traces
+handles.lever_raw_on.Value = 1;
+
 % Update handles structure
 guidata(hObject, handles);
+lever_raw_on_Callback(hObject,eventdata,handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
 ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Update_Params
 % Zero MFCs
@@ -588,13 +592,13 @@ handles.NI.DurationInSeconds = temp_duration;
 
 % --- Executes on button press in lever_raw_on.
 function lever_raw_on_Callback(hObject, eventdata, handles)
-if get(hObject,'Value')
-    set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
+if get(handles.lever_raw_on,'Value')
+    set(handles.lever_raw_on,'BackgroundColor',[0.5 0.94 0.94]);
     set(handles.lever_raw_plot,'LineStyle','none');
     set(handles.respiration_1_plot,'LineStyle','none');
     set(handles.respiration_2_plot,'LineStyle','none');
 else
-    set(hObject,'BackgroundColor',[0.94 0.94 0.94]);
+    set(handles.lever_raw_on,'BackgroundColor',[0.94 0.94 0.94]);
     set(handles.lever_raw_plot,'LineStyle','-');
     set(handles.respiration_1_plot,'LineStyle','-');
     set(handles.respiration_2_plot,'LineStyle','-');
