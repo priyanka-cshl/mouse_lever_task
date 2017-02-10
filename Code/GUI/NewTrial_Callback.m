@@ -13,6 +13,13 @@ odor_states(odor_list(1)) = 1;
 % set all odor valves
 outputSingleScan(h.Odors,odor_states);
 
+% update target hold time
+x = exprnd(h.TargetHold.Data(1));
+while (x + h.TargetHold.Data(2)) > h.TargetHold.Data(3)
+    x = exprnd(h.TargetHold.Data(1));
+end
+h.current_trial_block.Data(5) = round(h.TargetHold.Data(2)+x,0);
+
 %% feedback perturbation settings
 if (h.which_perturbation.Value)
     % bsed on the user set probability,

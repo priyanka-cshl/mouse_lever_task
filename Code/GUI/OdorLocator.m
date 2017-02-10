@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 25-Jan-2017 19:55:50
+% Last Modified by GUIDE v2.5 09-Feb-2017 11:46:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -59,7 +59,7 @@ if strcmp(handles.computername,'PRIYANKA-PC')
     handles.file_names.Data(2) = {'C:\Data\Behavior'};
     handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\Behavior'};
     handles.NIchannels = 11;
-    handles.DAC_settings.Data = [1 0]';
+    handles.DAC_settings.Data = [2 0.7]';
     % motor location settings
     handles.motor_params = 4;
     handles.TrialSettings.Data(2) = 0.5;
@@ -72,11 +72,11 @@ if strcmp(handles.computername,'PRIYANKA-PC')
     % TF - locations per zone
     handles.locations_per_zone.Data = [50 0 50]'; % [20 0 80]'
     % Trial settings
-    handles.TrialSettings.Data = [4.5 0.2 10 20 600 3000]';
+    handles.TrialSettings.Data = [4.5 0.2 100 20 600 3000]';
     % zone width
     handles.ZoneLimitSettings.Data = [0.4 0.1]'; 
     % reward settings
-    handles.RewardControls.Data = [150 40]';
+    handles.RewardControls.Data = 30;
     % odor panel
     handles.Odor_list.Value = [1 2 3]';
 end
@@ -89,12 +89,16 @@ handles.TransferFunction.Data(2) = 1;
 handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
 
 % clear indicators
-handles.RewardStatus.Data = [0 0 0]';
-handles.current_trial_block.Data = [1 1 0 1]';
+handles.RewardStatus.Data = [0 0]';
+handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
 handles.water_received.Data = 0;
 handles.Date.String = datestr(now, 'mm-dd-yy');
 handles.StartTime.Visible = 'off';
 handles.StopTime.Visible = 'off';
+
+% load mouse specific settings
+handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
+handles = LoadSettings(handles);
 
 % set up NI acquisition and reset Arduino
 handles.sampling_rate_array = handles.DAQrates.Data;
@@ -177,15 +181,18 @@ set(handles.cameraAxes,'YTick',[],'YTickLabel',' ','YTickMode','manual','YTickLa
 
 % for data logging
 handles.was_last_file_saved = 1;
-handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
 handles.traces = zeros(5,5);
 handles.timestamps = ones(5,1)*-1;
 handles.samplenum = 1;
 handles.targetLevel = zeros(2,2);
 handles.update_call = 0;
 
+% hide extra traces
+handles.lever_raw_on.Value = 1;
+
 % Update handles structure
 guidata(hObject, handles);
+lever_raw_on_Callback(hObject,eventdata,handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
 ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Update_Params
 % Zero MFCs
@@ -227,9 +234,9 @@ if get(handles.startAcquisition,'value')
     handles.StopTime.Visible = 'off';
     
     % clear indicators
-    handles.RewardStatus.Data = [0 0 0]';
+    handles.RewardStatus.Data = [0 0]';
     handles.water_received.Data = 0;
-    handles.current_trial_block.Data = [1 1 0 1]';
+    handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
     handles.update_call = 1;
     handles.timestamp.Data = 0;
     handles.lastrewardtime = 0;
@@ -265,7 +272,7 @@ if get(handles.startAcquisition,'value')
         
         % main settings - only change in the beginning of each session
         [settings.legends_main, settings.params_main] = Current_Settings(handles,0);
-        [settings.legends_trial, params] = Current_Settings(handles,1);
+        [settings.legends_trial, params] = Current_Settings(handles,2);
         save('C:\temp_data_files\session_settings.mat','settings*');
         
         % dynamic settings - change within a session
@@ -463,14 +470,14 @@ if handles.which_stage.Value==1
     if ((handles.timestamp.Data - handles.lastrewardtime) > 20)
         handles.lastrewardtime = handles.timestamp.Data; % update 'last reward'
         handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
-        handles.RewardStatus.Data(3) = handles.RewardStatus.Data(3) + 1;
+        handles.RewardStatus.Data(2) = handles.RewardStatus.Data(2) + 1;
     end
 else
     handles.lastrewardtime = handles.timestamp.Data; % update 'last reward'
     handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
-    handles.RewardStatus.Data(3) = handles.RewardStatus.Data(3) + 1;
+    handles.RewardStatus.Data(2) = handles.RewardStatus.Data(2) + 1;
 end
-handles.water_received.Data = handles.water_received.Data + 10*(handles.RewardControls.Data(2)*0.015 - 0.042);
+handles.water_received.Data = handles.water_received.Data + 10*(handles.RewardControls.Data*0.015 - 0.042);
 handles.lastrewardtime = handles.timestamp.Data;
 guidata(hObject, handles);
 
@@ -487,6 +494,7 @@ Update_Params(handles);
 function ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles)
 % compute new target definition
 [handles] = Compute_TargetDefinition(handles);
+
 Update_TransferFunction_discrete(handles);
 pause(0.1);
 Update_Params(handles);
@@ -507,13 +515,13 @@ ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles);
 
 % --- Executes on button press in stay_time_up.
 function stay_time_up_Callback(hObject, eventdata, handles)
-handles.RewardControls.Data(1) = handles.RewardControls.Data(1) + 5;
-handles.RewardControls.ForegroundColor = 'r';
+handles.TargetHold.Data(1) = handles.TargetHold.Data(1) + 5;
+handles.TargetHold.ForegroundColor = 'r';
 
 % --- Executes on button press in stay_time_down.
 function stay_time_down_Callback(hObject, eventdata, handles)
-handles.RewardControls.Data(1) = handles.RewardControls.Data(1) - 5;
-handles.RewardControls.ForegroundColor = 'r';
+handles.TargetHold.Data(1) = handles.TargetHold.Data(1) - 5;
+handles.TargetHold.ForegroundColor = 'r';
 
 % --- Executes on button press in min_width_down.
 function min_width_down_Callback(hObject, eventdata, handles)
@@ -588,13 +596,13 @@ handles.NI.DurationInSeconds = temp_duration;
 
 % --- Executes on button press in lever_raw_on.
 function lever_raw_on_Callback(hObject, eventdata, handles)
-if get(hObject,'Value')
-    set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
+if get(handles.lever_raw_on,'Value')
+    set(handles.lever_raw_on,'BackgroundColor',[0.5 0.94 0.94]);
     set(handles.lever_raw_plot,'LineStyle','none');
     set(handles.respiration_1_plot,'LineStyle','none');
     set(handles.respiration_2_plot,'LineStyle','none');
 else
-    set(hObject,'BackgroundColor',[0.94 0.94 0.94]);
+    set(handles.lever_raw_on,'BackgroundColor',[0.94 0.94 0.94]);
     set(handles.lever_raw_plot,'LineStyle','-');
     set(handles.respiration_1_plot,'LineStyle','-');
     set(handles.respiration_2_plot,'LineStyle','-');
@@ -906,5 +914,3 @@ end
 
 % --- Executes during object deletion, before destroying properties.
 function figure1_DeleteFcn(hObject, eventdata, handles)
-
-

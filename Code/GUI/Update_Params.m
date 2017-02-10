@@ -34,7 +34,7 @@ while (sent == 0) && (sending_attempts <=8 )
                 if all(params_returned(1:end-1) == ParamArray') && params_returned(end) == 89
                     disp(['arduino: params updated: attempts = ' num2str(sending_attempts+1)])
                     sent = 1;
-                    h.RewardControls.ForegroundColor = 'k';
+                    h.TargetHold.ForegroundColor = 'k';
                 else
                     pause(.1);
                     sending_attempts = sending_attempts + 1';
@@ -56,5 +56,12 @@ end
 
 %% if acquisition is Running and params were sent - update settings file
 if get(h.startAcquisition,'value') && (sent == 1)
+    % replace last three values in params1 to store Stay Time min and Stay
+    % Time Max
+    params1(1) = h.ZoneLimitSettings.Data(1); % MinWidth
+    params1(2) = h.ZoneLimitSettings.Data(2); % PropWidth
+    params1(end-2) = h.TargetHold.Data(1); % StayMean
+    params1(end-1) = h.TargetHold.Data(2); % StayMin
+    params1(end) = h.TargetHold.Data(3); % StayMax
     fwrite(h.settingsfileID,[h.timestamp.Data params1 params2],'double');
 end
