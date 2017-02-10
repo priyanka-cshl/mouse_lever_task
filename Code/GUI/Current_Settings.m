@@ -1,5 +1,11 @@
 function [legend,param,not_ints] = Current_Settings(h,caller)
 
+newlegends = 0;
+if caller == 2
+    newlegends = 1;
+    caller = 1;
+end
+    
 not_ints = [];
 switch caller
     case 0 % settings that don't update within a session
@@ -88,5 +94,17 @@ switch caller
         
         legend(16) = {'signal_generator'};
         param(16) = h.fake_lever_signal.Value;
+end
+
+if newlegends
+    legend(16:31) = legend(1:16);
+    legend(1) = {'Timestamp'};
+    legend(2:3) = {'MinWidth' 'PropWidth'};        
+    legend(4:5) = {'DACgain' 'DACdc'};
+    legend(6:7) = {'RewardHoldTime' 'RewardDuration'};
+    legend(8) = {'MaxPerBlock'};
+    legend(9) = {'PerturbationProbability'};
+    legend(10:11) = {'TriggerON' 'TriggerOFF'};
+    legend(12:15) = {'TriggerHOLD' 'StayMean' 'StayMin' 'StayMax'};
 end
 end

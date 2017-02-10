@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 25-Jan-2017 19:55:50
+% Last Modified by GUIDE v2.5 09-Feb-2017 11:46:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -95,6 +95,10 @@ handles.water_received.Data = 0;
 handles.Date.String = datestr(now, 'mm-dd-yy');
 handles.StartTime.Visible = 'off';
 handles.StopTime.Visible = 'off';
+
+% load mouse specific settings
+handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
+handles = LoadSettings(handles);
 
 % set up NI acquisition and reset Arduino
 handles.sampling_rate_array = handles.DAQrates.Data;
@@ -177,7 +181,6 @@ set(handles.cameraAxes,'YTick',[],'YTickLabel',' ','YTickMode','manual','YTickLa
 
 % for data logging
 handles.was_last_file_saved = 1;
-handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
 handles.traces = zeros(5,5);
 handles.timestamps = ones(5,1)*-1;
 handles.samplenum = 1;
@@ -269,7 +272,7 @@ if get(handles.startAcquisition,'value')
         
         % main settings - only change in the beginning of each session
         [settings.legends_main, settings.params_main] = Current_Settings(handles,0);
-        [settings.legends_trial, params] = Current_Settings(handles,1);
+        [settings.legends_trial, params] = Current_Settings(handles,2);
         save('C:\temp_data_files\session_settings.mat','settings*');
         
         % dynamic settings - change within a session
@@ -491,6 +494,7 @@ Update_Params(handles);
 function ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles)
 % compute new target definition
 [handles] = Compute_TargetDefinition(handles);
+
 Update_TransferFunction_discrete(handles);
 pause(0.1);
 Update_Params(handles);
@@ -910,5 +914,3 @@ end
 
 % --- Executes during object deletion, before destroying properties.
 function figure1_DeleteFcn(hObject, eventdata, handles)
-
-
