@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 09-Feb-2017 11:46:07
+% Last Modified by GUIDE v2.5 11-Feb-2017 14:21:52
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -72,7 +72,7 @@ if strcmp(handles.computername,'PRIYANKA-PC')
     % TF - locations per zone
     handles.locations_per_zone.Data = [50 0 50]'; % [20 0 80]'
     % Trial settings
-    handles.TrialSettings.Data = [4.5 0.2 100 20 600 3000]';
+    handles.TrialSettings.Data = [4.5 0.2 100 20 600 2000]';
     % zone width
     handles.ZoneLimitSettings.Data = [0.4 0.1]'; 
     % reward settings
@@ -163,11 +163,11 @@ if ~isempty(webcamlist)
      %mycam.Resolution = '320x240';
     handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
     handles.camera_available = 1;
-    handles.focus_mode.Value = 1;
-    handles.mycam.FocusMode = 'auto';
+    handles.focus_mode.Value = 2;
+    handles.mycam.FocusMode = 'manual';
     handles.mycam.ExposureMode = 'auto';
     handles.exposure_mode.Value = 1;
-    handles.focus_value.Data = handles.mycam.Focus;
+    handles.focus_value.Data = 250; %handles.mycam.Focus;
     handles.exposure_value.Data = handles.mycam.Exposure;
     handles.mycam.Zoom = 100;
 end
@@ -606,6 +606,16 @@ else
     set(handles.lever_raw_plot,'LineStyle','-');
     set(handles.respiration_1_plot,'LineStyle','-');
     set(handles.respiration_2_plot,'LineStyle','-');
+end
+guidata(hObject, handles);
+
+% --- Executes when entered data in editable cell(s) in TargetHold.
+function TargetHold_CellEditCallback(hObject, eventdata, handles)
+if hObject.Data(2)>hObject.Data(1)
+    hObject.Data(2) = hObject.Data(1) - 10;
+end
+if hObject.Data(3)<hObject.Data(1)
+    hObject.Data(3) = hObject.Data(1) + 10;
 end
 guidata(hObject, handles);
 
