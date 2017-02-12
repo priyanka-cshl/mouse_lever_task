@@ -41,7 +41,8 @@ int trialstates::WhichState(int trialstate, long lever_position, long time_since
       }
       else if ( _time_since_last_change >= _min_trigger_on_duration )
       { // above trial triggerON theshold long enough - can activate trial trigger
-        _trialstate = 2;
+        //_trialstate = 2;
+        _trialstate = 4;
       }
       break;
     case 2: // trial trigger is now armed, waiting for border cross
