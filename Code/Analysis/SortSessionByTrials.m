@@ -15,6 +15,11 @@ function [Lever,TrialInfo, TargetZones] = SortSessionByTrials(MyData)
         TrialOn(end,:) = [];
     end
     
+    % Discard Trials shorter than 600 ms i.e. 300 points (500 Hz sampling rate) 
+    f = find((TrialOff-TrialOn)<=0.6);
+    TrialOn(f,:) = [];
+    TrialOff(f,:) = [];
+    
     % get a list of unique Target Zone conditions
     [x,y] = unique(MyData(:,2));
     for i = 1:length(x)
