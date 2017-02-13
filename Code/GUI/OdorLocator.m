@@ -59,7 +59,7 @@ if strcmp(handles.computername,'PRIYANKA-PC')
     handles.file_names.Data(2) = {'C:\Data\Behavior'};
     handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\Behavior'};
     handles.NIchannels = 11;
-    handles.DAC_settings.Data = [2 0.7]';
+    handles.DAC_settings.Data = [2.2 0.7]';
     % motor location settings
     handles.motor_params = 4;
     handles.TrialSettings.Data(2) = 0.5;
