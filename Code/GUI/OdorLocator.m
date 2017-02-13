@@ -54,32 +54,7 @@ handles.Zero_MFC.Value = 0;
 handles.startAcquisition.Enable = 'off';
 
 % rig specific settings
-handles.computername = textread('hostname.txt','%s'); %#ok<*DTXTRD>
-if strcmp(handles.computername,'PRIYANKA-PC')
-    handles.file_names.Data(2) = {'C:\Data\Behavior'};
-    handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\Behavior'};
-    handles.NIchannels = 11;
-    handles.DAC_settings.Data = [2.2 0.7]';
-    % motor location settings
-    handles.motor_params = 4;
-    handles.TrialSettings.Data(2) = 0.5;
-    % disable transfer function calibrator
-    handles.calibrate_transfer_function.Enable = 'off';
-    % MFC settings
-    handles.MFC_table.Data = [1.55 0.4]';
-    % training stage 
-    handles.which_stage.Value = 3;
-    % TF - locations per zone
-    handles.locations_per_zone.Data = [50 0 50]'; % [20 0 80]'
-    % Trial settings
-    handles.TrialSettings.Data = [4.5 0.2 100 20 600 2000]';
-    % zone width
-    handles.ZoneLimitSettings.Data = [0.4 0.1]'; 
-    % reward settings
-    handles.RewardControls.Data = 30;
-    % odor panel
-    handles.Odor_list.Value = [1 2 3]';
-end
+[handles] = RigDefaults(handles);
 
 % defaults
 handles.target_level_array.Data = [1 2 3]';
@@ -106,10 +81,6 @@ handles.sampling_rate_array = handles.DAQrates.Data;
 
 % initiate plots
 axes(handles.axes1); % main plot
-% handles.trial_on = fill(NaN,NaN,[.8 .8 .8]);
-% hold on;
-% handles.trial_on.EdgeColor = 'none';
-
 % three different trial plots - for different odor
 handles.trial_on_1 = fill(NaN,NaN,[.8 .8 .8]);
 hold on;
@@ -138,17 +109,7 @@ handles.targetzone.EdgeColor = 'none';
 handles.minlim = plot(NaN, NaN, 'k','LineStyle',':'); % mark target zone
 set(handles.axes1,'YLim',handles.Plot_YLim.Data);
 
-% axes(handles.axes4); % markers etc plot
-% handles.lims_plot = plot([1 1 1],[1 2 3],'r<','MarkerFaceColor','k','MarkerEdgeColor','k');
-% hold on;
-% handles.fake_lims_plot = plot([1 1 1],[0 0 0],'r<','MarkerFaceColor','none','MarkerEdgeColor','k');
-% axis off tight
-% set(handles.axes4,'YLim',handles.Plot_YLim.Data);
-
 axes(handles.axes9); % Transfer function plot
-%handles.TF_left_plot = plot(NaN, NaN,'k','linewidth',2);
-%hold on;
-%handles.TF_right_plot = plot(NaN, NaN,'r','linewidth',2);
 handles.TF_plot = imagesc(abs((-50:1:50)')/50,[0 1]);
 colormap('hot');
 axis off tight
