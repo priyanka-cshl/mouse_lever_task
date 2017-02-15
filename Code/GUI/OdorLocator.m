@@ -183,6 +183,7 @@ global TotalData;
 global TotalTime;
 global samplenum;
 global TargetLevel;
+global IsRewardedTrial;
 
 if get(handles.startAcquisition,'value')
     % checks whether last file was saved and enable quiting if not
@@ -219,6 +220,7 @@ if get(handles.startAcquisition,'value')
         TotalTime = handles.timestamps;
         samplenum = handles.samplenum;
         TargetLevel = handles.targetlevel;
+        IsRewardedTrial = 1;
         
         set(handles.startAcquisition,'String','Running');
         set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
@@ -465,12 +467,6 @@ Update_Params(handles);
 handles.TargetDefinition.Data = handles.NewTargetDefinition.Data;
 handles.(['TargetLevel',num2str( 1 + mod(handles.current_trial_block.Data(1)-1,length(handles.target_level_array.Data)) )]).Value = 1;
 % --------------------------------------------------------------------
-
-function update_current_target_level_Callback(hObject, eventdata, handles)
-foo = get(hObject,'tag');
-handles.TargetDefinition.Data(2) = handles.target_level_array.Data(str2num(foo(end)));
-ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles);
-
 
 % --- Executes on button press in min_width_up.
 function min_width_up_Callback(hObject, eventdata, handles)
