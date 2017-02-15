@@ -185,38 +185,6 @@ global samplenum;
 global TargetLevel;
 
 if get(handles.startAcquisition,'value')
-       
-    set(handles.startAcquisition,'String','Running');
-    set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
-    time = regexp(char(datetime('now')),' ','split');
-    handles.Date.String = datestr(now, 'mm-dd-yy');
-    handles.StartTime.String = char(time(2));
-    handles.StartTime.Visible = 'on';
-    handles.StopTime.Visible = 'off';
-    
-    % clear indicators
-    handles.RewardStatus.Data = [0 0]';
-    handles.water_received.Data = 0;
-    handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
-    handles.update_call = 1;
-    handles.timestamp.Data = 0;
-    handles.lastrewardtime = 0;
-    
-    % clear plots
-    handles.trial_on.Vertices = [];
-    handles.trial_on.Faces = [];
-    handles.in_target_zone_plot.Vertices = [];
-    handles.in_target_zone_plot.Faces = [];
-    handles.in_reward_zone_plot.Vertices = [];
-    handles.in_reward_zone_plot.Faces = [];
-    
-    set(handles.reward_plot,'XData',NaN,'YData',NaN);
-    set(handles.stimulus_plot,'XData',NaN,'YData',NaN);
-    set(handles.distractor_plot,'XData',NaN,'YData',NaN);
-    set(handles.respiration_1_plot,'XData',NaN,'YData',NaN);
-    set(handles.respiration_2_plot,'XData',NaN,'YData',NaN);
-    set(handles.lick_plot,'XData',NaN,'YData',NaN);
-    
     % checks whether last file was saved and enable quiting if not
     if (handles.was_last_file_saved == 0)
         usrans = menu('warning -- last file did not save','quit','continue');
@@ -252,6 +220,37 @@ if get(handles.startAcquisition,'value')
         samplenum = handles.samplenum;
         TargetLevel = handles.targetlevel;
         
+        set(handles.startAcquisition,'String','Running');
+        set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
+        time = regexp(char(datetime('now')),' ','split');
+        handles.Date.String = datestr(now, 'mm-dd-yy');
+        handles.StartTime.String = char(time(2));
+        handles.StartTime.Visible = 'on';
+        handles.StopTime.Visible = 'off';
+        
+        % clear indicators
+        handles.RewardStatus.Data = [0 0]';
+        handles.water_received.Data = 0;
+        handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
+        handles.update_call = 1;
+        handles.timestamp.Data = 0;
+        handles.lastrewardtime = 0;
+        
+        % clear plots
+        handles.trial_on.Vertices = [];
+        handles.trial_on.Faces = [];
+        handles.in_target_zone_plot.Vertices = [];
+        handles.in_target_zone_plot.Faces = [];
+        handles.in_reward_zone_plot.Vertices = [];
+        handles.in_reward_zone_plot.Faces = [];
+        
+        set(handles.reward_plot,'XData',NaN,'YData',NaN);
+        set(handles.stimulus_plot,'XData',NaN,'YData',NaN);
+        set(handles.distractor_plot,'XData',NaN,'YData',NaN);
+        set(handles.respiration_1_plot,'XData',NaN,'YData',NaN);
+        set(handles.respiration_2_plot,'XData',NaN,'YData',NaN);
+        set(handles.lick_plot,'XData',NaN,'YData',NaN);
+        
         % disable motor override
         handles.motor_override.Value = 0;
         motor_override_Callback(hObject, eventdata, handles);
@@ -280,11 +279,15 @@ if get(handles.startAcquisition,'value')
         
         % enable transfer function calibrator
         handles.calibrate_transfer_function.Enable = 'on';
-    
+
         guidata(hObject,handles);
         if isfield(handles,'lis')
             handles.lis.delete
         end
+        
+        % refresh DAC levels
+        calibrate_DAC_Callback(hObject,eventdata,handles);
+        
         handles.lis = handles.NI.addlistener('DataAvailable', @(src,evt) NI_Callback(src,evt,handles,hObject,fid1));
         handles.NI.startBackground();
         wait(handles.NI);
