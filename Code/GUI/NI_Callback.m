@@ -10,6 +10,7 @@ global TotalTime; % matrix containing timestamps from the current callback
 global mycam; % for webcam
 persistent last_data_value; % event.Data(end,:) from last call
 global TargetLevel;
+global IsRewardedTrial;
 
 fid1 = varargin{3}; % C:\temp_data_files\log.bin
 h = varargin{1}; % handles
@@ -58,6 +59,7 @@ if TotalTime(end)>2
         end
     elseif any(diff(TotalData(end-num_new_samples:end,trial_channel)) > 0) % trial just turned ON
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1; % increment 'trial number'
+        IsRewardedTrial = 0;
     end
 %     % Multiply by odor index
 %     TotalData(end-num_new_samples:end,trial_channel) = ...
@@ -70,11 +72,7 @@ if TotalTime(end)>2
     if any(TotalData(end-num_new_samples+1:end,reward_channel))
         h.RewardStatus.Data(1) = h.RewardStatus.Data(1) + 1; % increment 'total rewards' and 'rewards in block'
         h.water_received.Data = h.water_received.Data + 10*(h.RewardControls.Data*0.015 - 0.042);
-        %h.RewardStatus.Data(3) = round(TotalTime(end)); % update 'last reward'
-%         if h.RewardStatus.Data(2) == h.TransferFunction.Data(2) %#ok<*FNDSB> % rewards in block == max rewards allowed per block
-%                 h.RewardStatus.Data(2) = 0; % reset rewards in block
-%                 %call_new_block = 1;
-%         end
+        IsRewardedTrial = 1;
     end
     
     % lick channel

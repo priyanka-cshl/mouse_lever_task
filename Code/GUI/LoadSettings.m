@@ -10,5 +10,6 @@ function [handles] = LoadSettings(handles)
         handles.locations_per_zone.Data = X.session_data.params(end,21:23)';
         handles.RewardControls.Data = X.session_data.params(end,7);    
         handles.ZoneLimitSettings.Data = X.session_data.params(end,2:3)';
+        handles.TrialSettings.Data(3) = X.session_data.params(end,12);
     end
 end
