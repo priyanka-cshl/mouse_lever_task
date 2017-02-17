@@ -5,7 +5,7 @@ if nargin < 5
 end
 
 %% make histogram of all trials for a given odor & target zone type
-bins = 10;
+bins = 20;
 %for i = 1:numel(Odors)
 i = 1;
     for j = 1:numel(ZonesToUse)
@@ -36,7 +36,7 @@ if DoPlot
             
             subplot(1,numel(Odors),i); hold on
 %            plot(1:bins, H(1,:)/sum(H(1,:)), 'color', cmat, 'Linewidth', 1);
-             plot(1:bins, H(2,:)/sum(H(2,:)), 'color', cmat/2, 'Linewidth', 1);
+             plot(1:bins, H(1,:)/sum(H(1,:)), 'color', cmat/2, 'Linewidth', 1);
 %             plot(1:bins, H(3,:)/sum(H(3,:)), 'color', cmat, 'LineStyle',':');
             
         end

@@ -16,14 +16,18 @@ function [Lever,TrialInfo, TargetZones] = SortSessionByTrials(MyData)
     end
     
     % Discard Trials shorter than 600 ms i.e. 300 points (500 Hz sampling rate) 
-    f = find((TrialOff-TrialOn)<=0.6);
+    f = find((TrialOff-TrialOn)<=300);
     TrialOn(f,:) = [];
     TrialOff(f,:) = [];
     
+    % discard trial 1
+    TrialOn(1,:) = [];
+    TrialOff(1,:) = [];
+    
     % get a list of unique Target Zone conditions
-    [x,y] = unique(MyData(:,2));
+    [x,y] = unique(MyData(TrialOn(1):end,2)); % a hack to get rid of crappy values in the beginning
     for i = 1:length(x)
-        TargetZones(i,:) = MyData( find(MyData(:,2)==x(i),1), [2 3] );
+        TargetZones(i,:) = MyData(TrialOn(1) - 1 + find(MyData(TrialOn(1):end,2)==x(i),1), [2 3] );
     end
     
     % Crunch data trial-by-trial

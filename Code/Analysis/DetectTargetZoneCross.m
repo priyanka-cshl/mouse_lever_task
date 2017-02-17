@@ -19,7 +19,8 @@ if ~isempty(t)
             t_stay(i) = NaN;
         end
     end
-    [~, j] = max(t_stay);
+    %[~, j] = max(t_stay);
+    j = 1;
     MyTraces = [MyTraces; trace( t(j)-timewindow : t(j)+timewindow )];
 end
 end
