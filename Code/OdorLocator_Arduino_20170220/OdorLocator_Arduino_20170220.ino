@@ -15,6 +15,7 @@ ArCOM myUSB(SerialUSB); // Create an ArCOM wrapper for the SerialUSB interface
 //pins
 int lever_in = A0; // 
 int fake_lever_in = A8; // signal generator
+
 int trial_reporter_pin = 41;
 int in_target_zone_reporter_pin = 43;
 int in_reward_zone_reporter_pin = 45;
@@ -81,6 +82,7 @@ unsigned int my_location = 101;
 int reward_state = 0;
 long reward_zone_timestamp = micros();
 int reward_params[] = {100, 40}; // {hold for, duration} in ms
+int multiplerewards = 0; // only one reward per trial
 
 //variables : perturbation related - water delivery decoupled from stimulus
 bool decouple_reward_and_stimulus = false;
@@ -251,8 +253,15 @@ void loop()
         {
           reward_state = 1; // was in reward zone in this trial, but exited reward zone before getting a reward, retrigger reward availability
         }
+        if multiplerewards > 0
+        {
+          if ( in_target_zone[1] && (reward_state == 4) && (micros() - reward_zone_timestamp)<=multiplerewards )
+          {
+            reward_zone_timestamp = micros();
+            reward_state = 2;
+          }
+        }
       }
-
       // update stimulus state
       stimulus_state[0] = stimulus_state[1];
     }
@@ -549,6 +558,9 @@ void UpdateAllParams()
   {
     trial_trigger_timing[i] = param_array[10 + i]; // trig_hold, trig_smooth, min_trial, max_trial
   }
+  // copy trig_smooth to multiplerewards
+  multiplerewards = trial_trigger_timing[1]; // dirty hack
+  
   // param[14] = timestamp
   target_which = param_array[15];
   for (i = 0; i < 3; i++)
@@ -619,6 +631,7 @@ void RewardNow()
     Timer4.stop();
     digitalWrite(reward_valve_pin, LOW);
     digitalWrite(reward_reporter_pin, LOW);
+    reward_zone_timestamp = micros();
   }
 }
 
