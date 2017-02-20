@@ -40,55 +40,25 @@ int trialstates::WhichState(int trialstate, long lever_position, long time_since
         _trialstate = 0; // failed attempt : go back to pre-trial
       }
       else if ( _time_since_last_change >= _min_trigger_on_duration )
-      { // above trial triggerON theshold long enough - can activate trial trigger
-        //_trialstate = 2;
-        _trialstate = 4;
-      }
-      break;
-//    case 2: // trial trigger is now armed, waiting for border cross
-//      if (_lever_position < _trial_trigger_on )
-//      {
-//        _trialstate = 3;
-//      }
-//      break;
-    case 2: 
-      if (_lever_position < _trial_trigger_on )
-      {
-        _trialstate = 0;
-      }
-      break;
-    case 3: // trial is triggered once trial trigger has been armed for
-      // longer than 25 ms (to overcome noise around the border)
-      if ( _lever_position < _trial_trigger_on &
-           _time_since_last_change > _trigger_smooth )
-      {
+      { // above trial triggerON theshold long enough - activate trial
         _trialstate = 4;
       }
       break;
     case 4: // in active trial mode
-      // don't allow a change of state to pre-trial, if min_trial_duration has not elapsed
-//      if ( (_lever_position != constrain(_lever_position, _trial_trigger_off, _trial_trigger_on))
-//           & _time_since_last_change > _min_trial_duration )
-//      {
-//        _trialstate = 0;
-//      }
+      // if time elapsed is less than _min_trial_duration
+      // and lever is beyond lower limit - terminate trial
       if ( (_lever_position < _trial_trigger_off)
-           & _time_since_last_change > _min_trial_duration )
+           & _time_since_last_change < _min_trial_duration )
       {
         _trialstate = 0;
       }
-      if ( (_lever_position > _trial_trigger_on)
-           & _time_since_last_change > _max_trial_duration )
-      {
-        _trialstate = 2;
-      }
-      if ( (_lever_position == constrain(_lever_position, _trial_trigger_off, _trial_trigger_on))
-                & _time_since_last_change > _max_trial_duration )
+      // if time elapsed is more than _max_trial_duration
+      // terminate trial
+      if ( _time_since_last_change > _max_trial_duration )
       {
         _trialstate = 0;
       }
       break;
-      
   }
   return _trialstate;
 }
