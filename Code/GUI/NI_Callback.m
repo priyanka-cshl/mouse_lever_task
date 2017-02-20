@@ -30,9 +30,11 @@ call_new_block = 0;
 % update_trial = 0;
 callreward = 0;
 
+
 %% populate TotalTime with newly available timestamps
 TotalTime = [ TotalTime(num_new_samples+1:end); event.TimeStamps ];
 TargetLevel = [TargetLevel(num_new_samples+1:end,:); h.TargetDefinition.Data(3)+0*event.Data(:,1) h.TargetDefinition.Data(1)+0*event.Data(:,1)];
+which_target = find(sort(h.target_level_array.Data,'descend')==h.TargetDefinition.Data(2));
 %% update MFC setpoints
 h.MFC_setpoints_IN.Data = round(mean(event.Data(:,h.NIchannels+1:h.NIchannels+2)),2,'significant')';
 
@@ -59,6 +61,8 @@ if TotalTime(end)>2
         end
     elseif any(diff(TotalData(end-num_new_samples:end,trial_channel)) > 0) % trial just turned ON
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1; % increment 'trial number'
+        h.ProgressReport.Data(1,which_target) = h.ProgressReport.Data(1,which_target) + 1;
+        h.ProgressReport.Data(1,4) = h.ProgressReport.Data(1,4) + 1;
         IsRewardedTrial = 0;
     end
 %     % Multiply by odor index
@@ -70,9 +74,17 @@ if TotalTime(end)>2
         diff([last_data_value(reward_channel); event.Data(:,reward_channel)])==1 ];
     % check if there were any rewards and update block accordingly
     if any(TotalData(end-num_new_samples+1:end,reward_channel))
-        h.RewardStatus.Data(1) = h.RewardStatus.Data(1) + 1; % increment 'total rewards' and 'rewards in block'
-        h.water_received.Data = h.water_received.Data + 10*(h.RewardControls.Data(1)*0.015 - 0.042);
-        IsRewardedTrial = 1;
+        % increment 'total rewards' and 'rewards in block'
+        if ~IsRewardedTrial
+            h.RewardStatus.Data(1) = h.RewardStatus.Data(1) + 1; 
+            h.ProgressReport.Data(2,which_target) = h.ProgressReport.Data(2,which_target) + 1;
+            h.ProgressReport.Data(2,4) = h.ProgressReport.Data(2,4) + 1;
+            h.water_received.Data = h.water_received.Data + 10*(h.RewardControls.Data(1)*0.015 - 0.042);
+            IsRewardedTrial = 1;
+        else
+            h.RewardStatus.Data(3) = h.RewardStatus.Data(3) + 1; 
+            h.water_received.Data = h.water_received.Data + 10*(h.RewardControls.Data(4)*0.015 - 0.042);
+        end
     end
     
     % lick channel

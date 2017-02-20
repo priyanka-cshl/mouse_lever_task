@@ -15,6 +15,10 @@ end
 h.current_trial_block.Data(1) = block_num; % update 'block number'
 %h.RewardStatus.Data(2) = 0; % reset 'rewards given in block'
 
+for i = 1:size(h.ProgressReport.Data,2)
+    h.ProgressReport.Data(3,i) = round(h.ProgressReport.Data(2,i)/h.ProgressReport.Data(1,i),0,'decimals');
+end
+
 %% update target level
 NoAntiBias = 1;
 % check if antibias needs to be implemented and if previous trial was a failure

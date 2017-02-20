@@ -64,7 +64,8 @@ handles.TransferFunction.Data(2) = 1;
 handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
 
 % clear indicators
-handles.RewardStatus.Data = [0 0]';
+handles.RewardStatus.Data = [0 0 0]';
+handles.ProgressReport.Data = zeros(3,4);
 handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
 handles.water_received.Data = 0;
 handles.Date.String = datestr(now, 'mm-dd-yy');
@@ -232,7 +233,8 @@ if get(handles.startAcquisition,'value')
         handles.StopTime.Visible = 'off';
         
         % clear indicators
-        handles.RewardStatus.Data = [0 0]';
+        handles.RewardStatus.Data = [0 0 0]';
+        handles.ProgressReport.Data = zeros(3,4);
         handles.water_received.Data = 0;
         handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
         handles.update_call = 1;
