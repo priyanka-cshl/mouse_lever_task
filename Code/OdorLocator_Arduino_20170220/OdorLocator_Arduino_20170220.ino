@@ -253,9 +253,9 @@ void loop()
         {
           reward_state = 1; // was in reward zone in this trial, but exited reward zone before getting a reward, retrigger reward availability
         }
-        if multiplerewards > 0
+        if (multiplerewards > 0)
         {
-          if ( in_target_zone[1] && (reward_state == 4) && (micros() - reward_zone_timestamp)<=multiplerewards )
+          if ( in_target_zone[1] && (reward_state == 4) && (micros() - reward_zone_timestamp)<= 1000*multiplerewards )
           {
             reward_zone_timestamp = micros();
             reward_state = 2;
