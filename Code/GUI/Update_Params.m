@@ -2,7 +2,6 @@ function Update_Params(h)
 %% pull all params
 [~, params1, not_ints1] = Current_Settings(h,0);
 [~, params2, not_ints2] = Current_Settings(h,1);
-
 %% send params to Arduino
 sent = 0;
 sending_attempts = 0;
@@ -60,6 +59,7 @@ if get(h.startAcquisition,'value') && (sent == 1)
     % Time Max
     params1(1) = h.ZoneLimitSettings.Data(1); % MinWidth
     params1(2) = h.ZoneLimitSettings.Data(2); % PropWidth
+    params1(end-4) = h.RewardControls.Data(2); % IRI
     params1(end-2) = h.TargetHold.Data(1); % StayMean
     params1(end-1) = h.TargetHold.Data(2); % StayMin
     params1(end) = h.TargetHold.Data(3); % StayMax

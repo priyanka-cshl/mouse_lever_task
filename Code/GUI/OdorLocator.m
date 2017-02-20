@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 11-Feb-2017 14:21:52
+% Last Modified by GUIDE v2.5 20-Feb-2017 14:06:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -443,7 +443,7 @@ else
     handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
     handles.RewardStatus.Data(2) = handles.RewardStatus.Data(2) + 1;
 end
-handles.water_received.Data = handles.water_received.Data + 10*(handles.RewardControls.Data*0.015 - 0.042);
+handles.water_received.Data = handles.water_received.Data + 10*(handles.RewardControls.Data(1)*0.015 - 0.042);
 handles.lastrewardtime = handles.timestamp.Data;
 guidata(hObject, handles);
 
@@ -455,6 +455,16 @@ handles.Arduino.write(83, 'uint16'); %fwrite(handles.Arduino, char(83));
 function RewardControls_CellEditCallback(hObject, eventdata, handles)
 Update_Params(handles);
 
+% --- Executes on button press in MultiRewards.
+function MultiRewards_Callback(hObject, eventdata, handles)
+if handles.MultiRewards.Value == 0
+    handles.RewardControls.Data(2) = 0;
+else
+    if handles.RewardControls.Data(2) == 0
+        handles.RewardControls.Data(2) = 1;
+    end
+end
+Update_Params(handles);
 
 % --- Executes when entered data in editable cell(s) in ZoneLimitSettings.
 function ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles)
@@ -884,3 +894,5 @@ end
 
 % --- Executes during object deletion, before destroying properties.
 function figure1_DeleteFcn(hObject, eventdata, handles)
+
+

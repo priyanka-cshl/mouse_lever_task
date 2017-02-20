@@ -71,7 +71,7 @@ if TotalTime(end)>2
     % check if there were any rewards and update block accordingly
     if any(TotalData(end-num_new_samples+1:end,reward_channel))
         h.RewardStatus.Data(1) = h.RewardStatus.Data(1) + 1; % increment 'total rewards' and 'rewards in block'
-        h.water_received.Data = h.water_received.Data + 10*(h.RewardControls.Data*0.015 - 0.042);
+        h.water_received.Data = h.water_received.Data + 10*(h.RewardControls.Data(1)*0.015 - 0.042);
         IsRewardedTrial = 1;
     end
     

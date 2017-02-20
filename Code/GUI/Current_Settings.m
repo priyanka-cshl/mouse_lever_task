@@ -20,7 +20,7 @@ switch caller
         
         legend(5:6) = {'RewardHoldTime' 'RewardDuration'};
         param(5) = h.current_trial_block.Data(5);
-        param(6) = h.RewardControls.Data;
+        param(6) = h.RewardControls.Data(1);
         
         legend(7) = {'MaxPerBlock'};
         param(7) = h.TransferFunction.Data(2);
@@ -35,6 +35,8 @@ switch caller
         
         legend(11:14) = {'TriggerHOLD' 'TriggerSmooth' 'MinTrialLength' 'MaxTrialLength'};
         param(11:14) = h.TrialSettings.Data(3:6);
+        
+        param(12) = h.MultiRewards.Value*h.RewardControls.Data(2);
         
     case 1 % settings that update within a session
         legend(1) = {'Timestamp'};
@@ -104,7 +106,7 @@ if newlegends
     legend(6:7) = {'RewardHoldTime' 'RewardDuration'};
     legend(8) = {'MaxPerBlock'};
     legend(9) = {'PerturbationProbability'};
-    legend(10:11) = {'TriggerON' 'TriggerOFF'};
+    legend(10:11) = {'TriggerON' 'IRI'};
     legend(12:15) = {'TriggerHOLD' 'StayMean' 'StayMin' 'StayMax'};
 end
 end
