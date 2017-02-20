@@ -82,6 +82,7 @@ unsigned int my_location = 101;
 int reward_state = 0;
 long reward_zone_timestamp = micros();
 int reward_params[] = {100, 40}; // {hold for, duration} in ms
+unsigned short multi_reward_params[] = {200, 10}; // {hold for, duration} in ms for the subsequent rewards within a trial
 int multiplerewards = 0; // only one reward per trial
 
 //variables : perturbation related - water delivery decoupled from stimulus
@@ -255,10 +256,14 @@ void loop()
         }
         if (multiplerewards > 0)
         {
-          if ( in_target_zone[1] && (reward_state == 4) && (micros() - reward_zone_timestamp)<= 1000*multiplerewards )
+          if ( in_target_zone[1] && ((reward_state == 4)||(reward_state == 7)) && (micros() - reward_zone_timestamp)<= 1000*multiplerewards )
           {
             reward_zone_timestamp = micros();
-            reward_state = 2;
+            reward_state = 5;
+          }
+          if (!in_target_zone[1] && (reward_state == 5))
+          {
+            reward_state = 4; // was in reward zone in this trial, but exited reward zone before getting a reward, retrigger reward availability
           }
         }
       }
@@ -302,6 +307,11 @@ void loop()
     reward_state = 3; // flag reward valve opening
     Timer4.start(1000 * reward_params[1]); // call reward timer
   }
+  if (reward_state == 5 && ((micros() - reward_zone_timestamp) > 1000 * multi_reward_params[0]))
+  {
+    reward_state = 6; // flag reward valve opening
+    Timer4.start(1000 * multi_reward_params[1]); // call reward timer
+  }
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
@@ -311,7 +321,7 @@ void loop()
   digitalWrite(target_valves[1], (target_valve_state[1] || (trialstate[0] == 4) || !close_loop_mode) ); // open air valve
   digitalWrite(trial_reporter_pin, (trialstate[0] == 4)); // active trial?
   digitalWrite(in_target_zone_reporter_pin, in_target_zone[1]); // in_target_zone?
-  digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2)); // in_reward_zone?
+  digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2)||(reward_state == 5)); // in_reward_zone?
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
@@ -506,6 +516,13 @@ void loop()
               delay(500);
             }
             break;
+          case 4: // Multi_reward_params
+            serial_clock = millis();
+            while ( myUSB.available() < 2 && (millis() - serial_clock) < 1000 )
+            { } // wait for serial input or time-out
+            myUSB.readUint16Array(multi_reward_params, 2);
+            myUSB.writeUint16Array(multi_reward_params, 2);
+          break;
         }
         break;
       case 90: // SPI communication
@@ -620,11 +637,11 @@ void MoveMotor()
 
 void RewardNow()
 {
-  if ((reward_state == 3) && timer_override)
+  if ((reward_state % 3 == 0) && timer_override)
   {
     digitalWrite(reward_valve_pin, HIGH);
     digitalWrite(reward_reporter_pin, HIGH);
-    reward_state = 4;
+    reward_state = reward_state + 1;
   }
   else
   {

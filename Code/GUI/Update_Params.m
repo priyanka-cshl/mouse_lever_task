@@ -59,7 +59,7 @@ if get(h.startAcquisition,'value') && (sent == 1)
     % Time Max
     params1(1) = h.ZoneLimitSettings.Data(1); % MinWidth
     params1(2) = h.ZoneLimitSettings.Data(2); % PropWidth
-    params1(end-4) = h.RewardControls.Data(2); % IRI
+    params1(end-4) = h.MultiRewards.Value*h.RewardControls.Data(2); % IRI
     params1(end-2) = h.TargetHold.Data(1); % StayMean
     params1(end-1) = h.TargetHold.Data(2); % StayMin
     params1(end) = h.TargetHold.Data(3); % StayMax

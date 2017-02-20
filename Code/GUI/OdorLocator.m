@@ -156,6 +156,7 @@ guidata(hObject, handles);
 lever_raw_on_Callback(hObject,eventdata,handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
 ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Update_Params
+Update_MultiRewards(handles);
 % Zero MFCs
 Zero_MFC_Callback(hObject, eventdata, handles);
 % set all odor valves to default state
@@ -454,17 +455,12 @@ handles.Arduino.write(83, 'uint16'); %fwrite(handles.Arduino, char(83));
 % --- Executes when entered data in editable cell(s) in RewardControls.
 function RewardControls_CellEditCallback(hObject, eventdata, handles)
 Update_Params(handles);
+Update_MultiRewards(handles);
 
 % --- Executes on button press in MultiRewards.
 function MultiRewards_Callback(hObject, eventdata, handles)
-if handles.MultiRewards.Value == 0
-    handles.RewardControls.Data(2) = 0;
-else
-    if handles.RewardControls.Data(2) == 0
-        handles.RewardControls.Data(2) = 1;
-    end
-end
 Update_Params(handles);
+Update_MultiRewards(handles);
 
 % --- Executes when entered data in editable cell(s) in ZoneLimitSettings.
 function ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles)
