@@ -80,7 +80,7 @@ switch caller
         end
         
         legend(11:13) = {'FakeHighLim' 'FakeTarget' 'FakeLowLim'};
-        if h.which_perturbation.Value == 3
+        if h.which_perturbation.Value == 3 && h.current_trial_block.Data(3) == 1
             param(11:13) = h.PertubationSettings.Data(3:5);
         else
             param(11:13) = [0 0 0];
