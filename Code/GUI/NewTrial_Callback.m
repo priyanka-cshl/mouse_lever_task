@@ -40,6 +40,8 @@ if (h.which_perturbation.Value)
     end      
 end
 
+guidata(h.hObject, h);
+
 if callUpdate
     display('params modified by new trial call');
     if callUpdate == 2
