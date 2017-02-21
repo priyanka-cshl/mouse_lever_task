@@ -461,6 +461,15 @@ Update_MultiRewards(handles);
 
 % --- Executes on button press in MultiRewards.
 function MultiRewards_Callback(hObject, eventdata, handles)
+if handles.MultiRewards.Value
+    handles.RewardControls.RowName(2) = {'IRI'};
+    handles.RewardControls.RowName(3) = {'hold-II'};
+    handles.RewardControls.RowName(4) = {'time-II'};
+else
+    handles.RewardControls.RowName(2) = {'---'};
+    handles.RewardControls.RowName(3) = {'OFFlag'};
+    handles.RewardControls.RowName(4) = {'--'};
+end
 Update_Params(handles);
 Update_MultiRewards(handles);
 

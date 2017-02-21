@@ -338,7 +338,7 @@ void loop()
     // if multiplerewards if off and trialstate is active and reward has been received 
     // - trialstate should be pushed to 0 after a buffer time ~100ms after reward offset
     // note: reward_zone_timestamp will be updated when reward valve is turned off
-    if ( multiplerewards==0 && trialstate[0]==4 && reward_state == 4 && (micros() - reward_zone_timestamp)>1000*100)
+    if ( multiplerewards==0 && trialstate[0]==4 && reward_state == 4 && (micros() - reward_zone_timestamp)>1000*multi_reward_params[0])
     {
       trialstate[1] = 0;
     }
