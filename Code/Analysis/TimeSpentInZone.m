@@ -49,6 +49,11 @@ for t = 1:size(LeverTruncated,1) % each trial
     Scores(2,which_row,which_col) = Scores(2,which_row,which_col) + 1;
 end
 
+for x = 1:3
+    Scores(1,x,:) = Scores(1,x,:)/sum(Scores(1,x,:));
+    Scores(2,x,:) = Scores(2,x,:)/sum(Scores(2,x,:));
+end
+
 for Z1 = 1:numel(ZonesToUse)
     for Z2 = 1:numel(ZonesToUse)
         M(1,Z1,Z2) = median(TrialStats.FractionSpent(find(TrialInfo.TargetZoneType==ZonesToUse(Z1)),Z2));
@@ -62,25 +67,37 @@ end
 
 %% Make plots
 if DoPlot
+    MyTitle = {'Time spent', 'Longest stay (ms)', 'Longest Fraction Spent'};
+
     figure('name',[char(MyFileName),'StayTimes']);
     for x = 1:3
         subplot(1,3,x); hold on
+        ax = gca;
+        ax.Title.String =  char(MyTitle(x));
         for y = 1:3
             for z = 1:3
                 cmat = [0 0 0];
                 cmat(z) = 1;
                 errorbar(y+0.2*z,M(x,y,z),S(x,y,z),'color',cmat/2);
                 %bar(y+0.2*z,M(x,y,z),0.1,'FaceColor','none','EdgeColor',cmat/2);
-                bar(y+0.2*z,M(x,y,z),0.15,'FaceColor',cmat/2);
+                if y == z
+                    bar(y+0.2*z,M(x,y,z),0.15,'FaceColor',cmat/2,'EdgeColor','k', 'Linewidth',3);
+                else
+                    bar(y+0.2*z,M(x,y,z),0.15,'FaceColor',cmat/2,'EdgeColor','none');
+                end
             end
+            
         end
     end
     
     figure('name',[char(MyFileName),'Scores']);
-    subplot(1,2,1);
-    imagesc(squeeze(Scores(1,:,:)));
-    subplot(1,2,2);
-    imagesc(squeeze(Scores(2,:,:)));
+    for x = 1:3
+        subplot(1,2,1);
+        imagesc(squeeze(Scores(1,:,:)));
+        subplot(1,2,2);
+        imagesc(squeeze(Scores(2,:,:)));
+    end
+
 end
 
 end

@@ -39,21 +39,22 @@ for i = 1:size(FileNames,2)
         TargetZones_all = TargetZones;
         ZonesToUse_all = ZonesToUse;
         
-        for m = 1:2
-            f = find(mod(TrialInfo_all.TargetZoneType,2)==m-1);
+        n = numel(ZonesToUse)/3;
+        for m = 1:n
+            f = find(mod(TrialInfo_all.TargetZoneType,n)==m-1);
             LeverTruncated = LeverTruncated_all(f,:);
             TrialInfo.TargetZoneType = TrialInfo_all.TargetZoneType(f,:);
             TrialInfo.Success = TrialInfo_all.Success(f,:);
-            TargetZones = TargetZones_all(3-m:2:end,:);
-            ZonesToUse = ZonesToUse_all(3-m:2:end,:);
+            TargetZones = TargetZones_all(n+1-m:n:end,:);
+            ZonesToUse = ZonesToUse_all(n+1-m:n:end,:);
             [Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 1);
-            [StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, 1);
+            %[StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, 1);
             [Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
         end
     else
-        [Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 1);
-        [StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, 1);
-        [Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
+        %[Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 1);
+        %[StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, 1);
+        %[Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
     end
 
 end

@@ -50,14 +50,19 @@ if DoPlot
         fill([-timewindow -timewindow timewindow timewindow], ...
             [LowLim HighLim HighLim LowLim],cmat/2,'FaceAlpha',0.1,'EdgeColor','none');
         
+        MyTitle = [];
         for j = 1:3
             cmat = [0 0 0];
             cmat(j) = 1;
             f = find(Trajectories.(['Z',num2str(z)]).ZoneType==j);
             AverageTrajectories = Mean_NoNaNs(Trajectories.(['Z',num2str(z)]).Traces(f,:),1);
             shadedErrorBar(-timewindow:timewindow, AverageTrajectories(1,:),AverageTrajectories(4,:),{'color',cmat/2},1);
+            MyTitle = [MyTitle,':',num2str(numel(f))];
         end
+        MyTitle = [MyTitle,':'];
         set(gca,'YLim',[0 5]);
+        ax = gca;
+        ax.Title.String =  MyTitle;
         
         % successful trials
         cmat = [0 0 0];
@@ -68,6 +73,7 @@ if DoPlot
         fill([-timewindow -timewindow timewindow timewindow], ...
             [LowLim HighLim HighLim LowLim],cmat/2,'FaceAlpha',0.1,'EdgeColor','none');
         
+        MyTitle = [];
         for j = 1:3
             cmat = [0 0 0];
             cmat(j) = 1;
@@ -76,8 +82,12 @@ if DoPlot
             %f = find( (Trajectories.(['Z',num2str(z)]).ZoneType==j) & (Trajectories.(['Z',num2str(z)]).Outcome==1));
             AverageTrajectories = Mean_NoNaNs(Trajectories.(['Z',num2str(z)]).Traces(f,:),1);
             shadedErrorBar(-timewindow:timewindow, AverageTrajectories(1,:),AverageTrajectories(4,:),{'color',cmat/2},1);
+            MyTitle = [MyTitle,':',num2str(numel(f))];            
         end
-        set(gca,'YLim',[0 5]);
+        MyTitle = [MyTitle,':'];
+        set(gca,'YLim',[0 5])
+        ax = gca;
+        ax.Title.String =  MyTitle;
         
         % failures
         cmat = [0 0 0];
@@ -88,6 +98,7 @@ if DoPlot
         fill([-timewindow -timewindow timewindow timewindow], ...
             [LowLim HighLim HighLim LowLim],cmat/2,'FaceAlpha',0.1,'EdgeColor','none');
         
+        MyTitle = [];
         for j = 1:3
             cmat = [0 0 0];
             cmat(j) = 1;
@@ -96,8 +107,12 @@ if DoPlot
             %f = find((Trajectories.(['Z',num2str(z)]).ZoneType==j) & (Trajectories.(['Z',num2str(z)]).Outcome==0));
             AverageTrajectories = Mean_NoNaNs(Trajectories.(['Z',num2str(z)]).Traces(f,:),1);
             shadedErrorBar(-timewindow:timewindow, AverageTrajectories(1,:),AverageTrajectories(4,:),{'color',cmat/2},1);
+            MyTitle = [MyTitle,':',num2str(numel(f))];      
         end
+        MyTitle = [MyTitle,':'];
         set(gca,'YLim',[0 5]);
+        ax = gca;
+        ax.Title.String =  MyTitle;
     end
 
 %     figure('Name',[char(FileNames{i}),'ZoneAlignedSingleTrials']);
