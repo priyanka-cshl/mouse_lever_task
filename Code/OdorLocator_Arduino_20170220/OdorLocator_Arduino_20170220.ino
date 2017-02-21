@@ -87,9 +87,6 @@ int multiplerewards = 0; // only one reward per trial
 
 //variables : perturbation related - water delivery decoupled from stimulus
 bool decouple_reward_and_stimulus = false;
-int fake_stimulus_state[] = {0, 0};
-long fake_stimulus_state_timestamp = micros();
-bool in_fake_target_zone[] = {false, false};
 
 //variables : trial related
 int trialstate[] = {0, 0}; // old, new
@@ -217,20 +214,25 @@ void loop()
   // in reward zone or not : if in, odor location ranges between 17 and 48
   for (i = 0; i < 2; i++)
   {
-    in_target_zone[i] = (lever_position == constrain(lever_position, target_params[2], target_params[0]));
+    if (decouple_reward_and_stimulus)
+    {
+      in_target_zone[i] = (lever_position == constrain(lever_position, fake_target_params[2], fake_target_params[0]));
+    }
+    else
+    {
+      in_target_zone[i] = (lever_position == constrain(lever_position, target_params[2], target_params[0]));
+    }
   }
   // do the same for the fake target zone condition
   // used only if water delivery is uncoupled from stimulus state
-  if (decouple_reward_and_stimulus)
-  {
-    // fake_stimulus_state[1] = LeverToStimulus.WhichZone(2, lever_position);
-    motor_location = map(lever_position, 0, 65534, 0, num_of_locations - 1);
-    fake_stimulus_state[1] = transfer_function[motor_location];
-    for (i = 0; i < 2; i++)
-    {
-      in_fake_target_zone[i] = (lever_position == constrain(lever_position, target_params[2], target_params[0]));
-    }
-  }
+//  if (decouple_reward_and_stimulus)
+//  {
+//    fake_stimulus_state[1] = stimulus_state[1];
+//    for (i = 0; i < 2; i++)
+//    {
+//      in_fake_target_zone[i] = (lever_position == constrain(lever_position, fake_target_params[2], fake_target_params[0]));
+//    }
+//  }
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
@@ -276,26 +278,26 @@ void loop()
   //----------------------------------------------------------------------------
   // 4) process the 'fake target' when reward is decoupled from stimulus
   //----------------------------------------------------------------------------
-  if ( (decouple_reward_and_stimulus) && (fake_stimulus_state[1] != fake_stimulus_state[0]) )
-  {
-    if ( ((micros() - fake_stimulus_state_timestamp) >= 1000 * min_time_since_last_motor_call) )
-    {
-      fake_stimulus_state_timestamp = micros(); // valid event
-      if (in_fake_target_zone[1])
-      { // currently in reward zone
-        if (reward_state == 1 && trialstate[0] == 4)
-        { // just entered reward zone
-          reward_zone_timestamp = micros();
-          //reward_state = 2;
-        }
-      }
-      else if (trialstate[0] == 4)
-      {
-        reward_state = 1; // exited reward zone
-      }
-      fake_stimulus_state[0] = fake_stimulus_state[1];
-    }
-  }
+//  if ( (decouple_reward_and_stimulus) && (fake_stimulus_state[1] != fake_stimulus_state[0]) )
+//  {
+//    if ( ((micros() - fake_stimulus_state_timestamp) >= 1000 * min_time_since_last_motor_call) )
+//    {
+//      fake_stimulus_state_timestamp = micros(); // valid event
+//      if (in_fake_target_zone[1])
+//      { // currently in reward zone
+//        if (reward_state == 1 && trialstate[0] == 4)
+//        { // just entered reward zone
+//          reward_zone_timestamp = micros();
+//          //reward_state = 2;
+//        }
+//      }
+//      else if (trialstate[0] == 4)
+//      {
+//        reward_state = 1; // exited reward zone
+//      }
+//      fake_stimulus_state[0] = fake_stimulus_state[1];
+//    }
+//  }
   //----------------------------------------------------------------------------
 
 
