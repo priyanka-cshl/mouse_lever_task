@@ -184,10 +184,12 @@ set(h.axes1,'XLim',[TotalTime(indices_to_plot(1)) TotalTime(indices_to_plot(end)
 if get(h.startAcquisition,'value') == 0
     src.stop();
 end
-if call_new_block
+
+if call_new_block && trial_just_ended
+    NewBlockTrial_Callback(h);
+elseif call_new_block
     NewBlock_Callback(h);
-end
-if trial_just_ended
+elseif trial_just_ended
     NewTrial_Callback(h);
 end
 % if update_trial
