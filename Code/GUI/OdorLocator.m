@@ -57,7 +57,6 @@ handles.startAcquisition.Enable = 'off';
 [handles] = RigDefaults(handles);
 
 % defaults
-handles.target_level_array.Data = [1 2 3]';
 handles.DAQrates.Data = [500 20]';
 handles.which_perturbation.Value = 1;
 handles.TransferFunction.Data(2) = 1;
@@ -477,7 +476,6 @@ Update_MultiRewards(handles);
 function ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles)
 % compute new target definition
 [handles] = Compute_TargetDefinition(handles);
-
 Update_TransferFunction_discrete(handles);
 pause(0.1);
 Update_Params(handles);
