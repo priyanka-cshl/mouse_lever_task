@@ -81,6 +81,7 @@ unsigned int my_location = 101;
 //variables : reward related
 int reward_state = 0;
 long reward_zone_timestamp = micros();
+long trial_off_buffer = 0;
 int reward_params[] = {100, 40}; // {hold for, duration} in ms
 unsigned short multi_reward_params[] = {200, 10}; // {hold for, duration} in ms for the subsequent rewards within a trial
 int multiplerewards = 0; // only one reward per trial
@@ -335,10 +336,24 @@ void loop()
   }
   else
   {
-    // if multiplerewards if off and trialstate is active and reward has been received 
-    // - trialstate should be pushed to 0 after a buffer time ~100ms after reward offset
+    // if trialstate is active and reward has been received 
+    // - trialstate should be pushed to 0 after a buffer time has elapsed
+    // buffer time = multi_reward_params[0] if multiplerewards==0
+    // buffer time = multiplerewards if multiplerewards!=0
     // note: reward_zone_timestamp will be updated when reward valve is turned off
-    if ( multiplerewards==0 && trialstate[0]==4 && reward_state == 4 && (micros() - reward_zone_timestamp)>1000*multi_reward_params[0])
+    if (multiplerewards == 0)
+    {
+      trial_off_buffer = 1000*multi_reward_params[0];
+    }
+    else
+    {
+      trial_off_buffer = 1000*multiplerewards;
+    }
+//    if ( multiplerewards==0 && trialstate[0]==4 && reward_state == 4 && (micros() - reward_zone_timestamp)>1000*multi_reward_params[0])
+//    {
+//      trialstate[1] = 0;
+//    }
+    if ( trialstate[0]==4 && ( (reward_state==4)||(reward_state==7) ) && (micros() - reward_zone_timestamp)>trial_off_buffer)
     {
       trialstate[1] = 0;
     }
