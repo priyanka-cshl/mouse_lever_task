@@ -57,7 +57,6 @@ handles.startAcquisition.Enable = 'off';
 [handles] = RigDefaults(handles);
 
 % defaults
-handles.target_level_array.Data = [1 2 3]';
 handles.DAQrates.Data = [500 20]';
 handles.which_perturbation.Value = 1;
 handles.TransferFunction.Data(2) = 1;
