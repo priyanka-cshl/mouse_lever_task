@@ -126,10 +126,11 @@ if ~isempty(webcamlist)
     handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
     handles.camera_available = 1;
     handles.focus_mode.Value = 2;
-    handles.mycam.FocusMode = 'manual';
+    %handles.mycam.FocusMode = 'manual';
     handles.mycam.ExposureMode = 'auto';
     handles.exposure_mode.Value = 1;
-    handles.focus_value.Data = 250; %handles.mycam.Focus;
+    %handles.focus_value.Data = 250; 
+    handles.mycam.Focus = 250;
     handles.exposure_value.Data = handles.mycam.Exposure;
     handles.mycam.Zoom = 100;
 end
@@ -203,13 +204,13 @@ if get(handles.startAcquisition,'value')
         fid3 = fopen('C:\temp_data_files\transferfunction_log.bin','w');
         
         % main settings - only change in the beginning of each session
-        [settings.legends_main, settings.params_main] = Current_Settings(handles,0);
-        [settings.legends_trial, params] = Current_Settings(handles,2);
-        save('C:\temp_data_files\session_settings.mat','settings*');
+        [mysettings.legends_main, mysettings.params_main] = Current_Settings(handles,0);
+        [mysettings.legends_trial, params] = Current_Settings(handles,2);
+        save('C:\temp_data_files\session_settings.mat','mysettings*');
         
         % dynamic settings - change within a session
         handles.settingsfileID = fid2;
-        fwrite(fid2,[handles.timestamp.Data settings.params_main params],'double');
+        fwrite(fid2,[handles.timestamp.Data mysettings.params_main params],'double');
         handles.TransferFunctionfileID = fid3;
         
         handles.hObject = hObject;
@@ -292,6 +293,7 @@ if get(handles.startAcquisition,'value')
         
         % refresh DAC levels
         calibrate_DAC_Callback(hObject,eventdata,handles);
+        NewBlockTrial_Callback(handles);
         
         handles.lis = handles.NI.addlistener('DataAvailable', @(src,evt) NI_Callback(src,evt,handles,hObject,fid1));
         handles.NI.startBackground();
@@ -406,7 +408,7 @@ if usrans == 1
     end
     % read session settings
     load('C:\temp_data_files\session_settings.mat'); % loads variable settings
-    session_data = settings;
+    session_data = mysettings;
     session_data.timestamps = a(1,:)';
     session_data.trace = a(2:handles.NIchannels+1,:)';
     session_data.trace_legend = Connections_list();
@@ -419,9 +421,9 @@ if usrans == 1
     display(['saved to ' filename])
     display(['saved to ' server_file_name])
     set(gcf,'PaperPositionMode','auto')
-    print(gcf,['GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
+    print(gcf,['C:\Users\florin\Desktop\','GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
         '-dpng','-r0');
-    display(['saved GUI screen shot at ' (pwd)])
+    display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
     guidata(hObject, handles);
 end
 
@@ -827,7 +829,7 @@ end
 % --- Executes on selection change in focus_mode.
 function focus_mode_Callback(hObject, eventdata, handles)
 contents = cellstr(get(hObject,'String')); % returns focus_mode contents as cell array
-handles.mycam.FocusMode = contents{get(hObject,'Value')}; %returns selected item from focus_mode
+%handles.mycam.FocusMode = contents{get(hObject,'Value')}; %returns selected item from focus_mode
 handles.focus_value.Data = handles.mycam.Focus;
 if get(hObject,'Value') == 1
     handles.focus_value.Enable = 'off';

@@ -70,7 +70,7 @@ if (h.which_perturbation.Value)
     end
     if perturb && (h.which_perturbation.Value == 3) % decouple feedback
         % select randomly a target level that is not currently in use
-        unused_targets = setdiff(h.target_levels_array.Data,h.TargetDefinition.Data(2));
+        unused_targets = setdiff(h.target_level_array.Data,h.TargetDefinition.Data(2));
         new_fake_target = unused_targets(randi(length(unused_targets)));
         if  h.PertubationSettings.Data(4) ~= new_fake_target % fake target has changed
             h.PertubationSettings.Data(4) = new_fake_target;
