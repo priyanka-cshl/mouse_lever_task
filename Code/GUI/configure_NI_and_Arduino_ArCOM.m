@@ -52,13 +52,16 @@ addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 6, 'Voltage');
 
 %% ------------------------------------------------------------------------------------------------------------
 % configure NI DAQ - digital output (valves)
-Odor_session = daq.createSession('ni');
-release(Odor_session);
-stop(Odor_session);
-addDigitalChannel(Odor_session,'Dev2','Port0/Line5','OutputOnly');
-addDigitalChannel(Odor_session,'Dev2','Port0/Line6','OutputOnly');
-addDigitalChannel(Odor_session,'Dev2','Port0/Line7','OutputOnly');
-%addDigitalChannel(Odor_session,'Dev2','Port1/Line0','OutputOnly');
+Odor_session = [];
+% Odor_session = daq.createSession('ni');
+% release(Odor_session);
+% stop(Odor_session);
+% warning('off');
+% addDigitalChannel(Odor_session,'Dev1','Port0/Line0','OutputOnly');
+% addDigitalChannel(Odor_session,'Dev1','Port0/Line1','OutputOnly');
+% addDigitalChannel(Odor_session,'Dev1','Port0/Line2','OutputOnly');
+% addDigitalChannel(Odor_session,'Dev1','Port0/Line3','OutputOnly');
+% warning('on');
 %% ------------------------------------------------------------------------------------------------------------
 
 %% ------------------------------------------------------------------------------------------------------------

@@ -161,7 +161,7 @@ Update_MultiRewards(handles);
 % Zero MFCs
 Zero_MFC_Callback(hObject, eventdata, handles);
 % set all odor valves to default state
-outputSingleScan(handles.Odors,[0, 0, 0]);
+% outputSingleScan(handles.Odors,[0, 0, 0, 0]);
 % disable motor override
 handles.motor_override.Value = 0;
 motor_override_Callback(hObject, eventdata, handles);
@@ -747,7 +747,7 @@ else
     outputSingleScan(handles.MFC,0*handles.MFC_table.Data');
     handles.Zero_MFC.String = 'MFCs OFF';
     % also turn OFF valves
-    outputSingleScan(handles.Odors,[0, 0, 0]);
+%     outputSingleScan(handles.Odors,[0, 0, 0, 0]);
 end
 
 % --- Executes on button press in valve_odor_A.
@@ -788,13 +788,13 @@ if handles.odor_vial.Value && length(handles.Odor_list.Value)==1
     MyVial = handles.Odor_list.Value;
     set(handles.odor_vial,'String',['Vial',num2str(MyVial),' ON'])
     set(handles.odor_vial,'BackgroundColor',[0.5 0.94 0.94]);
-    odor_states = [0 0 0];
-    odor_states(MyVial) = 1;
-    outputSingleScan(handles.Odors,odor_states);
+%     odor_states = [0 0 0 0];
+%     odor_states(MyVial) = 1;
+%     outputSingleScan(handles.Odors,odor_states);
 else
-    set(handles.odor_vial,'String','Vial1 ON')
+    set(handles.odor_vial,'String','Vial OFF')
     set(handles.odor_vial,'BackgroundColor',[0.94 0.94 0.94]);
-    outputSingleScan(handles.Odors,[1, 0, 0]);
+%     outputSingleScan(handles.Odors,[0, 0, 0, 1]);
 end
 
 % Hint: get(hObject,'Value') returns toggle state of odor_vial
@@ -878,7 +878,7 @@ handles.mycam.Exposure = hObject.Data;
 function close_gui_Callback(hObject, eventdata, handles)
 % close valves and MFCs
 outputSingleScan(handles.MFC,0*handles.MFC_table.Data');
-outputSingleScan(handles.Odors,[0, 0, 0]);
+% outputSingleScan(handles.Odors,[0, 0, 0, 0]);
 handles.Arduino.write(44, 'uint16');
 delete(handles.figure1);
 handles.Arduino.write(12, 'uint16'); %fwrite(handles.Arduino, char(11));

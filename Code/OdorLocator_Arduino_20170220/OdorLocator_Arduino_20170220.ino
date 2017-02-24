@@ -22,6 +22,7 @@ int in_reward_zone_reporter_pin = 45;
 int reward_reporter_pin = 47;
 int reward_valve_pin = 8;
 int target_valves[] = {9, 10};
+int odor_valves[] = {37, 31, 33, 35};
 //int distractor_valves[] = {35, 39};
 //int target_MFC[] = {23, 25};
 //int distractor_MFC[] = {39, 33};
@@ -65,6 +66,8 @@ int training_stage = 2;
 //int delay_distractor_by = 20000; // in milliseconds
 
 // MFC related and valves related
+int which_odor = 0;
+bool odor_ON = true;
 bool target_valve_state[2] = {false, false};
 //bool distractor_valve_state = false;
 
@@ -120,6 +123,13 @@ void setup()
     //    pinMode(distractor_valves[i], OUTPUT);
     //    digitalWrite(distractor_valves[i], LOW);
   }
+
+  for (i = 0; i < 4; i++)
+  {
+    pinMode(odor_valves[i], OUTPUT);
+    digitalWrite(odor_valves[i], LOW);
+  }
+  
   pinMode(reward_valve_pin, OUTPUT);
   digitalWrite(reward_valve_pin, LOW);
   pinMode(in_reward_zone_reporter_pin, OUTPUT);
@@ -301,9 +311,8 @@ void loop()
 //  }
   //----------------------------------------------------------------------------
 
-
   //----------------------------------------------------------------------------
-  // 7) manage reward
+  // 5) manage reward
   //----------------------------------------------------------------------------
   if (reward_state == 2 && ((micros() - reward_zone_timestamp) > 1000 * reward_params[0]))
   {
@@ -318,7 +327,7 @@ void loop()
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
-  // 8) manage reporter pins, valves etc based on time elapsed since last event
+  // 6) manage reporter pins, valves etc based on time elapsed since last event
   //----------------------------------------------------------------------------
   digitalWrite(target_valves[0], (target_valve_state[0] || (trialstate[0] == 4) || !close_loop_mode) ); // open odor valve
   digitalWrite(target_valves[1], (target_valve_state[1] || (trialstate[0] == 4) || !close_loop_mode) ); // open air valve
@@ -328,7 +337,7 @@ void loop()
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
-  // 6) determine trial mode
+  // 7) determine trial mode
   //----------------------------------------------------------------------------
   if (training_stage == 2)
   {
@@ -369,12 +378,33 @@ void loop()
     {
       trial_timestamp = micros();
     }
+    // manage odor valves
+    if (timer_override)
+    {
+      if ( (trialstate[1]==0) && odor_ON)
+      {
+        for (i=0; i<4; i++)
+        {
+          digitalWrite(odor_valves[i],(i==trialstate[0]));
+          odor_ON = false;
+        }
+      }
+      else if ( (trialstate[1]==1) && (trialstate[0]==0) )
+      {
+        for (i=0; i<4; i++)
+        {
+          digitalWrite(odor_valves[i],(i==which_odor));
+          odor_ON = true;
+        }
+      }
+    }
+    
     trialstate[0] = trialstate[1];
   }
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
-  // 7) Serial handshakes to check for parameter updates etc
+  // 8) Serial handshakes to check for parameter updates etc
   //----------------------------------------------------------------------------
   if (myUSB.available() > 0)
   {
@@ -396,6 +426,11 @@ void loop()
           case 2: // Acquisition stop handshake
             myUSB.writeUint16(7);
             timer_override = false;
+            // turn off all odor valves as caution
+            for (i=0; i<4; i++)
+            {
+              digitalWrite(odor_valves[i],LOW);
+            }
             break;
         }
         break;
@@ -605,6 +640,7 @@ void UpdateAllParams()
   multiplerewards = trial_trigger_timing[1]; // dirty hack
   
   // param[14] = timestamp
+  which_odor = param_array[14]; // odor vial number
   target_which = param_array[15];
   for (i = 0; i < 3; i++)
   {
