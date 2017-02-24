@@ -674,7 +674,7 @@ void RewardNow()
     Timer4.stop();
     digitalWrite(reward_valve_pin, LOW);
     digitalWrite(reward_reporter_pin, LOW);
-    reward_zone_timestamp = micros();
+    //reward_zone_timestamp = micros();
   }
 }
 
