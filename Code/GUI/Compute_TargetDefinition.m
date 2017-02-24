@@ -17,7 +17,7 @@ h.PertubationSettings.Data(5) = h.PertubationSettings.Data(4) -...
 % shrink target Zone if needed
 if h.ShrinkTargetLocations.Value
     h.locations_per_zone.Data(1) = round(sum(h.locations_per_zone.Data) * (h.ZoneLimitSettings.Data(1)*2)/5);
-    h.locations_per_zone.Data(3) = h.TransferFunction.Data(1) - sum(h.locations_per_zone.Data(1:2));
+    h.locations_per_zone.Data(3) = 80 - sum(h.locations_per_zone.Data(1:2));
 end
 
 end

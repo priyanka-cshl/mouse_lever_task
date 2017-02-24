@@ -16,7 +16,7 @@ switch char(handles.computername)
         % training stage
         handles.which_stage.Value = 3;
         % TF - locations per zone
-        handles.locations_per_zone.Data = [20 0 80]';
+        handles.locations_per_zone.Data = [20 0 60]';
         % Trial settings
         handles.TrialSettings.Data = [4.8 0.2 200 0 100 2000]';
         % zone width
