@@ -26,7 +26,7 @@ switch caller
         param(7) = h.TransferFunction.Data(2);
         
         legend(8) = {'PerturbationProbability'};
-        param(8) = h.PertubationSettings.Data(1);
+        param(8) = h.PerturbationSettings.Data(1);
         
         legend(9:10) = {'TriggerON' 'TriggerOFF'};
         param(9:10) = h.TrialSettings.Data(1:2);
@@ -63,8 +63,8 @@ switch caller
         legend(9) = {'StimulusDelay'};
         if (h.is_stimulus_on.Value)
             if h.current_trial_block.Data(3) == 1 && h.which_perturbation.Value == 2
-                param(9) = 1 + 1000*h.PertubationSettings.Data(2);
-                %param(9) = 1 + h.PertubationSettings.Data(2);
+                param(9) = 1 + 1000*h.PerturbationSettings.Data(2);
+                %param(9) = 1 + h.PerturbationSettings.Data(2);
             else
                 param(9) = 1;
             end
@@ -81,12 +81,12 @@ switch caller
         
         legend(11:13) = {'FakeHighLim' 'FakeTarget' 'FakeLowLim'};
         if h.which_perturbation.Value == 3 && h.current_trial_block.Data(3) == 1
-            param(11:13) = h.PertubationSettings.Data(3:5);
+            param(11:13) = h.PerturbationSettings.Data(3:5);
+            % convert to integers for Arduino communication purpose
+            not_ints = [not_ints 11:13];
         else
             param(11:13) = [0 0 0];
         end
-        % convert to integers for Arduino communication purpose
-        %not_ints = [not_ints 3:5];
         
         legend(14) = {'TFsize'};
         param(14) = h.TransferFunction.Data(1);

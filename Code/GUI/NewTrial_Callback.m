@@ -24,7 +24,7 @@ h.current_trial_block.Data(5) = round(h.TargetHold.Data(2)+x,0);
 if (h.which_perturbation.Value)
     % bsed on the user set probability,
     % check if the trial is to be perturbed or not
-    perturb = (rand(1) <= h.PertubationSettings.Data(1));
+    perturb = (rand(1) <= h.PerturbationSettings.Data(1));
     if (perturb ~= h.current_trial_block.Data(3))
         h.current_trial_block.Data(3) = perturb;
         callUpdate = 1;
@@ -33,8 +33,8 @@ if (h.which_perturbation.Value)
         % select randomly a target level that is not currently in use
         unused_targets = setdiff(h.target_levels_array.Data,h.TargetDefinition.Data(2));
         new_fake_target = unused_targets(randi(length(unused_targets)));
-        if  h.PertubationSettings.Data(4) ~= new_fake_target % fake target has changed
-            h.PertubationSettings.Data(4) = new_fake_target;
+        if  h.PerturbationSettings.Data(4) ~= new_fake_target % fake target has changed
+            h.PerturbationSettings.Data(4) = new_fake_target;
             callUpdate = 2;
         end
     end      
