@@ -385,7 +385,7 @@ void loop()
       {
         for (i=0; i<4; i++)
         {
-          digitalWrite(odor_valves[i],(i==trialstate[0]));
+          digitalWrite(odor_valves[i],(i==trialstate[1]));
           odor_ON = false;
         }
       }
@@ -421,6 +421,8 @@ void loop()
           case 1: // Acquisition start handshake
             myUSB.writeUint16(6);
             stimulus_writepointer = 0;
+            digitalWrite(odor_valves[0],HIGH);
+            odor_ON = true;
             timer_override = true;
             break;
           case 2: // Acquisition stop handshake
