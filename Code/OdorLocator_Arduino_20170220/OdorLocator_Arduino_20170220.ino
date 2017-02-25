@@ -255,7 +255,8 @@ void loop()
     {
       stimulus_state_timestamp = micros(); // valid event
       // update reward zone time stamp, if needed
-      if (!decouple_reward_and_stimulus && (trialstate[0] == 4))
+      // if (!decouple_reward_and_stimulus && (trialstate[0] == 4))
+      if (trialstate[0] == 4)
       {
         if (in_target_zone[1] && (reward_state == 1)) 
         // in trial, entered target zone, and has not received reward in this trial
