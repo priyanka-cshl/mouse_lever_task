@@ -6,7 +6,7 @@ switch char(handles.computername)
         handles.file_names.Data(2) = {'C:\Data\Behavior'};
         handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\Behavior'};
         handles.NIchannels = 11;
-        handles.DAC_settings.Data = [1.8 0]';
+        handles.DAC_settings.Data = [1.5 0.95]';
         % motor location settings
         handles.motor_params = 4;
         % disable transfer function calibrator
@@ -22,7 +22,7 @@ switch char(handles.computername)
         % zone width
         handles.ZoneLimitSettings.Data = [0.5 0.1]';
         % reward settings
-        handles.RewardControls.Data(1) = 30;
+        handles.RewardControls.Data = [40 200 50 5]';
         % odor panel
         handles.Odor_list.Value = [1 2 3]';
         % target levels
