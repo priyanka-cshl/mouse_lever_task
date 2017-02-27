@@ -395,8 +395,11 @@ void loop()
         for (i=0; i<4; i++)
         {
           digitalWrite(odor_valves[i],(i==which_odor));
-          odor_ON = true;
         }
+      }
+      else if (trialstate[1]==4)
+      {
+        odor_ON = true;
       }
     }
     
