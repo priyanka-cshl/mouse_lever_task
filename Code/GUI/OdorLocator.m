@@ -337,6 +337,9 @@ else
    
    % disable transfer function calibrator
     handles.calibrate_transfer_function.Enable = 'off';
+    
+    handles.water_calibrate.Enable = 'on';
+    handles.open_valve.Enable = 'on';
 end
 
 handles.traces = TotalData;
@@ -493,12 +496,16 @@ ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles);
 
 % --- Executes on button press in stay_time_up.
 function stay_time_up_Callback(hObject, eventdata, handles)
-handles.TargetHold.Data(1) = handles.TargetHold.Data(1) + 5;
+handles.TargetHold.Data(3) = handles.TargetHold.Data(3) + 25;
+handles.TargetHold.Data(2) = handles.TargetHold.Data(2) + 25;
+handles.TargetHold.Data(1) = handles.TargetHold.Data(1) + 25;
 handles.TargetHold.ForegroundColor = 'r';
 
 % --- Executes on button press in stay_time_down.
 function stay_time_down_Callback(hObject, eventdata, handles)
-handles.TargetHold.Data(1) = handles.TargetHold.Data(1) - 5;
+handles.TargetHold.Data(3) = handles.TargetHold.Data(3) - 25;
+handles.TargetHold.Data(2) = handles.TargetHold.Data(2) - 25;
+handles.TargetHold.Data(1) = handles.TargetHold.Data(1) - 25;
 handles.TargetHold.ForegroundColor = 'r';
 
 % --- Executes on button press in min_width_down.
