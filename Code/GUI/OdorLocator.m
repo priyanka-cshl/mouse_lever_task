@@ -284,6 +284,9 @@ if get(handles.startAcquisition,'value')
         
         % enable transfer function calibrator
         handles.calibrate_transfer_function.Enable = 'on';
+        
+        handles.water_calibrate.Enable = 'off';
+        handles.open_valve.Enable = 'off';
 
         guidata(hObject,handles);
         if isfield(handles,'lis')
