@@ -351,18 +351,6 @@ void loop()
     // buffer time = multi_reward_params[0] if multiplerewards==0
     // buffer time = multiplerewards if multiplerewards!=0
     // note: reward_zone_timestamp will be updated when reward valve is turned off
-    if (multiplerewards == 0)
-    {
-      trial_off_buffer = 1000*multi_reward_params[0];
-    }
-    else
-    {
-      trial_off_buffer = 1000*multiplerewards;
-    }
-//    if ( multiplerewards==0 && trialstate[0]==4 && reward_state == 4 && (micros() - reward_zone_timestamp)>1000*multi_reward_params[0])
-//    {
-//      trialstate[1] = 0;
-//    }
     if ( trialstate[0]==4 && ( (reward_state==4)||(reward_state==7) ) && (micros() - reward_zone_timestamp)>trial_off_buffer)
     {
       trialstate[1] = 0;
@@ -644,6 +632,15 @@ void UpdateAllParams()
   }
   // copy trig_smooth to multiplerewards
   multiplerewards = trial_trigger_timing[1]; // dirty hack
+
+  if (multiplerewards == 0)
+  {
+    trial_off_buffer = 1000*param_array[0];
+  }
+  else
+  {
+    trial_off_buffer = 1000*multiplerewards;
+  }
   
   // param[14] = timestamp
   which_odor = param_array[14]; // odor vial number
@@ -711,6 +708,7 @@ void RewardNow()
     digitalWrite(reward_valve_pin, HIGH);
     digitalWrite(reward_reporter_pin, HIGH);
     reward_state = reward_state + 1;
+    reward_zone_timestamp = micros();
   }
   else
   {
