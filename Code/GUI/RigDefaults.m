@@ -6,7 +6,7 @@ switch char(handles.computername)
         handles.file_names.Data(2) = {'C:\Data\Behavior'};
         handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\Behavior'};
         handles.NIchannels = 11;
-        handles.DAC_settings.Data = [1.5 0.85]';
+        handles.DAC_settings.Data = [1.6 1.3]';
         % motor location settings
         handles.motor_params = 4;
         % disable transfer function calibrator
