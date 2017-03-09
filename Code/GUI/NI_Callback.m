@@ -202,10 +202,10 @@ data(trial_channel+1,:) = h.current_trial_block.Data(4)*data(trial_channel+1,:);
 fwrite(fid1,data,'double');
 
 
-%% write behavior video to disk
-if get(h.grab_camera,'Value')
-    h.cam_image = snapshot(mycam);
-end
+% %% write behavior video to disk
+% if get(h.grab_camera,'Value')
+%     h.cam_image = snapshot(mycam);
+% end
 
 %% for next round
 samplenum = samplenum + num_new_samples;

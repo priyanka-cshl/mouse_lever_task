@@ -67,7 +67,7 @@ Odor_session = [];
 %% ------------------------------------------------------------------------------------------------------------
 % initialize Arduino as Serial Object
 [Arduino_Serial,portNum] = Start_Arduino_ArCOM(8);
-pause(5);
+pause(0.5);
 Arduino_Serial.write(10, 'uint16'); % opening handshake - should return 5 as confirmation
 %Arduino_Serial.Port.BytesAvailable
 tic
