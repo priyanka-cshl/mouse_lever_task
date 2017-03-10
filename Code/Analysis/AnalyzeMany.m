@@ -5,7 +5,18 @@ global timewindow;
 global MyFileName;
 timewindow = 100; % sampling rate of 500 Hz, 50 points = 100ms
 
-DataRoot = '//sonas-hs.cshl.edu/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
+% read computer name
+!hostname > hostname.txt
+computername = char(textread('hostname.txt','%s'));
+
+switch computername
+    case 'priyanka-gupta.cshl.edu'
+        DataRoot = '/Volumes/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
+    case 'Priyanka-PC'
+        DataRoot = 'C:\Data\Behavior'; % location on rig computer
+    otherwise
+        DataRoot = '//sonas-hs.cshl.edu/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
+end
 DataRoot = fullfile(DataRoot,MouseName);
 
 % get session files for analysis
@@ -31,6 +42,11 @@ for i = 1:size(FileNames,2)
     
     %% Basic session statistics
     [Odors, ZonesToUse, LeverTruncated] = SortTrialsByType(Lever, TrialInfo, TargetZones);
+%     [NumTrials] = SessionSummary(TrialInfo,ZonesToUse,TargetZones,1);    
+    
+    %% Trajectory Analysis
+%     ParameterizeTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones);
+    
     
     % if number of Zones>6 split the data set into two
     if numel(ZonesToUse)>3
@@ -52,9 +68,9 @@ for i = 1:size(FileNames,2)
             [Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
         end
     else
-        %[Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 1);
-        %[StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, 1);
-        %[Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
+%         [Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 1);
+%         [StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, 1);
+%         [Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
     end
 
 end
