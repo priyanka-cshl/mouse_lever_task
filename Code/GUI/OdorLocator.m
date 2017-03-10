@@ -61,6 +61,7 @@ handles.DAQrates.Data = [500 20]';
 handles.which_perturbation.Value = 1;
 handles.TransferFunction.Data(2) = 1;
 handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
+handles.NewTargetDefinition.Data(2) = handles.target_level_array.Data(2);
 
 % clear indicators
 handles.RewardStatus.Data = [0 0 0]';
@@ -828,11 +829,11 @@ end
 
 % --- Executes on button press in grab_camera.
 function grab_camera_Callback(hObject, eventdata, handles)
-if get(hObject,'Value') && handles.startStopCamera.Value
-    closePreview(handles.mycam);
-    set(handles.startStopCamera,'String','Cam OFF');
-    set(handles.startStopCamera,'BackgroundColor',[0.94 0.94 0.94]);
-end
+% if get(hObject,'Value') && handles.startStopCamera.Value
+%     closePreview(handles.mycam);
+%     set(handles.startStopCamera,'String','Cam OFF');
+%     set(handles.startStopCamera,'BackgroundColor',[0.94 0.94 0.94]);
+% end
 % Hint: get(hObject,'Value') returns toggle state of grab_camera
 
 % --- Executes on selection change in focus_mode.

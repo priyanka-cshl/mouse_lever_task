@@ -108,6 +108,11 @@ int FSMheader = 0;
 unsigned int num_of_params = 30;
 unsigned short param_array[30] = {0}; // ArCOM aray needs unsigned shorts
 
+// variables - camera sync
+int camera_pin = 29;
+bool camera = 0;
+int camera_on = 0;
+
 void setup()
 {
   SerialUSB.begin(115200);
@@ -140,6 +145,8 @@ void setup()
   digitalWrite(reward_reporter_pin, LOW);
   pinMode(trial_reporter_pin, OUTPUT);
   digitalWrite(trial_reporter_pin, LOW);
+  pinMode(camera_pin, OUTPUT);
+  digitalWrite(camera_pin, LOW);
 
   // set up SPI
   pinMode (dac_spi_pin, OUTPUT);
@@ -409,6 +416,7 @@ void loop()
         {
           case 0: // opening handshake
             myUSB.writeUint16(5);
+            camera_on = 1;
             break;
           case 1: // Acquisition start handshake
             myUSB.writeUint16(6);
@@ -416,6 +424,7 @@ void loop()
             digitalWrite(odor_valves[0],HIGH);
             odor_ON = true;
             timer_override = true;
+            camera_on = 1;
             break;
           case 2: // Acquisition stop handshake
             myUSB.writeUint16(7);
@@ -425,6 +434,7 @@ void loop()
             {
               digitalWrite(odor_valves[i],LOW);
             }
+            camera_on = 1;
             break;
         }
         break;
@@ -641,6 +651,8 @@ void UpdateAllParams()
   {
     trial_off_buffer = 1000*multiplerewards;
   }
+
+  camera_on = param_array[1];
   
   // param[14] = timestamp
   which_odor = param_array[14]; // odor vial number
@@ -698,6 +710,8 @@ void MoveMotor()
     // roll over the TF array pointer
     transfer_function_pointer = (transfer_function_pointer + 1) % num_of_locations;
   }
+    camera = camera_on*(!camera);
+    digitalWrite(camera_pin,camera);
 }
 
 void RewardNow()
