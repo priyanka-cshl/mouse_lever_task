@@ -1,6 +1,6 @@
-function [handles] = AlignVideoAndTraces()
+function [handles] = AlignVideoAndTraces_MovingBar()
 
-write_video = 1;
+write_video = 0;
 
 %% Filepaths
 vid_folder = '/Users/Priyanka/Desktop/temp/MP8_5/';
@@ -8,7 +8,7 @@ filetag = 'fc2_save_2017-03-09-141331-00';
 startindex = 0; % video file start ID
 stopindex = 5; % video file end ID
 DataFile = fullfile('/Users/Priyanka/Desktop/temp/MP8/MP8_20170309_r1.mat');
-timewindow = [-1 1]; % seconds
+timewindow = [-1 35]; % seconds
 framerate = 50; % Hz
 
 if write_video
@@ -16,12 +16,12 @@ if write_video
     writerObj = VideoWriter('test_video','MPEG-4');
     writerObj.FrameRate = framerate;
     open(writerObj);
-    endcl
+end
 
 %% Video display initializations
 % display parameters
-a = 0.6; % proportion occupied by the video image - choose between 0 and 1
-margin = 0.1;
+a = 0.5; % proportion occupied by the video image - choose between 0 and 1
+margin = 0.5;
 edge = 0.05;
 
 % % load and display one frame
@@ -36,7 +36,7 @@ set(t, 'Units', 'Normalized', 'OuterPosition', [0 0 0.75 1]);
 f = getframe(t);
 d = size(f.cdata);
 % override figure height
-d(1) = 500;
+%d(1) = 500;
 
 close (gcf);
 pause(0.5);
@@ -58,6 +58,7 @@ tstart
 offset = 0.4;
 t0 = offset + t0;
 
+frames_to_show = diff(timewindow)*framerate;
 % when aligning to a specific stretch in the session, recalculate offset
 tdesired = 172; % set to 0 if tdesired conincides with the start of video acquisition
 if tdesired>0
@@ -65,23 +66,14 @@ if tdesired>0
     frames_to_skip = round(newoffset*framerate);
     frames_per_video = 583;
     startindex = startindex + floor((frames_to_skip-1)/frames_per_video);
-    stopindex = stopindex + floor((frames_to_skip-1)/frames_per_video);
+    stopindex = floor((frames_to_skip+frames_to_show-1)/frames_per_video);
     frames_remaining = mod(frames_to_skip,frames_per_video);
     t0 = tdesired;
+    last_frame = mod(frames_to_skip+frames_to_show,frames_per_video);
 else
     frames_remaining = 0;
 end
 
-
-set(handles.H2,'position',[a+margin, margin, 1-a-1.5*margin, a*ratio*d(2)/d(1)]);
-set(handles.H2,'XTick',[],'XTickLabel',' ','XTickMode','manual','XTickLabelMode','manual');
-set(handles.H2,'YTick',[],'YTickLabel',' ','YTickMode','manual','YTickLabelMode','manual');
-handles.H2.XLim = t0 + timewindow;
-handles.H2.FontSize = 14;
-handles.H2.FontWeight = 'bold';
-set(handles.H2,'YTick',[0 5],'YTickLabel',{'min' 'max'},'TickDir','out');
-handles.H2.Position(2) = 0.4;
-handles.H2.Position(4) = 0.4;
 
 % initialize video axes with one frame
 handles.H1 = subplot(1,2,1);
@@ -90,7 +82,18 @@ handles.H1.LineWidth = 2;
 handles.frame = image(frame,'parent',handles.H1);
 set(handles.H1,'XTick',[],'XTickLabel',' ','XTickMode','manual','XTickLabelMode','manual');
 set(handles.H1,'YTick',[],'YTickLabel',' ','YTickMode','manual','YTickLabelMode','manual');
-set(handles.H1, 'position', [margin/2, margin , a, a*ratio*d(2)/d(1)]); % left, bottom, width, height relative to the bottom left corner
+set(handles.H1, 'position', [margin/2, edge*2 , a, a*ratio*d(2)/d(1)]); % left, bottom, width, height relative to the bottom left corner
+
+%set(handles.H2,'position',[a+margin, margin, 1-a-1.5*margin, a*ratio*d(2)/d(1)]);
+set(handles.H2, 'position', [-0.2+margin/2, 0.65, 0.9, 0.25]);
+set(handles.H2,'XTick',[],'XTickLabel',' ','XTickMode','manual','XTickLabelMode','manual');
+set(handles.H2,'YTick',[],'YTickLabel',' ','YTickMode','manual','YTickLabelMode','manual');
+handles.H2.XLim = t0 + timewindow;
+handles.H2.FontSize = 14;
+handles.H2.FontWeight = 'bold';
+set(handles.H2,'YTick',[0 5],'YTickLabel',{'min' 'max'},'TickDir','out');
+% handles.H2.Position(2) = 0.4;
+% handles.H2.Position(4) = 0.4;
 
 % initialize another axes object to plot the timestamp bar
 handles.H3 = axes;
@@ -98,10 +101,10 @@ handles.H3.Position = handles.H2.Position;
 axes(handles.H3);
 set(gca, 'Color', 'none');
 handles.H3.YLim = handles.H2.YLim;
-handles.H3.XLim = timewindow;
+handles.H3.XLim = t0 + timewindow;
 set(handles.H3,'XTick',[min(timewindow) 0 max(timewindow)],'TickDir','out');
 set(handles.H3,'YTick',[],'YTickLabel',' ','YTickMode','manual','YTickLabelMode','manual');
-line([0 0],handles.H3.YLim,'color','k','LineStyle','--');
+handles.bar = line([t0 t0],handles.H3.YLim,'color',[0.6 0 0.2]);
 handles.H3.FontSize = 14;
 handles.H3.FontWeight = 'bold';
 
@@ -110,10 +113,10 @@ zonehalfwidth = 0.07*handles.H1.Position(3);
 zoneheight = 0.06;
 handles.H4 = axes;
 handles.H4.Position = handles.H1.Position;
-handles.H4.Position(1) = handles.H1.Position(1) + (handles.H1.Position(3)-handles.H1.Position(1))/2 - zonehalfwidth;
+handles.H4.Position(1) = handles.H1.Position(1) + (handles.H1.Position(3))/2 - zonehalfwidth;
 handles.H4.Position(2) = handles.H1.Position(2) - zoneheight;
 handles.H4.Position(3) = 2*zonehalfwidth;
-handles.H4.Position(1) = handles.H4.Position(1) + 0.025;
+%handles.H4.Position(1) = handles.H4.Position(1) + 0.025;
 
 set(gca,'Color','r');
 handles.H4.Position(3) = 2*zonehalfwidth;
@@ -147,13 +150,18 @@ for num = startindex:1:stopindex
     else
         startframe = 1;
     end
-        
+    
+    if num == stopindex && k>last_frame
+        return
+    end
+    
     for i = startframe:k-1
         axes(handles.H1);
         handles.frame.CData = s(i).cdata;
         
         t0 = t0 + (1/framerate);
-        handles.H2.XLim = t0 + timewindow;
+        %handles.H2.XLim = t0 + timewindow;
+        handles.bar.XData = [t0 t0];
         pause(1/framerate);
         
         % encoding of trial state

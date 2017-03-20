@@ -38,6 +38,7 @@ myfakezone = cell2mat(cellfun(@(x) max([x 0]), TrialInfo.FakeZone, 'UniformOutpu
                 perturbtrials(Z,3) = numel(intersect(perturbed, find(TrialInfo.Success==1)));
                 perturbtrials(Z,4) = numel(perturbed) - perturbtrials(Z,3);
             end
+            myPtextlabel{Z} = [num2str(perturbtrials(Z,3)),'/',num2str(numel(perturbed))] ;
         end
         
     end
@@ -74,6 +75,7 @@ myfakezone = cell2mat(cellfun(@(x) max([x 0]), TrialInfo.FakeZone, 'UniformOutpu
             mybar(2).EdgeColor = 'r';
             mybar(2).LineWidth = 2;
             mybar(2).FaceColor = 'none';
+            text(sum(perturbtrials(:,3:4),2)+0.1,mean(TargetZones(ZonesToUse,1:2),2), myPtextlabel);
             
         end
     end
