@@ -146,9 +146,9 @@ H.patch=patch(xP,yP,1,'facecolor',patchColor,...
               'facealpha',faceAlpha);
 
 
-%Make pretty edges around the patch. 
-H.edge(1)=plot(x,lE,'-','color',edgeColor);
-H.edge(2)=plot(x,uE,'-','color',edgeColor);
+% %Make pretty edges around the patch. 
+% H.edge(1)=plot(x,lE,'-','color',edgeColor);
+% H.edge(2)=plot(x,uE,'-','color',edgeColor);
 
 %Now replace the line (this avoids having to bugger about with z coordinates)
 uistack(H.mainLine,'top')

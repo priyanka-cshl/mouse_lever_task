@@ -33,8 +33,14 @@ function [] = ParameterizeTrajectories(LeverTruncated,TrialInfo, ZonesToUse, Tar
     % sort trajectories by zones and separate successes, failures, and
     % perturbations.
     myfakezone = cell2mat(cellfun(@(x) max([x 0]), TrialInfo.FakeZone, 'UniformOutput', false))';
-    figure;
+    fig_num = get(gcf,'Number');
+    figure(fig_num+1);
     mylim = [0 size(LeverReAligned,2)];
+    mylim(1) = -0.05*mylim(2);
+    mylim(2) = mylim(2) + abs(mylim(1));
+    
+    TrajectoriesSummarized = [];
+    
     for Z = 1:numel(ZonesToUse)
         all_trials = intersect(idx,find(TrialInfo.TargetZoneType==ZonesToUse(Z)));
         all_trials = intersect(all_trials, find(myfakezone==0));
@@ -47,7 +53,7 @@ function [] = ParameterizeTrajectories(LeverTruncated,TrialInfo, ZonesToUse, Tar
         % separate plots for averages and all trials
         for M = 1:2
             for i = 1:3
-                figure(M+1);
+                H = figure(fig_num+M);
                 h = subplot(3,numel(ZonesToUse),Z+3*(i-1)); hold on
                 h.LineWidth = 2;
                 h.Box = 'on';
@@ -56,36 +62,58 @@ function [] = ParameterizeTrajectories(LeverTruncated,TrialInfo, ZonesToUse, Tar
                 for j = 1:numel(ZonesToUse)
                     x = [mylim(1) mylim(1) mylim(2) mylim(2)];
                     y = [ TargetZones(ZonesToUse(j),[1 2]) TargetZones(ZonesToUse(j),[2 1]) ];
-                    fill( [x], [y], ZoneColors(ZonesToUse(j)), 'FaceAlpha', 0.5, 'EdgeColor', 'none');
+                    fill( [x], [y], ZoneColors(ZonesToUse(j)), 'FaceAlpha', 0.4, 'EdgeColor', 'none');
+                    % demarcate actual target zone
+                    if j == Z
+                        rectangle('Position',...
+                            [mylim(1), TargetZones(ZonesToUse(j),2), ...
+                            abs(mylim(1)), diff(TargetZones(ZonesToUse(j),[2 1]))],...
+                            'FaceColor','k','EdgeColor','none');
+                    end
                 end
                 switch i
                     case 1
                         switch M
                             case 1
+                                MyTrace = Mean_NoNaNs(LeverReAligned(successes,:));
+                                MyShadedErrorBar(1:size(MyTrace,2),MyTrace(1,:),MyTrace(4,:),'b',[],0.5);
+                                MyShadedErrorBar(1:size(MyTrace,2),MyTrace(5,:),MyTrace(4,:),'r',[],0.5);
                                 plot(LeverReAligned(successes,:)','k','LineWidth',0.25);
+                                TrajectoriesSummarized{i,Z} = MyTrace;
                             case 2
                                 MyTrace = Mean_NoNaNs(LeverReAligned(successes,:));
-                                shadedErrorBar(1:size(MyTrace,2),MyTrace(1,:),MyTrace(4,:),{'color','k'},1);
+                                MyShadedErrorBar(1:size(MyTrace,2),MyTrace(1,:),MyTrace(4,:),'k',[],0.5);
+                                MyShadedErrorBar(1:size(MyTrace,2),MyTrace(5,:),MyTrace(4,:),'r',[],0.5);
                         end
                         h.YColor = 'k';
                         h.XColor = 'k';
                     case 2
                         switch M
                             case 1
+                                MyTrace = Mean_NoNaNs(LeverReAligned(failures,:));
+                                MyShadedErrorBar(1:size(MyTrace,2),MyTrace(1,:),MyTrace(4,:),'b',[],0.5);
+                                MyShadedErrorBar(1:size(MyTrace,2),MyTrace(5,:),MyTrace(4,:),'r',[],0.5);
                                 plot(LeverReAligned(failures,:)','k','LineWidth',0.25);
+                                TrajectoriesSummarized{i,Z} = MyTrace;
                             case 2
                                 MyTrace = Mean_NoNaNs(LeverReAligned(failures,:));
-                                shadedErrorBar(1:size(MyTrace,2),MyTrace(1,:),MyTrace(4,:),{'color','k'},1);
+                                MyShadedErrorBar(1:size(MyTrace,2),MyTrace(1,:),MyTrace(4,:),'k',[],0.5);
+                                MyShadedErrorBar(1:size(MyTrace,2),MyTrace(5,:),MyTrace(4,:),'r',[],0.5);
                         end
                         h.YColor = 'r';
                         h.XColor = 'r';
                     case 3
                         switch M
                             case 1
+                                MyTrace = Mean_NoNaNs(LeverReAligned(perturbed,:));
+                                MyShadedErrorBar(1:size(MyTrace,2),MyTrace(1,:),MyTrace(4,:),'b',[],0.5);
+                                MyShadedErrorBar(1:size(MyTrace,2),MyTrace(5,:),MyTrace(4,:),'r',[],0.5);
                                 plot(LeverReAligned(perturbed,:)','k','LineWidth',0.25);
+                                TrajectoriesSummarized{i,Z} = MyTrace;
                             case 2
                                 MyTrace = Mean_NoNaNs(LeverReAligned(perturbed,:));
-                                shadedErrorBar(1:size(MyTrace,2),MyTrace(1,:),MyTrace(4,:),{'color','k'},1);
+                                MyShadedErrorBar(1:size(MyTrace,2),MyTrace(1,:),MyTrace(4,:),'k',[],0.5);
+                                MyShadedErrorBar(1:size(MyTrace,2),MyTrace(5,:),MyTrace(4,:),'r',[],0.5);
                         end
                         h.YColor = 'b';
                         h.XColor = 'b';
@@ -95,6 +123,20 @@ function [] = ParameterizeTrajectories(LeverTruncated,TrialInfo, ZonesToUse, Tar
         end
     end
     
-    
+% calculate correlations
+% use min trial length 
+triallength = size(TrajectoriesSummarized{1}(1,:),2);
+for i = 1:3
+    for j = 1:3
+        triallength = min(triallength, numel(find(~isnan(TrajectoriesSummarized{i,j}(5,:)))));
+    end
+end
+
+for i = 1:3
+    for j = 1:3
+        R = corrcoef(TrajectoriesSummarized{1,i}(5,1:triallength),TrajectoriesSummarized{3,j}(5,1:triallength));
+        corrs(i,j) = R(1,2);
+    end
+end
     
 end

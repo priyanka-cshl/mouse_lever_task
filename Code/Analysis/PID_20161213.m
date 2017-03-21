@@ -1,7 +1,7 @@
 % script to plot PID/Anemometer data for mouse-lever-task
 
 DataRoot = '//sonas-hs.cshl.edu/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
-
+% load testmouse_20161212_r8.mat
 % get session files for analysis
 [FileNames,FilePaths] = uigetfile('.mat','choose one or more session files','MultiSelect','on',DataRoot);
 if ~iscell(FileNames)
@@ -16,7 +16,7 @@ MyFileParts = regexp(FilePaths(1:end-1),'\','split');
 MouseName = MyFileParts{end};
 which_column = 3;
 
-for i = 1%:size(FileNames,2)
+for i = 1:size(FileNames,2)
     % load the file
     Data.(['session',num2str(i)]) = load(fullfile(FilePaths,FileNames{i}),'session_data');
     Data.(['session',num2str(i)]).session_data.path = fullfile(FilePaths,FileNames{i});
@@ -49,4 +49,5 @@ for i = 1%:size(FileNames,2)
     
 end
 
+for i = 1:11, subplot(3,4,i); plot(Data.session1.session_data.TF(i,3+(1:Data.session1.session_data.TF(i,3))),squeeze(AllData{i}(:,:,2))); end
 

@@ -1,6 +1,8 @@
 function [rgb] = ZoneColors(code)
 
 switch code
+    case 0
+        rgb=[0.8 0.8 0.8];
     case 1
         rgb=[44 127 184]/256;
     case 2
@@ -17,5 +19,11 @@ switch code
         rgb=[0 139 139]./256;
     case 8%pink
         rgb=[199 21 133]./256;
+    case 11 % zone1 - trace
+        rgb=[0 0 102]./255;
+    case 12 % zone2 - trace
+        rgb=[0 153 153]./255;
+    case 13 % zone3 - trace
+        rgb=[191 191 0]./255;
 end
 end
