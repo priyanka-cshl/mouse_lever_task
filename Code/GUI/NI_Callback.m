@@ -114,6 +114,11 @@ set(h.lever_DAC_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indice
 set(h.lever_raw_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,2));
 set(h.stimulus_plot,'XData',TotalTime(indices_to_plot),'YData',...
     -1*h.RE_scaling.Data(1)*(TotalData(indices_to_plot,3) - h.RE_scaling.Data(2)) );
+
+h.motor_location.YData = MapRotaryEncoderToTFColorMap(h,mean(event.Data(:,3)));
+%set(h.motor_location,'YData',mean(-1*h.RE_scaling.Data(1)*(TotalData(indices_to_plot,3) - h.RE_scaling.Data(2))));
+
+
 if h.is_distractor_on.Value
     set(h.distractor_plot,'XData',TotalTime(indices_to_plot),'YData',...
          -1*h.RE_scaling.Data(1)*(TotalData(indices_to_plot,4) - h.RE_scaling.Data(2)) );

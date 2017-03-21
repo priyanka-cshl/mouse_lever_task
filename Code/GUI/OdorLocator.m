@@ -117,6 +117,12 @@ axis off tight
 %set(handles.axes9,'YLim',handles.Plot_YLim.Data);
 set(handles.axes9,'YLim',[0 100]);
 
+axes(handles.axes4); % motor location plot
+handles.motor_location = plot([1],[2],'r<','MarkerFaceColor','k','MarkerEdgeColor','k');
+axis off tight
+set(handles.axes4,'YLim',[0 100]);
+set(handles.axes4, 'Color', 'none');
+
 % for webcam
 handles.camera_available = 0;
 if ~isempty(webcamlist)
@@ -299,8 +305,22 @@ if get(handles.startAcquisition,'value')
         
         % refresh DAC levels
         calibrate_DAC_Callback(hObject,eventdata,handles);
+        
+        % update plot height and position to match that of the lever graph
+        DAC_limits = handles.DAC_levels.Data;
+        scalefactor = handles.axes1.Position(4)/sum(abs(handles.Plot_YLim.Data));
+        Y_position = handles.axes1.Position(2) + scalefactor*abs(handles.Plot_YLim.Data(1) - DAC_limits(1));
+        Height = scalefactor*abs(DAC_limits(2) - DAC_limits(1));
+        handles.axes9.Position(2) = Y_position;
+        handles.axes9.Position(4) = Height;
+        handles.axes4.Position(2) = Y_position;
+        handles.axes4.Position(4) = Height;
         NewBlockTrial_Callback(handles);
         
+        % update pointer to match motor location
+        handles.axes4.YLim = [0 handles.TransferFunction.Data(1)];
+        handles.motor_location.YData = MapRotaryEncoderToTFColorMap(handles, handles.Rotary.Limits(3));
+       
         handles.lis = handles.NI.addlistener('DataAvailable', @(src,evt) NI_Callback(src,evt,handles,hObject,fid1));
         handles.NI.startBackground();
         wait(handles.NI);

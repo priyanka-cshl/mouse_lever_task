@@ -39,12 +39,6 @@ while (sent == 0) && (sending_attempts <=8 )
                     %update transfer function colormap
                     TF = TF_4_plot;
                     h.TF_plot.CData = abs(TF(length(TF):-1:1))'/max(TF);
-                    % update plot height and position to match that of the lever graph
-                    scalefactor = h.axes1.Position(4)/sum(abs(h.Plot_YLim.Data));
-                    Y_position = h.axes1.Position(2) + scalefactor*abs(h.Plot_YLim.Data(1) - DAC_limits(1));
-                    Height = scalefactor*abs(DAC_limits(2) - DAC_limits(1));
-                    h.axes9.Position(2) = Y_position;
-                    h.axes9.Position(4) = Height;
                     h.all_locations.String = num2str(unique(TF)');
                 else
                     pause(.1);
