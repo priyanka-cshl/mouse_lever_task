@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 20-Feb-2017 14:06:46
+% Last Modified by GUIDE v2.5 20-Mar-2017 19:49:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -911,5 +911,58 @@ end
 %     delete(handles.figure1);
 % end
 
+% --- Executes on button press in log_weight.
+function log_weight_Callback(hObject, eventdata, handles)
+
+% check if the weight log file exists
+animal_name = char(handles.file_names.Data(1));
+foldername_local = char(handles.file_names.Data(2));
+foldername_server = char(handles.file_names.Data(3));
+
+MadeNewFile = 0;
+FileExistChecker = 0;
+while ~FileExistChecker
+    filename = [foldername_local, filesep, animal_name, '_WeightLog.mat'];
+    [~,justname] = fileparts(filename);
+    server_file_name = [foldername_server,filesep,justname,'.mat'];
+    
+    if ~exist(filename) %#ok<*EXIST>
+        % get weight
+        prompt = {'Enter weight (grams):'};
+        dlg_title = 'Weight Log';
+        num_lines = 1;
+        defaultans = {num2str(23)};
+        userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+        if ~isempty(userans)
+            weight(1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans)};
+            save(filename,'weight*');
+            save(server_file_name,'weight*');
+            MadeNewFile = 1;
+        end
+    end
+    FileExistChecker = exist(filename,'file');
+end
+    
+if ~MadeNewFile
+    clear weight;
+    load(filename);
+    if ~isempty(strmatch(datestr(now, 'yyyymmdd'),weight(:,1)))
+        % check with the use if he/she wants to make a repeat entry
+        prompt = {'A weight entry for today already exists. You can still add a new one or cancel'};
+        dlg_title = 'Weight Log';
+        num_lines = 1;
+        defaultans = weight(end,3);
+        userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+        if ~isempty(userans)
+            weight(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans)};
+            save(filename,'weight*');
+            save(server_file_name,'weight*');
+        end
+    end
+end
+
 % --- Executes during object deletion, before destroying properties.
 function figure1_DeleteFcn(hObject, eventdata, handles)
+
+
+
