@@ -265,6 +265,9 @@ if get(handles.startAcquisition,'value')
         set(handles.motor_status,'String','OFF')
         motor_toggle_Callback(hObject, eventdata, handles);
         
+        % Calibrate Rotary encoder
+        handles = CalibrateRotaryEncoder(handles);
+        
         % turn ON MFCs
         handles.Zero_MFC.Value = 1;
         handles.Zero_MFC.String = 'MFCs OFF';
@@ -520,8 +523,6 @@ else
     handles.ZoneLimitSettings.Data(1) = 0;
 end
 ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles);
-
-
 
 % --- Executes on button press in update_zones.
 function update_zones_Callback(hObject, eventdata, handles)
