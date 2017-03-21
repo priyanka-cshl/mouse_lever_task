@@ -46,7 +46,7 @@ int trialstates::WhichState(int trialstate, long lever_position, long time_since
       break;
     case 2: // odor/air is on, start trial clock but reset it, if a movement is initiated
       if ( (_lever_position < _trial_trigger_on)
-           & _time_since_last_change < _min_trial_duration )
+           & _time_since_last_change < _max_trial_duration )
       {
         _trialstate = 4;
       }

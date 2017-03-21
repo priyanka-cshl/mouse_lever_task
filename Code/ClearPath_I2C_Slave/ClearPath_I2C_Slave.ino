@@ -66,7 +66,7 @@ void setup ()
   attachInterrupt(digitalPinToInterrupt(end_stop_pin_left), SafetyStopLeft, LOW);
   attachInterrupt(digitalPinToInterrupt(end_stop_pin_right), SafetyStopRight, LOW);
   // debugging
-  //Serial.begin (115200);
+//  Serial.begin (115200);
 }
 
 void receiveEvent(int howmany) // I2C interrupt routine
@@ -217,6 +217,9 @@ void loop ()
       {
         step_wait = round(5000 / delta_steps);
       }
+//      Serial.print(current_location);
+//      Serial.print(" ");
+//      Serial.println(desired_location);
     }
     else
     {
