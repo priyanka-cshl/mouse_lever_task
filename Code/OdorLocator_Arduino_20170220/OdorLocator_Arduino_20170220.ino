@@ -241,16 +241,6 @@ void loop()
       in_target_zone[i] = (lever_position == constrain(lever_position, target_params[2], target_params[0]));
     }
   }
-  // do the same for the fake target zone condition
-  // used only if water delivery is uncoupled from stimulus state
-//  if (decouple_reward_and_stimulus)
-//  {
-//    fake_stimulus_state[1] = stimulus_state[1];
-//    for (i = 0; i < 2; i++)
-//    {
-//      in_fake_target_zone[i] = (lever_position == constrain(lever_position, fake_target_params[2], fake_target_params[0]));
-//    }
-//  }
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
@@ -295,32 +285,7 @@ void loop()
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
-  // 4) process the 'fake target' when reward is decoupled from stimulus
-  //----------------------------------------------------------------------------
-//  if ( (decouple_reward_and_stimulus) && (fake_stimulus_state[1] != fake_stimulus_state[0]) )
-//  {
-//    if ( ((micros() - fake_stimulus_state_timestamp) >= 1000 * min_time_since_last_motor_call) )
-//    {
-//      fake_stimulus_state_timestamp = micros(); // valid event
-//      if (in_fake_target_zone[1])
-//      { // currently in reward zone
-//        if (reward_state == 1 && trialstate[0] == 4)
-//        { // just entered reward zone
-//          reward_zone_timestamp = micros();
-//          //reward_state = 2;
-//        }
-//      }
-//      else if (trialstate[0] == 4)
-//      {
-//        reward_state = 1; // exited reward zone
-//      }
-//      fake_stimulus_state[0] = fake_stimulus_state[1];
-//    }
-//  }
-  //----------------------------------------------------------------------------
-
-  //----------------------------------------------------------------------------
-  // 5) manage reward
+  // 4) manage reward
   //----------------------------------------------------------------------------
   if (reward_state == 2 && ((micros() - reward_zone_timestamp) > 1000 * reward_params[0]))
   {
@@ -335,17 +300,17 @@ void loop()
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
-  // 6) manage reporter pins, valves etc based on time elapsed since last event
+  // 5) manage reporter pins, valves etc based on time elapsed since last event
   //----------------------------------------------------------------------------
-  digitalWrite(target_valves[0], (target_valve_state[0] || (trialstate[0] == 4) || !close_loop_mode) ); // open odor valve
-  digitalWrite(target_valves[1], (target_valve_state[1] || (trialstate[0] == 4) || !close_loop_mode) ); // open air valve
+  digitalWrite(target_valves[0], (target_valve_state[0] || (trialstate[0] == 2) || !close_loop_mode) ); // open odor valve
+  digitalWrite(target_valves[1], (target_valve_state[1] || (trialstate[0] == 2) || !close_loop_mode) ); // open air valve
   digitalWrite(trial_reporter_pin, (trialstate[0] == 4)); // active trial?
   digitalWrite(in_target_zone_reporter_pin, in_target_zone[1]); // in_target_zone?
   digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2)||(reward_state == 5)); // in_reward_zone?
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
-  // 7) determine trial mode
+  // 6) determine trial mode
   //----------------------------------------------------------------------------
   if (training_stage == 2)
   {
@@ -392,7 +357,7 @@ void loop()
           digitalWrite(odor_valves[i],(i==which_odor));
         }
       }
-      else if (trialstate[1]==4)
+      else if (trialstate[1]==2)
       {
         odor_ON = true;
       }
@@ -403,7 +368,7 @@ void loop()
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
-  // 8) Serial handshakes to check for parameter updates etc
+  // 7) Serial handshakes to check for parameter updates etc
   //----------------------------------------------------------------------------
   if (myUSB.available() > 0)
   {

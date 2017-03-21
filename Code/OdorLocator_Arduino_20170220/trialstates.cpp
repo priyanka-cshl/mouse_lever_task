@@ -41,7 +41,18 @@ int trialstates::WhichState(int trialstate, long lever_position, long time_since
       }
       else if ( _time_since_last_change >= _min_trigger_on_duration )
       { // above trial triggerON theshold long enough - activate trial
+        _trialstate = 2;
+      }
+      break;
+    case 2: // odor/air is on, start trial clock but reset it, if a movement is initiated
+      if ( (_lever_position < _trial_trigger_on)
+           & _time_since_last_change < _min_trial_duration )
+      {
         _trialstate = 4;
+      }
+      if ( _time_since_last_change > _max_trial_duration )
+      {
+        _trialstate = 0;
       }
       break;
     case 4: // in active trial mode
