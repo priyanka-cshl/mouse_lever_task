@@ -72,6 +72,21 @@ handles.Date.String = datestr(now, 'mm-dd-yy');
 handles.StartTime.Visible = 'off';
 handles.StopTime.Visible = 'off';
 
+% get weight data if available
+% check if the weight log file exists
+animal_name = char(handles.file_names.Data(1));
+foldername_local = char(handles.file_names.Data(2));
+filename = [foldername_local, filesep, animal_name, '_WeightLog.mat'];
+if exist(filename) %#ok<*EXIST>
+    load(filename);
+    w_o = str2num(char(weight(1,3)));
+    w_c = str2num(char(weight(end,3)));
+    w_p = round(100*w_c/w_o,0,'decimals');
+    handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [100% = ', num2str(w_o), ' grams]'];
+else
+    handles.WeightString.String = 'weight data unavailable';
+end
+
 % load mouse specific settings
 handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
 handles = LoadSettings(handles);
@@ -263,6 +278,11 @@ if get(handles.startAcquisition,'value')
         set(handles.respiration_2_plot,'XData',NaN,'YData',NaN);
         set(handles.lick_plot,'XData',NaN,'YData',NaN);
         
+        % turn ON MFCs
+        handles.Zero_MFC.Value = 1;
+        handles.Zero_MFC.String = 'MFCs OFF';
+        Zero_MFC_Callback(hObject, eventdata, handles);
+        
         % Calibrate Rotary encoder
         handles = CalibrateRotaryEncoder(handles);
         % disable motor override
@@ -271,11 +291,6 @@ if get(handles.startAcquisition,'value')
         % enable the motors
         set(handles.motor_status,'String','OFF')
         motor_toggle_Callback(hObject, eventdata, handles);
-        
-        % turn ON MFCs
-        handles.Zero_MFC.Value = 1;
-        handles.Zero_MFC.String = 'MFCs OFF';
-        Zero_MFC_Callback(hObject, eventdata, handles);
         
         if handles.which_stage.Value>1
             % start the Arduino timer
@@ -448,7 +463,7 @@ if usrans == 1
     display(['saved to ' filename])
     display(['saved to ' server_file_name])
     set(gcf,'PaperPositionMode','auto')
-    print(gcf,['C:\Users\florin\Desktop\','GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
+    print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
         '-dpng','-r0');
     display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
     guidata(hObject, handles);
@@ -947,16 +962,21 @@ while ~FileExistChecker
     
     if ~exist(filename) %#ok<*EXIST>
         % get weight
-        prompt = {'Enter weight (grams):'};
+        prompt = {'Enter original weight (grams):', 'Enter current weight (grams):'};
         dlg_title = 'Weight Log';
-        num_lines = 1;
-        defaultans = {num2str(23)};
+        num_lines = 2;
+        defaultans = {num2str(23), num2str(23)};
         userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
         if ~isempty(userans)
-            weight(1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans)};
+            weight(1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(1))};
+            weight(2,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(2))};
             save(filename,'weight*');
             save(server_file_name,'weight*');
             MadeNewFile = 1;
+            w_o = str2num(char(userans(1)));
+            w_c = str2num(char(userans(2)));
+            w_p = round(100*w_c/w_o,0,'decimals');
+            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [100% = ', num2str(w_o), ' grams]'];
         end
     end
     FileExistChecker = exist(filename,'file');
@@ -976,6 +996,15 @@ if ~MadeNewFile
             weight(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans)};
             save(filename,'weight*');
             save(server_file_name,'weight*');
+            w_o = str2num(char(weight(1,3)));
+            w_c = str2num(char(userans));
+            w_p = round(100*w_c/w_o,0,'decimals');
+            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [100% = ', num2str(w_o), ' grams]'];
+        else
+            w_o = str2num(char(weight(1,3)));
+            w_c = str2num(char(weight(end,3)));
+            w_p = round(100*w_c/w_o,0,'decimals');
+            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [100% = ', num2str(w_o), ' grams]'];
         end
     else
         % check with the use if he/she wants to make a repeat entry
@@ -988,6 +1017,10 @@ if ~MadeNewFile
             weight(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans)};
             save(filename,'weight*');
             save(server_file_name,'weight*');
+            w_o = str2num(weight(1,3));
+            w_c = str2num(userans);
+            w_p = round(100*w_c/w_o,0,'decimals');
+            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [100% = ', num2str(w_o), ' grams]'];
         end
     end
 end
