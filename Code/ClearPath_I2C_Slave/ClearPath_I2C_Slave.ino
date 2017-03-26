@@ -214,7 +214,7 @@ void loop ()
       }
       else
       {
-        step_wait = round(5000 / delta_steps);
+        step_wait = round(8000 / delta_steps);
       }
 //      Serial.print(current_location);
 //      Serial.print(" ");

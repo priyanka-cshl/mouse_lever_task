@@ -385,8 +385,12 @@ void loop()
             break;
           case 1: // Acquisition start handshake
             myUSB.writeUint16(6);
-            stimulus_readpointer = 0;
             stimulus_writepointer = 0;
+            // fill stimulus position array
+            for (i = 0; i < stimulus_array_size; i++)
+            {
+              stimulus_position_array[i] = 20;
+            }
             digitalWrite(odor_valves[0],HIGH);
             odor_ON = true;
             timer_override = true;
