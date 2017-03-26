@@ -22,7 +22,7 @@ void setup() {
   pinMode(home_pin,INPUT);
   analogWriteResolution(12);
   attachInterrupt(home_pin, home_interrupt, RISING) ; 
-  attachInterrupt(home_pin, reenable_interrupt, FALLING) ; 
+  //attachInterrupt(home_pin, reenable_interrupt, FALLING) ; 
   attachInterrupt(encoderA,rotary,RISING);
 
   // set up SPI
@@ -35,12 +35,14 @@ void home_interrupt()
 {
   detachInterrupt(encoderA);
   rotary_position = 0;  
+  attachInterrupt(encoderA,rotary,RISING);
 }
 
 void reenable_interrupt()
 {
   attachInterrupt(encoderA,rotary,RISING);
 }
+
 void rotary() // interrup routine for rising edge on encoderA
 {
   rotary_position = rotary_position + (2*(digitalRead(encoderB)) - 1);
@@ -61,7 +63,7 @@ void loop() {
   rotary_position = rotary_position * position_sign;
   //analogWrite(DAC_pin,3*(rotary_position+650));
   //remap before sending to DAC
-  rotary_position_out = map(rotary_position, -1000, 1000, 0, 65534);
+  rotary_position_out = map(rotary_position, -550, 350, 0, 65534);
   SPIWriter(dac_spi_pin, rotary_position_out);
   Serial.print(rotary_position);
   Serial.print(" ");
