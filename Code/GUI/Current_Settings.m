@@ -101,12 +101,13 @@ end
 if newlegends
     legend(16:31) = legend(1:16);
     legend(1) = {'Timestamp'};
-    legend(2:3) = {'MinWidth' 'PropWidth'};        
+    legend(2:3) = {'MinWidth' 'IRI'};        
     legend(4:5) = {'DACgain' 'DACdc'};
     legend(6:7) = {'RewardHoldTime' 'RewardDuration'};
     legend(8) = {'MaxPerBlock'};
     legend(9) = {'PerturbationProbability'};
-    legend(10:11) = {'TriggerON' 'IRI'};
+    legend(10:11) = {'TriggerON' 'MultirewardIRI'};
     legend(12:15) = {'TriggerHOLD' 'StayMean' 'StayMin' 'StayMax'};
+    legend(16) = {'CameraON'};
 end
 end

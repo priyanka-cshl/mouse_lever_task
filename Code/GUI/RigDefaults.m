@@ -1,8 +1,8 @@
 function [handles] = RigDefaults(handles)
 % rig specific settings
-handles.computername = textread('hostname.txt','%s'); %#ok<*DTXTRD>
+handles.computername = textread('C:\Users\pgupta\Documents\hostname.txt','%s'); %#ok<*DTXTRD>
 switch char(handles.computername)
-    case 'marbprec'
+    case {'marbprec', 'PRIYANKA-HP'}
         handles.file_names.Data(2) = {'C:\Data\Behavior'};
         handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\Behavior'};
         handles.NIchannels = 11;

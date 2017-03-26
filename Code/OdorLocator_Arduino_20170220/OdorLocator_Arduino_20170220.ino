@@ -48,7 +48,7 @@ int target_which = 1; // stim A is target
 bool target_on = true;
 int stimulus_state[] = {0, 0}; // old, new
 long stimulus_state_timestamp = micros();
-byte stimulus_position_array[1199] = {101};
+byte stimulus_position_array[1199] = {20};
 const int stimulus_array_size = 1200;
 int stimulus_writepointer = 0;
 int stimulus_readpointer = 0;
@@ -158,13 +158,13 @@ void setup()
   // fill transfer function
   for (i = 0; i < num_of_locations; i++)
   {
-    transfer_function[i] = 101;
+    transfer_function[i] = 20;
   }
 
   // fill stimulus position array
   for (i = 0; i < stimulus_array_size; i++)
   {
-    stimulus_position_array[i] = 101;
+    stimulus_position_array[i] = 20;
   }
 
   // Timer for motor update
@@ -385,6 +385,7 @@ void loop()
             break;
           case 1: // Acquisition start handshake
             myUSB.writeUint16(6);
+            stimulus_readpointer = 0;
             stimulus_writepointer = 0;
             digitalWrite(odor_valves[0],HIGH);
             odor_ON = true;

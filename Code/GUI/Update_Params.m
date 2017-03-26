@@ -60,7 +60,8 @@ if get(h.startAcquisition,'value') && (sent == 1)
     % replace last three values in params1 to store Stay Time min and Stay
     % Time Max
     params1(1) = h.ZoneLimitSettings.Data(1); % MinWidth
-    params1(2) = h.ZoneLimitSettings.Data(2); % PropWidth
+    %params1(2) = h.ZoneLimitSettings.Data(2); % PropWidth
+    params1(2) = h.RewardControls.Data(2); % IRI - when multirewards is off
     params1(end-4) = h.MultiRewards.Value*h.RewardControls.Data(2); % IRI
     params1(end-2) = h.TargetHold.Data(1); % StayMean
     params1(end-1) = h.TargetHold.Data(2); % StayMin

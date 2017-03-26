@@ -263,16 +263,14 @@ if get(handles.startAcquisition,'value')
         set(handles.respiration_2_plot,'XData',NaN,'YData',NaN);
         set(handles.lick_plot,'XData',NaN,'YData',NaN);
         
+        % Calibrate Rotary encoder
+        handles = CalibrateRotaryEncoder(handles);
         % disable motor override
         handles.motor_override.Value = 0;
         motor_override_Callback(hObject, eventdata, handles);
-        
         % enable the motors
         set(handles.motor_status,'String','OFF')
         motor_toggle_Callback(hObject, eventdata, handles);
-        
-        % Calibrate Rotary encoder
-        handles = CalibrateRotaryEncoder(handles);
         
         % turn ON MFCs
         handles.Zero_MFC.Value = 1;
@@ -970,6 +968,18 @@ if ~MadeNewFile
     if ~isempty(strmatch(datestr(now, 'yyyymmdd'),weight(:,1)))
         % check with the use if he/she wants to make a repeat entry
         prompt = {'A weight entry for today already exists. You can still add a new one or cancel'};
+        dlg_title = 'Weight Log';
+        num_lines = 1;
+        defaultans = weight(end,3);
+        userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+        if ~isempty(userans)
+            weight(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans)};
+            save(filename,'weight*');
+            save(server_file_name,'weight*');
+        end
+    else
+        % check with the use if he/she wants to make a repeat entry
+        prompt = {'Please enter weight (in grams)'};
         dlg_title = 'Weight Log';
         num_lines = 1;
         defaultans = weight(end,3);

@@ -15,5 +15,13 @@ function [handles] = LoadSettings(handles)
             handles.RewardControls.Data(2) = X.session_data.params(end,11);
             handles.MultiRewards.Value = (X.session_data.params(end,11)>0);
         end
+        if strcmp(X.session_data.legends_trial(11),'MultirewardIRI')
+            handles.MultiRewards.Value = (X.session_data.params(end,11)>0);
+            if handles.MultiRewards.Value
+                handles.RewardControls.Data(2) = X.session_data.params(end,11);
+            else
+                handles.RewardControls.Data(2) = X.session_data.params(end,3);
+            end
+        end
     end
 end

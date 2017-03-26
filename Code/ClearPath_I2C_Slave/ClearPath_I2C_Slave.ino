@@ -16,6 +16,7 @@ const byte SCL_pin = 21;
 const byte home_out = 47;
 bool motor_ON = false;
 int home_location = 0;
+bool cheat = false;
 
 // motor position variables
 int desired_location = 101;
@@ -64,9 +65,9 @@ void setup ()
   // safety switches (end-stops)
   //disable motor when it reaches an end stop
   attachInterrupt(digitalPinToInterrupt(end_stop_pin_left), SafetyStopLeft, LOW);
-  attachInterrupt(digitalPinToInterrupt(end_stop_pin_right), SafetyStopRight, LOW);
+  attachInterrupt(digitalPinToInterrupt(end_stop_pin_right), SafetyStopRight, FALLING);
   // debugging
-//  Serial.begin (115200);
+  //Serial.begin (115200);
 }
 
 void receiveEvent(int howmany) // I2C interrupt routine
@@ -83,18 +84,16 @@ void receiveEvent(int howmany) // I2C interrupt routine
 
 void SafetyStopLeft()
 {
-  //noInterrupts();
-      detachInterrupt(end_stop_pin_left);
-      detachInterrupt(end_stop_pin_right);
-      FindHome(true);
+  detachInterrupt(digitalPinToInterrupt(end_stop_pin_left));
+  detachInterrupt(digitalPinToInterrupt(end_stop_pin_right));
+  FindHome(true);
 }
 
 void SafetyStopRight()
 {
-    //noInterrupts();
-      detachInterrupt(end_stop_pin_right);
-      detachInterrupt(end_stop_pin_left);
-      FindHome(false);
+  detachInterrupt(digitalPinToInterrupt(end_stop_pin_right));
+  detachInterrupt(digitalPinToInterrupt(end_stop_pin_left));
+  FindHome(false);
 }
 
 void FindHome(bool which_direction)
@@ -105,8 +104,8 @@ void FindHome(bool which_direction)
   // set direction accordingly
   digitalWrite(dir_pin, which_direction);
   current_direction = (int)which_direction;
-  delay(5000);
-
+  delay(500);
+  
   // enable motor again
   digitalWrite(enable_pin, true);
 
@@ -123,12 +122,12 @@ void FindHome(bool which_direction)
       delay(1000);
     }
     digitalWrite(dir_pin, which_direction);
-    delay(5000);
+    delay(500);
   }
   
   // move until it reaches home OR hits the other switch
   //while (!digitalRead(home_pin) && digitalRead(end_stop_pin_left + (int)which_direction))
-  while (!digitalRead(home_pin) && digitalRead(end_stop_pin_left) && digitalRead(end_stop_pin_right))
+  while (!digitalRead(home_pin) && digitalRead(end_stop_pin_left+ (int)which_direction)) //&& digitalRead(end_stop_pin_right))
   {
     digitalWrite(step_pin, HIGH);
     digitalWrite(step_pin, LOW);
@@ -223,6 +222,7 @@ void loop ()
     }
     else
     {
+      //Serial.println(value_received);
       Housekeeping(value_received);
     }
     readpointer = (readpointer + 1) % 10;
@@ -257,8 +257,40 @@ void Housekeeping(int which_case)
     digitalWrite(enable_pin, bool(which_case));
     motor_ON = bool(which_case);
   }
+  else if (which_case < 3)
+  { // Home the motor by finding home
+     MyCheatHome();
+  }
   else
   { // change stepsize, range = 2-9
-    stepsize = which_case - 1;
+    stepsize = which_case - 2;
   }
 }
+
+void MyCheatHome()
+{
+  detachInterrupt(digitalPinToInterrupt(end_stop_pin_left));
+  detachInterrupt(digitalPinToInterrupt(end_stop_pin_right));
+  // turn motor ON if its off
+  if (!motor_ON)
+  {
+    digitalWrite(enable_pin, 1);
+    motor_ON = true;
+  }
+  // move motor until it hits one of the home switches and can fire an interrupt
+  while ((digitalRead(end_stop_pin_left)) && (digitalRead(end_stop_pin_right)))
+  {    
+    delay(10);
+    digitalWrite(step_pin, HIGH);
+    digitalWrite(step_pin, LOW);
+  }
+  if (digitalRead(end_stop_pin_left))
+  {
+    FindHome(true);
+  }
+  else
+  {
+    FindHome(false);
+  }
+}
+
