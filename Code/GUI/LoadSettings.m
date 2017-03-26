@@ -9,7 +9,7 @@ function [handles] = LoadSettings(handles)
         handles.TargetHold.Data = X.session_data.params(end,13:15)';
         handles.locations_per_zone.Data = X.session_data.params(end,21:23)';
         handles.RewardControls.Data(1) = X.session_data.params(end,7);    
-        handles.ZoneLimitSettings.Data = X.session_data.params(end,2:3)';
+        handles.ZoneLimitSettings.Data(1) = X.session_data.params(end,2);
         handles.TrialSettings.Data(3) = X.session_data.params(end,12);
         if strcmp(X.session_data.legends_trial(11),'IRI')
             handles.RewardControls.Data(2) = X.session_data.params(end,11);

@@ -20,7 +20,7 @@ switch char(handles.computername)
         % Trial settings
         handles.TrialSettings.Data = [4.8 0.2 200 0 100 2000]';
         % zone width
-        handles.ZoneLimitSettings.Data = [0.5 0.1]';
+        handles.ZoneLimitSettings.Data(1) = 0.7;%[0.5 0.1]';
         % reward settings
         handles.RewardControls.Data = [40 200 50 5]';
         % odor panel
@@ -50,7 +50,7 @@ switch char(handles.computername)
         % Trial settings
         handles.TrialSettings.Data = [4.5 0.2 100 20 600 2000]';
         % zone width
-        handles.ZoneLimitSettings.Data = [0.4 0.1]';
+        handles.ZoneLimitSettings.Data(1) = 0.7;%[0.4 0.1]';
         % reward settings
         handles.RewardControls.Data = 30;
         % odor panel
