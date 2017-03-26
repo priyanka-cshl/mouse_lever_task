@@ -204,8 +204,9 @@ end
 %% write data to disk
 data = [TotalTime(end-num_new_samples+1:end) TotalData(end-num_new_samples+1:end,:)]';
 data(trial_channel+1,:) = h.current_trial_block.Data(4)*data(trial_channel+1,:);
+% rescale stimulus position plot
+data(4,:) = MapRotaryEncoderToTFColorMap(h,data(4,:),1);
 fwrite(fid1,data,'double');
-
 
 % %% write behavior video to disk
 % if get(h.grab_camera,'Value')
