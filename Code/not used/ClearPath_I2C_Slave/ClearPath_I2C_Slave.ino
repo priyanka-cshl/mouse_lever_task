@@ -67,7 +67,7 @@ void setup ()
   attachInterrupt(digitalPinToInterrupt(end_stop_pin_left), SafetyStopLeft, LOW);
   attachInterrupt(digitalPinToInterrupt(end_stop_pin_right), SafetyStopRight, FALLING);
   // debugging
-  //Serial.begin (115200);
+  Serial.begin (115200);
 }
 
 void receiveEvent(int howmany) // I2C interrupt routine
@@ -200,6 +200,7 @@ void FindHome(bool which_direction)
 
 void loop ()
 {
+  Serial.println(digitalRead(home_pin));
   if (Wire_received > 0) //edited
   {
     value_received = motor_positions[readpointer];
