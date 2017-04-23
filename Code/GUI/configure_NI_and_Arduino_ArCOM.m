@@ -21,8 +21,8 @@ for i = 5:6
     DAQchannels(i).Range = [-10 10];
 end
 % configure digital channels
-for i = handles.NIchannels-4:handles.NIchannels
-    DAQchannels(i)= addDigitalChannel(NI_session,'Dev2',['Port0/Line',num2str(i-(handles.NIchannels-4))],'InputOnly');
+for j = i+1:handles.NIchannels
+    DAQchannels(i)= addDigitalChannel(NI_session,'Dev2',['Port0/Line',num2str(j-(i+1))],'InputOnly');
 end
 
 % configure MFC channels (2)

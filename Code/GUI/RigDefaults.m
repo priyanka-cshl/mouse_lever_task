@@ -5,7 +5,7 @@ switch char(handles.computername)
     case {'marbprec', 'PRIYANKA-HP'}
         handles.file_names.Data(2) = {'C:\Data\Behavior'};
         handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\Behavior'};
-        handles.NIchannels = 11;
+        handles.NIchannels = 12;
         handles.DAC_settings.Data = [1.6 1.85]';
         % motor location settings
         handles.motor_params = 4;

@@ -20,6 +20,7 @@ h.timestamp.Data = event.TimeStamps(end);
 trial_channel = 7;
 reward_channel = trial_channel + 3; %10;
 lick_channel = trial_channel + 4; %11;
+homesensor_channel = trial_channel + 5; %12;
 
 num_new_samples = length(event.TimeStamps);
 lastsample = samplenum + num_new_samples - 1;
@@ -47,6 +48,11 @@ for i = 1:reward_channel-1
     if i == trial_channel
         samples_new = samples_new*odorID;
     end
+    TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];
+end
+
+for i = homesensor_channel
+    samples_new = event.Data(:,i);
     TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];
 end
              
@@ -138,6 +144,8 @@ set(h.respiration_2_plot,'XData',TotalTime(indices_to_plot),'YData',...
 %set(h.in_target_zone_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,6)-1);
 [h.in_reward_zone_plot] = PlotToPatch(h.in_reward_zone_plot, TotalData(:,trial_channel+2), TotalTime, [-1 -0.2]);
 %set(h.in_reward_zone_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,7)-1.2);
+% home position sensor
+[h.homesensor_plot] = PlotToPatch(h.homesensor_plot, TotalData(:,homesensor_channel), TotalTime, [-1 -0.2]);
 
 % % rewards
 % reward_timestamps = TotalTime(TotalData(:,reward_channel)==1);

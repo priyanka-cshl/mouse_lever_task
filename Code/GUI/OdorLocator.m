@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 20-Mar-2017 19:49:10
+% Last Modified by GUIDE v2.5 21-Apr-2017 17:05:03
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -116,6 +116,8 @@ handles.in_target_zone_plot = fill(NaN,NaN,Plot_Colors('r'));
 handles.in_target_zone_plot.EdgeColor = 'none';
 handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
 handles.in_reward_zone_plot.EdgeColor = 'none';
+handles.homesensor_plot = fill(NaN, NaN,Plot_Colors('g')); %homesensor
+handles.homesensor_plot.EdgeColor = 'none';
 %handles.reward_plot = plot(NaN, NaN,'o','MarkerFaceColor',Plot_Colors('t'),'MarkerSize',10,'MarkerEdgeColor','none'); %rewards
 handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.25); %rewards
 handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1); %licks
@@ -143,7 +145,7 @@ handles.camera_available = 0;
 if ~isempty(webcamlist)
     
     handles.mycam = webcam(1);
-     %mycam.Resolution = '320x240';
+    %mycam.Resolution = '320x240';
     handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
     handles.camera_available = 1;
     handles.focus_mode.Value = 2;
@@ -695,12 +697,12 @@ set(handles.motor_override,'BackgroundColor',[(0.94 - 0.44*handles.motor_overrid
 if handles.motor_override.Value
     % enable direct motor controls
     handles.motor_move.Enable = 'on';
-    handles.motor_home.Enable = 'on';
+    %handles.motor_home.Enable = 'on';
     handles.change_motor_params.Enable = 'on';
 else
     % disable direct motor controls
     handles.motor_move.Enable = 'off';
-    handles.motor_home.Enable = 'off';
+    %handles.motor_home.Enable = 'off';
     handles.change_motor_params.Enable = 'off';
 end
     
@@ -728,9 +730,13 @@ handles.Arduino.write(my_location+101, 'uint16'); % which location
 
 % --- Executes on button press in motor_home.
 function motor_home_Callback(hObject, eventdata, handles)
-pause(0.01);
-handles.Arduino.write(62, 'uint16'); % handler - move motor to specific location
-handles.Arduino.write(101, 'uint16'); % home location       
+if handles.motor_override.Value
+    pause(0.01);
+    handles.Arduino.write(62, 'uint16'); % handler - move motor to specific location
+    handles.Arduino.write(101, 'uint16'); % home location       
+else
+    set(handles.motor_home,'BackgroundColor',[0.5 0.94 0.94]);
+end
 
 % --- Executes on button press in change_motor_params.
 function change_motor_params_Callback(hObject, eventdata, handles)
@@ -1017,8 +1023,8 @@ if ~MadeNewFile
             weight(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans)};
             save(filename,'weight*');
             save(server_file_name,'weight*');
-            w_o = str2num(weight(1,3));
-            w_c = str2num(userans);
+            w_o = str2num(char(weight(1,3)));
+            w_c = str2num(char(userans));
             w_p = round(100*w_c/w_o,0,'decimals');
             handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [100% = ', num2str(w_o), ' grams]'];
         end
@@ -1030,3 +1036,10 @@ function figure1_DeleteFcn(hObject, eventdata, handles)
 
 
 
+
+
+% --- Executes on button press in resethome.
+function resethome_Callback(hObject, eventdata, handles)
+% hObject    handle to resethome (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
