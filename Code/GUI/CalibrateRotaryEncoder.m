@@ -10,7 +10,7 @@ handles.Arduino.write(61, 'uint16');
 pause(0.5);
 
 % Move motor to one extreme and then the other
-contents = cellstr(get(handles.all_locations,'String'));
+contents = cellstr(get(handles.all_locations,'String'));  
 my_location = [str2num(char(contents(end))) 0 str2num(char(contents(1)))];
     
 for i = 1:3    
