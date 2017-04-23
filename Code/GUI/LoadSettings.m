@@ -2,6 +2,8 @@ function [handles] = LoadSettings(handles)
     animal_name = char(handles.file_names.Data(1));
     foldername_local = char(handles.file_names.Data(2));
     Allfiles = dir(fullfile(foldername_local,animal_name));
+    handles.trainingday.String = ['Training day ',num2str(...
+    size(dir([fullfile(foldername_local,animal_name),filesep,'*r0*']),1))];
     X = load(fullfile(foldername_local,animal_name,Allfiles(end).name));
     
     if size(X.session_data.legends_trial,2)==31
