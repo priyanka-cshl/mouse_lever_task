@@ -1,6 +1,12 @@
 function NewBlockTrial_Callback(h)
 % combo of New block and New Trial
 
+% home motor if needed
+if h.motor_home.BackgroundColor(1) == 0.5
+    h.Arduino.write(72,'uint16');
+    %pause(5)
+end
+
 global IsRewardedTrial;
 
 display('----------New Trial------------------------------');
@@ -80,6 +86,7 @@ if (h.which_perturbation.Value)
 end
 
 %% invoke target definition callback (this automatically calls Update_Params)
+set(h.motor_home,'BackgroundColor',[0.94 0.94 0.94]);
 guidata(h.hObject, h);
 % display('params modified by new block call');
 OdorLocator('ZoneLimitSettings_CellEditCallback',h.hObject,[],h);
