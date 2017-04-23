@@ -21,7 +21,7 @@ void setup() {
   pinMode(encoderB,INPUT);
   pinMode(home_pin,INPUT);
   analogWriteResolution(12);
-  attachInterrupt(home_pin, home_interrupt, RISING) ; 
+  attachInterrupt(home_pin, home_interrupt, RISING); 
   //attachInterrupt(home_pin, reenable_interrupt, FALLING) ; 
   attachInterrupt(encoderA,rotary,RISING);
 
@@ -65,9 +65,9 @@ void loop() {
   //remap before sending to DAC
   rotary_position_out = map(rotary_position, -550, 350, 0, 65534);
   SPIWriter(dac_spi_pin, rotary_position_out);
-  Serial.print(rotary_position);
-  Serial.print(" ");
-  Serial.println(rotary_position_out);
+//  Serial.print(rotary_position);
+//  Serial.print(" ");
+//  Serial.println(rotary_position_out);
   
 }
 
