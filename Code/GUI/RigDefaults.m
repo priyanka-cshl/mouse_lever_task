@@ -20,9 +20,9 @@ switch char(handles.computername)
         % Trial settings
         handles.TrialSettings.Data = [4.8 0.2 200 0 100 1500]';
         % zone width
-        handles.ZoneLimitSettings.Data(1) = 0.7;%[0.5 0.1]';
+        handles.ZoneLimitSettings.Data(1) = 0.4;%[0.5 0.1]';
         % reward settings
-        handles.RewardControls.Data = [40 200 50 5]';
+        handles.RewardControls.Data = [25 100 50 5]';
         % odor panel
         handles.Odor_list.Value = [1 2 3]';
         % target levels

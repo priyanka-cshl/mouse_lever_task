@@ -30,5 +30,4 @@ for i = 1:3
     handles.NI.DurationInSeconds = temp_duration;
 end
 
-handles.Rotary.Limits
 end

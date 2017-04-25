@@ -72,10 +72,27 @@ handles.Date.String = datestr(now, 'mm-dd-yy');
 handles.StartTime.Visible = 'off';
 handles.StopTime.Visible = 'off';
 
-% get weight data if available
-% check if the weight log file exists
+% load mouse specific settings
+handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
+% create the data directories if they don't already exist
 animal_name = char(handles.file_names.Data(1));
 foldername_local = char(handles.file_names.Data(2));
+foldername_server = char(handles.file_names.Data(3));
+if ~exist(fullfile(foldername_local,animal_name),'dir')
+    mkdir(fullfile(foldername_local,animal_name));
+    disp('making local data directory');
+end
+if ~exist(fullfile(foldername_server,animal_name),'dir')
+    mkdir(fullfile(foldername_server,animal_name));
+    disp('making remote data directory');
+end
+
+% load settings
+handles = LoadSettings(handles);
+
+% get weight data if available
+% check if the weight log file exists
+
 filename = [foldername_local, filesep, animal_name, '_WeightLog.mat'];
 if exist(filename) %#ok<*EXIST>
     load(filename);
@@ -86,10 +103,6 @@ if exist(filename) %#ok<*EXIST>
 else
     handles.WeightString.String = 'weight data unavailable';
 end
-
-% load mouse specific settings
-handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
-handles = LoadSettings(handles);
 
 % set up NI acquisition and reset Arduino
 handles.sampling_rate_array = handles.DAQrates.Data;
@@ -1033,13 +1046,3 @@ end
 
 % --- Executes during object deletion, before destroying properties.
 function figure1_DeleteFcn(hObject, eventdata, handles)
-
-
-
-
-
-% --- Executes on button press in resethome.
-function resethome_Callback(hObject, eventdata, handles)
-% hObject    handle to resethome (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
