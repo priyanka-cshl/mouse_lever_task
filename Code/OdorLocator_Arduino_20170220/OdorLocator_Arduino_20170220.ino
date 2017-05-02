@@ -22,6 +22,7 @@ int in_reward_zone_reporter_pin = 45;
 int reward_reporter_pin = 47;
 int reward_valve_pin = 8;
 int target_valves[] = {9, 10};
+int odor_valves[] = {37, 31, 33, 35};
 //int distractor_valves[] = {35, 39};
 //int target_MFC[] = {23, 25};
 //int distractor_MFC[] = {39, 33};
@@ -47,7 +48,7 @@ int target_which = 1; // stim A is target
 bool target_on = true;
 int stimulus_state[] = {0, 0}; // old, new
 long stimulus_state_timestamp = micros();
-byte stimulus_position_array[1199] = {101};
+byte stimulus_position_array[1199] = {20};
 const int stimulus_array_size = 1200;
 int stimulus_writepointer = 0;
 int stimulus_readpointer = 0;
@@ -65,6 +66,8 @@ int training_stage = 2;
 //int delay_distractor_by = 20000; // in milliseconds
 
 // MFC related and valves related
+int which_odor = 0;
+bool odor_ON = true;
 bool target_valve_state[2] = {false, false};
 //bool distractor_valve_state = false;
 
@@ -81,6 +84,7 @@ unsigned int my_location = 101;
 //variables : reward related
 int reward_state = 0;
 long reward_zone_timestamp = micros();
+long trial_off_buffer = 0;
 int reward_params[] = {100, 40}; // {hold for, duration} in ms
 unsigned short multi_reward_params[] = {200, 10}; // {hold for, duration} in ms for the subsequent rewards within a trial
 int multiplerewards = 0; // only one reward per trial
@@ -104,6 +108,11 @@ int FSMheader = 0;
 unsigned int num_of_params = 30;
 unsigned short param_array[30] = {0}; // ArCOM aray needs unsigned shorts
 
+// variables - camera sync
+int camera_pin = 29;
+bool camera = 0;
+int camera_on = 0;
+
 void setup()
 {
   SerialUSB.begin(115200);
@@ -119,6 +128,13 @@ void setup()
     //    pinMode(distractor_valves[i], OUTPUT);
     //    digitalWrite(distractor_valves[i], LOW);
   }
+
+  for (i = 0; i < 4; i++)
+  {
+    pinMode(odor_valves[i], OUTPUT);
+    digitalWrite(odor_valves[i], LOW);
+  }
+  
   pinMode(reward_valve_pin, OUTPUT);
   digitalWrite(reward_valve_pin, LOW);
   pinMode(in_reward_zone_reporter_pin, OUTPUT);
@@ -129,6 +145,8 @@ void setup()
   digitalWrite(reward_reporter_pin, LOW);
   pinMode(trial_reporter_pin, OUTPUT);
   digitalWrite(trial_reporter_pin, LOW);
+  pinMode(camera_pin, OUTPUT);
+  digitalWrite(camera_pin, LOW);
 
   // set up SPI
   pinMode (dac_spi_pin, OUTPUT);
@@ -140,13 +158,13 @@ void setup()
   // fill transfer function
   for (i = 0; i < num_of_locations; i++)
   {
-    transfer_function[i] = 101;
+    transfer_function[i] = 20;
   }
 
   // fill stimulus position array
   for (i = 0; i < stimulus_array_size; i++)
   {
-    stimulus_position_array[i] = 101;
+    stimulus_position_array[i] = 20;
   }
 
   // Timer for motor update
@@ -223,16 +241,6 @@ void loop()
       in_target_zone[i] = (lever_position == constrain(lever_position, target_params[2], target_params[0]));
     }
   }
-  // do the same for the fake target zone condition
-  // used only if water delivery is uncoupled from stimulus state
-//  if (decouple_reward_and_stimulus)
-//  {
-//    fake_stimulus_state[1] = stimulus_state[1];
-//    for (i = 0; i < 2; i++)
-//    {
-//      in_fake_target_zone[i] = (lever_position == constrain(lever_position, fake_target_params[2], fake_target_params[0]));
-//    }
-//  }
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
@@ -244,7 +252,8 @@ void loop()
     {
       stimulus_state_timestamp = micros(); // valid event
       // update reward zone time stamp, if needed
-      if (!decouple_reward_and_stimulus && (trialstate[0] == 4))
+      // if (!decouple_reward_and_stimulus && (trialstate[0] == 4))
+      if (trialstate[0] == 4)
       {
         if (in_target_zone[1] && (reward_state == 1)) 
         // in trial, entered target zone, and has not received reward in this trial
@@ -276,33 +285,7 @@ void loop()
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
-  // 4) process the 'fake target' when reward is decoupled from stimulus
-  //----------------------------------------------------------------------------
-//  if ( (decouple_reward_and_stimulus) && (fake_stimulus_state[1] != fake_stimulus_state[0]) )
-//  {
-//    if ( ((micros() - fake_stimulus_state_timestamp) >= 1000 * min_time_since_last_motor_call) )
-//    {
-//      fake_stimulus_state_timestamp = micros(); // valid event
-//      if (in_fake_target_zone[1])
-//      { // currently in reward zone
-//        if (reward_state == 1 && trialstate[0] == 4)
-//        { // just entered reward zone
-//          reward_zone_timestamp = micros();
-//          //reward_state = 2;
-//        }
-//      }
-//      else if (trialstate[0] == 4)
-//      {
-//        reward_state = 1; // exited reward zone
-//      }
-//      fake_stimulus_state[0] = fake_stimulus_state[1];
-//    }
-//  }
-  //----------------------------------------------------------------------------
-
-
-  //----------------------------------------------------------------------------
-  // 7) manage reward
+  // 4) manage reward
   //----------------------------------------------------------------------------
   if (reward_state == 2 && ((micros() - reward_zone_timestamp) > 1000 * reward_params[0]))
   {
@@ -317,10 +300,10 @@ void loop()
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
-  // 8) manage reporter pins, valves etc based on time elapsed since last event
+  // 5) manage reporter pins, valves etc based on time elapsed since last event
   //----------------------------------------------------------------------------
-  digitalWrite(target_valves[0], (target_valve_state[0] || (trialstate[0] == 4) || !close_loop_mode) ); // open odor valve
-  digitalWrite(target_valves[1], (target_valve_state[1] || (trialstate[0] == 4) || !close_loop_mode) ); // open air valve
+  digitalWrite(target_valves[0], (target_valve_state[0] || (trialstate[0] != 0) || !close_loop_mode) ); // open odor valve
+  digitalWrite(target_valves[1], (target_valve_state[1] || (trialstate[0] != 0) || !close_loop_mode) ); // open air valve
   digitalWrite(trial_reporter_pin, (trialstate[0] == 4)); // active trial?
   digitalWrite(in_target_zone_reporter_pin, in_target_zone[1]); // in_target_zone?
   digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2)||(reward_state == 5)); // in_reward_zone?
@@ -335,10 +318,12 @@ void loop()
   }
   else
   {
-    // if multiplerewards if off and trialstate is active and reward has been received 
-    // - trialstate should be pushed to 0 after a buffer time ~100ms after reward offset
+    // if trialstate is active and reward has been received 
+    // - trialstate should be pushed to 0 after a buffer time has elapsed
+    // buffer time = multi_reward_params[0] if multiplerewards==0
+    // buffer time = multiplerewards if multiplerewards!=0
     // note: reward_zone_timestamp will be updated when reward valve is turned off
-    if ( multiplerewards==0 && trialstate[0]==4 && reward_state == 4 && (micros() - reward_zone_timestamp)>1000*multi_reward_params[0])
+    if ( trialstate[0]==4 && ( (reward_state==4)||(reward_state==7) ) && (micros() - reward_zone_timestamp)>trial_off_buffer)
     {
       trialstate[1] = 0;
     }
@@ -354,6 +339,30 @@ void loop()
     {
       trial_timestamp = micros();
     }
+    // manage odor valves
+    if (timer_override)
+    {
+      if ( (trialstate[1]==0) && odor_ON)
+      {
+        for (i=0; i<4; i++)
+        {
+          digitalWrite(odor_valves[i],(i==trialstate[1]));
+          odor_ON = false;
+        }
+      }
+      else if ( (trialstate[1]==1) && (trialstate[0]==0) )
+      {
+        for (i=0; i<4; i++)
+        {
+          digitalWrite(odor_valves[i],(i==which_odor));
+        }
+      }
+      else if (trialstate[1]==2)
+      {
+        odor_ON = true;
+      }
+    }
+    
     trialstate[0] = trialstate[1];
   }
   //----------------------------------------------------------------------------
@@ -372,15 +381,30 @@ void loop()
         {
           case 0: // opening handshake
             myUSB.writeUint16(5);
+            camera_on = 1;
             break;
           case 1: // Acquisition start handshake
             myUSB.writeUint16(6);
             stimulus_writepointer = 0;
+            // fill stimulus position array
+            for (i = 0; i < stimulus_array_size; i++)
+            {
+              stimulus_position_array[i] = 20;
+            }
+            digitalWrite(odor_valves[0],HIGH);
+            odor_ON = true;
             timer_override = true;
+            camera_on = 1;
             break;
           case 2: // Acquisition stop handshake
             myUSB.writeUint16(7);
             timer_override = false;
+            // turn off all odor valves as caution
+            for (i=0; i<4; i++)
+            {
+              digitalWrite(odor_valves[i],LOW);
+            }
+            camera_on = 1;
             break;
         }
         break;
@@ -588,8 +612,20 @@ void UpdateAllParams()
   }
   // copy trig_smooth to multiplerewards
   multiplerewards = trial_trigger_timing[1]; // dirty hack
+
+  if (multiplerewards == 0)
+  {
+    trial_off_buffer = 1000*param_array[0];
+  }
+  else
+  {
+    trial_off_buffer = 1000*multiplerewards;
+  }
+
+  camera_on = param_array[1];
   
   // param[14] = timestamp
+  which_odor = param_array[14]; // odor vial number
   target_which = param_array[15];
   for (i = 0; i < 3; i++)
   {
@@ -644,22 +680,26 @@ void MoveMotor()
     // roll over the TF array pointer
     transfer_function_pointer = (transfer_function_pointer + 1) % num_of_locations;
   }
+    camera = camera_on*(!camera);
+    digitalWrite(camera_pin,camera);
 }
 
 void RewardNow()
 {
-  if ((reward_state % 3 == 0) && timer_override)
+  //if ((reward_state % 3 == 0) && timer_override)
+  if ( ((reward_state == 3)||(reward_state == 6)) && timer_override )
   {
     digitalWrite(reward_valve_pin, HIGH);
     digitalWrite(reward_reporter_pin, HIGH);
     reward_state = reward_state + 1;
+    reward_zone_timestamp = micros();
   }
   else
   {
     Timer4.stop();
     digitalWrite(reward_valve_pin, LOW);
     digitalWrite(reward_reporter_pin, LOW);
-    reward_zone_timestamp = micros();
+    //reward_zone_timestamp = micros();
   }
 }
 

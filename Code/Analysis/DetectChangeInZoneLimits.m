@@ -1,5 +1,5 @@
 % organize the session data into a cell array of trials
-function [Lever,TrialInfo, TargetZones] = SortSessionByTrials(MyData)
+function [Lever,TrialInfo, TargetZones] = DetectChangeInZoneLimits(MyData,Params)
     % column ID for trial column
     TrialCol = find(cellfun(@isempty,regexp(WhatsMyData','Trial'))==0);
     TrialColumn = MyData(:,TrialCol);
@@ -14,6 +14,26 @@ function [Lever,TrialInfo, TargetZones] = SortSessionByTrials(MyData)
     while TrialOn(end)>TrialOff(end)
         TrialOn(end,:) = [];
     end
+    
+    % find param updates that happened during ITIs
+    X = diff(Params(:,18:20));
+    X(X~=0) = 1;
+    f = find(X(:,2)-X(:,1)==-1);
+    
+    
+    
+    T = [[0; MyData(TrialOff(1:end-1),1)] MyData(TrialOn,1)];
+    for i = 1:size(T,1)
+        MultipleUpdates(i) = numel(intersect(find(Params(:,1)>=T(i,1)),find(Params(:,1)<T(i,2))));
+    end
+    
+    f = find(MultipleUpdates>1); 
+    f(find(f)==1) = [];
+    for i = 1:length(f)
+        idx = intersect(find(Params(:,1)>=T(f(i),1)),find(Params(:,1)<T(f(i),2)));
+    end
+        
+    
     
     % get a list of unique Target Zone conditions
     [x,y] = unique(MyData(TrialOn(1):end,2)); % a hack to get rid of crappy values in the beginning

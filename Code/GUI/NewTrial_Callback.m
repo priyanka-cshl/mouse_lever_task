@@ -8,10 +8,10 @@ callUpdate = 0; % whether to update Arduino or not?
 % shuffle odor list
 odor_list = randperm(length(h.Odor_list.Value));
 h.current_trial_block.Data(4) = h.Odor_list.Value(odor_list(1));
-odor_states = [0 0 0];
+odor_states = [0 0 0 0];
 odor_states(odor_list(1)) = 1;
 % set all odor valves
-outputSingleScan(h.Odors,odor_states);
+%outputSingleScan(h.Odors,odor_states);
 
 % update target hold time
 x = exprnd(h.TargetHold.Data(1));
@@ -24,7 +24,7 @@ h.current_trial_block.Data(5) = round(h.TargetHold.Data(2)+x,0);
 if (h.which_perturbation.Value)
     % bsed on the user set probability,
     % check if the trial is to be perturbed or not
-    perturb = (rand(1) <= h.PertubationSettings.Data(1));
+    perturb = (rand(1) <= h.PerturbationSettings.Data(1));
     if (perturb ~= h.current_trial_block.Data(3))
         h.current_trial_block.Data(3) = perturb;
         callUpdate = 1;
@@ -33,12 +33,14 @@ if (h.which_perturbation.Value)
         % select randomly a target level that is not currently in use
         unused_targets = setdiff(h.target_level_array.Data,h.TargetDefinition.Data(2));
         new_fake_target = unused_targets(randi(length(unused_targets)));
-        if  h.PertubationSettings.Data(4) ~= new_fake_target % fake target has changed
-            h.PertubationSettings.Data(4) = new_fake_target;
+        if  h.PerturbationSettings.Data(4) ~= new_fake_target % fake target has changed
+            h.PerturbationSettings.Data(4) = new_fake_target;
             callUpdate = 2;
         end
     end      
 end
+
+guidata(h.hObject, h);
 
 if callUpdate
     display('params modified by new trial call');

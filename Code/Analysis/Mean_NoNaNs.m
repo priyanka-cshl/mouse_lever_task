@@ -12,5 +12,6 @@ for i = 1:size(data,2)
     MyMean(2,i) = std(a(~isnan(a)));
     MyMean(3,i) = numel(a(~isnan(a)));
     MyMean(4,i) = MyMean(2,i)/sqrt(MyMean(3,i));
+    MyMean(5,i) = median(a(~isnan(a)));
 end
 end

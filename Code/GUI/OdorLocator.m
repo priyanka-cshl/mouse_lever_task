@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 20-Feb-2017 14:06:46
+% Last Modified by GUIDE v2.5 21-Apr-2017 17:05:03
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,6 +61,7 @@ handles.DAQrates.Data = [500 20]';
 handles.which_perturbation.Value = 1;
 handles.TransferFunction.Data(2) = 1;
 handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
+handles.NewTargetDefinition.Data(2) = handles.target_level_array.Data(2);
 
 % clear indicators
 handles.RewardStatus.Data = [0 0 0]';
@@ -73,7 +74,35 @@ handles.StopTime.Visible = 'off';
 
 % load mouse specific settings
 handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
+% create the data directories if they don't already exist
+animal_name = char(handles.file_names.Data(1));
+foldername_local = char(handles.file_names.Data(2));
+foldername_server = char(handles.file_names.Data(3));
+if ~exist(fullfile(foldername_local,animal_name),'dir')
+    mkdir(fullfile(foldername_local,animal_name));
+    disp('making local data directory');
+end
+if ~exist(fullfile(foldername_server,animal_name),'dir')
+    mkdir(fullfile(foldername_server,animal_name));
+    disp('making remote data directory');
+end
+
+% load settings
 handles = LoadSettings(handles);
+
+% get weight data if available
+% check if the weight log file exists
+
+filename = [foldername_local, filesep, animal_name, '_WeightLog.mat'];
+if exist(filename) %#ok<*EXIST>
+    load(filename);
+    w_o = str2num(char(weight(1,3)));
+    w_c = str2num(char(weight(end,3)));
+    w_p = round(100*w_c/w_o,0,'decimals');
+    handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [100% = ', num2str(w_o), ' grams]'];
+else
+    handles.WeightString.String = 'weight data unavailable';
+end
 
 % set up NI acquisition and reset Arduino
 handles.sampling_rate_array = handles.DAQrates.Data;
@@ -100,6 +129,8 @@ handles.in_target_zone_plot = fill(NaN,NaN,Plot_Colors('r'));
 handles.in_target_zone_plot.EdgeColor = 'none';
 handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
 handles.in_reward_zone_plot.EdgeColor = 'none';
+handles.homesensor_plot = fill(NaN, NaN,Plot_Colors('g')); %homesensor
+handles.homesensor_plot.EdgeColor = 'none';
 %handles.reward_plot = plot(NaN, NaN,'o','MarkerFaceColor',Plot_Colors('t'),'MarkerSize',10,'MarkerEdgeColor','none'); %rewards
 handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.25); %rewards
 handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1); %licks
@@ -116,19 +147,26 @@ axis off tight
 %set(handles.axes9,'YLim',handles.Plot_YLim.Data);
 set(handles.axes9,'YLim',[0 100]);
 
+axes(handles.axes4); % motor location plot
+handles.motor_location = plot([1],[2],'r<','MarkerFaceColor','k','MarkerEdgeColor','k');
+axis off tight
+set(handles.axes4,'YLim',[0 100]);
+set(handles.axes4, 'Color', 'none');
+
 % for webcam
 handles.camera_available = 0;
 if ~isempty(webcamlist)
     
     handles.mycam = webcam(1);
-     %mycam.Resolution = '320x240';
+    %mycam.Resolution = '320x240';
     handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
     handles.camera_available = 1;
     handles.focus_mode.Value = 2;
-    handles.mycam.FocusMode = 'manual';
+    %handles.mycam.FocusMode = 'manual';
     handles.mycam.ExposureMode = 'auto';
     handles.exposure_mode.Value = 1;
-    handles.focus_value.Data = 250; %handles.mycam.Focus;
+    %handles.focus_value.Data = 250; 
+    handles.mycam.Focus = 250;
     handles.exposure_value.Data = handles.mycam.Exposure;
     handles.mycam.Zoom = 100;
 end
@@ -160,7 +198,7 @@ Update_MultiRewards(handles);
 % Zero MFCs
 Zero_MFC_Callback(hObject, eventdata, handles);
 % set all odor valves to default state
-outputSingleScan(handles.Odors,[0, 0, 0]);
+% outputSingleScan(handles.Odors,[0, 0, 0, 0]);
 % disable motor override
 handles.motor_override.Value = 0;
 motor_override_Callback(hObject, eventdata, handles);
@@ -202,13 +240,13 @@ if get(handles.startAcquisition,'value')
         fid3 = fopen('C:\temp_data_files\transferfunction_log.bin','w');
         
         % main settings - only change in the beginning of each session
-        [settings.legends_main, settings.params_main] = Current_Settings(handles,0);
-        [settings.legends_trial, params] = Current_Settings(handles,2);
-        save('C:\temp_data_files\session_settings.mat','settings*');
+        [mysettings.legends_main, mysettings.params_main] = Current_Settings(handles,0);
+        [mysettings.legends_trial, params] = Current_Settings(handles,2);
+        save('C:\temp_data_files\session_settings.mat','mysettings*');
         
         % dynamic settings - change within a session
         handles.settingsfileID = fid2;
-        fwrite(fid2,[handles.timestamp.Data settings.params_main params],'double');
+        fwrite(fid2,[handles.timestamp.Data mysettings.params_main params],'double');
         handles.TransferFunctionfileID = fid3;
         
         handles.hObject = hObject;
@@ -255,18 +293,19 @@ if get(handles.startAcquisition,'value')
         set(handles.respiration_2_plot,'XData',NaN,'YData',NaN);
         set(handles.lick_plot,'XData',NaN,'YData',NaN);
         
-        % disable motor override
-        handles.motor_override.Value = 0;
-        motor_override_Callback(hObject, eventdata, handles);
-        
-        % enable the motors
-        set(handles.motor_status,'String','OFF')
-        motor_toggle_Callback(hObject, eventdata, handles);
-        
         % turn ON MFCs
         handles.Zero_MFC.Value = 1;
         handles.Zero_MFC.String = 'MFCs OFF';
         Zero_MFC_Callback(hObject, eventdata, handles);
+        
+        % Calibrate Rotary encoder
+        handles = CalibrateRotaryEncoder(handles);
+        % disable motor override
+        handles.motor_override.Value = 0;
+        motor_override_Callback(hObject, eventdata, handles);
+        % enable the motors
+        set(handles.motor_status,'String','OFF')
+        motor_toggle_Callback(hObject, eventdata, handles);
         
         if handles.which_stage.Value>1
             % start the Arduino timer
@@ -283,6 +322,9 @@ if get(handles.startAcquisition,'value')
         
         % enable transfer function calibrator
         handles.calibrate_transfer_function.Enable = 'on';
+        
+        handles.water_calibrate.Enable = 'off';
+        handles.open_valve.Enable = 'off';
 
         guidata(hObject,handles);
         if isfield(handles,'lis')
@@ -292,6 +334,21 @@ if get(handles.startAcquisition,'value')
         % refresh DAC levels
         calibrate_DAC_Callback(hObject,eventdata,handles);
         
+        % update plot height and position to match that of the lever graph
+        DAC_limits = handles.DAC_levels.Data;
+        scalefactor = handles.axes1.Position(4)/sum(abs(handles.Plot_YLim.Data));
+        Y_position = handles.axes1.Position(2) + scalefactor*abs(handles.Plot_YLim.Data(1) - DAC_limits(1));
+        Height = scalefactor*abs(DAC_limits(2) - DAC_limits(1));
+        handles.axes9.Position(2) = Y_position;
+        handles.axes9.Position(4) = Height;
+        handles.axes4.Position(2) = Y_position;
+        handles.axes4.Position(4) = Height;
+        NewBlockTrial_Callback(handles);
+        
+        % update pointer to match motor location
+        handles.axes4.YLim = [0 handles.TransferFunction.Data(1)];
+        handles.motor_location.YData = MapRotaryEncoderToTFColorMap(handles, handles.Rotary.Limits(3));
+       
         handles.lis = handles.NI.addlistener('DataAvailable', @(src,evt) NI_Callback(src,evt,handles,hObject,fid1));
         handles.NI.startBackground();
         wait(handles.NI);
@@ -335,6 +392,9 @@ else
    
    % disable transfer function calibrator
     handles.calibrate_transfer_function.Enable = 'off';
+    
+    handles.water_calibrate.Enable = 'on';
+    handles.open_valve.Enable = 'on';
 end
 
 handles.traces = TotalData;
@@ -405,7 +465,7 @@ if usrans == 1
     end
     % read session settings
     load('C:\temp_data_files\session_settings.mat'); % loads variable settings
-    session_data = settings;
+    session_data = mysettings;
     session_data.timestamps = a(1,:)';
     session_data.trace = a(2:handles.NIchannels+1,:)';
     session_data.trace_legend = Connections_list();
@@ -418,9 +478,9 @@ if usrans == 1
     display(['saved to ' filename])
     display(['saved to ' server_file_name])
     set(gcf,'PaperPositionMode','auto')
-    print(gcf,['GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
+    print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
         '-dpng','-r0');
-    display(['saved GUI screen shot at ' (pwd)])
+    display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
     guidata(hObject, handles);
 end
 
@@ -490,12 +550,16 @@ ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles);
 
 % --- Executes on button press in stay_time_up.
 function stay_time_up_Callback(hObject, eventdata, handles)
-handles.TargetHold.Data(1) = handles.TargetHold.Data(1) + 5;
+handles.TargetHold.Data(3) = handles.TargetHold.Data(3) + 25;
+handles.TargetHold.Data(2) = handles.TargetHold.Data(2) + 25;
+handles.TargetHold.Data(1) = handles.TargetHold.Data(1) + 25;
 handles.TargetHold.ForegroundColor = 'r';
 
 % --- Executes on button press in stay_time_down.
 function stay_time_down_Callback(hObject, eventdata, handles)
-handles.TargetHold.Data(1) = handles.TargetHold.Data(1) - 5;
+handles.TargetHold.Data(3) = handles.TargetHold.Data(3) - 25;
+handles.TargetHold.Data(2) = handles.TargetHold.Data(2) - 25;
+handles.TargetHold.Data(1) = handles.TargetHold.Data(1) - 25;
 handles.TargetHold.ForegroundColor = 'r';
 
 % --- Executes on button press in min_width_down.
@@ -506,8 +570,6 @@ else
     handles.ZoneLimitSettings.Data(1) = 0;
 end
 ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles);
-
-
 
 % --- Executes on button press in update_zones.
 function update_zones_Callback(hObject, eventdata, handles)
@@ -647,12 +709,12 @@ set(handles.motor_override,'BackgroundColor',[(0.94 - 0.44*handles.motor_overrid
 if handles.motor_override.Value
     % enable direct motor controls
     handles.motor_move.Enable = 'on';
-    handles.motor_home.Enable = 'on';
+    %handles.motor_home.Enable = 'on';
     handles.change_motor_params.Enable = 'on';
 else
     % disable direct motor controls
     handles.motor_move.Enable = 'off';
-    handles.motor_home.Enable = 'off';
+    %handles.motor_home.Enable = 'off';
     handles.change_motor_params.Enable = 'off';
 end
     
@@ -680,9 +742,13 @@ handles.Arduino.write(my_location+101, 'uint16'); % which location
 
 % --- Executes on button press in motor_home.
 function motor_home_Callback(hObject, eventdata, handles)
-pause(0.01);
-handles.Arduino.write(62, 'uint16'); % handler - move motor to specific location
-handles.Arduino.write(101, 'uint16'); % home location       
+if handles.motor_override.Value
+    pause(0.01);
+    handles.Arduino.write(62, 'uint16'); % handler - move motor to specific location
+    handles.Arduino.write(101, 'uint16'); % home location       
+else
+    set(handles.motor_home,'BackgroundColor',[0.5 0.94 0.94]);
+end
 
 % --- Executes on button press in change_motor_params.
 function change_motor_params_Callback(hObject, eventdata, handles)
@@ -744,7 +810,7 @@ else
     outputSingleScan(handles.MFC,0*handles.MFC_table.Data');
     handles.Zero_MFC.String = 'MFCs OFF';
     % also turn OFF valves
-    outputSingleScan(handles.Odors,[0, 0, 0]);
+%     outputSingleScan(handles.Odors,[0, 0, 0, 0]);
 end
 
 % --- Executes on button press in valve_odor_A.
@@ -785,13 +851,13 @@ if handles.odor_vial.Value && length(handles.Odor_list.Value)==1
     MyVial = handles.Odor_list.Value;
     set(handles.odor_vial,'String',['Vial',num2str(MyVial),' ON'])
     set(handles.odor_vial,'BackgroundColor',[0.5 0.94 0.94]);
-    odor_states = [0 0 0];
-    odor_states(MyVial) = 1;
-    outputSingleScan(handles.Odors,odor_states);
+%     odor_states = [0 0 0 0];
+%     odor_states(MyVial) = 1;
+%     outputSingleScan(handles.Odors,odor_states);
 else
-    set(handles.odor_vial,'String','Vial1 ON')
+    set(handles.odor_vial,'String','Vial OFF')
     set(handles.odor_vial,'BackgroundColor',[0.94 0.94 0.94]);
-    outputSingleScan(handles.Odors,[1, 0, 0]);
+%     outputSingleScan(handles.Odors,[0, 0, 0, 1]);
 end
 
 % Hint: get(hObject,'Value') returns toggle state of odor_vial
@@ -815,17 +881,17 @@ end
 
 % --- Executes on button press in grab_camera.
 function grab_camera_Callback(hObject, eventdata, handles)
-if get(hObject,'Value') && handles.startStopCamera.Value
-    closePreview(handles.mycam);
-    set(handles.startStopCamera,'String','Cam OFF');
-    set(handles.startStopCamera,'BackgroundColor',[0.94 0.94 0.94]);
-end
+% if get(hObject,'Value') && handles.startStopCamera.Value
+%     closePreview(handles.mycam);
+%     set(handles.startStopCamera,'String','Cam OFF');
+%     set(handles.startStopCamera,'BackgroundColor',[0.94 0.94 0.94]);
+% end
 % Hint: get(hObject,'Value') returns toggle state of grab_camera
 
 % --- Executes on selection change in focus_mode.
 function focus_mode_Callback(hObject, eventdata, handles)
 contents = cellstr(get(hObject,'String')); % returns focus_mode contents as cell array
-handles.mycam.FocusMode = contents{get(hObject,'Value')}; %returns selected item from focus_mode
+%handles.mycam.FocusMode = contents{get(hObject,'Value')}; %returns selected item from focus_mode
 handles.focus_value.Data = handles.mycam.Focus;
 if get(hObject,'Value') == 1
     handles.focus_value.Enable = 'off';
@@ -875,7 +941,7 @@ handles.mycam.Exposure = hObject.Data;
 function close_gui_Callback(hObject, eventdata, handles)
 % close valves and MFCs
 outputSingleScan(handles.MFC,0*handles.MFC_table.Data');
-outputSingleScan(handles.Odors,[0, 0, 0]);
+% outputSingleScan(handles.Odors,[0, 0, 0, 0]);
 handles.Arduino.write(44, 'uint16');
 delete(handles.figure1);
 handles.Arduino.write(12, 'uint16'); %fwrite(handles.Arduino, char(11));
@@ -897,7 +963,85 @@ end
 %     delete(handles.figure1);
 % end
 
+% --- Executes on button press in log_weight.
+function log_weight_Callback(hObject, eventdata, handles)
+
+% check if the weight log file exists
+animal_name = char(handles.file_names.Data(1));
+foldername_local = char(handles.file_names.Data(2));
+foldername_server = char(handles.file_names.Data(3));
+
+MadeNewFile = 0;
+FileExistChecker = 0;
+while ~FileExistChecker
+    filename = [foldername_local, filesep, animal_name, '_WeightLog.mat'];
+    [~,justname] = fileparts(filename);
+    server_file_name = [foldername_server,filesep,justname,'.mat'];
+    
+    if ~exist(filename) %#ok<*EXIST>
+        % get weight
+        prompt = {'Enter original weight (grams):', 'Enter current weight (grams):'};
+        dlg_title = 'Weight Log';
+        num_lines = 2;
+        defaultans = {num2str(23), num2str(23)};
+        userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+        if ~isempty(userans)
+            weight(1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(1))};
+            weight(2,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(2))};
+            save(filename,'weight*');
+            save(server_file_name,'weight*');
+            MadeNewFile = 1;
+            w_o = str2num(char(userans(1)));
+            w_c = str2num(char(userans(2)));
+            w_p = round(100*w_c/w_o,0,'decimals');
+            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [100% = ', num2str(w_o), ' grams]'];
+        end
+    end
+    FileExistChecker = exist(filename,'file');
+end
+    
+if ~MadeNewFile
+    clear weight;
+    load(filename);
+    if ~isempty(strmatch(datestr(now, 'yyyymmdd'),weight(:,1)))
+        % check with the use if he/she wants to make a repeat entry
+        prompt = {'A weight entry for today already exists. You can still add a new one or cancel'};
+        dlg_title = 'Weight Log';
+        num_lines = 1;
+        defaultans = weight(end,3);
+        userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+        if ~isempty(userans)
+            weight(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans)};
+            save(filename,'weight*');
+            save(server_file_name,'weight*');
+            w_o = str2num(char(weight(1,3)));
+            w_c = str2num(char(userans));
+            w_p = round(100*w_c/w_o,0,'decimals');
+            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [100% = ', num2str(w_o), ' grams]'];
+        else
+            w_o = str2num(char(weight(1,3)));
+            w_c = str2num(char(weight(end,3)));
+            w_p = round(100*w_c/w_o,0,'decimals');
+            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [100% = ', num2str(w_o), ' grams]'];
+        end
+    else
+        % check with the use if he/she wants to make a repeat entry
+        prompt = {'Please enter weight (in grams)'};
+        dlg_title = 'Weight Log';
+        num_lines = 1;
+        defaultans = weight(end,3);
+        userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+        if ~isempty(userans)
+            weight(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans)};
+            save(filename,'weight*');
+            save(server_file_name,'weight*');
+            w_o = str2num(char(weight(1,3)));
+            w_c = str2num(char(userans));
+            w_p = round(100*w_c/w_o,0,'decimals');
+            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [100% = ', num2str(w_o), ' grams]'];
+        end
+    end
+end
+
 % --- Executes during object deletion, before destroying properties.
 function figure1_DeleteFcn(hObject, eventdata, handles)
-
-

@@ -42,21 +42,17 @@ end
 if DoPlot
     figure('Name',[char(MyFileName),'ZoneAligned']);
     for z = 1:numel(ZonesToUse)
-        cmat = [0 0 0];
-        cmat(z) = 1;
         subplot(3,numel(ZonesToUse),z); hold on;
         HighLim = TargetZones(z,1);
         LowLim = TargetZones(z,2);
         fill([-timewindow -timewindow timewindow timewindow], ...
-            [LowLim HighLim HighLim LowLim],cmat/2,'FaceAlpha',0.1,'EdgeColor','none');
+            [LowLim HighLim HighLim LowLim],ZoneColors(ZonesToUse(z)),'FaceAlpha',0.4,'EdgeColor','none');
         
         MyTitle = [];
         for j = 1:3
-            cmat = [0 0 0];
-            cmat(j) = 1;
             f = find(Trajectories.(['Z',num2str(z)]).ZoneType==j);
             AverageTrajectories = Mean_NoNaNs(Trajectories.(['Z',num2str(z)]).Traces(f,:),1);
-            shadedErrorBar(-timewindow:timewindow, AverageTrajectories(1,:),AverageTrajectories(4,:),{'color',cmat/2},1);
+            shadedErrorBar(-timewindow:timewindow, AverageTrajectories(1,:),AverageTrajectories(4,:),{'color',ZoneColors(10+ZonesToUse(j))},1);
             MyTitle = [MyTitle,':',num2str(numel(f))];
         end
         MyTitle = [MyTitle,':'];
@@ -65,23 +61,19 @@ if DoPlot
         ax.Title.String =  MyTitle;
         
         % successful trials
-        cmat = [0 0 0];
-        cmat(z) = 1;
         subplot(3,numel(ZonesToUse),numel(ZonesToUse)+z); hold on;
         HighLim = TargetZones(z,1);
         LowLim = TargetZones(z,2);
         fill([-timewindow -timewindow timewindow timewindow], ...
-            [LowLim HighLim HighLim LowLim],cmat/2,'FaceAlpha',0.1,'EdgeColor','none');
+            [LowLim HighLim HighLim LowLim],ZoneColors(ZonesToUse(z)),'FaceAlpha',0.4,'EdgeColor','none');
         
         MyTitle = [];
         for j = 1:3
-            cmat = [0 0 0];
-            cmat(j) = 1;
             f = find( Trajectories.(['Z',num2str(z)]).ZoneType==j);
             f(find(Trajectories.(['Z',num2str(z)]).Outcome(f,:)~=1),:) = [];
             %f = find( (Trajectories.(['Z',num2str(z)]).ZoneType==j) & (Trajectories.(['Z',num2str(z)]).Outcome==1));
             AverageTrajectories = Mean_NoNaNs(Trajectories.(['Z',num2str(z)]).Traces(f,:),1);
-            shadedErrorBar(-timewindow:timewindow, AverageTrajectories(1,:),AverageTrajectories(4,:),{'color',cmat/2},1);
+            shadedErrorBar(-timewindow:timewindow, AverageTrajectories(1,:),AverageTrajectories(4,:),{'color',ZoneColors(10+ZonesToUse(j))},1);
             MyTitle = [MyTitle,':',num2str(numel(f))];            
         end
         MyTitle = [MyTitle,':'];
@@ -90,23 +82,19 @@ if DoPlot
         ax.Title.String =  MyTitle;
         
         % failures
-        cmat = [0 0 0];
-        cmat(z) = 1;
         subplot(3,numel(ZonesToUse),2*numel(ZonesToUse)+z); hold on;
         HighLim = TargetZones(z,1);
         LowLim = TargetZones(z,2);
         fill([-timewindow -timewindow timewindow timewindow], ...
-            [LowLim HighLim HighLim LowLim],cmat/2,'FaceAlpha',0.1,'EdgeColor','none');
+            [LowLim HighLim HighLim LowLim],ZoneColors(ZonesToUse(z)),'FaceAlpha',0.4,'EdgeColor','none');
         
         MyTitle = [];
         for j = 1:3
-            cmat = [0 0 0];
-            cmat(j) = 1;
             f = find( Trajectories.(['Z',num2str(z)]).ZoneType==j);
             f(find(Trajectories.(['Z',num2str(z)]).Outcome(f,:)~=0),:) = [];
             %f = find((Trajectories.(['Z',num2str(z)]).ZoneType==j) & (Trajectories.(['Z',num2str(z)]).Outcome==0));
             AverageTrajectories = Mean_NoNaNs(Trajectories.(['Z',num2str(z)]).Traces(f,:),1);
-            shadedErrorBar(-timewindow:timewindow, AverageTrajectories(1,:),AverageTrajectories(4,:),{'color',cmat/2},1);
+            shadedErrorBar(-timewindow:timewindow, AverageTrajectories(1,:),AverageTrajectories(4,:),{'color',ZoneColors(10+ZonesToUse(j))},1);
             MyTitle = [MyTitle,':',num2str(numel(f))];      
         end
         MyTitle = [MyTitle,':'];

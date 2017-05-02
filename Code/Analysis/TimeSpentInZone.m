@@ -1,5 +1,8 @@
-function [StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, DoPlot)
+function [StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, Params, DoPlot)
 global MyFileName;
+
+MinHold = min(Params(:,6));
+
 
 Scores = zeros(2,numel(ZonesToUse),numel(ZonesToUse));
 for t = 1:size(LeverTruncated,1) % each trial    
@@ -43,10 +46,12 @@ for t = 1:size(LeverTruncated,1) % each trial
         end
     end
     which_row = find(ZonesToUse==TrialInfo.TargetZoneType(t));
-    [~,which_col] = max(TrialStats.MaxStay(t,:));
-    Scores(1,which_row,which_col) = Scores(1,which_row,which_col) + 1;
-    [~,which_col] = max(TrialStats.MaxFractionStay(t,:));
-    Scores(2,which_row,which_col) = Scores(2,which_row,which_col) + 1;
+    [MaxHold,which_col] = max(TrialStats.MaxStay(t,:));
+    if MaxHold>=MinHold-50
+        Scores(1,which_row,which_col) = Scores(1,which_row,which_col) + 1;
+        [~,which_col] = max(TrialStats.MaxFractionStay(t,:));
+        Scores(2,which_row,which_col) = Scores(2,which_row,which_col) + 1;
+    end
 end
 
 for x = 1:3

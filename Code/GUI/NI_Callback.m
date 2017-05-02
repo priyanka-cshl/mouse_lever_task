@@ -20,6 +20,7 @@ h.timestamp.Data = event.TimeStamps(end);
 trial_channel = 7;
 reward_channel = trial_channel + 3; %10;
 lick_channel = trial_channel + 4; %11;
+homesensor_channel = trial_channel + 5; %12;
 
 num_new_samples = length(event.TimeStamps);
 lastsample = samplenum + num_new_samples - 1;
@@ -47,6 +48,11 @@ for i = 1:reward_channel-1
     if i == trial_channel
         samples_new = samples_new*odorID;
     end
+    TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];
+end
+
+for i = homesensor_channel
+    samples_new = event.Data(:,i);
     TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];
 end
              
@@ -114,6 +120,11 @@ set(h.lever_DAC_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indice
 set(h.lever_raw_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,2));
 set(h.stimulus_plot,'XData',TotalTime(indices_to_plot),'YData',...
     -1*h.RE_scaling.Data(1)*(TotalData(indices_to_plot,3) - h.RE_scaling.Data(2)) );
+
+h.motor_location.YData = MapRotaryEncoderToTFColorMap(h,mean(event.Data(:,3)));
+%set(h.motor_location,'YData',mean(-1*h.RE_scaling.Data(1)*(TotalData(indices_to_plot,3) - h.RE_scaling.Data(2))));
+
+
 if h.is_distractor_on.Value
     set(h.distractor_plot,'XData',TotalTime(indices_to_plot),'YData',...
          -1*h.RE_scaling.Data(1)*(TotalData(indices_to_plot,4) - h.RE_scaling.Data(2)) );
@@ -133,6 +144,8 @@ set(h.respiration_2_plot,'XData',TotalTime(indices_to_plot),'YData',...
 %set(h.in_target_zone_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,6)-1);
 [h.in_reward_zone_plot] = PlotToPatch(h.in_reward_zone_plot, TotalData(:,trial_channel+2), TotalTime, [-1 -0.2]);
 %set(h.in_reward_zone_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,7)-1.2);
+% home position sensor
+[h.homesensor_plot] = PlotToPatch(h.homesensor_plot, TotalData(:,homesensor_channel), TotalTime, [-1 -0.2]);
 
 % % rewards
 % reward_timestamps = TotalTime(TotalData(:,reward_channel)==1);
@@ -184,10 +197,12 @@ set(h.axes1,'XLim',[TotalTime(indices_to_plot(1)) TotalTime(indices_to_plot(end)
 if get(h.startAcquisition,'value') == 0
     src.stop();
 end
-if call_new_block
+
+if call_new_block && trial_just_ended
+    NewBlockTrial_Callback(h);
+elseif call_new_block
     NewBlock_Callback(h);
-end
-if trial_just_ended
+elseif trial_just_ended
     NewTrial_Callback(h);
 end
 % if update_trial
@@ -197,13 +212,14 @@ end
 %% write data to disk
 data = [TotalTime(end-num_new_samples+1:end) TotalData(end-num_new_samples+1:end,:)]';
 data(trial_channel+1,:) = h.current_trial_block.Data(4)*data(trial_channel+1,:);
+% rescale stimulus position plot
+data(4,:) = MapRotaryEncoderToTFColorMap(h,data(4,:),1);
 fwrite(fid1,data,'double');
 
-
-%% write behavior video to disk
-if get(h.grab_camera,'Value')
-    h.cam_image = snapshot(mycam);
-end
+% %% write behavior video to disk
+% if get(h.grab_camera,'Value')
+%     h.cam_image = snapshot(mycam);
+% end
 
 %% for next round
 samplenum = samplenum + num_new_samples;

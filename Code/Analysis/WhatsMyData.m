@@ -10,4 +10,6 @@ function [ColumnNames] = WhatsMyData()
     ColumnNames(8) = {'InRewardZone'};
     ColumnNames(9) = {'Water'};
     ColumnNames(10) = {'Licks'};
+    ColumnNames(11) = {'FakeUpperLimit'};
+    ColumnNames(12) = {'FakeLowerLimit'};
 end

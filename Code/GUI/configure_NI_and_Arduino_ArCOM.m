@@ -7,9 +7,9 @@ release(NI_session);
 stop(NI_session);
 
 % configure analog channels (4)
-if  strcmp(handles.computername,'PRIYANKA-PC')
-    DAQchannels = addAnalogInputChannel(NI_session,'Dev2',{'ai0','ai1','ai2','ai3','ai11','ai12'},'Voltage');
-end
+%if  strcmp(handles.computername,'PRIYANKA-PC')
+DAQchannels = addAnalogInputChannel(NI_session,'Dev2',{'ai0','ai1','ai2','ai3','ai11','ai12'},'Voltage');
+%end
 % configure all analog channels as single ended and voltage range [-5 to 5]
 for i = 1:4
     DAQchannels(i).TerminalConfig = 'SingleEnded';
@@ -21,8 +21,8 @@ for i = 5:6
     DAQchannels(i).Range = [-10 10];
 end
 % configure digital channels
-for i = handles.NIchannels-4:handles.NIchannels
-    DAQchannels(i)= addDigitalChannel(NI_session,'Dev2',['Port0/Line',num2str(i-(handles.NIchannels-4))],'InputOnly');
+for j = i+1:handles.NIchannels
+    DAQchannels(i)= addDigitalChannel(NI_session,'Dev2',['Port0/Line',num2str(j-(i+1))],'InputOnly');
 end
 
 % configure MFC channels (2)
@@ -52,19 +52,22 @@ addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 6, 'Voltage');
 
 %% ------------------------------------------------------------------------------------------------------------
 % configure NI DAQ - digital output (valves)
-Odor_session = daq.createSession('ni');
-release(Odor_session);
-stop(Odor_session);
-addDigitalChannel(Odor_session,'Dev2','Port0/Line5','OutputOnly');
-addDigitalChannel(Odor_session,'Dev2','Port0/Line6','OutputOnly');
-addDigitalChannel(Odor_session,'Dev2','Port0/Line7','OutputOnly');
-%addDigitalChannel(Odor_session,'Dev2','Port1/Line0','OutputOnly');
+Odor_session = [];
+% Odor_session = daq.createSession('ni');
+% release(Odor_session);
+% stop(Odor_session);
+% warning('off');
+% addDigitalChannel(Odor_session,'Dev1','Port0/Line0','OutputOnly');
+% addDigitalChannel(Odor_session,'Dev1','Port0/Line1','OutputOnly');
+% addDigitalChannel(Odor_session,'Dev1','Port0/Line2','OutputOnly');
+% addDigitalChannel(Odor_session,'Dev1','Port0/Line3','OutputOnly');
+% warning('on');
 %% ------------------------------------------------------------------------------------------------------------
 
 %% ------------------------------------------------------------------------------------------------------------
 % initialize Arduino as Serial Object
-[Arduino_Serial,portNum] = Start_Arduino_ArCOM(30);
-pause(5);
+[Arduino_Serial,portNum] = Start_Arduino_ArCOM(3);
+pause(0.5);
 Arduino_Serial.write(10, 'uint16'); % opening handshake - should return 5 as confirmation
 %Arduino_Serial.Port.BytesAvailable
 tic

@@ -22,7 +22,7 @@ for i = 1:size(Lever,2)
     timepoints_to_keep = timepoints_all(i); % length of the trial
     if TrialInfo.Success(i) % successful trial
         % truncate trial at time of reward delivery
-        timepoints_to_keep = TrialInfo.Reward{i};
+        timepoints_to_keep = TrialInfo.Reward{i}(1);
     end
     Lever_mat(i,1:timepoints_to_keep) = Lever{i}(1:timepoints_to_keep);
     timepoints_to_keep = timepoints_to_keep + 1;
