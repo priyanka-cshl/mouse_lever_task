@@ -156,9 +156,9 @@ void FindHome(bool which_direction)
   {
     // send AtHome signal to the rotary encoder Arduino
       digitalWrite(home_out, HIGH);
-      delay(1000);
+      delay(100);
       digitalWrite(home_out, LOW);
-      delay(1000);
+      delay(100);
 
       // update location and release motor for directed movements
       current_location = home_location;
