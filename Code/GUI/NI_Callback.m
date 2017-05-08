@@ -134,6 +134,7 @@ set(h.respiration_1_plot,'XData',TotalTime(indices_to_plot),'YData',...
     -1*h.RS_scaling.Data(1)*TotalData(indices_to_plot,5) + h.RS_scaling.Data(2) );
 set(h.respiration_2_plot,'XData',TotalTime(indices_to_plot),'YData',...
     -1*h.RS_scaling.Data(1)*TotalData(indices_to_plot,6) + h.RS_scaling.Data(2) );
+set(h.homesensor_plot,'XData',TotalTime(indices_to_plot),'YData', 5 + 0.5*TotalData(indices_to_plot,homesensor_channel));
 
 % trial_on
 [h] = PlotToPatch_Trial(h, TotalData(:,trial_channel), TotalTime, [0 5]);
@@ -145,7 +146,7 @@ set(h.respiration_2_plot,'XData',TotalTime(indices_to_plot),'YData',...
 [h.in_reward_zone_plot] = PlotToPatch(h.in_reward_zone_plot, TotalData(:,trial_channel+2), TotalTime, [-1 -0.2]);
 %set(h.in_reward_zone_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,7)-1.2);
 % home position sensor
-[h.homesensor_plot] = PlotToPatch(h.homesensor_plot, TotalData(:,homesensor_channel), TotalTime, [-1 -0.2]);
+%[h.homesensor_plot] = PlotToPatch(h.homesensor_plot, TotalData(:,homesensor_channel), TotalTime, [-1 -0.2]);
 
 % % rewards
 % reward_timestamps = TotalTime(TotalData(:,reward_channel)==1);

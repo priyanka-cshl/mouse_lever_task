@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 21-Apr-2017 17:05:03
+% Last Modified by GUIDE v2.5 02-May-2017 11:12:17
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -125,12 +125,13 @@ handles.stimulus_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor 
 handles.distractor_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % distractor location
 handles.respiration_1_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % respiration sensor 1
 handles.respiration_2_plot = plot(NaN, NaN, 'color',Plot_Colors('p')); % respiration sensor 2
+handles.homesensor_plot = plot(NaN, NaN,'k'); %homesensor
 handles.in_target_zone_plot = fill(NaN,NaN,Plot_Colors('r'));
 handles.in_target_zone_plot.EdgeColor = 'none';
 handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
 handles.in_reward_zone_plot.EdgeColor = 'none';
-handles.homesensor_plot = fill(NaN, NaN,Plot_Colors('g')); %homesensor
-handles.homesensor_plot.EdgeColor = 'none';
+%handles.homesensor_plot = fill(NaN, NaN,Plot_Colors('g')); %homesensor
+%handles.homesensor_plot.EdgeColor = 'none';
 %handles.reward_plot = plot(NaN, NaN,'o','MarkerFaceColor',Plot_Colors('t'),'MarkerSize',10,'MarkerEdgeColor','none'); %rewards
 handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.25); %rewards
 handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1); %licks
@@ -158,17 +159,33 @@ handles.camera_available = 0;
 if ~isempty(webcamlist)
     
     handles.mycam = webcam(1);
-    %mycam.Resolution = '320x240';
-    handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
-    handles.camera_available = 1;
-    handles.focus_mode.Value = 2;
-    %handles.mycam.FocusMode = 'manual';
-    handles.mycam.ExposureMode = 'auto';
-    handles.exposure_mode.Value = 1;
-    %handles.focus_value.Data = 250; 
-    handles.mycam.Focus = 250;
-    handles.exposure_value.Data = handles.mycam.Exposure;
-    handles.mycam.Zoom = 100;
+    
+    switch handles.mycam.Name
+        case 'USB Video Device'
+            %mycam.Resolution = '320x240';
+            handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
+            handles.camera_available = 1;
+            handles.focus_mode.Enable = 'off';
+            %handles.mycam.FocusMode = 'manual';
+            %handles.mycam.ExposureMode = 'auto';
+            handles.exposure_mode.Enable = 'off';
+            %handles.focus_value.Data = 250;
+            %handles.mycam.Focus = 250;
+            handles.exposure_value.Enable = 'off';
+            %handles.mycam.Zoom = 100;
+        case 'Logitech HD Pro Webcam C920'
+            %mycam.Resolution = '320x240';
+            handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
+            handles.camera_available = 1;
+            handles.focus_mode.Value = 2;
+            %handles.mycam.FocusMode = 'manual';
+            handles.mycam.ExposureMode = 'auto';
+            handles.exposure_mode.Value = 1;
+            %handles.focus_value.Data = 250;
+            handles.mycam.Focus = 250;
+            handles.exposure_value.Data = handles.mycam.Exposure;
+            handles.mycam.Zoom = 100;
+    end
 end
 % display webcam image, if available
 axes(handles.cameraAxes);
