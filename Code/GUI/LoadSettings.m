@@ -14,6 +14,7 @@ if ~isempty(Allfiles)
         handles.RewardControls.Data(1) = X.session_data.params(end,7);
         handles.ZoneLimitSettings.Data(1) = X.session_data.params(end,2);
         handles.TrialSettings.Data(3) = X.session_data.params(end,12);
+        handles.TrialSettings.Data(4) = X.session_data.params(end,12);
         if strcmp(X.session_data.legends_trial(11),'IRI')
             handles.RewardControls.Data(2) = X.session_data.params(end,11);
             handles.MultiRewards.Value = (X.session_data.params(end,11)>0);

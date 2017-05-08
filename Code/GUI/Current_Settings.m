@@ -34,7 +34,11 @@ switch caller
         not_ints = [not_ints 9:10];
         
         legend(11:14) = {'TriggerHOLD' 'TriggerSmooth' 'MinTrialLength' 'MaxTrialLength'};
-        param(11:14) = h.TrialSettings.Data(3:6);
+        % add 0-100 ms jitter around the Trigger hold mean value
+        % overwrite trigger mean value as zero in the arduino array - this
+        % is the smoothing parameter
+        h.TrialSettings.Data(3) = h.TrialSettings.Data(4) + round(100*rand,0,'decimals');
+        param(11:14) = [h.TrialSettings.Data(3:6)];
         
         param(12) = h.MultiRewards.Value*h.RewardControls.Data(2);
         
