@@ -65,9 +65,9 @@ void loop() {
   //remap before sending to DAC
   rotary_position_out = map(rotary_position, -550, 350, 0, 65534);
   SPIWriter(dac_spi_pin, rotary_position_out);
-//  Serial.print(rotary_position);
-//  Serial.print(" ");
-//  Serial.println(rotary_position_out);
+  Serial.print(rotary_position);
+  Serial.print(" ");
+  Serial.println(rotary_position_out);
   
 }
 
