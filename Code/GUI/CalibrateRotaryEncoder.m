@@ -3,7 +3,7 @@ function [handles] = CalibrateRotaryEncoder(handles)
 % Take Motor to Home
 % Fake a home interrupt signal
 handles.Arduino.write(72, 'uint16');
-pause(5);
+pause(2);
 
 % set clearpath motor control to manual override 
 handles.Arduino.write(61, 'uint16');
@@ -17,7 +17,7 @@ for i = 1:3
     handles.Arduino.write(62, 'uint16'); % handler - move motor to specific location
     % get chosen location
     handles.Arduino.write(my_location(i)+101, 'uint16'); % which location
-    pause(2);
+    pause(0.5);
     % read the rotary encoder output
     temp_duration = handles.NI.DurationInSeconds;
     handles.NI.DurationInSeconds = 0.5;
@@ -29,5 +29,5 @@ for i = 1:3
     handles.Rotary.Limits(i) = mean(data(:,3));
     handles.NI.DurationInSeconds = temp_duration;
 end
-
+handles.Rotary.Limits
 end
