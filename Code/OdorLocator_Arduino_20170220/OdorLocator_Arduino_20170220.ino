@@ -80,6 +80,7 @@ unsigned short transfer_function[99] = {0}; // ArCOM aray needs unsigned shorts
 int motor_location = 1;
 int transfer_function_pointer = 0; // for transfer function calibration
 unsigned int my_location = 101;
+int rewarded_locations[2] = {101, 101};
 
 //variables : reward related
 int reward_state = 0;
@@ -238,7 +239,7 @@ void loop()
     }
     else
     {
-      in_target_zone[i] = (lever_position == constrain(lever_position, target_params[2], target_params[0]));
+      in_target_zone[i] = (stimulus_state[1] == constrain(stimulus_state[1], rewarded_locations[0], rewarded_locations[1]));
     }
   }
   //----------------------------------------------------------------------------
@@ -632,6 +633,8 @@ void UpdateAllParams()
     target_params[i] = param_array[16 + i]; // high lim, target, low lim
   }
   // params[19-21] = 'target_locations' 'skip_locations' 'offtarget_locations'
+  rewarded_locations[0] = 101 - param_array[19];
+  rewarded_locations[1] = 101 + param_array[19];
   target_on = (param_array[22] > 0);
   delay_feedback_by = ((int)target_on) * (param_array[22] - 1) / min_time_since_last_motor_call;
   // ensure that the dlay does not exceed buffer size

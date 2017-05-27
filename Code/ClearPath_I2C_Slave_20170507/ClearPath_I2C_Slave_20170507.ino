@@ -182,7 +182,7 @@ void FindHome(bool which_direction)
 
 void loop ()
 {
-  //Serial.println(digitalRead(home_pin));
+  //Serial.println(motor_positions);
   if (Wire_received > 0) //edited
   {
     //value_received = motor_positions[readpointer];

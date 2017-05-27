@@ -553,11 +553,11 @@ Update_MultiRewards(handles);
 function ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles)
 % compute new target definition
 [handles] = Compute_TargetDefinition(handles);
-
+handles.TargetDefinition.Data = handles.NewTargetDefinition.Data;
 Update_TransferFunction_discrete(handles);
 pause(0.1);
+%handles.TargetDefinition.Data = handles.NewTargetDefinition.Data;
 Update_Params(handles);
-handles.TargetDefinition.Data = handles.NewTargetDefinition.Data;
 handles.(['TargetLevel',num2str( 1 + mod(handles.current_trial_block.Data(1)-1,length(handles.target_level_array.Data)) )]).Value = 1;
 % --------------------------------------------------------------------
 
