@@ -42,7 +42,7 @@ for i = 1:size(FileNames,2)
     
     %% Basic session statistics
     [Odors, ZonesToUse, LeverTruncated] = SortTrialsByType(Lever, TrialInfo, TargetZones);
-    %[NumTrials] = SessionSummary(TrialInfo,ZonesToUse,TargetZones,1);    
+    [NumTrials] = SessionSummary(TrialInfo,ZonesToUse,TargetZones,1);    
     
     %% Trajectory Analysis
     ParameterizeTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones);
@@ -63,14 +63,14 @@ for i = 1:size(FileNames,2)
             TrialInfo.Success = TrialInfo_all.Success(f,:);
             TargetZones = TargetZones_all(n+1-m:n:end,:);
             ZonesToUse = ZonesToUse_all(n+1-m:n:end,:);
-            [Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 1);
-            %[StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, 1);
+%             [Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 1);
+%             [StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, 1);
             [Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
         end
     else
-        %[Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, Data.(['session',num2str(i)]).settings, 1);
-        %[StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, Data.(['session',num2str(i)]).settings, 1);
-        %[Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
+%         [Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, Data.(['session',num2str(i)]).settings, 1);
+%         [StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, Data.(['session',num2str(i)]).settings, 1);
+        [Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
     end
 
 end
