@@ -7,7 +7,7 @@ int i = 0;
 const byte enable_pin = 23;
 const byte dir_pin = 25;
 const byte step_pin = 27;
-const byte servoON_pin = 29;
+const byte servoON_pin = 31; //HFLB
 const byte home_pin = 51;
 const byte end_stop_pin_left = 2;
 const byte end_stop_pin_right = 3;
@@ -68,20 +68,17 @@ void setup ()
   attachInterrupt(digitalPinToInterrupt(end_stop_pin_left), SafetyStopLeft, LOW);
   attachInterrupt(digitalPinToInterrupt(end_stop_pin_right), SafetyStopRight, FALLING);
   // debugging
-  //Serial.begin (115200);
+  Serial.begin (115200);
 }
 
 void receiveEvent(int howmany) // I2C interrupt routine
 {
-  //noInterrupts();
   for (int j = 0; j < howmany; j++)
   {
     byte c = Wire.read();
-    //motor_positions[writepointer] = c;
     motor_positions = c;
   }
   Wire_received = Wire_received + 1; //edited
-  //writepointer = (writepointer + 1) % 10;
 }  // end of interrupt routine
 
 void SafetyStopLeft()
@@ -182,7 +179,7 @@ void FindHome(bool which_direction)
 
 void loop ()
 {
-  //Serial.println(motor_positions);
+  Serial.println(motor_positions);
   if (Wire_received > 0) //edited
   {
     //value_received = motor_positions[readpointer];
@@ -194,19 +191,15 @@ void loop ()
       delta_steps = stepsize * abs(desired_location - current_location);
       if ( delta_steps <= 50 )
       {
-        step_wait = round(5000 / delta_steps);
+        step_wait = round(4000 / delta_steps);
       }
       else
       {
-        step_wait = round(8000 / delta_steps);
+        step_wait = round(6000 / delta_steps);
       }
-      //      Serial.print(current_location);
-      //      Serial.print(" ");
-      //      Serial.println(desired_location);
     }
     else
     {
-      //Serial.println(value_received);
       Housekeeping(value_received);
     }
     //readpointer = (readpointer + 1) % 10;
@@ -224,10 +217,12 @@ void loop ()
     }
     // move now
     for (i = 0; i < stepsize; i++)
+    //for (i = 0; i < delta_steps; i++)
     {
       digitalWrite(step_pin, HIGH);
       digitalWrite(step_pin, LOW);
       delayMicroseconds(step_wait);
+      //current_location = current_location + current_direction + (current_direction - 1);
     }
     // hack to increment current location: +1 if direction CW, -1 otherwise
     current_location = current_location + current_direction + (current_direction - 1);
