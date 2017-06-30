@@ -35,7 +35,9 @@ callreward = 0;
 %% populate TotalTime with newly available timestamps
 TotalTime = [ TotalTime(num_new_samples+1:end); event.TimeStamps ];
 TargetLevel = [TargetLevel(num_new_samples+1:end,:); h.TargetDefinition.Data(3)+0*event.Data(:,1) h.TargetDefinition.Data(1)+0*event.Data(:,1)];
-which_target = find(sort(h.target_level_array.Data,'descend')==h.TargetDefinition.Data(2));
+%which_target = find(sort(h.target_level_array.Data,'descend')==h.TargetDefinition.Data(2));
+which_target = floor(h.TargetDefinition.Data(2));
+
 %% update MFC setpoints
 h.MFC_setpoints_IN.Data = round(mean(event.Data(:,h.NIchannels+1:h.NIchannels+2)),2,'significant')';
 
@@ -124,11 +126,11 @@ set(h.stimulus_plot,'XData',TotalTime(indices_to_plot),'YData',...
 h.motor_location.YData = MapRotaryEncoderToTFColorMap(h,mean(event.Data(:,3)));
 %set(h.motor_location,'YData',mean(-1*h.RE_scaling.Data(1)*(TotalData(indices_to_plot,3) - h.RE_scaling.Data(2))));
 
-
 if h.is_distractor_on.Value
     set(h.distractor_plot,'XData',TotalTime(indices_to_plot),'YData',...
          -1*h.RE_scaling.Data(1)*(TotalData(indices_to_plot,4) - h.RE_scaling.Data(2)) );
 end
+
 % respiration sensors
 set(h.respiration_1_plot,'XData',TotalTime(indices_to_plot),'YData',...
     -1*h.RS_scaling.Data(1)*TotalData(indices_to_plot,5) + h.RS_scaling.Data(2) );
@@ -213,8 +215,8 @@ end
 %% write data to disk
 data = [TotalTime(end-num_new_samples+1:end) TotalData(end-num_new_samples+1:end,:)]';
 data(trial_channel+1,:) = h.current_trial_block.Data(4)*data(trial_channel+1,:);
-% rescale stimulus position plot
-data(4,:) = MapRotaryEncoderToTFColorMap(h,data(4,:),1);
+% rescale stimulus position plot (save it in distractor location column
+data(5,:) = MapRotaryEncoderToTFColorMap(h,data(4,:),1);
 fwrite(fid1,data,'double');
 
 % %% write behavior video to disk
