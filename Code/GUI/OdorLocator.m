@@ -106,7 +106,7 @@ end
 
 % set up NI acquisition and reset Arduino
 handles.sampling_rate_array = handles.DAQrates.Data;
-[handles.NI,handles.Arduino,handles.MFC,handles.Odors] = configure_NI_and_Arduino_ArCOM(handles);
+[handles.NI,handles.Arduino,handles.MFC,handles.Odors,handles.Teensy] = configure_NI_and_Arduino_ArCOM(handles);
 
 % initiate plots
 axes(handles.axes1); % main plot
@@ -325,6 +325,8 @@ if get(handles.startAcquisition,'value')
         motor_toggle_Callback(hObject, eventdata, handles);
         
         if handles.which_stage.Value>1
+            % start the teensy timer
+            %handles.Teensy.write(10, 'uint16'); %fwrite(handles.Arduino, char(11));
             % start the Arduino timer
             handles.Arduino.write(11, 'uint16'); %fwrite(handles.Arduino, char(11));
             tic
@@ -336,6 +338,7 @@ if get(handles.startAcquisition,'value')
                 disp('arduino: Motor Timer Started');
             end
         end
+        
         
         % enable transfer function calibrator
         handles.calibrate_transfer_function.Enable = 'on';
@@ -391,6 +394,7 @@ else
    Zero_MFC_Callback(hObject, eventdata, handles);
    
    % stop the Arduino timer
+   %handles.Teensy.write(11, 'uint16');
    handles.Arduino.write(12, 'uint16'); %fwrite(handles.Arduino, char(12));
    tic
    while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
