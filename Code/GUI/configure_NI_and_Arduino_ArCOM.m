@@ -1,4 +1,4 @@
-function [NI_session,Arduino_Serial,MFC_session,Odor_session]=configure_NI_and_Arduino_ArCOM(handles)
+function [NI_session,Arduino_Serial,MFC_session,Odor_session,Teensy_Serial]=configure_NI_and_Arduino_ArCOM(handles)
 
 %% ------------------------------------------------------------------------------------------------------------
 % configure NI DAQ
@@ -44,10 +44,13 @@ NI_session.NotifyWhenDataAvailableExceeds = handles.sampling_rate_array(1)/handl
 MFC_session = daq.createSession('ni');
 release(MFC_session);
 stop(MFC_session);
-% addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 0, 'Voltage');
-% addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 2, 'Voltage');
-addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 4, 'Voltage');
-addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 6, 'Voltage');
+% % addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 0, 'Voltage');
+% % addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 2, 'Voltage');
+% addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 4, 'Voltage');
+% addAnalogOutputChannel(MFC_session,'cDAQ1Mod1', 6, 'Voltage');
+addAnalogOutputChannel(MFC_session,'Dev2', 'ao0', 'Voltage');
+addAnalogOutputChannel(MFC_session,'Dev2', 'ao1', 'Voltage');
+
 %% ------------------------------------------------------------------------------------------------------------
 
 %% ------------------------------------------------------------------------------------------------------------
@@ -85,4 +88,28 @@ if Arduino_Serial.Port.BytesAvailable > 0
     trash = Arduino_Serial.read(Arduino_Serial.Port.BytesAvailable, 'uint16');
 end
 clear trash
+
+% %------------------------------------------------------------------------------------------------------------
+% % initialize Teensy as a Serial Object (Rotary Encoder)
+% [Teensy_Serial,portNum]= Start_Teensy_ArCOM(7);
+% pause(0.5);
+% Teensy_Serial.write(9, 'uint16'); % opening handshake - should return 5 as confirmation
+% %Arduino_Serial.Port.BytesAvailable
+% 
+% tic
+% while (Teensy_Serial.Port.BytesAvailable == 0 && toc < 2)
+% end
+% if(Teensy_Serial.Port.BytesAvailable == 0)
+%     Teensy_Serial.close;%fclose(instrfind);
+%     error('Teensy: Teensy did not send confirmation byte in time')
+% end
+% if (Teensy_Serial.read(1, 'uint16')==9)
+%     disp(['Teensy: connected on port COM' num2str(portNum)])
+% end
+% % discard any unread bytes on the port
+% if Teensy_Serial.Port.BytesAvailable > 0
+%     trash = Teensy_Serial.read(Teensy_Serial.Port.BytesAvailable, 'uint16');
+% end
+% clear trash
+Teensy_Serial = [];
 
