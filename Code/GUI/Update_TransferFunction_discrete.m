@@ -38,7 +38,8 @@ while (sent == 0) && (sending_attempts <=8 )
                     h.TFupdate = 1;
                     %update transfer function colormap
                     TF = TF_4_plot;
-                    h.TF_plot.CData = abs(TF(length(TF):-1:1))'/max(TF);
+                    %h.TF_plot.CData = abs(TF(length(TF):-1:1))'/max(TF);
+                    h.TF_plot.CData = (TF(length(TF):-1:1))'/max(TF);
                     h.all_locations.String = num2str(unique(TF)');
                 else
                     pause(.1);

@@ -142,8 +142,10 @@ handles.minlim = plot(NaN, NaN, 'k','LineStyle',':'); % mark target zone
 set(handles.axes1,'YLim',handles.Plot_YLim.Data);
 
 axes(handles.axes9); % Transfer function plot
-handles.TF_plot = imagesc(abs((-50:1:50)')/50,[0 1]);
-colormap('hot');
+%handles.TF_plot = imagesc(abs((-50:1:50)')/50,[0 1]);
+handles.TF_plot = imagesc(((-50:1:50)')/50,[-1 1]);
+%colormap('hot');
+colormap(brewermap([11],'rdbu'));
 axis off tight
 %set(handles.axes9,'YLim',handles.Plot_YLim.Data);
 set(handles.axes9,'YLim',[0 100]);
