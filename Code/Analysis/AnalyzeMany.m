@@ -35,7 +35,7 @@ for i = 1:size(FileNames,2)
     [Data.(['session',num2str(i)]).data, Data.(['session',num2str(i)]).settings] = ...
         ExtractSessionData(fullfile(FilePaths,FileNames{i}));
     MyFileName = FileNames{i};
-    %RecreateSession(Data.(['session',num2str(i)]).data);
+    RecreateSession(Data.(['session',num2str(i)]).data);
     
     %% Parse trials
     [Lever, TrialInfo, TargetZones] = SortSessionByTrials(Data.(['session',num2str(i)]).data);

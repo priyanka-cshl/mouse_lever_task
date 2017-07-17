@@ -6,19 +6,19 @@ switch char(handles.computername)
         handles.file_names.Data(2) = {'C:\Data\Behavior'};
         handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\Behavior'};
         handles.NIchannels = 12;
-        handles.DAC_settings.Data = [1.45 0.0]';
+        handles.DAC_settings.Data = [1.57 0.0]';
         % motor location settings
         handles.motor_params = 4;
         % disable transfer function calibrator
         handles.calibrate_transfer_function.Enable = 'off';
         % MFC settings
-        handles.MFC_table.Data = [1.55 0.4]';
+        handles.MFC_table.Data = [1.6 0.4]';
         % training stage
         handles.which_stage.Value = 3;
         % TF - locations per zone
         handles.locations_per_zone.Data = [20 0 60]';
         % Trial settings
-        handles.TrialSettings.Data = [4.8 0.2 200 200 100 2000]';
+        handles.TrialSettings.Data = [4.8 0.2 200 200 100 2500]';
         % zone width
         handles.ZoneLimitSettings.Data(1) = 0.4;%[0.5 0.1]';
         % reward settings

@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 02-May-2017 11:12:17
+% Last Modified by GUIDE v2.5 30-Jun-2017 15:10:59
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -345,7 +345,9 @@ if get(handles.startAcquisition,'value')
         
         handles.water_calibrate.Enable = 'off';
         handles.open_valve.Enable = 'off';
-
+        handles.CleaningRoutine.Value = 0;
+        handles.CleaningRoutine.Enable = 'off';
+        
         guidata(hObject,handles);
         if isfield(handles,'lis')
             handles.lis.delete
@@ -416,6 +418,7 @@ else
     
     handles.water_calibrate.Enable = 'on';
     handles.open_valve.Enable = 'on';
+    handles.CleaningRoutine.Enable = 'on';
 end
 
 handles.traces = TotalData;
@@ -1067,3 +1070,53 @@ end
 
 % --- Executes during object deletion, before destroying properties.
 function figure1_DeleteFcn(hObject, eventdata, handles)
+
+
+% --- Executes on button press in CleaningRoutine.
+function CleaningRoutine_Callback(hObject, eventdata, handles)
+% hObject    handle to CleaningRoutine (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if handles.CleaningRoutine.Value
+    handles.Arduino.write(13, 'uint16');
+    tic
+    while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
+    end
+    if(handles.Arduino.Port.BytesAvailable == 0)
+        error('arduino: failed to start cleaning')
+    elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==3
+        disp('arduino: Cleaning Routine Started');
+    end
+    
+    % turn ON MFCs
+    handles.Zero_MFC.Value = 1;
+    handles.Zero_MFC.String = 'MFCs OFF';
+    Zero_MFC_Callback(hObject, eventdata, handles);
+        
+    set(handles.CleaningRoutine,'String','Cleaning...')
+    set(handles.CleaningRoutine,'BackgroundColor',[0.5 0.94 0.94]);
+else
+    % turn OFF MFCs
+    handles.Zero_MFC.Value = 0;
+    Zero_MFC_Callback(hObject, eventdata, handles);
+    
+    handles.Arduino.write(14, 'uint16');
+    tic
+    while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
+    end
+    if(handles.Arduino.Port.BytesAvailable == 0)
+        error('arduino: failed to stop cleaning')
+    elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==4
+        disp('arduino: Cleaning Routine Stopped');
+    end
+
+    set(handles.CleaningRoutine,'String','Cleaning OFF')
+    set(handles.CleaningRoutine,'BackgroundColor',[0.94 0.94 0.94]);
+end
+
+
+
+
+
+
+% Hint: get(hObject,'Value') returns toggle state of CleaningRoutine
