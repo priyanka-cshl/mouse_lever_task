@@ -1,5 +1,9 @@
 % test script to extract behavior data and replot session
-function [] = AnalyzeMany(MouseName)
+function [] = AnalyzeMany(MouseName, ReplotSession)
+
+if nargin < 2
+    ReplotSession = 0;
+end
 
 global timewindow;
 global MyFileName;
@@ -35,7 +39,10 @@ for i = 1:size(FileNames,2)
     [Data.(['session',num2str(i)]).data, Data.(['session',num2str(i)]).settings, TargetZones, FakeTargetZones] = ...
         ExtractSessionData(fullfile(FilePaths,FileNames{i}));
     MyFileName = FileNames{i};
-    %RecreateSession(Data.(['session',num2str(i)]).data);
+    
+    if ReplotSession
+        RecreateSession(Data.(['session',num2str(i)]).data);
+    end
     
     %% Parse trials
     [Lever, Motor, TrialInfo, TargetZones] = ChunkUpTrials(Data.(['session',num2str(i)]).data, TargetZones, FakeTargetZones);
