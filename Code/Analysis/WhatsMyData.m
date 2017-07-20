@@ -12,4 +12,6 @@ function [ColumnNames] = WhatsMyData()
     ColumnNames(10) = {'Licks'};
     ColumnNames(11) = {'FakeUpperLimit'};
     ColumnNames(12) = {'FakeLowerLimit'};
+    ColumnNames(13) = {'MotorPosition'};
+    ColumnNames(14) = {'HomeSensor'};
 end
