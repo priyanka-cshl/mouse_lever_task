@@ -1,8 +1,9 @@
 % test script to extract behavior data and replot session
-function [MyData, params] = ExtractSessionData(FileName)
+function [MyData, params, TargetZones, FakeTargetZones] = ExtractSessionData(FileName)
     % load the file
     Temp = load(FileName,'session_data');
     MyData = Temp.session_data.trace(:,[1 3 7:11]);
+        
     % add three columns in the beginning - 1 for timestamp and 2 for target zone levels
     % add two columns in the end - for fake target zone levels
     MyData = [Temp.session_data.timestamps Temp.session_data.timestamps...
@@ -23,6 +24,13 @@ function [MyData, params] = ExtractSessionData(FileName)
     MyData(f,11) = Temp.session_data.params(end,26);
     MyData(f,12) = Temp.session_data.params(end, 28);
     
+    % append motor location and,  home sensor column (if available)
+    % and fake lim center
+    MyData(:,end+1) = Temp.session_data.trace(:,4);
+    if size(Temp.session_data.trace,2)>11
+        MyData(:,end+1) = Temp.session_data.trace(:,12);
+    end
+    
     % convert trial_ON column to odor IDs
     % column number = 6 in MyData
     for odor = 1:3
@@ -31,4 +39,6 @@ function [MyData, params] = ExtractSessionData(FileName)
     end
     
     params = Temp.session_data.params;
+    TargetZones = unique(params(:,18:20),'rows');
+    FakeTargetZones = unique(params(:,26:28),'rows');
 end

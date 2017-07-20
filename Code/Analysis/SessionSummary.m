@@ -1,11 +1,12 @@
 function [numtrials] = SessionSummary(TrialInfo,ZonesToUse,TargetZones,ToPlot)
 if nargin<3
-    ToPlot = 0
+    ToPlot = 0;
 end
 
 % for perturbations
-myfakezone = cell2mat(cellfun(@(x) max([x 0]), TrialInfo.FakeZone, 'UniformOutput', false))';
+myfakezone = cell2mat(cellfun(@(x) max([x; 0]), TrialInfo.FakeZone, 'UniformOutput', false))';
 
+%% Rolling average success rate
 
     % rolling average success rate
     
