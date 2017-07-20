@@ -1,9 +1,5 @@
 % test script to extract behavior data and replot session
-function [] = AnalyzeMany(MouseName, ReplotSession)
-
-if nargin<2
-    ReplotSession = 0
-end
+function [] = AnalyzeMany(MouseName)
 
 global timewindow;
 global MyFileName;
@@ -39,9 +35,7 @@ for i = 1:size(FileNames,2)
     [Data.(['session',num2str(i)]).data, Data.(['session',num2str(i)]).settings, TargetZones, FakeTargetZones] = ...
         ExtractSessionData(fullfile(FilePaths,FileNames{i}));
     MyFileName = FileNames{i};
-    if ReplotSession
-        RecreateSession(Data.(['session',num2str(i)]).data);
-    end
+    %RecreateSession(Data.(['session',num2str(i)]).data);
     
     %% Parse trials
     [Lever, Motor, TrialInfo, TargetZones] = ChunkUpTrials(Data.(['session',num2str(i)]).data, TargetZones, FakeTargetZones);
@@ -49,9 +43,6 @@ for i = 1:size(FileNames,2)
     
     %% Get TFs
     [AllTFs] = GetAllTransferFunctions(Data.(['session',num2str(i)]).settings, TargetZones(ZonesToUse,:));
-    
-    %% Basic session statistics
-    [NumTrials] = SessionSummary(TrialInfo,ZonesToUse,TargetZones,1);    
     
     %% Trajectory Analysis
     [Trajectories] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones);
@@ -79,8 +70,8 @@ for i = 1:size(FileNames,2)
             TrialInfo.Success = TrialInfo_all.Success(f,:);
             TargetZones = TargetZones_all(n+1-m:n:end,:);
             ZonesToUse = ZonesToUse_all(n+1-m:n:end,:);
-%             [Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 1);
-%             [StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, 1);
+            [Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 1);
+            %[StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, 1);
             [Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
         end
         
@@ -88,9 +79,6 @@ for i = 1:size(FileNames,2)
         [Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, Data.(['session',num2str(i)]).settings, 1);
         %[StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, Data.(['session',num2str(i)]).settings, 1);
         %[Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
-%         [Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, Data.(['session',num2str(i)]).settings, 1);
-%         [StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, Data.(['session',num2str(i)]).settings, 1);
-        [Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
     end
 
 end
