@@ -2,7 +2,7 @@
 function [] = AnalyzeMany(MouseName, ReplotSession)
 
 if nargin<2
-    ReplotSession = 0
+    ReplotSession = 0;
 end
 
 global timewindow;
