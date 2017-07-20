@@ -5,11 +5,12 @@ MinHold = min(Params(:,6));
 Scores = zeros(2,numel(ZonesToUse),numel(ZonesToUse));
 
 for t = 1:size(LeverTruncated,1) % each trial
-    % trial trace
-    temp = LeverTruncated(t,:);
-    triallength = numel(temp(~isnan(temp)));
     
     for Z = 1:numel(ZonesToUse)
+        % trial trace
+        temp = LeverTruncated(t,:);
+        triallength = numel(temp(~isnan(temp)));
+    
         % Zone LImits
         HighLim = TargetZones(ZonesToUse(Z),1);
         LowLim = TargetZones(ZonesToUse(Z),3);
