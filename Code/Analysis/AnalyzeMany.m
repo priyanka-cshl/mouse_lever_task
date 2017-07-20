@@ -1,6 +1,5 @@
 % test script to extract behavior data and replot session
 function [] = AnalyzeMany(MouseName, ReplotSession)
-
 if nargin < 2
     ReplotSession = 0;
 end
@@ -21,15 +20,22 @@ switch computername
     otherwise
         DataRoot = '//sonas-hs.cshl.edu/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
 end
-DataRoot = fullfile(DataRoot,MouseName);
 
-% get session files for analysis
-[FileNames,FilePaths] = uigetfile('.mat','choose one or more session files','MultiSelect','on',DataRoot);
-if ~iscell(FileNames)
-    temp = FileNames;
-    clear FileNames
-    FileNames{1} = temp;
-    clear temp
+if ~isempty(strfind(MouseName,'.mat'))
+    foo = strsplit(MouseName,'_');
+    FileNames{1} = MouseName;
+    MouseName = char(foo(1));
+    FilePaths = fullfile(DataRoot,MouseName);
+else
+    DataRoot = fullfile(DataRoot,MouseName);
+    % get session files for analysis
+    [FileNames,FilePaths] = uigetfile('.mat','choose one or more session files','MultiSelect','on',DataRoot);
+    if ~iscell(FileNames)
+        temp = FileNames;
+        clear FileNames
+        FileNames{1} = temp;
+        clear temp
+    end
 end
 
 for i = 1:size(FileNames,2) 
