@@ -49,8 +49,8 @@ for i = 1:size(FileNames,2)
     
     %% Get TFs
     [AllTFs] = GetAllTransferFunctions(Data.(['session',num2str(i)]).settings, TargetZones(ZonesToUse,:));
+    
     %% Basic session statistics
-    [Odors, ZonesToUse, LeverTruncated] = SortTrialsByType(Lever, TrialInfo, TargetZones);
     [NumTrials] = SessionSummary(TrialInfo,ZonesToUse,TargetZones,1);    
     
     %% Trajectory Analysis
