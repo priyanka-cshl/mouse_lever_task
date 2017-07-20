@@ -48,7 +48,7 @@ int target_which = 1; // stim A is target
 bool target_on = true;
 int stimulus_state[] = {0, 0}; // old, new
 long stimulus_state_timestamp = micros();
-byte stimulus_position_array[1199] = {101};
+byte stimulus_position_array[1199] = {20};
 const int stimulus_array_size = 1200;
 int stimulus_writepointer = 0;
 int stimulus_readpointer = 0;
@@ -80,6 +80,7 @@ unsigned short transfer_function[99] = {0}; // ArCOM aray needs unsigned shorts
 int motor_location = 1;
 int transfer_function_pointer = 0; // for transfer function calibration
 unsigned int my_location = 101;
+int rewarded_locations[2] = {101, 101};
 
 //variables : reward related
 int reward_state = 0;
@@ -112,6 +113,11 @@ unsigned short param_array[30] = {0}; // ArCOM aray needs unsigned shorts
 int camera_pin = 29;
 bool camera = 0;
 int camera_on = 0;
+
+// variables - cleaning
+bool odorON = false;
+byte whichOdor = 0;
+bool cleaningON = false;
 
 void setup()
 {
@@ -158,13 +164,13 @@ void setup()
   // fill transfer function
   for (i = 0; i < num_of_locations; i++)
   {
-    transfer_function[i] = 101;
+    transfer_function[i] = 20;
   }
 
   // fill stimulus position array
   for (i = 0; i < stimulus_array_size; i++)
   {
-    stimulus_position_array[i] = 101;
+    stimulus_position_array[i] = 20;
   }
 
   // Timer for motor update
@@ -174,6 +180,9 @@ void setup()
   // Timer for reward delivery
   Timer4.attachInterrupt(RewardNow);
   //Timer3.start(1000 * min_time_since_last_motor_call_default); // Calls every 10 msec
+
+  // Timer for odor machine cleaning
+  Timer5.attachInterrupt(CleaningRoutine);
   
   // analog read - lever position
   analogReadResolution(12);
@@ -238,7 +247,7 @@ void loop()
     }
     else
     {
-      in_target_zone[i] = (lever_position == constrain(lever_position, target_params[2], target_params[0]));
+      in_target_zone[i] = (stimulus_state[1] == constrain(stimulus_state[1], rewarded_locations[0], rewarded_locations[1]));
     }
   }
   //----------------------------------------------------------------------------
@@ -302,8 +311,12 @@ void loop()
   //----------------------------------------------------------------------------
   // 5) manage reporter pins, valves etc based on time elapsed since last event
   //----------------------------------------------------------------------------
-  digitalWrite(target_valves[0], (target_valve_state[0] || (trialstate[0] != 0) || !close_loop_mode) ); // open odor valve
-  digitalWrite(target_valves[1], (target_valve_state[1] || (trialstate[0] != 0) || !close_loop_mode) ); // open air valve
+  if (!cleaningON)
+  {
+    digitalWrite(target_valves[0], (target_valve_state[0] || (trialstate[0] != 0) || !close_loop_mode) ); // open odor valve
+    digitalWrite(target_valves[1], (target_valve_state[1] || (trialstate[0] != 0) || !close_loop_mode) ); // open air valve
+  }
+
   digitalWrite(trial_reporter_pin, (trialstate[0] == 4)); // active trial?
   digitalWrite(in_target_zone_reporter_pin, in_target_zone[1]); // in_target_zone?
   digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2)||(reward_state == 5)); // in_reward_zone?
@@ -386,6 +399,11 @@ void loop()
           case 1: // Acquisition start handshake
             myUSB.writeUint16(6);
             stimulus_writepointer = 0;
+            // fill stimulus position array
+            for (i = 0; i < stimulus_array_size; i++)
+            {
+              stimulus_position_array[i] = 20;
+            }
             digitalWrite(odor_valves[0],HIGH);
             odor_ON = true;
             timer_override = true;
@@ -401,6 +419,26 @@ void loop()
             }
             camera_on = 1;
             break;
+          case 3: // Cleaning Routine start
+            myUSB.writeUint16(3);
+            odorON = false;
+            timer_override = false;
+            camera_on = 1;
+            cleaningON = true;
+            Timer5.start(1000*1000);
+            break;
+          case 4: // Cleaning Routine stop
+            myUSB.writeUint16(4);
+            timer_override = false;
+            // turn off all odor valves as caution
+            for (i=0; i<4; i++)
+            {
+              digitalWrite(odor_valves[i],LOW);
+            }
+            camera_on = 1;
+            cleaningON = false;
+            Timer5.stop();
+            break;            
         }
         break;
       case 20: // update variables
@@ -409,7 +447,7 @@ void loop()
         { } // wait for serial input or time-out
         if (myUSB.available() < 2)
         {
-          myUSB.writeInt16(-1);
+          myUSB.writeUint16(1);
         }
         else
         {
@@ -425,7 +463,7 @@ void loop()
         { } // wait for serial input or time-out
         if (myUSB.available() < 2)
         {
-          myUSB.writeInt16(-1);
+          myUSB.writeUint16(1);
         }
         else
         {
@@ -495,7 +533,7 @@ void loop()
         { } // wait for serial input or time-out
         if (myUSB.available() < 2)
         {
-          myUSB.writeInt16(-1);
+          myUSB.writeUint16(1);
         }
         else
         {
@@ -627,6 +665,8 @@ void UpdateAllParams()
     target_params[i] = param_array[16 + i]; // high lim, target, low lim
   }
   // params[19-21] = 'target_locations' 'skip_locations' 'offtarget_locations'
+  rewarded_locations[0] = 101 - param_array[19];
+  rewarded_locations[1] = 101 + param_array[19];
   target_on = (param_array[22] > 0);
   delay_feedback_by = ((int)target_on) * (param_array[22] - 1) / min_time_since_last_motor_call;
   // ensure that the dlay does not exceed buffer size
@@ -695,6 +735,24 @@ void RewardNow()
     digitalWrite(reward_valve_pin, LOW);
     digitalWrite(reward_reporter_pin, LOW);
     //reward_zone_timestamp = micros();
+  }
+}
+
+void CleaningRoutine()
+{
+  // odorON = true,false; whichOdor = 0,1,2,3;
+  odorON = !odorON; // toggle the state of the final valves
+  digitalWrite(target_valves[0], odorON );
+  digitalWrite(target_valves[1], odorON );
+  if (odorON)
+  {
+    // update the odor vial index
+    whichOdor = (whichOdor + 1)%4;
+    // update valve state
+    for (i=0; i<4; i++)
+    {
+      digitalWrite(odor_valves[i],(i==whichOdor));
+    }
   }
 }
 

@@ -34,7 +34,11 @@ switch caller
         not_ints = [not_ints 9:10];
         
         legend(11:14) = {'TriggerHOLD' 'TriggerSmooth' 'MinTrialLength' 'MaxTrialLength'};
-        param(11:14) = h.TrialSettings.Data(3:6);
+        % add 0-100 ms jitter around the Trigger hold mean value
+        % overwrite trigger mean value as zero in the arduino array - this
+        % is the smoothing parameter
+        h.TrialSettings.Data(3) = h.TrialSettings.Data(4) + round(100*rand,0,'decimals');
+        param(11:14) = [h.TrialSettings.Data(3:6)];
         
         param(12) = h.MultiRewards.Value*h.RewardControls.Data(2);
         
@@ -101,12 +105,13 @@ end
 if newlegends
     legend(16:31) = legend(1:16);
     legend(1) = {'Timestamp'};
-    legend(2:3) = {'MinWidth' 'PropWidth'};        
+    legend(2:3) = {'MinWidth' 'IRI'};        
     legend(4:5) = {'DACgain' 'DACdc'};
     legend(6:7) = {'RewardHoldTime' 'RewardDuration'};
     legend(8) = {'MaxPerBlock'};
     legend(9) = {'PerturbationProbability'};
-    legend(10:11) = {'TriggerON' 'IRI'};
+    legend(10:11) = {'TriggerON' 'MultirewardIRI'};
     legend(12:15) = {'TriggerHOLD' 'StayMean' 'StayMin' 'StayMax'};
+    legend(16) = {'CameraON'};
 end
 end

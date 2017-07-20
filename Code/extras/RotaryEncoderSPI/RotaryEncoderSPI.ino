@@ -5,7 +5,7 @@ int encoderA = 53;
 int encoderB = 51;
 int encoderZ = 49;
 int home_pin = 47;
-//int DAC_pin = DAC1;
+int DAC_pin = DAC0;
 volatile int rotary_position = 0;
 long rotary_position_out = 0L;
 int position_sign = 1; // 1 = positive, -1 = negative;
@@ -21,13 +21,13 @@ void setup() {
   pinMode(encoderB,INPUT);
   pinMode(home_pin,INPUT);
   analogWriteResolution(12);
-  attachInterrupt(home_pin, home_interrupt, RISING) ; 
-  attachInterrupt(home_pin, reenable_interrupt, FALLING) ; 
+  attachInterrupt(home_pin, home_interrupt, RISING); 
+  //attachInterrupt(home_pin, reenable_interrupt, FALLING) ; 
   attachInterrupt(encoderA,rotary,RISING);
 
   // set up SPI
-  pinMode (dac_spi_pin, OUTPUT);
-  SPI.begin(dac_spi_pin);
+//  pinMode (dac_spi_pin, OUTPUT);
+//  SPI.begin(dac_spi_pin);
   Serial.begin(115200);
 }
 
@@ -35,12 +35,14 @@ void home_interrupt()
 {
   detachInterrupt(encoderA);
   rotary_position = 0;  
+  attachInterrupt(encoderA,rotary,RISING);
 }
 
 void reenable_interrupt()
 {
   attachInterrupt(encoderA,rotary,RISING);
 }
+
 void rotary() // interrup routine for rising edge on encoderA
 {
   rotary_position = rotary_position + (2*(digitalRead(encoderB)) - 1);
@@ -57,15 +59,15 @@ void loop() {
     position_sign = 1;
   }
   // constrain rotary position between 0-1023
-  rotary_position = abs(rotary_position) % 1024;
+  rotary_position = abs(rotary_position) % 200;
   rotary_position = rotary_position * position_sign;
-  //analogWrite(DAC_pin,3*(rotary_position+650));
   //remap before sending to DAC
-  rotary_position_out = map(rotary_position, -1000, 1000, 0, 65534);
-  SPIWriter(dac_spi_pin, rotary_position_out);
-  Serial.print(rotary_position);
-  Serial.print(" ");
-  Serial.println(rotary_position_out);
+  rotary_position_out = map(rotary_position, -100, 100, 0, 4095);
+  analogWrite(DAC_pin,rotary_position_out);
+  //SPIWriter(dac_spi_pin, rotary_position_out);
+  Serial.println(rotary_position);
+  //Serial.print(" ");
+  //Serial.println(rotary_position_out);
   
 }
 

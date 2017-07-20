@@ -1,6 +1,12 @@
 function NewBlockTrial_Callback(h)
 % combo of New block and New Trial
 
+% home motor if needed
+if h.motor_home.BackgroundColor(1) == 0.5
+    h.Arduino.write(72,'uint16');
+    %pause(5)
+end
+
 global IsRewardedTrial;
 
 display('----------New Trial------------------------------');
@@ -8,9 +14,9 @@ display('----------New Trial------------------------------');
 %% shuffle arrays of targets after all targets have been used
 block_num = h.current_trial_block.Data(1);
 block_num = block_num + 1;
-if mod(block_num,length(h.target_level_array.Data)) == 0
+%if mod(block_num,length(h.target_level_array.Data)) == 0
     h.target_level_array.Data = h.target_level_array.Data(randperm(length(h.target_level_array.Data)) );
-end
+%end
 h.current_trial_block.Data(1) = block_num; % update 'block number'
 %h.RewardStatus.Data(2) = 0; % reset 'rewards given in block'
 
@@ -22,17 +28,20 @@ end
 NoAntiBias = 1;
 % check if antibias needs to be implemented and if previous trial was a failure
 if (sum([h.TargetLevel1AntiBias.Value,h.TargetLevel2AntiBias.Value,h.TargetLevel3AntiBias.Value])>0 && ~IsRewardedTrial)
-    which_target = find(sort(h.target_level_array.Data,'descend')==h.TargetDefinition.Data(2));
+    %which_target = find(sort(h.target_level_array.Data,'descend')==h.TargetDefinition.Data(2));
+    which_target = floor(h.TargetDefinition.Data(2));
     if h.(['TargetLevel',num2str(which_target),'AntiBias']).Value
         NoAntiBias = 0;
         disp('antibiasing');
-        h.NewTargetDefinition.Data(2) = h.TargetDefinition.Data(2);
+        %h.NewTargetDefinition.Data(2) = h.TargetDefinition.Data(2);
+        h.NewTargetDefinition.Data(2) = floor(h.TargetDefinition.Data(2)) + ...
+            h.target_level_array.Data(1) - floor(h.target_level_array.Data(1));
     end
 end
 
 if NoAntiBias
-    h.NewTargetDefinition.Data(2) = ...
-        h.target_level_array.Data( 1 + mod(block_num-1,length(h.target_level_array.Data)) );
+    h.NewTargetDefinition.Data(2) = h.target_level_array.Data(1);
+        %h.target_level_array.Data( 1 + mod(block_num-1,length(h.target_level_array.Data)) );
     % Update current target level radio button
     % h.(['TargetLevel',num2str( 1 + mod(block_num-1,length(h.target_level_array.Data)) )]).Value = 1;
 end
@@ -80,6 +89,7 @@ if (h.which_perturbation.Value)
 end
 
 %% invoke target definition callback (this automatically calls Update_Params)
+set(h.motor_home,'BackgroundColor',[0.94 0.94 0.94]);
 guidata(h.hObject, h);
 % display('params modified by new block call');
 OdorLocator('ZoneLimitSettings_CellEditCallback',h.hObject,[],h);
