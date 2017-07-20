@@ -562,7 +562,8 @@ Update_MultiRewards(handles);
 function ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles)
 % compute new target definition
 [handles] = Compute_TargetDefinition(handles);
-handles.TargetDefinition.Data = handles.NewTargetDefinition.Data;
+guidata(hObject,handles);
+%handles.TargetDefinition.Data = handles.NewTargetDefinition.Data;
 Update_TransferFunction_discrete(handles);
 pause(0.1);
 %handles.TargetDefinition.Data = handles.NewTargetDefinition.Data;
