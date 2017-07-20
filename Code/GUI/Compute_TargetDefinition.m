@@ -24,5 +24,5 @@ if h.ShrinkTargetLocations.Value
     h.locations_per_zone.Data(1) = round(sum(h.locations_per_zone.Data) * (h.ZoneLimitSettings.Data(1)*2)/total_range);
     h.locations_per_zone.Data(3) = 80 - sum(h.locations_per_zone.Data(1:2));
 end
-
+h.TargetDefinition.Data = h.NewTargetDefinition.Data;
 end
