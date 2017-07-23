@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 21-Jul-2017 15:57:55
+% Last Modified by GUIDE v2.5 30-Jun-2017 15:10:59
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -60,11 +60,14 @@ handles.startAcquisition.Enable = 'off';
 handles.DAQrates.Data = [500 20]';
 handles.which_perturbation.Value = 1;
 handles.TransferFunction.Data(2) = 1;
-handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
+%handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
 % populate target levels
 handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),handles.targets_to_use));
 % handles.target_level_array.Data 
-handles.NewTargetDefinition.Data(2) = handles.target_level_array.Data(2);
+%handles.NewTargetDefinition.Data(2) = handles.target_level_array.Data(2);
+handles.TargetDefinition.Data(2) = handles.target_level_array.Data(2);
+%handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
+%handles.NewTargetDefinition.Data(2) = handles.target_level_array.Data(2);
 
 % clear indicators
 handles.RewardStatus.Data = [0 0 0]';
