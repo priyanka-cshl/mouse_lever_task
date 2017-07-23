@@ -4,14 +4,21 @@ function [h] = Compute_TargetDefinition(h)
 % partitioning of the available lever range
 total_range = h.TrialSettings.Data(1) - h.TrialSettings.Data(2);
 
-mywidth(1) = (h.TrialSettings.Data(1) - h.NewTargetDefinition.Data(2))/total_range;
-mywidth(2) = (h.NewTargetDefinition.Data(2) - h.TrialSettings.Data(2))/total_range;
+%mywidth(1) = (h.TrialSettings.Data(1) - h.NewTargetDefinition.Data(2))/total_range;
+%mywidth(2) = (h.NewTargetDefinition.Data(2) - h.TrialSettings.Data(2))/total_range;
+mywidth(1) = (h.TrialSettings.Data(1) - h.TargetDefinition.Data(2))/total_range;
+mywidth(2) = (h.TargetDefinition.Data(2) - h.TrialSettings.Data(2))/total_range;
 mywidth = 2*mywidth*h.ZoneLimitSettings.Data(1);
 
 % compute new target zone definition
-h.NewTargetDefinition.Data(1) = h.NewTargetDefinition.Data(2) +...
+% h.NewTargetDefinition.Data(1) = h.NewTargetDefinition.Data(2) +...
+%     mywidth(1);
+% h.NewTargetDefinition.Data(3) = h.NewTargetDefinition.Data(2) -...
+%     mywidth(2);
+
+h.TargetDefinition.Data(1) = h.TargetDefinition.Data(2) +...
     mywidth(1);
-h.NewTargetDefinition.Data(3) = h.NewTargetDefinition.Data(2) -...
+h.TargetDefinition.Data(3) = h.TargetDefinition.Data(2) -...
     mywidth(2);
 
 h.PerturbationSettings.Data(3) = h.PerturbationSettings.Data(4) +...
@@ -24,5 +31,5 @@ if h.ShrinkTargetLocations.Value
     h.locations_per_zone.Data(1) = round(sum(h.locations_per_zone.Data) * (h.ZoneLimitSettings.Data(1)*2)/total_range);
     h.locations_per_zone.Data(3) = 80 - sum(h.locations_per_zone.Data(1:2));
 end
-h.TargetDefinition.Data = h.NewTargetDefinition.Data;
+%h.TargetDefinition.Data = h.NewTargetDefinition.Data;
 end

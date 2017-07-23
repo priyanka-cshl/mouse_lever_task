@@ -1,7 +1,8 @@
 function Update_TransferFunction_discrete(h)
 
 % get current transfer function
-target_limits = [h.TrialSettings.Data(2) h.NewTargetDefinition.Data(3:-1:1)' h.TrialSettings.Data(1)];
+%target_limits = [h.TrialSettings.Data(2) h.NewTargetDefinition.Data(3:-1:1)' h.TrialSettings.Data(1)];
+target_limits = [h.TrialSettings.Data(2) h.TargetDefinition.Data(3:-1:1)' h.TrialSettings.Data(1)];
 DAC_limits = h.DAC_levels.Data;
 Zone_limits = h.locations_per_zone.Data;
 [TF] = LeverTransferFunction_discrete(target_limits,DAC_limits,Zone_limits,...

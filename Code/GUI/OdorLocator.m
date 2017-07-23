@@ -60,8 +60,8 @@ handles.startAcquisition.Enable = 'off';
 handles.DAQrates.Data = [500 20]';
 handles.which_perturbation.Value = 1;
 handles.TransferFunction.Data(2) = 1;
-handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
-handles.NewTargetDefinition.Data(2) = handles.target_level_array.Data(2);
+%handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
+%handles.NewTargetDefinition.Data(2) = handles.target_level_array.Data(2);
 
 % clear indicators
 handles.RewardStatus.Data = [0 0 0]';
