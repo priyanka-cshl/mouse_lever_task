@@ -34,9 +34,9 @@ callreward = 0;
 
 %% populate TotalTime with newly available timestamps
 TotalTime = [ TotalTime(num_new_samples+1:end); event.TimeStamps ];
-TargetLevel = [TargetLevel(num_new_samples+1:end,:); h.TargetDefinition.Data(3)+0*event.Data(:,1) h.TargetDefinition.Data(1)+0*event.Data(:,1)];
+TargetLevel = [TargetLevel(num_new_samples+1:end,:); h.NewTargetDefinition.Data(3)+0*event.Data(:,1) h.NewTargetDefinition.Data(1)+0*event.Data(:,1)];
 %which_target = find(sort(h.target_level_array.Data,'descend')==h.TargetDefinition.Data(2));
-which_target = floor(h.TargetDefinition.Data(2));
+which_target = floor(h.NewTargetDefinition.Data(2));
 
 %% update MFC setpoints
 h.MFC_setpoints_IN.Data = round(mean(event.Data(:,h.NIchannels+1:h.NIchannels+2)),2,'significant')';
