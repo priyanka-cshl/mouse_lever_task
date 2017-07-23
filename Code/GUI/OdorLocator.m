@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 30-Jun-2017 15:10:59
+% Last Modified by GUIDE v2.5 21-Jul-2017 15:57:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,6 +61,9 @@ handles.DAQrates.Data = [500 20]';
 handles.which_perturbation.Value = 1;
 handles.TransferFunction.Data(2) = 1;
 handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
+% populate target levels
+handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),handles.targets_to_use));
+% handles.target_level_array.Data 
 handles.NewTargetDefinition.Data(2) = handles.target_level_array.Data(2);
 
 % clear indicators
@@ -288,6 +291,12 @@ if get(handles.startAcquisition,'value')
         handles.StartTime.Visible = 'on';
         handles.StopTime.Visible = 'off';
         
+        % update target levels
+        handles.targets_to_use = [handles.TargetLevel3Active.Value handles.TargetLevel2Active.Value handles.TargetLevel1Active.Value];
+        handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),find(handles.targets_to_use)));
+        handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
+        handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
+
         % clear indicators
         handles.RewardStatus.Data = [0 0 0]';
         handles.ProgressReport.Data = zeros(3,4);
@@ -1117,9 +1126,41 @@ else
     set(handles.CleaningRoutine,'BackgroundColor',[0.94 0.94 0.94]);
 end
 
-
-
-
-
-
 % Hint: get(hObject,'Value') returns toggle state of CleaningRoutine
+% --- Executes on button press in TargetLevel3Active.
+function TargetLevel3Active_Callback(hObject, eventdata, handles)
+% hObject    handle to TargetLevel3Active (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.targets_to_use(3) = get(hObject,'Value');
+handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),find(handles.targets_to_use)));
+handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
+handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
+guidata(hObject, handles);
+% Hint: get(hObject,'Value') returns toggle state of TargetLevel3Active
+
+
+% --- Executes on button press in TargetLevel2Active.
+function TargetLevel2Active_Callback(hObject, eventdata, handles)
+% hObject    handle to TargetLevel2Active (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.targets_to_use(2) = get(hObject,'Value');
+handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),find(handles.targets_to_use)));
+handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
+handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
+guidata(hObject, handles);
+% Hint: get(hObject,'Value') returns toggle state of TargetLevel2Active
+
+
+% --- Executes on button press in TargetLevel1Active.
+function TargetLevel1Active_Callback(hObject, eventdata, handles)
+% hObject    handle to TargetLevel1Active (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.targets_to_use(1) = get(hObject,'Value');
+handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),find(handles.targets_to_use)));
+handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
+handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
+guidata(hObject, handles);
+% Hint: get(hObject,'Value') returns toggle state of TargetLevel1Active

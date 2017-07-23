@@ -26,7 +26,12 @@ switch char(handles.computername)
         % odor panel
         handles.Odor_list.Value = [1 2 3]';
         % target levels
-        handles.target_level_array.Data = [1:0.25:3.75]';
+        %handles.target_level_array.Data = [1:0.25:3.75]'; %[3:0.25:3.75]';
+        handles.all_targets = [1:0.25:3.75]';
+        handles.targets_to_use = [1 1 1];
+        handles.TargetLevel1Active.Value = 1;
+        handles.TargetLevel2Active.Value = 1;
+        handles.TargetLevel3Active.Value = 1;
         handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
         handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
         % shrink target zone
