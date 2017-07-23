@@ -15,6 +15,12 @@ computername = char(textread('hostname.txt','%s'));
 switch computername
     case 'priyanka-gupta.cshl.edu'
         DataRoot = '/Volumes/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
+    case 'priyanka-gupta.home'
+        if exist('/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior','dir')
+            DataRoot = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior'; % local copy
+        else
+            DataRoot = '/Volumes/Albeanu-Norepl/pgupta/Behavior'; 
+        end
     case 'Priyanka-PC'
         DataRoot = 'C:\Data\Behavior'; % location on rig computer
     otherwise
@@ -53,6 +59,9 @@ for i = 1:size(FileNames,2)
     %% Parse trials
     [Lever, Motor, TrialInfo, TargetZones] = ChunkUpTrials(Data.(['session',num2str(i)]).data, TargetZones, FakeTargetZones);
     [Odors, ZonesToUse, LeverTruncated, MotorTruncated] = SortTrialsByType(Lever, Motor, TrialInfo, TargetZones);
+    
+    %% Correct for incorrect Target Zone assignments
+    FixTargetZoneAssignments(Data.(['session',num2str(i)]).data,TrialInfo,TargetZones,Data.(['session',num2str(i)]).settings);
     
     %% Get TFs
     [AllTFs] = GetAllTransferFunctions(Data.(['session',num2str(i)]).settings, TargetZones(ZonesToUse,:));
