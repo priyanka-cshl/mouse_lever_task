@@ -27,36 +27,12 @@ function [Lever, Motor, TrialInfo, TargetZones] = ChunkUpTrials(MyData, TargetZo
     
     for t = 1:length(TrialOn)
         
-%         %% verify that the reported target zone actually matches the actual
-%         % target zone
-%         if t == 1
-%             start_idx = 1;
-%         else
-%             start_idx = TrialOff(t-1);
-%         end
-%         start_idx = TrialOn(t);
-%         stop_idx = TrialOff(t);
-%             
-%         % find values of the lever when Arduino detected that the lever is in TZ
-%         if any(MyData(start_idx:stop_idx, TZoneCol))
-%             TZ_values = MyData(start_idx:stop_idx, TZoneCol);
-%             Lever_temp = MyData(start_idx:stop_idx, LeverCol);
-%             Motor_temp = MyData(start_idx:stop_idx, MotorCol);
-%             Motor_temp(Motor_temp<-4) = NaN;
-%             Motor_temp(Motor_temp>4) = NaN;
-%             % Lever values while home sensor was on
-%             LeverValues(t,1:2) = [min(Lever_temp(find(TZ_values))) max(Lever_temp(find(TZ_values)))];
-%             
-%             if any(find(~isnan(Motor_temp)))
-%                 LeverValues(t,3) = mean(Lever_temp(find(~isnan(Motor_temp))));
-%             end
-%         end
-        
-        
         %% populate two cell arays - TrialInfo and Lever and Motor
         Lever(t) = { MyData(TrialOn(t):TrialOff(t), LeverCol) };
         Motor(t) = { MyData(TrialOn(t):TrialOff(t), MotorCol) };
-
+        
+        TrialInfo.Timestamps(t,:) = MyData([TrialOn(t) TrialOff(t)],1);
+        TrialInfo.TimeIndices(t,:) = [TrialOn(t) TrialOff(t)];
         TrialInfo.Odor(t,1) = mode( MyData(TrialOn(t):TrialOff(t), TrialCol) );
         TrialInfo.TargetZoneType(t,1) = find(TargetZones(:,1)==mode( MyData(TrialOn(t):TrialOff(t), 2) ),1);
         TrialInfo.Reward(t) = { find( diff( MyData(TrialOn(t):TrialOff(t), RewardCol) )==1 ) };

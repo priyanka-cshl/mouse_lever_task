@@ -34,13 +34,15 @@ if (sum([h.TargetLevel1AntiBias.Value,h.TargetLevel2AntiBias.Value,h.TargetLevel
         NoAntiBias = 0;
         disp('antibiasing');
         %h.NewTargetDefinition.Data(2) = h.TargetDefinition.Data(2);
-        h.NewTargetDefinition.Data(2) = floor(h.TargetDefinition.Data(2)) + ...
+        %h.NewTargetDefinition.Data(2) = floor(h.TargetDefinition.Data(2)) + ...
+        h.TargetDefinition.Data(2) = floor(h.TargetDefinition.Data(2)) + ...
             h.target_level_array.Data(1) - floor(h.target_level_array.Data(1));
     end
 end
 
 if NoAntiBias
-    h.NewTargetDefinition.Data(2) = h.target_level_array.Data(1);
+    %h.NewTargetDefinition.Data(2) = h.target_level_array.Data(1);
+    h.TargetDefinition.Data(2) = h.target_level_array.Data(1);
         %h.target_level_array.Data( 1 + mod(block_num-1,length(h.target_level_array.Data)) );
     % Update current target level radio button
     % h.(['TargetLevel',num2str( 1 + mod(block_num-1,length(h.target_level_array.Data)) )]).Value = 1;
@@ -79,7 +81,8 @@ if (h.which_perturbation.Value)
     end
     if perturb && (h.which_perturbation.Value == 3) % decouple feedback
         % select randomly a target level that is not currently in use
-        unused_targets = setdiff(h.target_level_array.Data,h.NewTargetDefinition.Data(2));
+        %unused_targets = setdiff(h.target_level_array.Data,h.NewTargetDefinition.Data(2));
+        unused_targets = setdiff(h.target_level_array.Data,h.TargetDefinition.Data(2));
         new_fake_target = unused_targets(randi(length(unused_targets)));
         if  h.PerturbationSettings.Data(4) ~= new_fake_target % fake target has changed
             h.PerturbationSettings.Data(4) = new_fake_target;
