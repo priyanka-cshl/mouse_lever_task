@@ -61,7 +61,7 @@ for i = 1:size(FileNames,2)
     [Odors, ZonesToUse, LeverTruncated, MotorTruncated] = SortTrialsByType(Lever, Motor, TrialInfo, TargetZones);
     
     %% Correct for incorrect Target Zone assignments
-    FixTargetZoneAssignments(Data.(['session',num2str(i)]).data,TrialInfo,TargetZones,Data.(['session',num2str(i)]).settings);
+    %FixTargetZoneAssignments(Data.(['session',num2str(i)]).data,TrialInfo,TargetZones,Data.(['session',num2str(i)]).settings);
     
     %% Get TFs
     [AllTFs] = GetAllTransferFunctions(Data.(['session',num2str(i)]).settings, TargetZones(ZonesToUse,:));
