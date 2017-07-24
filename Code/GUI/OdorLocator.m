@@ -295,7 +295,7 @@ if get(handles.startAcquisition,'value')
         handles.StopTime.Visible = 'off';
         
         % update target levels
-        handles.targets_to_use = [handles.TargetLevel3Active.Value handles.TargetLevel2Active.Value handles.TargetLevel1Active.Value];
+        handles.targets_to_use = [handles.TargetLevel1Active.Value handles.TargetLevel2Active.Value handles.TargetLevel3Active.Value];
         handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),find(handles.targets_to_use)));
         handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
         handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
@@ -1131,11 +1131,11 @@ end
 
 % Hint: get(hObject,'Value') returns toggle state of CleaningRoutine
 % --- Executes on button press in TargetLevel3Active.
-function TargetLevel3Active_Callback(hObject, eventdata, handles)
+function TargetLevelActive_Callback(hObject, eventdata, handles)
 % hObject    handle to TargetLevel3Active (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.targets_to_use(3) = get(hObject,'Value');
+handles.targets_to_use = [handles.TargetLevel1Active.Value handles.TargetLevel2Active.Value handles.TargetLevel3Active.Value];
 handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),find(handles.targets_to_use)));
 handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
 handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
