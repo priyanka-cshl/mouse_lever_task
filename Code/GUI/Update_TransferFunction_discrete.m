@@ -7,7 +7,7 @@ DAC_limits = h.DAC_levels.Data;
 Zone_limits = h.locations_per_zone.Data;
 [TF] = LeverTransferFunction_discrete(target_limits,DAC_limits,Zone_limits,...
     h.TransferFunction.Data(1));
-
+%TF = -TF;
 TF_4_plot = TF; % use later for colormap update
 
 TF = TF'+101; % get rid of negative values
