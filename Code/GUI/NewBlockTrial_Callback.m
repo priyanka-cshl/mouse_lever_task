@@ -12,13 +12,16 @@ global IsRewardedTrial;
 display('----------New Trial------------------------------');
 
 %% shuffle arrays of targets after all targets have been used
-block_num = h.current_trial_block.Data(1);
-block_num = block_num + 1;
-%if mod(block_num,length(h.target_level_array.Data)) == 0
-    h.target_level_array.Data = h.target_level_array.Data(randperm(length(h.target_level_array.Data)) );
-%end
-h.current_trial_block.Data(1) = block_num; % update 'block number'
-%h.RewardStatus.Data(2) = 0; % reset 'rewards given in block'
+h.target_level_array.Data = h.target_level_array.Data(randperm(length(h.target_level_array.Data)) );
+
+% invert TF if needed
+if h.InvertTFs.Value
+    h.current_trial_block.Data(1) = round(rand(1)); % 50% chance of inverting TF
+end
+
+% block_num = h.current_trial_block.Data(1);
+% block_num = block_num + 1;
+% h.current_trial_block.Data(1) = block_num; % update 'block number'
 
 for i = 1:size(h.ProgressReport.Data,2)
     h.ProgressReport.Data(3,i) = round(100*h.ProgressReport.Data(2,i)/h.ProgressReport.Data(1,i),0,'decimals');

@@ -14,6 +14,8 @@ if nargin < 3
     MyMap(foo:end,1) = -1*MyMap(foo:end,1);
     [~,idx] = min(abs(MyMap-motor_location));
     idx = 100 - idx;
+    if h.current_trial_block.Data(1)
+    end
 else
     idx = motor_location; % for data rescaling
 end

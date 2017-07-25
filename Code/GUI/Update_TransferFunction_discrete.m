@@ -7,7 +7,11 @@ DAC_limits = h.DAC_levels.Data;
 Zone_limits = h.locations_per_zone.Data;
 [TF] = LeverTransferFunction_discrete(target_limits,DAC_limits,Zone_limits,...
     h.TransferFunction.Data(1));
-%TF = -TF;
+
+if ~h.current_trial_block.Data(1)
+    TF = -TF; % invert the TF
+end
+
 TF_4_plot = TF; % use later for colormap update
 
 TF = TF'+101; % get rid of negative values
@@ -40,7 +44,7 @@ while (sent == 0) && (sending_attempts <=8 )
                     %update transfer function colormap
                     TF = TF_4_plot;
                     %h.TF_plot.CData = abs(TF(length(TF):-1:1))'/max(TF);
-                    h.TF_plot.CData = (TF(length(TF):-1:1))'/max(TF);
+                    h.TF_plot.CData = flipud(TF')/max(TF);
                     h.all_locations.String = num2str(unique(TF)');
                 else
                     pause(.1);
