@@ -580,7 +580,7 @@ Update_TransferFunction_discrete(handles);
 pause(0.1);
 %handles.TargetDefinition.Data = handles.NewTargetDefinition.Data;
 Update_Params(handles);
-handles.(['TargetLevel',num2str( 1 + mod(handles.current_trial_block.Data(1)-1,length(handles.target_level_array.Data)) )]).Value = 1;
+%handles.(['TargetLevel',num2str( 1 + mod(handles.current_trial_block.Data(1)-1,length(handles.target_level_array.Data)) )]).Value = 1;
 % --------------------------------------------------------------------
 
 % --- Executes on button press in min_width_up.
