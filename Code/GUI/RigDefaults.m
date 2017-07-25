@@ -12,7 +12,7 @@ switch char(handles.computername)
         % disable transfer function calibrator
         handles.calibrate_transfer_function.Enable = 'off';
         % MFC settings
-        handles.MFC_table.Data = [1.6 0.4]';
+        handles.MFC_table.Data = [1.6 0.64]'; %[1.6 0.4]';
         % training stage
         handles.which_stage.Value = 3;
         % TF - locations per zone
