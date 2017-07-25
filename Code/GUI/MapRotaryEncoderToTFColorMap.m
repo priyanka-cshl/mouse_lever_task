@@ -8,13 +8,20 @@ motor_location = (motor_location*2*sum(h.locations_per_zone.Data)) - sum(h.locat
 if nargin < 3
     % normalize motor location to max
     motor_location = motor_location/sum(h.locations_per_zone.Data);
+    
+    
     % get a signed color map
-    [minVal,foo] = min(h.TF_plot.CData);
-    MyMap = h.TF_plot.CData;
-    MyMap(foo:end,1) = -1*MyMap(foo:end,1);
-    [~,idx] = min(abs(MyMap-motor_location));
-    idx = 100 - idx;
     if h.current_trial_block.Data(1)
+        [~,foo] = min(h.TF_plot.CData);
+        MyMap = h.TF_plot.CData;
+        MyMap(foo:end,1) = -1*MyMap(foo:end,1);
+        [~,idx] = min(abs(MyMap-motor_location));
+        idx = 100 - idx;
+    else
+        MyMap = flipud(h.TF_plot.CData);
+        %MyMap(foo:end,1) = -1*MyMap(foo:end,1);
+        [~,idx] = min(abs(MyMap-motor_location));
+        %idx = 100 - idx;
     end
 else
     idx = motor_location; % for data rescaling
