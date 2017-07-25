@@ -15,16 +15,14 @@ display('----------New Trial------------------------------');
 h.target_level_array.Data = h.target_level_array.Data(randperm(length(h.target_level_array.Data)) );
 
 % invert TF if needed
-if h.InvertTFs.Value
-    h.current_trial_block.Data(1) = round(rand(1)); % 50% chance of inverting TF
-end
+h.current_trial_block.Data(1) = (rand(1)<h.TFLeftprobability.Data(1)); % 50% chance of inverting TF
 
 % block_num = h.current_trial_block.Data(1);
 % block_num = block_num + 1;
 % h.current_trial_block.Data(1) = block_num; % update 'block number'
 
-for i = 1:size(h.ProgressReport.Data,2)
-    h.ProgressReport.Data(3,i) = round(100*h.ProgressReport.Data(2,i)/h.ProgressReport.Data(1,i),0,'decimals');
+for i = 1:size(h.ProgressReport.Data,1)
+    h.ProgressReport.Data(i,3) = round(100*h.ProgressReport.Data(i,2)/h.ProgressReport.Data(i,1),0,'decimals');
 end
 
 %% update target level
