@@ -58,25 +58,28 @@ for i = 1:size(FileNames,2)
     
     %% Parse trials
     [Lever, Motor, TrialInfo, TargetZones] = ChunkUpTrials(Data.(['session',num2str(i)]).data, TargetZones, FakeTargetZones);
-    [Odors, ZonesToUse, LeverTruncated, MotorTruncated] = SortTrialsByType(Lever, Motor, TrialInfo, TargetZones);
+    [Odors, ZonesToUse, LeverTruncated, MotorTruncated] = TruncateTrials(Lever, Motor, TrialInfo, TargetZones);
     
     %% Correct for incorrect Target Zone assignments
-    %FixTargetZoneAssignments(Data.(['session',num2str(i)]).data,TrialInfo,TargetZones,Data.(['session',num2str(i)]).settings);
+    [TrialInfo] = FixTargetZoneAssignments(Data.(['session',num2str(i)]).data,TrialInfo,TargetZones,Data.(['session',num2str(i)]).settings);
     
     %% Get TFs
     [AllTFs] = GetAllTransferFunctions(Data.(['session',num2str(i)]).settings, TargetZones(ZonesToUse,:));
     
     %% Trajectory Analysis
-    [Trajectories] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones);
-    
+    if i == 1
+        [Trajectories] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones);
+    else
+        [Trajectories] = OverLayTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones,1);
+    end
     %% Basic session statistics
-    [NumTrials] = SessionStats(TrialInfo,Trajectories,ZonesToUse,TargetZones,1);    
+    %[NumTrials] = SessionStats(TrialInfo,Trajectories,ZonesToUse,TargetZones,1);    
     
     % if number of Zones>6 split the data set into two
     
     if numel(ZonesToUse)>6
-        HistogramOfOccupancy(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, AllTFs, Trajectories, 1);
-        [StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, Data.(['session',num2str(i)]).settings, 1);
+       % HistogramOfOccupancy(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, AllTFs, Trajectories, 1);
+        %[StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, Data.(['session',num2str(i)]).settings, 1);
         
     elseif numel(ZonesToUse)>3
         LeverTruncated_all = LeverTruncated;
