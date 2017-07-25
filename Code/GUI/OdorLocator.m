@@ -71,7 +71,7 @@ handles.TargetDefinition.Data(2) = handles.target_level_array.Data(2);
 
 % clear indicators
 handles.RewardStatus.Data = [0 0 0]';
-handles.ProgressReport.Data = zeros(3,4);
+handles.ProgressReport.Data = zeros(4,3);
 handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
 handles.water_received.Data = 0;
 handles.Date.String = datestr(now, 'mm-dd-yy');
@@ -302,7 +302,7 @@ if get(handles.startAcquisition,'value')
 
         % clear indicators
         handles.RewardStatus.Data = [0 0 0]';
-        handles.ProgressReport.Data = zeros(3,4);
+        handles.ProgressReport.Data = zeros(4,3);
         handles.water_received.Data = 0;
         handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
         handles.update_call = 1;
@@ -583,11 +583,6 @@ Update_Params(handles);
 %handles.(['TargetLevel',num2str( 1 + mod(handles.current_trial_block.Data(1)-1,length(handles.target_level_array.Data)) )]).Value = 1;
 % --------------------------------------------------------------------
 
-% --- Executes on button press in min_width_up.
-function min_width_up_Callback(hObject, eventdata, handles)
-handles.ZoneLimitSettings.Data(1) = handles.ZoneLimitSettings.Data(1) + 0.05;
-ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles);
-
 % --- Executes on button press in stay_time_up.
 function stay_time_up_Callback(hObject, eventdata, handles)
 handles.TargetHold.Data(3) = handles.TargetHold.Data(3) + 25;
@@ -601,15 +596,6 @@ handles.TargetHold.Data(3) = handles.TargetHold.Data(3) - 25;
 handles.TargetHold.Data(2) = handles.TargetHold.Data(2) - 25;
 handles.TargetHold.Data(1) = handles.TargetHold.Data(1) - 25;
 handles.TargetHold.ForegroundColor = 'r';
-
-% --- Executes on button press in min_width_down.
-function min_width_down_Callback(hObject, eventdata, handles)
-if ((handles.ZoneLimitSettings.Data(1) - 0.05) >= 0)
-    handles.ZoneLimitSettings.Data(1) = handles.ZoneLimitSettings.Data(1) - 0.05;
-else
-    handles.ZoneLimitSettings.Data(1) = 0;
-end
-ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles);
 
 % --- Executes on button press in update_zones.
 function update_zones_Callback(hObject, eventdata, handles)
