@@ -105,7 +105,7 @@ if exist(filename) %#ok<*EXIST>
     w_o = str2num(char(weight(1,3)));
     w_c = str2num(char(weight(end,3)));
     w_p = round(100*w_c/w_o,0,'decimals');
-    handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [100% = ', num2str(w_o), ' grams]'];
+    handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [85% = ', num2str(0.85*w_o), ' grams]'];
 else
     handles.WeightString.String = 'weight data unavailable';
 end
@@ -1020,7 +1020,7 @@ while ~FileExistChecker
             w_o = str2num(char(userans(1)));
             w_c = str2num(char(userans(2)));
             w_p = round(100*w_c/w_o,0,'decimals');
-            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [100% = ', num2str(w_o), ' grams]'];
+            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [85% = ', num2str(0.85*w_o), ' grams]'];
         end
     end
     FileExistChecker = exist(filename,'file');
@@ -1043,12 +1043,12 @@ if ~MadeNewFile
             w_o = str2num(char(weight(1,3)));
             w_c = str2num(char(userans));
             w_p = round(100*w_c/w_o,0,'decimals');
-            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [100% = ', num2str(w_o), ' grams]'];
+            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [85% = ', num2str(0.85*w_o), ' grams]'];
         else
             w_o = str2num(char(weight(1,3)));
             w_c = str2num(char(weight(end,3)));
             w_p = round(100*w_c/w_o,0,'decimals');
-            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [100% = ', num2str(w_o), ' grams]'];
+            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [85% = ', num2str(0.85*w_o), ' grams]'];
         end
     else
         % check with the use if he/she wants to make a repeat entry
@@ -1064,7 +1064,7 @@ if ~MadeNewFile
             w_o = str2num(char(weight(1,3)));
             w_c = str2num(char(userans));
             w_p = round(100*w_c/w_o,0,'decimals');
-            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [100% = ', num2str(w_o), ' grams]'];
+            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [85% = ', num2str(0.85*w_o), ' grams]'];
         end
     end
 end
