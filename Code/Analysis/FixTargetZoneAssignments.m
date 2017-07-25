@@ -1,4 +1,4 @@
-function [] = FixTargetZoneAssignments(MyData,TrialInfo,TargetZones,Params);
+function [TrialInfo] = FixTargetZoneAssignments(MyData,TrialInfo,TargetZones,Params);
 
 % Find trials for which there is no record of successful updates to the Arduino
 
@@ -12,9 +12,11 @@ end
 % create a logical vector to get values of perturbed zones
 WasPerturbed = cell2mat(cellfun(@(x) max([x; 0]), TrialInfo.FakeZone, 'UniformOutput', false))';
 UpdateSuccess = zeros(size(TrialInfo.Timestamps,1),1);
+LeverAtHome = zeros(size(TrialInfo.Timestamps,1),1);
 Mismatch = zeros(size(TrialInfo.Timestamps,1),1);
+SuggestedZone = zeros(size(TrialInfo.Timestamps,1),1);
 
-for t = 2:size(TrialInfo.Timestamps,1)
+for t = 1:size(TrialInfo.Timestamps,1)
     if t == 1
         start_idx = 0; 
     else
@@ -32,17 +34,24 @@ for t = 2:size(TrialInfo.Timestamps,1)
     TZoneTemp = MyData(start_idx:stop_idx,TZoneCol);
     MotorTemp = MyData(start_idx:stop_idx,MotorCol);
     
+    % A vector to store lever values for assigning target zone in case of
+    % mismatch
+    LeverVals = [];
+    
     % for trials without any perturbation
     if ~WasPerturbed(t)
         if ~isempty( find(TZoneTemp)) % entered TargetZone in this trial
             if ~isempty(intersect(find(HomeTemp),find(TZoneTemp)))
                 idx = intersect(find(HomeTemp),find(TZoneTemp));
-                LeverAtHome(t,1) = median(LeverTemp(idx));
+                %LeverAtHome(t,1) = median(LeverTemp(idx));
+                LeverVals = LeverTemp(idx);
                 MotorLimits(t,:) = [min(MotorTemp(idx)) max(MotorTemp(idx))];
             else
-                LeverAtHome(t,1) = median(LeverTemp(find(TZoneTemp)));
+                %LeverAtHome(t,1) = median(LeverTemp(find(TZoneTemp)));
+                LeverVals = LeverTemp(find(TZoneTemp));
             end
         else
+            LeverVals = NaN;
             % if it didn't enter target zone - then hard to determine what
             % the TF was
         end
@@ -54,13 +63,21 @@ for t = 2:size(TrialInfo.Timestamps,1)
         HomeStays = [HomeOn(1:foo,1) HomeOff(1:foo,1)];
         HomeStays(:,3) = HomeStays(:,2)-HomeStays(:,1);
         [~,idx] = max(HomeStays(:,3));
-        LeverAtHome(t,1) = median(LeverTemp(HomeOn(idx):HomeOff(idx)));
+        LeverVals = LeverTemp(HomeOn(idx):HomeOff(idx));
+        %LeverAtHome(t,1) = median(LeverTemp(HomeOn(idx):HomeOff(idx)));
     end
+    LeverAtHome(t,1) = median(LeverVals);
     if (LeverAtHome(t,1)>TargetZones(TrialInfo.TargetZoneType(t),1)) | ...
             (LeverAtHome(t,1)<TargetZones(TrialInfo.TargetZoneType(t),3))
         Mismatch(t,1) = 1;
+        ZoneScore = zeros(size(TargetZones,1),1);
+        for Z = 1:size(TargetZones,1)
+            ZoneScore(Z,1) = numel(find(LeverVals>=TargetZones(Z,3) & LeverVals<=TargetZones(Z,1)));
+        end
+        [~,SuggestedZone(t,1)] = max(ZoneScore);
+        TrialInfo.TargetZoneType(t) = SuggestedZone(t,1);
+    else
+        SuggestedZone(t,1) = NaN;
     end
 end
-
-
 end
