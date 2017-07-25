@@ -69,8 +69,8 @@ if TotalTime(end)>2
         end
     elseif any(diff(TotalData(end-num_new_samples:end,trial_channel)) > 0) % trial just turned ON
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1; % increment 'trial number'
-        h.ProgressReport.Data(1,which_target) = h.ProgressReport.Data(1,which_target) + 1;
-        h.ProgressReport.Data(1,4) = h.ProgressReport.Data(1,4) + 1;
+        h.ProgressReport.Data(4-which_target,1) = h.ProgressReport.Data(4-which_target,1) + 1;
+        h.ProgressReport.Data(4,1) = h.ProgressReport.Data(4,1) + 1;
         IsRewardedTrial = 0;
     end
 %     % Multiply by odor index
@@ -85,8 +85,8 @@ if TotalTime(end)>2
         % increment 'total rewards' and 'rewards in block'
         if ~IsRewardedTrial
             h.RewardStatus.Data(1) = h.RewardStatus.Data(1) + 1; 
-            h.ProgressReport.Data(2,which_target) = h.ProgressReport.Data(2,which_target) + 1;
-            h.ProgressReport.Data(2,4) = h.ProgressReport.Data(2,4) + 1;
+            h.ProgressReport.Data(4-which_target,2) = h.ProgressReport.Data(4-which_target,2) + 1;
+            h.ProgressReport.Data(4,2) = h.ProgressReport.Data(4,2) + 1;
             h.water_received.Data = h.water_received.Data + 10*(h.RewardControls.Data(1)*0.015 - 0.042);
             IsRewardedTrial = 1;
         else
