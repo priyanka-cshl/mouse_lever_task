@@ -15,6 +15,14 @@ if ~isempty(Allfiles)
         handles.ZoneLimitSettings.Data(1) = X.session_data.params(end,2);
         handles.TrialSettings.Data(3) = X.session_data.params(end,12);
         handles.TrialSettings.Data(4) = X.session_data.params(end,12);
+        if isfield(X.session_data, 'ForNextSession')
+            handles.DAC_settings.Data = X.session_data.ForNextSession(1:2)';
+            handles.TrialSettings.Data(4) = X.session_data.ForNextSession(3);
+            if numel(X.session_data.ForNextSession)>3
+                handles.RewardControls.Data(3) = X.session_data.ForNextSession(4);
+                handles.TFLeftprobability.Data(1) = X.session_data.ForNextSession(5);
+            end
+        end
         if strcmp(X.session_data.legends_trial(11),'IRI')
             handles.RewardControls.Data(2) = X.session_data.params(end,11);
             handles.MultiRewards.Value = (X.session_data.params(end,11)>0);
