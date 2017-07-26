@@ -35,6 +35,11 @@ function [Lever, Motor, TrialInfo, TargetZones] = ChunkUpTrials(MyData, TargetZo
         TrialInfo.TimeIndices(t,:) = [TrialOn(t) TrialOff(t)];
         TrialInfo.Odor(t,1) = mode( MyData(TrialOn(t):TrialOff(t), TrialCol) );
         TrialInfo.TargetZoneType(t,1) = find(TargetZones(:,1)==mode( MyData(TrialOn(t):TrialOff(t), 2) ),1);
+        
+        % check the 10 samples before trial start to verify if the transfer
+        % function was inverted in this trial
+        TrialInfo.TransferFunctionLeft(t,1) = (MyData(TrialOn(t)-1, MotorCol)>0);
+        
         TrialInfo.Reward(t) = { find( diff( MyData(TrialOn(t):TrialOff(t), RewardCol) )==1 ) };
         TrialInfo.Length(t) = TrialOff(t) - TrialOn(t) + 1;
         

@@ -1,6 +1,10 @@
-function [Trajectories] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones)
+function [Trajectories] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones, Handedness)
 % plot all (or many) trajectories, separate failures and rewards and
 % perturbations
+
+if nargin<5
+    Handedness = 0; % All TFs together, 1 = left only, 2 = right only
+end
 
 %% Align all trajectories to the time-point when they start moving the lever
 % ie. lever voltage goes below thershold for Trigger ON = ~4.8V
@@ -13,6 +17,15 @@ for i = 1:size(LeverTruncated,1) % each trial
         LeverReAligned = [LeverReAligned; temp];
         idx = [idx; i];
     end
+end
+
+% keep only idx-s for the user-desired left or right TF functions
+switch Handedness
+    case 0
+    case 1 % Left only
+        idx = intersect(idx, find(TrialInfo.TransferFunctionLeft));
+    case 2
+        idx = intersect(idx, find(~TrialInfo.TransferFunctionLeft));
 end
 
 %% sort trajectories by zones, separate successes, failures, and perturbations.
