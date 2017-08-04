@@ -578,6 +578,7 @@ function ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles)
 [handles] = Compute_TargetDefinition(handles);
 guidata(hObject,handles);
 %handles.TargetDefinition.Data = handles.NewTargetDefinition.Data;
+Write_Params(handles);
 Update_TransferFunction_discrete(handles);
 pause(0.1);
 %handles.TargetDefinition.Data = handles.NewTargetDefinition.Data;
