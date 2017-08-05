@@ -40,6 +40,8 @@ for t = 1:size(LeverTruncated,1) % each trial
             StayTimes.(['Zone',num2str(ZonesToUse(Z))]){t} = {crosses};
             % Fraction of trial time spent in each zone
             TrialStats.FractionSpent(t,Z) = sum(crosses(:,3))/triallength;
+            % Total stay in each Zone
+            TrialStats.TotalStay(t,Z) = sum(crosses(:,3));
             % Max stay in each Zone
             TrialStats.MaxStay(t,Z) = max(crosses(:,3));
             TrialStats.MaxFractionStay(t,Z) = max(crosses(:,3))/triallength;

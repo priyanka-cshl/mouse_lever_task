@@ -38,6 +38,8 @@ for Z = 1:numel(ZonesToUse)
         if ~isempty(perturbed)
             perturbtrials(Z,1) = numel(intersect(perturbed, find(TrialInfo.Success==1)));
             perturbtrials(Z,2) = numel(perturbed) - perturbtrials(Z,1);
+        else
+            perturbtrials(Z,1:2) = [0 0];
         end
         
         % perturbations - grouped by 'fake target zones'
@@ -45,6 +47,8 @@ for Z = 1:numel(ZonesToUse)
         if ~isempty(perturbed)
             perturbtrials(Z,3) = numel(intersect(perturbed, find(TrialInfo.Success==1)));
             perturbtrials(Z,4) = numel(perturbed) - perturbtrials(Z,3);
+        else
+            perturbtrials(Z,3:4) = [0 0];
         end
         myPtextlabel{Z} = [num2str(perturbtrials(Z,3)),'/',num2str(numel(perturbed))] ;
     end
@@ -56,49 +60,59 @@ num_cols = 1 + 2*~isempty(find(myfakezone));
 
 if ToPlot
     figure;
-    subplot(2,num_cols,1:num_cols); 
+    subplot(2,num_cols,1:max(1,num_cols-1)); 
     plot(rate);
     ax = gca;
     ax.Title.String = ['Average Success Rate = ', num2str(SessionSuccessRate), '%'];
     ax.Title.FontSize = 12;
-    ax.YLim = [-0.9 1.1];
+    ax.YLim = [-0.1 1.1];
     ax.YTick = [0 0.5 1];
+    set(gca,'TickDir','out','Fontsize',12,'FontWeight','b');
     
     myplot = subplot(2,num_cols,num_cols+1); % success rate
     mybar = barh(mean(TargetZones(ZonesToUse,1:3),2),...
         numtrials,'stacked');
-    mybar(1).FaceColor = 'g';
+    mybar(1).FaceColor = 'k';
     mybar(2).FaceColor = 'r';
+    mybar(2).EdgeColor = 'r';
     % labels - no. of trials
-    text(sum(numtrials,2)+0.1,mean(TargetZones(ZonesToUse,1:3),2), mytextlabel);
-    myplot.Title.String = [num2str(sum(numtrials(:,1))),'/',num2str(sum(numtrials(:)))];
+    %text(sum(numtrials,2)+0.1,mean(TargetZones(ZonesToUse,1:3),2), mytextlabel);
+    myplot.Title.String = [num2str(sum(numtrials(:,1))),' / ',num2str(sum(numtrials(:)))];
+    set(gca,'TickDir','out','YTick',[],'Fontsize',12,'FontWeight','b');
     
     if ~isempty(find(myfakezone))
         subplot(2,num_cols,num_cols+2); % perturbation successes
         mybar = barh(mean(TargetZones(ZonesToUse,1:3),2),...
             perturbtrials(:,1:2),'stacked');
-        mybar(1).EdgeColor = 'g';
-        mybar(1).LineWidth = 2;
-        mybar(1).FaceColor = 'none';
+        mybar(1).FaceColor = 'k';
+        mybar(2).FaceColor = 'r';
         mybar(2).EdgeColor = 'r';
-        mybar(2).LineWidth = 2;
-        mybar(2).FaceColor = 'none';
+%         mybar(1).EdgeColor = 'k';
+%         mybar(1).LineWidth = 2;
+%         mybar(1).FaceColor = 'none';
+%         mybar(2).EdgeColor = 'r';
+%         mybar(2).LineWidth = 2;
+%         mybar(2).FaceColor = 'none';
         ax = gca;
-        ax.Title.String = [num2str(sum(perturbtrials(:,1))),'/',num2str(sum(perturbtrials(:,1))+sum(perturbtrials(:,2)))];
-
+        ax.Title.String = [num2str(sum(perturbtrials(:,1))),' / ',num2str(sum(perturbtrials(:,1))+sum(perturbtrials(:,2)))];
+        set(gca,'TickDir','out','YTick',[],'Fontsize',12,'FontWeight','b');
         
         subplot(2,num_cols,num_cols+3); % perturbation successes
         mybar = barh(mean(TargetZones(ZonesToUse,1:3),2),...
             perturbtrials(:,3:4),'stacked');
-        mybar(1).EdgeColor = 'g';
-        mybar(1).LineWidth = 2;
-        mybar(1).FaceColor = 'none';
+        mybar(1).FaceColor = 'k';
+        mybar(2).FaceColor = 'r';
         mybar(2).EdgeColor = 'r';
-        mybar(2).LineWidth = 2;
-        mybar(2).FaceColor = 'none';
-        text(sum(perturbtrials(:,3:4),2)+0.1,mean(TargetZones(ZonesToUse,1:3),2), myPtextlabel);
+%         mybar(1).EdgeColor = 'k';
+%         mybar(1).LineWidth = 2;
+%         mybar(1).FaceColor = 'none';
+%         mybar(2).EdgeColor = 'r';
+%         mybar(2).LineWidth = 2;
+%         mybar(2).FaceColor = 'none';
+        %text(sum(perturbtrials(:,3:4),2)+0.1,mean(TargetZones(ZonesToUse,1:3),2), myPtextlabel);
         ax = gca;
-        ax.Title.String = [num2str(sum(perturbtrials(:,3))),'/',num2str(sum(perturbtrials(:,3))+sum(perturbtrials(:,4)))];
+        ax.Title.String = [num2str(sum(perturbtrials(:,3))),' / ',num2str(sum(perturbtrials(:,3))+sum(perturbtrials(:,4)))];
+        set(gca,'TickDir','out','YTick',[],'Fontsize',12,'FontWeight','b');
     end
 end
 end

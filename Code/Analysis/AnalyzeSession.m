@@ -1,8 +1,10 @@
 % test script to extract behavior data and replot session
-function [] = AnalyzeSession(MouseName, ReplotSession)
+function [Data] = AnalyzeSession(MouseName, ReplotSession)
 if nargin < 2
     ReplotSession = 0;
 end
+
+Plotting = 1; %1 = plot results
 
 global timewindow;
 global MyFileName;
@@ -15,7 +17,7 @@ computername = char(textread('hostname.txt','%s'));
 switch computername
     case 'priyanka-gupta.cshl.edu'
         DataRoot = '/Volumes/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
-    case 'priyanka-gupta.home'
+    case {'priyanka-gupta.home','priyanka-gupta.local'}
         if exist('/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior','dir')
             DataRoot = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior'; % local copy
         else
@@ -45,47 +47,53 @@ else
 end
 
 for i = 1:size(FileNames,2) 
-    
+    i
     %% core data extraction (and settings)
     Data.(['session',num2str(i)]).path = fullfile(FilePaths,FileNames{i});
-    [Data.(['session',num2str(i)]).data, Data.(['session',num2str(i)]).settings, TargetZones, FakeTargetZones] = ...
+    [MyData.(['session',num2str(i)]).data, MyData.(['session',num2str(i)]).settings, TargetZones, FakeTargetZones] = ...
         ExtractSessionData(fullfile(FilePaths,FileNames{i}));
     MyFileName = FileNames{i};
     
-    if ReplotSession
-        RecreateSession(Data.(['session',num2str(i)]).data);
-    end
-    
     %% Parse trials
-    [Lever, Motor, TrialInfo, TargetZones] = ChunkUpTrials(Data.(['session',num2str(i)]).data, TargetZones, FakeTargetZones);
+    [Lever, Motor, TrialInfo, TargetZones] = ChunkUpTrials(MyData.(['session',num2str(i)]).data, TargetZones, FakeTargetZones);
     [Odors, ZonesToUse, LeverTruncated, MotorTruncated] = TruncateTrials(Lever, Motor, TrialInfo, TargetZones);
     
     %% Correct for incorrect Target Zone assignments
-    [TrialInfo] = FixTargetZoneAssignments(Data.(['session',num2str(i)]).data,TrialInfo,TargetZones,Data.(['session',num2str(i)]).settings);
+    [TrialInfo,MyData.(['session',num2str(i)]).data] = FixTargetZoneAssignments(MyData.(['session',num2str(i)]).data,TrialInfo,TargetZones,MyData.(['session',num2str(i)]).settings);
+    if ReplotSession
+        RecreateSession(MyData.(['session',num2str(i)]).data);
+    end
     
     %% Get TFs
-    [AllTFs] = GetAllTransferFunctions(Data.(['session',num2str(i)]).settings, TargetZones(ZonesToUse,:));
+    [AllTFs] = GetAllTransferFunctions(MyData.(['session',num2str(i)]).settings, TargetZones(ZonesToUse,:));
     
     %% Trajectory Analysis
     if i == 1
         if any(find(~TrialInfo.TransferFunctionLeft))
-            [TrajectoriesLeft] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones,1);
-            [TrajectoriesRight] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones,2);
-            [Trajectories] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones);
+            SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones,1, 1);
+            OverLayTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones,1, 2);
+            [Trajectories] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones, 0, 0);
         else
-            [Trajectories] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones);
+            [Trajectories] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones, 1, 1);
         end
     else
         [Trajectories] = OverLayTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones,1);
     end
+    %[Trajectories] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones, Plotting);
     
     %% Basic session statistics
-    [NumTrials] = SessionStats(TrialInfo,Trajectories,ZonesToUse,TargetZones,1);    
+    [NumTrials] = SessionStats(TrialInfo,Trajectories,ZonesToUse,TargetZones,Plotting);    
     
     %% Histograms
-    HistogramOfOccupancy(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, AllTFs, Trajectories, 1);
-    [StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, Data.(['session',num2str(i)]).settings, 1);
-        
-
+    HistogramOfOccupancy(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, AllTFs, Trajectories, Plotting);
+    [StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, MyData.(['session',num2str(i)]).settings, Plotting);
+    
+    Data.(['session',num2str(i)]).TargetZones = TargetZones;
+    Data.(['session',num2str(i)]).ZonesToUse = ZonesToUse;
+    Data.(['session',num2str(i)]).TrialInfo = TrialInfo;
+    Data.(['session',num2str(i)]).Trajectories = Trajectories;
+    Data.(['session',num2str(i)]).StayTimes = StayTimes;
+    Data.(['session',num2str(i)]).TrialStats = TrialStats;
+ 
 end
 end
