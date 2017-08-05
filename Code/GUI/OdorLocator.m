@@ -509,6 +509,8 @@ if usrans == 1
     session_data.trace_legend = Connections_list();
     session_data.params = b';
     session_data.TF = c';
+    session_data.ForNextSession = [handles.DAC_settings.Data' handles.TrialSettings.Data(4) handles.RewardControls.Data(3) handles.TFLeftprobability.Data(1)];
+    session_data.ForNextSession_Legends = {'DAQGain', 'DAQDC', 'TriggerHoldMean', 'RewardHold-II', 'LeftvsRightTFs' };
     
     save(filename,'session_data*');
     save(server_file_name,'session_data*');
@@ -576,6 +578,7 @@ function ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles)
 [handles] = Compute_TargetDefinition(handles);
 guidata(hObject,handles);
 %handles.TargetDefinition.Data = handles.NewTargetDefinition.Data;
+Write_Params(handles);
 Update_TransferFunction_discrete(handles);
 pause(0.1);
 %handles.TargetDefinition.Data = handles.NewTargetDefinition.Data;
