@@ -6,12 +6,14 @@ end
 
 %% defaults
 timewindow = [-1 25]; % seconds
-framerate = 25; % w.r.t to sample rate of 500 Hz, actual rate = 50Hz
+video_framerate = 50; % Hz
+data_samplerate = 500;
+framerate = video_framerate*(data_samplerate/1000); % 25; % w.r.t to sample rate of 500 Hz, actual rate = 50Hz
 %frames_to_show = diff(timewindow)*framerate;
 frames_to_show = max(timewindow)*framerate;
 
 %% FilePaths
-vid_folder = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior/PM27_170728_t5';
+vid_folder = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior/Movies/Raw/PM27_170728_t5';
 filetag = 'fc2_save_2017-07-28-174142-'; %0000';
 DataFile = fullfile('/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior/PM27/PM27_20170728_r1.mat');
 
@@ -24,12 +26,13 @@ DataFile = fullfile('/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior/PM27/PM27_
 % time at which save camera was turned on
 %tstart = MySettings(find(diff(MySettings(1:end,16))==1)+1,1);
 updateAT = MySettings(find(diff(MySettings(1:end,16))==1)+1,1); % +1 because of diff
-tstart = TrialInfo.Timestamps(find(TrialInfo.Timestamps(:,1)>updateAT(1),1)-1,2); % time of trial off
+tstart = TrialInfo.Timestamps(find(TrialInfo.Timestamps(:,1)>updateAT(1),1)-1,2); % time of previous trial off
 datastart = find(MyData(:,1)>=tstart(1),1);
 t0 = MyData(datastart,1);
 base_offset = 0.3; % to allow for delays in matlab to arduino communication
 t0 = base_offset + t0;
-time_desired = 141 + 19; 
+time_desired = 160; 
+%frame_offset = round((time_desired - t0)*video_framerate) - 22;
 frame_offset = round((time_desired - t0)*framerate) - 22;
 t0 = time_desired;
  

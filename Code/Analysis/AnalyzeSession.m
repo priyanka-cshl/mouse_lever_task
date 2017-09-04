@@ -47,53 +47,17 @@ else
 end
 
 for i = 1:size(FileNames,2) 
-    i
-    %% core data extraction (and settings)
     Data.(['session',num2str(i)]).path = fullfile(FilePaths,FileNames{i});
-    [MyData.(['session',num2str(i)]).data, MyData.(['session',num2str(i)]).settings, TargetZones, FakeTargetZones] = ...
-        ExtractSessionData(fullfile(FilePaths,FileNames{i}));
-    MyFileName = FileNames{i};
     
-    %% Parse trials
-    [Lever, Motor, TrialInfo, TargetZones] = ChunkUpTrials(MyData.(['session',num2str(i)]).data, TargetZones, FakeTargetZones);
-    [Odors, ZonesToUse, LeverTruncated, MotorTruncated] = TruncateTrials(Lever, Motor, TrialInfo, TargetZones);
+    %Output = ParseSession(MyFileName, ReplotSession, Plotting)
+    Output = ParseSession(Data.(['session',num2str(i)]).path, ReplotSession, Plotting);
     
-    %% Correct for incorrect Target Zone assignments
-    [TrialInfo,MyData.(['session',num2str(i)]).data] = FixTargetZoneAssignments(MyData.(['session',num2str(i)]).data,TrialInfo,TargetZones,MyData.(['session',num2str(i)]).settings);
-    if ReplotSession
-        RecreateSession(MyData.(['session',num2str(i)]).data);
-    end
-    
-    %% Get TFs
-    [AllTFs] = GetAllTransferFunctions(MyData.(['session',num2str(i)]).settings, TargetZones(ZonesToUse,:));
-    
-    %% Trajectory Analysis
-    if i == 1
-        if any(find(~TrialInfo.TransferFunctionLeft))
-            SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones,1, 1);
-            OverLayTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones,1, 2);
-            [Trajectories] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones, 0, 0);
-        else
-            [Trajectories] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones, 1, 1);
-        end
-    else
-        [Trajectories] = OverLayTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones,1);
-    end
-    %[Trajectories] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones, Plotting);
-    
-    %% Basic session statistics
-    [NumTrials] = SessionStats(TrialInfo,Trajectories,ZonesToUse,TargetZones,Plotting);    
-    
-    %% Histograms
-    HistogramOfOccupancy(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, AllTFs, Trajectories, Plotting);
-    [StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, MyData.(['session',num2str(i)]).settings, Plotting);
-    
-    Data.(['session',num2str(i)]).TargetZones = TargetZones;
-    Data.(['session',num2str(i)]).ZonesToUse = ZonesToUse;
-    Data.(['session',num2str(i)]).TrialInfo = TrialInfo;
-    Data.(['session',num2str(i)]).Trajectories = Trajectories;
-    Data.(['session',num2str(i)]).StayTimes = StayTimes;
-    Data.(['session',num2str(i)]).TrialStats = TrialStats;
+    Data.(['session',num2str(i)]).TargetZones = Output.TargetZones;
+    Data.(['session',num2str(i)]).ZonesToUse = Output.ZonesToUse;
+    Data.(['session',num2str(i)]).TrialInfo = Output.TrialInfo;
+    Data.(['session',num2str(i)]).Trajectories = Output.Trajectories;
+    Data.(['session',num2str(i)]).StayTimes = Output.StayTimes;
+    Data.(['session',num2str(i)]).TrialStats = Output.TrialStats;
  
 end
 end
