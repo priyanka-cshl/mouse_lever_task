@@ -1,4 +1,4 @@
-function [TrialInfo] = FixTargetZoneAssignments(MyData,TrialInfo,TargetZones,Params);
+function [TrialInfo,MyData] = FixTargetZoneAssignments(MyData,TrialInfo,TargetZones,Params);
 
 % Find trials for which there is no record of successful updates to the Arduino
 
@@ -76,6 +76,8 @@ for t = 1:size(TrialInfo.Timestamps,1)
         end
         [~,SuggestedZone(t,1)] = max(ZoneScore);
         TrialInfo.TargetZoneType(t) = SuggestedZone(t,1);
+        MyData(start_idx:stop_idx,2) = TargetZones(SuggestedZone(t,1),1);
+        MyData(start_idx:stop_idx,3) = TargetZones(SuggestedZone(t,1),3);
     else
         SuggestedZone(t,1) = NaN;
     end

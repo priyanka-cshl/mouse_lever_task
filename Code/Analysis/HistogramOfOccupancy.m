@@ -67,6 +67,7 @@ if DoPlot
         ax = gca;
         ax.YLabel.String = char(Tags(k));
         ax.YLabel.FontSize = 12;
+        ax.YLabel.FontWeight = 'b';
         
         subplot(num_rows+1,2,subplot_num);
         imagesc(squeeze(CenteredHistogramMotor(k,:,:)));

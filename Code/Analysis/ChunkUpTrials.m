@@ -80,6 +80,8 @@ function [Lever, Motor, TrialInfo, TargetZones] = ChunkUpTrials(MyData, TargetZo
     TrialInfo.StayTimeStart(:,todelete) = [];
     TrialInfo.TrialID(:,todelete) = [];
     TrialInfo.Success(todelete,:) = [];
+    TrialInfo.Timestamps(todelete,:) = [];
+    TrialInfo.TimeIndices(todelete,:) = [];
     %TargetZones(f,:) = [];
     
 end
