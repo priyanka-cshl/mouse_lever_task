@@ -71,6 +71,13 @@ if TotalTime(end)>2
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1; % increment 'trial number'
         h.ProgressReport.Data(4-which_target,1) = h.ProgressReport.Data(4-which_target,1) + 1;
         h.ProgressReport.Data(4,1) = h.ProgressReport.Data(4,1) + 1;
+        if h.current_trial_block.Data(1)
+            h.ProgressReportLeft.Data(4-which_target,1) = h.ProgressReportLeft.Data(4-which_target,1) + 1;
+            h.ProgressReportLeft.Data(4,1) = h.ProgressReportLeft.Data(4,1) + 1;
+        else
+            h.ProgressReportRight.Data(4-which_target,1) = h.ProgressReportRight.Data(4-which_target,1) + 1;
+            h.ProgressReportRight.Data(4,1) = h.ProgressReportRight.Data(4,1) + 1;
+        end
         IsRewardedTrial = 0;
     end
 %     % Multiply by odor index
@@ -87,8 +94,15 @@ if TotalTime(end)>2
             h.RewardStatus.Data(1) = h.RewardStatus.Data(1) + 1; 
             h.ProgressReport.Data(4-which_target,2) = h.ProgressReport.Data(4-which_target,2) + 1;
             h.ProgressReport.Data(4,2) = h.ProgressReport.Data(4,2) + 1;
+            if h.current_trial_block.Data(1)
+                h.ProgressReportLeft.Data(4-which_target,2) = h.ProgressReportLeft.Data(4-which_target,2) + 1;
+                h.ProgressReportLeft.Data(4,2) = h.ProgressReportLeft.Data(4,2) + 1;
+            else
+                h.ProgressReportRight.Data(4-which_target,2) = h.ProgressReportRight.Data(4-which_target,2) + 1;
+                h.ProgressReportRight.Data(4,2) = h.ProgressReportRight.Data(4,2) + 1;
+            end
             h.water_received.Data = h.water_received.Data + 10*(h.RewardControls.Data(1)*0.015 - 0.042);
-            IsRewardedTrial = 1;
+             IsRewardedTrial = 1;
         else
             h.RewardStatus.Data(3) = h.RewardStatus.Data(3) + 1; 
             h.water_received.Data = h.water_received.Data + 10*(h.RewardControls.Data(4)*0.015 - 0.042);
@@ -227,7 +241,6 @@ fwrite(fid1,data,'double');
 %% for next round
 samplenum = samplenum + num_new_samples;
 last_data_value = event.Data(end,:);
-
 if callreward
     OdorLocator('reward_now_Callback',h.hObject,[],h);
 end
