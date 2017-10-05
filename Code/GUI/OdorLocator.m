@@ -258,7 +258,7 @@ global samplenum;
 global TargetLevel;
 global IsRewardedTrial;
 
-if get(handles.startAcquisition,'value')
+if get(handles.startAcquisition,'value')    
     % checks whether last file was saved and enable quiting if not
     if (handles.was_last_file_saved == 0)
         usrans = menu('warning -- last file did not save','quit','continue');

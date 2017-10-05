@@ -43,10 +43,6 @@ int target_which = 1; // stim A is target
 bool target_on = true;
 int stimulus_state[] = {0, 0}; // old, new
 long stimulus_state_timestamp = micros();
-byte stimulus_position_array[1199] = {20};
-const int stimulus_array_size = 1200;
-int stimulus_writepointer = 0;
-int stimulus_readpointer = 0;
 int delay_feedback_by = 0; // in timer periods (max = 1200)
 bool in_target_zone[2] = {false, false};
 bool timer_override = false; // to disable timer start after serial communication
@@ -66,7 +62,9 @@ unsigned short transfer_function[99] = {0}; // ArCOM aray needs unsigned shorts
 int motor_location = 1;
 int transfer_function_pointer = 0; // for transfer function calibration
 unsigned int my_location = 101;
+unsigned int left_first = 1;
 int rewarded_locations[2] = {101, 101};
+//bool move_motor_to_start = false;
 
 //variables : reward related
 int reward_state = 0;
@@ -84,7 +82,9 @@ int trialstate[] = {0, 0}; // old, new
 long trial_timestamp = micros();
 long trial_trigger_level[] = {52000, 13000}; // trigger On, trigger Off
 int trial_trigger_timing[] = {10, 20, 600, 3000}; // trigger hold, trigger smooth, trial min, trial max
-
+//bool waiting_for_update = true;
+//long trial_off_timestamp = micros();
+      
 //variables : general
 int i = 0;
 int check = 0;
@@ -148,10 +148,8 @@ void setup()
   }
 
   // fill stimulus position array
-  for (i = 0; i < stimulus_array_size; i++)
-  {
-    stimulus_position_array[i] = 20;
-  }
+  stimulus_state[0] = 181;
+  stimulus_state[1] = 181;
 
   // Timer for motor update
   Timer3.attachInterrupt(MoveMotor);
@@ -327,10 +325,7 @@ void loop()
   if (trialstate[1] != trialstate[0]) // trial state changes
   {
     reward_state = (int)(trialstate[1] == 4); // trial was just activated, rewards can be triggered now
-    if (trialstate[1] > trialstate[0])
-    {
-      trial_timestamp = micros();
-    }
+    trial_timestamp = micros();
     // manage odor valves
     if (timer_override)
     {
@@ -377,12 +372,10 @@ void loop()
             break;
           case 1: // Acquisition start handshake
             myUSB.writeUint16(6);
-            stimulus_writepointer = 0;
             // fill stimulus position array
-            for (i = 0; i < stimulus_array_size; i++)
-            {
-              stimulus_position_array[i] = 20;
-            }
+            stimulus_state[0] = 20;
+            stimulus_state[1] = 20;
+
             digitalWrite(odor_valves[0],HIGH);
             odor_ON = true;
             timer_override = true;
@@ -590,8 +583,6 @@ void UpdateAllParams()
   rewarded_locations[1] = 101 + param_array[19];
   target_on = (param_array[22] > 0);
   delay_feedback_by = ((int)target_on) * (param_array[22] - 1) / min_time_since_last_motor_call;
-  // ensure that the dlay does not exceed buffer size
-  delay_feedback_by = constrain(delay_feedback_by, 0, stimulus_array_size);
   for (i = 0; i < 3; i++)
   {
     fake_target_params[i] = param_array[24 + i]; // high lim, target, low lim
@@ -607,18 +598,10 @@ void UpdateAllParams()
 
 void MoveMotor()
 {
-  // read 'delayed' state
-  if (!motor_override)
+  if (!motor_override)// && (trialstate[1] == 4))
   {
-    stimulus_readpointer = (stimulus_writepointer + delay_feedback_by) % stimulus_array_size;
-    if (stimulus_position_array[stimulus_readpointer] > 0)
-    {
-      I2Cwriter(motor1_i2c_address, 10 + stimulus_position_array[stimulus_readpointer]);
-    }
+    I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
   }
-  // write the new state
-  stimulus_writepointer = (stimulus_writepointer + 1) % stimulus_array_size;
-  stimulus_position_array[stimulus_writepointer] = stimulus_state[1];
 
   if (!close_loop_mode)
   {
