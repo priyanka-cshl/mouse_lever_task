@@ -33,21 +33,24 @@ switch caller
         % convert to integers for Arduino communication purpose
         not_ints = [not_ints 9:10];
         
-        legend(11:14) = {'TriggerHOLD' 'TriggerSmooth' 'MinTrialLength' 'MaxTrialLength'};
+        legend(11:13) = {'TriggerHOLD' 'MinTrialLength' 'MaxTrialLength'};
         % add 0-100 ms jitter around the Trigger hold mean value
         % overwrite trigger mean value as zero in the arduino array - this
         % is the smoothing parameter
-        h.TrialSettings.Data(3) = h.TrialSettings.Data(4) + round(100*rand,0,'decimals');
-        param(11:14) = [h.TrialSettings.Data(3:6)];
+        % h.TrialSettings.Data(3) = h.TrialSettings.Data(4) + round(100*rand,0,'decimals');
+        param(11:13) = [h.TrialSettings.Data(3:5)];
+        %param(11:14) = [h.TrialSettings.Data(3:6)];
         
-        param(12) = h.MultiRewards.Value*h.RewardControls.Data(2);
+        param(14) = h.MultiRewards.Value*h.RewardControls.Data(2);
         
     case 1 % settings that update within a session
         legend(1) = {'Timestamp'};
         param(1) = h.timestamp.Data;
         
-        legend(2) = {'WhichTarget'};
-        param(2) = h.stimulus_map.Value;
+%         legend(2) = {'WhichTarget'};
+%         param(2) = h.stimulus_map.Value;
+        legend(2) = {'SummedTargetHold'};
+        param(2) = h.current_trial_block.Data(5)*h.summedholdfactor.Data(1);
         
         legend(3:5) = {'HighLim' 'Target' 'LowLim'};
         %param(3:5) = h.NewTargetDefinition.Data;
@@ -65,27 +68,29 @@ switch caller
         legend(6:8) = {'target_locations' 'skip_locations' 'offtarget_locations'};
         param(6:8) = h.locations_per_zone.Data(1:3);
         
-        legend(9) = {'StimulusDelay'};
-        if (h.is_stimulus_on.Value)
-            if h.current_trial_block.Data(3) == 1 && h.which_perturbation.Value == 2
-                param(9) = 1 + 1000*h.PerturbationSettings.Data(2);
-                %param(9) = 1 + h.PerturbationSettings.Data(2);
-            else
-                param(9) = 1;
-            end
-        else
-            param(9) = 0;
-        end
+%         legend(9) = {'StimulusDelay'};
+%         if (h.is_stimulus_on.Value)
+%             if h.current_trial_block.Data(3) == 1 && h.which_perturbation.Value == 2
+%                 param(9) = 1 + 1000*h.PerturbationSettings.Data(2);
+%                 %param(9) = 1 + h.PerturbationSettings.Data(2);
+%             else
+%                 param(9) = 1;
+%             end
+%         else
+%             param(9) = 0;
+%         end
+        legend(9) = {'LongITI'};
+        param(9) = h.TrialSettings.Data(end);
         
-        legend(10) = {'DistractorDelay'};
-        if (h.is_distractor_on.Value)
-            param(10) = 1 + h.delay_distractor_by.Data;
-        else
+        legend(10) = {'FeedbackDelay'};
+%         if (h.is_distractor_on.Value)
+%             param(10) = 1 + h.delay_distractor_by.Data;
+%         else
             param(10) = 0;
-        end
+%         end
         
         legend(11:13) = {'FakeHighLim' 'FakeTarget' 'FakeLowLim'};
-        if h.which_perturbation.Value == 3 && h.current_trial_block.Data(3) == 1
+        if h.which_perturbation.Value == 2 && h.current_trial_block.Data(3) == 1
             param(11:13) = h.PerturbationSettings.Data(3:5);
             % convert to integers for Arduino communication purpose
             not_ints = [not_ints 11:13];

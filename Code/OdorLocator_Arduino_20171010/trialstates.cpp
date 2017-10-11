@@ -14,9 +14,8 @@ void trialstates::UpdateTrialParams(long trigger_limits[], int trigger_time[])
   _trial_trigger_on = trigger_limits[0];
   _trial_trigger_off = trigger_limits[1];
   _min_trigger_on_duration = 1000 * trigger_time[0];
-  _trigger_smooth = 1000 * trigger_time[1];
-  _min_trial_duration = 1000 * trigger_time[2];
-  _max_trial_duration = 1000 * trigger_time[3];
+  _min_trial_duration = 1000 * trigger_time[1];
+  _max_trial_duration = 1000 * trigger_time[2];
 }
 
 void trialstates::UpdateITI(int long_iti)

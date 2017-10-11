@@ -52,12 +52,12 @@ if NoAntiBias
     % h.(['TargetLevel',num2str( 1 + mod(block_num-1,length(h.target_level_array.Data)) )]).Value = 1;
 end
 
-%% switch target and distractor if needed
-if h.is_distractor_on.Value
-    if mod(floor((block_num-1)/h.distractor_block_size.Data),2) ~= abs(h.stimulus_map - 1)
-        h.stimulus_map.value = abs(h.stimulus_map - 1);
-    end
-end
+% %% switch target and distractor if needed
+% if h.is_distractor_on.Value
+%     if mod(floor((block_num-1)/h.distractor_block_size.Data),2) ~= abs(h.stimulus_map - 1)
+%         h.stimulus_map.value = abs(h.stimulus_map - 1);
+%     end
+% end
 
 %% update odor
 % shuffle odor list
@@ -75,6 +75,13 @@ while (x + h.TargetHold.Data(2)) > h.TargetHold.Data(3)
 end
 h.current_trial_block.Data(5) = round(h.TargetHold.Data(2)+x,0);
 
+%% update trigger hold time
+x = exprnd(h.TriggerHold.Data(1));
+while (x + h.TriggerHold.Data(2)) > h.TriggerHold.Data(3)
+    x = exprnd(h.TriggerHold.Data(1));
+end
+h.TrialSettings.Data(3) = round(h.TriggerHold.Data(2)+x,0);
+
 %% feedback perturbation settings
 if (h.which_perturbation.Value)
     % bsed on the user set probability,
@@ -83,7 +90,7 @@ if (h.which_perturbation.Value)
     if (perturb ~= h.current_trial_block.Data(3))
         h.current_trial_block.Data(3) = perturb;
     end
-    if perturb && (h.which_perturbation.Value == 3) % decouple feedback
+    if perturb && (h.which_perturbation.Value == 2) % decouple feedback
         % select randomly a target level that is not currently in use
         %unused_targets = setdiff(h.target_level_array.Data,h.NewTargetDefinition.Data(2));
         unused_targets = setdiff(h.target_level_array.Data,h.TargetDefinition.Data(2));

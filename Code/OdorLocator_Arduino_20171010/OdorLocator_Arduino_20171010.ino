@@ -78,8 +78,9 @@ bool decouple_reward_and_stimulus = false;
 int trialstate[] = {0, 0}; // old, new
 long trial_timestamp = micros();
 long trial_trigger_level[] = {52000, 13000}; // trigger On, trigger Off
-int trial_trigger_timing[] = {10, 20, 600, 3000}; // trigger hold, trigger smooth, trial min, trial max
+int trial_trigger_timing[] = {10, 600, 3000}; // trigger hold, trigger smooth, trial min, trial max
 int long_iti = 0;
+int normal_iti = 0;
 
 //variables : general
 int i = 0;
@@ -162,7 +163,7 @@ void setup()
 
   // first call to set up params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
-  trialstates.UpdateITI(long_iti);
+  trialstates.UpdateITI(normal_iti);
 }
 
 
@@ -274,7 +275,7 @@ void loop()
   {
     reward_state = 3; // flag reward valve opening
     time_in_target_zone = 0; // reset timespent value
-    trialstates.UpdateITI(0); // don't impose any ITI
+    trialstates.UpdateITI(normal_iti); // don't impose any ITI
     Timer4.start(1000 * reward_params[1]); // call reward timer
   }
   if (reward_state == 5 && ((micros() - reward_zone_timestamp) > 1000 * multi_reward_params[0]))
@@ -349,12 +350,12 @@ void loop()
         {
           digitalWrite(odor_valves[i],(i==which_odor));
         }
-        // reset long ITI
-        trialstates.UpdateITI(long_iti); // will be changed to zero if animal receives a reward in the upcoming trial
       }
       else if (trialstate[1]==2)
       {
         odor_ON = true;
+        // reset long ITI
+        trialstates.UpdateITI(long_iti); // will be changed to zero if animal receives a reward in the upcoming trial
       }
     }
     
@@ -563,12 +564,13 @@ void UpdateAllParams()
   // param_array[6-7] : [rewards_per_block perturb_probability]
   trial_trigger_level[0] = param_array[8];
   trial_trigger_level[1] = param_array[9];
-  for (i = 0; i < 4; i++)
+  for (i = 0; i < 3; i++)
   {
-    trial_trigger_timing[i] = param_array[10 + i]; // trig_hold, trig_smooth, min_trial, max_trial
+    trial_trigger_timing[i] = param_array[10 + i]; // trig_hold, min_trial, max_trial
   }
+  
   // copy trig_smooth to multiplerewards
-  multiplerewards = trial_trigger_timing[1]; // dirty hack
+  multiplerewards = param_array[13];
 
   if (multiplerewards == 0)
   {

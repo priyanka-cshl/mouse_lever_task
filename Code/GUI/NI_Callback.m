@@ -140,10 +140,10 @@ set(h.stimulus_plot,'XData',TotalTime(indices_to_plot),'YData',...
 h.motor_location.YData = MapRotaryEncoderToTFColorMap(h,mean(event.Data(:,3)));
 %set(h.motor_location,'YData',mean(-1*h.RE_scaling.Data(1)*(TotalData(indices_to_plot,3) - h.RE_scaling.Data(2))));
 
-if h.is_distractor_on.Value
-    set(h.distractor_plot,'XData',TotalTime(indices_to_plot),'YData',...
-         -1*h.RE_scaling.Data(1)*(TotalData(indices_to_plot,4) - h.RE_scaling.Data(2)) );
-end
+% if h.is_distractor_on.Value
+%     set(h.distractor_plot,'XData',TotalTime(indices_to_plot),'YData',...
+%          -1*h.RE_scaling.Data(1)*(TotalData(indices_to_plot,4) - h.RE_scaling.Data(2)) );
+% end
 
 % respiration sensors
 set(h.respiration_1_plot,'XData',TotalTime(indices_to_plot),'YData',...
@@ -199,7 +199,7 @@ end
 %     h.targetzone.Faces = 1:4;
 set(h.minlim,'XData',TotalTime(indices_to_plot),'YData',...
     h.TrialSettings.Data(2) + 0*TotalTime(indices_to_plot));
-if h.current_trial_block.Data(3) == 1 && h.which_perturbation.Value == 3
+if h.current_trial_block.Data(3) == 1 && h.which_perturbation.Value == 2
     set(h.fake_target_plot,'XData',TotalTime(indices_to_plot),'YData',...
         h.PerturbationSettings.Data(4) + 0*TotalTime(indices_to_plot));
 else

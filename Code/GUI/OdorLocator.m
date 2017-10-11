@@ -137,7 +137,7 @@ handles.trial_on_3.EdgeColor = 'none';
 handles.lever_DAC_plot = plot(NaN, NaN,'k','linewidth',1); %lever rescaled
 handles.lever_raw_plot = plot(NaN, NaN, 'color',Plot_Colors('b')); %lever raw
 handles.stimulus_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor location
-handles.distractor_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % distractor location
+% handles.distractor_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % distractor location
 handles.respiration_1_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % respiration sensor 1
 handles.respiration_2_plot = plot(NaN, NaN, 'color',Plot_Colors('p')); % respiration sensor 2
 handles.homesensor_plot = plot(NaN, NaN,'k'); %homesensor
@@ -330,7 +330,7 @@ if get(handles.startAcquisition,'value')
         
         set(handles.reward_plot,'XData',NaN,'YData',NaN);
         set(handles.stimulus_plot,'XData',NaN,'YData',NaN);
-        set(handles.distractor_plot,'XData',NaN,'YData',NaN);
+%         set(handles.distractor_plot,'XData',NaN,'YData',NaN);
         set(handles.respiration_1_plot,'XData',NaN,'YData',NaN);
         set(handles.respiration_2_plot,'XData',NaN,'YData',NaN);
         set(handles.lick_plot,'XData',NaN,'YData',NaN);
@@ -692,25 +692,25 @@ if hObject.Data(3)<hObject.Data(1)
 end
 guidata(hObject, handles);
 
-function is_stimulus_on_Callback(hObject, eventdata, handles)
-Update_Params(handles);
+% function is_stimulus_on_Callback(hObject, eventdata, handles)
+% Update_Params(handles);
 
-% --- Executes on button press in is_distractor_on.
-function is_distractor_on_Callback(hObject, eventdata, handles)
-if get(hObject,'Value')
-    set(handles.distractor_plot,'LineStyle','-');
-else
-    set(handles.distractor_plot,'LineStyle','none');
-end
-delay_distractor_by_CellEditCallback(hObject, eventdata, handles);
+% % --- Executes on button press in is_distractor_on.
+% function is_distractor_on_Callback(hObject, eventdata, handles)
+% if get(hObject,'Value')
+%     set(handles.distractor_plot,'LineStyle','-');
+% else
+%     set(handles.distractor_plot,'LineStyle','none');
+% end
+% delay_distractor_by_CellEditCallback(hObject, eventdata, handles);
 
-% --- Executes when entered data in editable cell(s) in delay_distractor_by.
-function delay_distractor_by_CellEditCallback(hObject, eventdata, handles)
-Update_Params(handles);
+% % --- Executes when entered data in editable cell(s) in delay_distractor_by.
+% function delay_distractor_by_CellEditCallback(hObject, eventdata, handles)
+% Update_Params(handles);
 
-% --- Executes on button press in stimulus_map.
-function stimulus_map_Callback(hObject, eventdata, handles)
-Update_Params(handles);
+% % --- Executes on button press in stimulus_map.
+% function stimulus_map_Callback(hObject, eventdata, handles)
+% Update_Params(handles);
 
 
 % --- Executes on selection change in which_stage.
@@ -727,7 +727,7 @@ end
 Update_Params(handles);
 
 % --- Executes on selection change in which_perturbation.
-function which_perturbation_Callback(hObject, eventdata, handles)
+% function which_perturbation_Callback(hObject, eventdata, handles)
 % hObject    handle to which_perturbation (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
