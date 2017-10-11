@@ -39,11 +39,8 @@ int close_loop_mode = 1; // motor moves in sync with lever/analog signal
 int fake_lever = 0;
 
 //variables : stimulus related
-//int target_which = 1; // stim A is target
-//bool target_on = true;
 int stimulus_state[] = {0, 0}; // old, new
 long stimulus_state_timestamp = micros();
-//int delay_feedback_by = 0; // in timer periods (max = 1200)
 bool in_target_zone[2] = {false, false};
 bool timer_override = false; // to disable timer start after serial communication
 int training_stage = 2;
@@ -64,15 +61,15 @@ int transfer_function_pointer = 0; // for transfer function calibration
 unsigned int my_location = 101;
 unsigned int left_first = 1;
 int rewarded_locations[2] = {101, 101};
-//bool move_motor_to_start = false;
 
 //variables : reward related
 int reward_state = 0;
 long reward_zone_timestamp = micros();
 long trial_off_buffer = 0;
-int reward_params[] = {100, 40}; // {hold for, duration} in ms
+int reward_params[] = {100, 40, 0}; // {hold for, duration, summed hold for} in ms
 unsigned short multi_reward_params[] = {200, 10}; // {hold for, duration} in ms for the subsequent rewards within a trial
 int multiplerewards = 0; // only one reward per trial
+long time_in_target_zone = 0;
 
 //variables : perturbation related - water delivery decoupled from stimulus
 bool decouple_reward_and_stimulus = false;
@@ -82,7 +79,8 @@ int trialstate[] = {0, 0}; // old, new
 long trial_timestamp = micros();
 long trial_trigger_level[] = {52000, 13000}; // trigger On, trigger Off
 int trial_trigger_timing[] = {10, 20, 600, 3000}; // trigger hold, trigger smooth, trial min, trial max
-      
+int long_iti = 0;
+
 //variables : general
 int i = 0;
 int check = 0;
@@ -155,7 +153,6 @@ void setup()
 
   // Timer for reward delivery
   Timer4.attachInterrupt(RewardNow);
-  //Timer3.start(1000 * min_time_since_last_motor_call_default); // Calls every 10 msec
 
   // Timer for odor machine cleaning
   Timer5.attachInterrupt(CleaningRoutine);
@@ -165,6 +162,7 @@ void setup()
 
   // first call to set up params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
+  trialstates.UpdateITI(long_iti);
 }
 
 
@@ -248,6 +246,7 @@ void loop()
         if (!in_target_zone[1] && (reward_state == 2))
         {
           reward_state = 1; // was in reward zone in this trial, but exited reward zone before getting a reward, retrigger reward availability
+          time_in_target_zone = time_in_target_zone + (reward_zone_timestamp - micros());
         }
         if (multiplerewards > 0)
         {
@@ -274,12 +273,20 @@ void loop()
   if (reward_state == 2 && ((micros() - reward_zone_timestamp) > 1000 * reward_params[0]))
   {
     reward_state = 3; // flag reward valve opening
+    time_in_target_zone = 0; // reset timespent value
+    trialstates.UpdateITI(0); // don't impose any ITI
     Timer4.start(1000 * reward_params[1]); // call reward timer
   }
   if (reward_state == 5 && ((micros() - reward_zone_timestamp) > 1000 * multi_reward_params[0]))
   {
     reward_state = 6; // flag reward valve opening
     Timer4.start(1000 * multi_reward_params[1]); // call reward timer
+  }
+  if ( trialstate[0] == 4 && (time_in_target_zone > 1000 * reward_params[2]) )
+  {
+    reward_state = 3; // flag reward valve opening
+    time_in_target_zone = 0; // reset timespent value
+    Timer4.start(1000 * reward_params[1]); // call reward timer
   }
   //----------------------------------------------------------------------------
 
@@ -324,6 +331,7 @@ void loop()
   {
     reward_state = (int)(trialstate[1] == 4); // trial was just activated, rewards can be triggered now
     trial_timestamp = micros();
+    time_in_target_zone = 0; // reset timespent value
     // manage odor valves
     if (timer_override)
     {
@@ -341,6 +349,8 @@ void loop()
         {
           digitalWrite(odor_valves[i],(i==which_odor));
         }
+        // reset long ITI
+        trialstates.UpdateITI(long_iti); // will be changed to zero if animal receives a reward in the upcoming trial
       }
       else if (trialstate[1]==2)
       {
@@ -544,10 +554,12 @@ void UpdateAllParams()
   myUSB.writeUint16(89);
   // parse param array to variable names
   // param_array[0-1] : [sample_rate refresh_rate]
+
   lever_rescale_params[0] = param_array[2]; // gain, offset
   lever_rescale_params[1] = param_array[3];
   reward_params[0] = param_array[4];
   reward_params[1] = param_array[5];
+  reward_params[2] = param_array[15]; // originally target_which, now summed hold duration
   // param_array[6-7] : [rewards_per_block perturb_probability]
   trial_trigger_level[0] = param_array[8];
   trial_trigger_level[1] = param_array[9];
@@ -580,6 +592,7 @@ void UpdateAllParams()
   rewarded_locations[0] = 101 - param_array[19];
   rewarded_locations[1] = 101 + param_array[19];
   //target_on = (param_array[22] > 0);
+  long_iti = param_array[22];
   //delay_feedback_by = ((int)target_on) * (param_array[22] - 1) / min_time_since_last_motor_call;
   for (i = 0; i < 3; i++)
   {
@@ -612,7 +625,6 @@ void MoveMotor()
 
 void RewardNow()
 {
-  //if ((reward_state % 3 == 0) && timer_override)
   if ( ((reward_state == 3)||(reward_state == 6)) && timer_override )
   {
     digitalWrite(reward_valve_pin, HIGH);
@@ -625,7 +637,6 @@ void RewardNow()
     Timer4.stop();
     digitalWrite(reward_valve_pin, LOW);
     digitalWrite(reward_reporter_pin, LOW);
-    //reward_zone_timestamp = micros();
   }
 }
 

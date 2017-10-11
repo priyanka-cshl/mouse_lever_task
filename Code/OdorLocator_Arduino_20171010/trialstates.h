@@ -11,9 +11,9 @@ class trialstates
 {
 	public:
 		trialstates();
-	  	void UpdateTrialParams(long trigger_limits[], int trigger_time[]);   
+	  	void UpdateTrialParams(long trigger_limits[], int trigger_time[]);
+	  	void UpdateITI(int long_iti);   
 	  	int WhichState(int trialstate, long lever_position, long time_since_last_change);
-        void TrialSwitch();
 	private:
   	  	int _trialstate;
 		long _lever_position;
@@ -24,6 +24,7 @@ class trialstates
 		int _max_trial_duration;// in ms
         int _min_trial_duration;// in ms
         int _trigger_smooth;// in ms
+        int _iti; // in ms
 };
 
 #endif

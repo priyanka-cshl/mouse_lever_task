@@ -19,6 +19,11 @@ void trialstates::UpdateTrialParams(long trigger_limits[], int trigger_time[])
   _max_trial_duration = 1000 * trigger_time[3];
 }
 
+void trialstates::UpdateITI(int long_iti)
+{
+  _iti = 1000 * long_iti;
+}
+
 int trialstates::WhichState(int trialstate, long lever_position, long time_since_last_change)
 {
   // parse values from public variables to private variables
@@ -29,7 +34,8 @@ int trialstates::WhichState(int trialstate, long lever_position, long time_since
   switch (_trialstate)
   {
     case 0: // pre-trial state
-      if (_lever_position > _trial_trigger_on)
+      if ( (_lever_position > _trial_trigger_on)
+        & _time_since_last_change > _iti )
       {
         _trialstate = 1;
       }
