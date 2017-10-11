@@ -37,15 +37,12 @@ switch char(handles.computername)
         % shrink target zone
         handles.ShrinkTargetLocations.Value = 1;
         
-        
     case 'PRIYANKA-PC'
         handles.file_names.Data(2) = {'C:\Data\Behavior'};
         handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\Behavior'};
         handles.NIchannels = 11;
-        handles.DAC_settings.Data = [2.2 0.7]';
         % motor location settings
         handles.motor_params = 4;
-        handles.TrialSettings.Data(2) = 0.5;
         % disable transfer function calibrator
         handles.calibrate_transfer_function.Enable = 'off';
         % MFC settings
@@ -55,7 +52,7 @@ switch char(handles.computername)
         % TF - locations per zone
         handles.locations_per_zone.Data = [50 0 50]'; % [20 0 80]'
         % Trial settings
-        handles.TrialSettings.Data = [4.5 0.2 100 20 600 2000]';
+        handles.TrialSettings.Data = [300 1000 2000 200 4000 50]';
         % zone width
         handles.ZoneLimitSettings.Data(1) = 0.7;%[0.4 0.1]';
         % reward settings
