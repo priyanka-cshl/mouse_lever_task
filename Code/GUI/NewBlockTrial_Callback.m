@@ -9,7 +9,7 @@ end
 
 global IsRewardedTrial;
 
-display('----------New Trial------------------------------');
+disp(['---------- New Trial (#', num2str(h.current_trial_block.Data(2)),') ----------']);
 
 %% shuffle arrays of targets after all targets have been used
 h.target_level_array.Data = h.target_level_array.Data(randperm(length(h.target_level_array.Data)) );
