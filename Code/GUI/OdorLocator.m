@@ -520,18 +520,18 @@ if usrans == 1
     session_data.trace_legend = Connections_list();
     session_data.params = b';
     session_data.TF = c';
-    session_data.ForNextSession = [handles.DAC_settings.Data' handles.TrialSettings.Data(4) handles.RewardControls.Data(3) handles.TFLeftprobability.Data(1)];
-    session_data.ForNextSession_Legends = {'DAQGain', 'DAQDC', 'TriggerHoldMean', 'RewardHold-II', 'LeftvsRightTFs' };
+    session_data.ForNextSession = [handles.DAC_settings.Data' handles.TriggerHold.Data' handles.RewardControls.Data(3) handles.TFLeftprobability.Data(1)];
+    session_data.ForNextSession_Legends = {'DAQGain', 'DAQDC', 'TriggerHoldMin', 'TriggerHoldMean', 'TriggerHoldMax', 'RewardHold-II', 'LeftvsRightTFs' };
     
     save(filename,'session_data*');
     save(server_file_name,'session_data*');
     clear a b c session_data
     display(['saved to ' filename])
     display(['saved to ' server_file_name])
-%     set(gcf,'PaperPositionMode','auto')
-%     print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
-%         '-dpng','-r0');
-%     display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
+    set(gcf,'PaperPositionMode','auto')
+    print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
+        '-dpng','-r0');
+    display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
     guidata(hObject, handles);
 end
 
