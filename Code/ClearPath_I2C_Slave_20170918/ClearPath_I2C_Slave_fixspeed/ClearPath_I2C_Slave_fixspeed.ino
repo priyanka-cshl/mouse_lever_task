@@ -35,7 +35,6 @@ volatile bool homing = 0;
 
 // SPI variables
 volatile int Wire_received = 0; //edited
-//byte motor_positions[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 byte motor_positions = 0;
 byte readpointer = 0;
 byte writepointer = 0;
@@ -68,7 +67,7 @@ void setup ()
   attachInterrupt(digitalPinToInterrupt(end_stop_pin_left), SafetyStopLeft, LOW);
   attachInterrupt(digitalPinToInterrupt(end_stop_pin_right), SafetyStopRight, FALLING);
   // debugging
-  Serial.begin (115200);
+ Serial.begin (115200);
 }
 
 void receiveEvent(int howmany) // I2C interrupt routine
@@ -139,11 +138,6 @@ void FindHome(bool which_direction)
       // update location and release motor for directed movements
       current_location = home_location;
       desired_location = home_location;
-      // overwite all values in buffer to home location
-//      for (int h = 0; h < 10; h++)
-//      {
-//        motor_positions[h] = home_location + 10;
-//      }
       motor_positions = home_location + 10;
       digitalWrite(enable_pin, motor_ON); // turn On if motor was ON before
       busy = 0;
@@ -163,11 +157,6 @@ void FindHome(bool which_direction)
       // update location and release motor for directed movements
       current_location = home_location;
       desired_location = home_location;
-      // overwite all values in buffer to home location
-//      for (int h = 0; h < 10; h++)
-//      {
-//        motor_positions[h] = home_location + 10;
-//      }
       motor_positions = home_location + 10;
       digitalWrite(enable_pin, motor_ON); // turn On if motor was ON before
       busy = 0;
@@ -191,11 +180,12 @@ void loop ()
       delta_steps = stepsize * abs(desired_location - current_location);
       if ( delta_steps <= 50 )
       {
-        step_wait = round(4000 / delta_steps);
+        step_wait = round(8000 / delta_steps);
       }
       else
       {
-        step_wait = round(6000 / delta_steps);
+        step_wait = 100;
+        //step_wait = round(6000 / delta_steps);
       }
     }
     else
@@ -274,11 +264,6 @@ void MyCheatHome()
       // update location and release motor for directed movements
       current_location = home_location;
       desired_location = home_location;
-      // overwite all values in buffer to home location
-//      for (int h = 0; h < 10; h++)
-//      {
-//        motor_positions[h] = home_location + 10;
-//      }
       motor_positions = home_location + 10;
   }
   else if (digitalRead(end_stop_pin_left))

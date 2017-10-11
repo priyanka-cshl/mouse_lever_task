@@ -21,32 +21,27 @@ while (sent == 0) && (sending_attempts <=8 )
     end
     h.Arduino.write(20,'uint16'); % handler code for parameter update
     h.Arduino.write(length(ParamArray),'uint16'); % tell Arduino how many params are going to be written
-    % if the write fails, Arduino writes back -1
-    if (h.Arduino.Port.BytesAvailable)==0 % Arduino did not write back
-        % write the params
-        ParamArray = uint16(ParamArray);
-        h.Arduino.write(ParamArray, 'uint16');
-        pause(.1);
-        % for every param Arduino writes back the param value
-        if (h.Arduino.Port.BytesAvailable)>1
-            params_returned = h.Arduino.read(h.Arduino.Port.BytesAvailable/2,'uint16');
-            if length(params_returned) >= length(ParamArray)
-                if all(params_returned(1:end-1) == ParamArray') && params_returned(end) == 89
-                    disp(['arduino: params updated: attempts = ' num2str(sending_attempts+1)])
-                    sent = 1;
-                    h.TargetHold.ForegroundColor = 'k';
-                else
-                    pause(.1);
-                    sending_attempts = sending_attempts + 1';
-                end
-            else
-                pause(.1)
-                sending_attempts = sending_attempts + 1';
-            end
+    
+    % write the params
+    ParamArray = uint16(ParamArray);
+    h.Arduino.write(ParamArray, 'uint16');
+    tic;
+    while toc<0.5 && h.Arduino.Port.BytesAvailable<2*(length(ParamArray)+1)
+    end
+    % for every param Arduino writes back the param value
+    if (h.Arduino.Port.BytesAvailable)==2*(length(ParamArray)+1)
+        params_returned = h.Arduino.read(h.Arduino.Port.BytesAvailable/2,'uint16');
+        if all(params_returned(1:end-1) == ParamArray') && params_returned(end) == 89
+            disp(['arduino: params updated: attempts = ' num2str(sending_attempts+1),'; time = ',num2str(toc),' seconds'])
+            sent = 1;
+            h.TargetHold.ForegroundColor = 'k';
         else
-            pause(.1)
-            sending_attempts = sending_attempts+1';
+            pause(.1);
+            sending_attempts = sending_attempts + 1';
         end
+    else
+        pause(.1)
+        sending_attempts = sending_attempts+1';
     end
 end
 

@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 30-Jun-2017 15:10:59
+% Last Modified by GUIDE v2.5 30-Sep-2017 18:21:20
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -72,11 +72,20 @@ handles.TargetDefinition.Data(2) = handles.target_level_array.Data(2);
 % clear indicators
 handles.RewardStatus.Data = [0 0 0]';
 handles.ProgressReport.Data = zeros(4,3);
+handles.ProgressReportLeft.Data = zeros(4,3);
+handles.ProgressReportRight.Data = zeros(4,3);
 handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
 handles.water_received.Data = 0;
 handles.Date.String = datestr(now, 'mm-dd-yy');
 handles.StartTime.Visible = 'off';
 handles.StopTime.Visible = 'off';
+
+% set progress report display type to All trials
+handles.reporttype = 0;
+handles.reporttag.String = 'All trials';
+handles.ProgressReport.Visible = 'on';
+handles.ProgressReportLeft.Visible = 'off';
+handles.ProgressReportRight.Visible = 'off';
 
 % load mouse specific settings
 handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
@@ -249,7 +258,7 @@ global samplenum;
 global TargetLevel;
 global IsRewardedTrial;
 
-if get(handles.startAcquisition,'value')
+if get(handles.startAcquisition,'value')    
     % checks whether last file was saved and enable quiting if not
     if (handles.was_last_file_saved == 0)
         usrans = menu('warning -- last file did not save','quit','continue');
@@ -303,6 +312,8 @@ if get(handles.startAcquisition,'value')
         % clear indicators
         handles.RewardStatus.Data = [0 0 0]';
         handles.ProgressReport.Data = zeros(4,3);
+        handles.ProgressReportLeft.Data = zeros(4,3);
+        handles.ProgressReportRight.Data = zeros(4,3);
         handles.water_received.Data = 0;
         handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
         handles.update_call = 1;
@@ -517,16 +528,12 @@ if usrans == 1
     clear a b c session_data
     display(['saved to ' filename])
     display(['saved to ' server_file_name])
-    set(gcf,'PaperPositionMode','auto')
-    print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
-        '-dpng','-r0');
-    display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
+%     set(gcf,'PaperPositionMode','auto')
+%     print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
+%         '-dpng','-r0');
+%     display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
     guidata(hObject, handles);
 end
-
-% --- Executes when entered data in editable cell(s) in TrialSettings.
-function TrialSettings_CellEditCallback(hObject, eventdata, handles)
-Update_Params(handles);
 
 % --- Executes on button press in open_valve.
 function open_valve_Callback(hObject, eventdata, handles)
@@ -1156,3 +1163,29 @@ handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
 handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
 guidata(hObject, handles);
 % Hint: get(hObject,'Value') returns toggle state of TargetLevel1Active
+
+
+% --- Executes on button press in trialtypetoggle.
+function trialtypetoggle_Callback(hObject, eventdata, handles)
+% hObject    handle to trialtypetoggle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.reporttype = mod(handles.reporttype + 1,3); % toggles between 0,1,2
+switch handles.reporttype
+    case 0 % all trials
+        handles.reporttag.String = 'All trials';
+        handles.ProgressReport.Visible = 'on';
+        handles.ProgressReportLeft.Visible = 'off';
+        handles.ProgressReportRight.Visible = 'off';
+    case 1
+        handles.reporttag.String = 'Left trials';
+        handles.ProgressReport.Visible = 'off';
+        handles.ProgressReportLeft.Visible = 'on';
+        handles.ProgressReportRight.Visible = 'off';
+    case 2
+        handles.reporttag.String = 'Right trials';
+        handles.ProgressReport.Visible = 'off';
+        handles.ProgressReportLeft.Visible = 'off';
+        handles.ProgressReportRight.Visible = 'on';
+end
+guidata(hObject, handles);

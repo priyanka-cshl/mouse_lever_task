@@ -4,6 +4,7 @@
 #include <Wire.h> // library for I2C communication - to slave Arduinos
 #include <DueTimer.h> // Import the ArCOM library
 #include "ArCOM.h"
+// #include "LeverToStimulus.h" // function to convert lever position to stimuli
 // ----------------------------------------------------------------------------
 
 // ---- initialize function calls ---------------------------------------------
@@ -22,12 +23,16 @@ int reward_reporter_pin = 47;
 int reward_valve_pin = 8;
 int target_valves[] = {9, 10};
 int odor_valves[] = {37, 31, 33, 35};
+//int distractor_valves[] = {35, 39};
+//int target_MFC[] = {23, 25};
+//int distractor_MFC[] = {39, 33};
 
 //communication related
 int dac_spi_pin = 22;
 const byte SDA_pin = 20;
 const byte SCL_pin = 21;
 int motor1_i2c_address = 7;
+//int motor2_i2c_address = 8;
 
 //variables : lever related
 long lever_position = 0L;
@@ -52,17 +57,26 @@ bool in_target_zone[2] = {false, false};
 bool timer_override = false; // to disable timer start after serial communication
 int training_stage = 2;
 
+////variables : distractor related
+//bool distractor = false;
+//int distractor_position_array[255] = {0};
+//unsigned long distractor_timestamp_array[255] = {micros()};
+//int distractor_writepointer = 0;
+//int distractor_readpointer = 0;
+//int delay_distractor_by = 20000; // in milliseconds
+
 // MFC related and valves related
 int which_odor = 0;
 bool odor_ON = true;
 bool target_valve_state[2] = {false, false};
+//bool distractor_valve_state = false;
 
 //variables : motor and transfer function related
 bool motor_override = false;
 const int min_time_since_last_motor_call_default = 10; // in ms
 int min_time_since_last_motor_call = 10; // in ms - timer period
-unsigned int num_of_locations = 100;
-unsigned short transfer_function[99] = {0}; // ArCOM aray needs unsigned shorts
+unsigned int num_of_locations = 1200;
+unsigned short transfer_function[1199] = {0}; // ArCOM aray needs unsigned shorts
 int motor_location = 1;
 int transfer_function_pointer = 0; // for transfer function calibration
 unsigned int my_location = 101;
@@ -113,6 +127,12 @@ void setup()
   {
     pinMode(target_valves[i], OUTPUT);
     digitalWrite(target_valves[i], LOW);
+    //    pinMode(target_MFC[i], OUTPUT);
+    //    digitalWrite(target_MFC[i], LOW);
+    //    pinMode(distractor_MFC[i], OUTPUT);
+    //    digitalWrite(distractor_MFC[i], LOW);
+    //    pinMode(distractor_valves[i], OUTPUT);
+    //    digitalWrite(distractor_valves[i], LOW);
   }
 
   for (i = 0; i < 4; i++)
@@ -241,6 +261,7 @@ void loop()
     {
       stimulus_state_timestamp = micros(); // valid event
       // update reward zone time stamp, if needed
+      // if (!decouple_reward_and_stimulus && (trialstate[0] == 4))
       if (trialstate[0] == 4)
       {
         if (in_target_zone[1] && (reward_state == 1)) 
@@ -421,12 +442,31 @@ void loop()
         }
         break;
       case 20: // update variables
+        serial_clock = millis();
+        while ( myUSB.available() < 2 && (millis() - serial_clock) < 1000 )
+        { } // wait for serial input or time-out
+        if (myUSB.available() < 2)
+        {
+          myUSB.writeUint16(1);
+        }
+        else
+        {
           num_of_params = myUSB.readUint16(); // get number of params to be updated
           myUSB.readUint16Array(param_array, num_of_params);
           myUSB.writeUint16Array(param_array, num_of_params);
           UpdateAllParams(); // parse param array to variable names and update motor params
+        }
         break;
       case 30: // update transfer function or calibrate transfer function
+//        serial_clock = millis();
+//        while ( myUSB.available() < 2 && (millis() - serial_clock) < 10000 )
+//        { } // wait for serial input or time-out
+//        if (myUSB.available() < 2)
+//        {
+//          myUSB.writeUint16(1);
+//        }
+//        else
+//        {
           switch (FSMheader - 30)
           {
             case 0: // close loop
@@ -444,10 +484,35 @@ void loop()
           myUSB.writeUint16Array(transfer_function, num_of_locations);
           myUSB.writeUint16(83);
           transfer_function_pointer = 0;
+//        }
         break;
       case 40: // toggle MFCs or odor valves
         switch (FSMheader - 40)
         {
+          case 0: // MFCs OFF
+            for (i = 0; i < 2; i++)
+            {
+              //digitalWrite(target_MFC[i], LOW);
+            }
+            break;
+          case 1: // MFCs ON
+            for (i = 0; i < 2; i++)
+            {
+              //digitalWrite(target_MFC[i], HIGH);
+            }
+            break;
+          case 2: // MFCs OFF
+            for (i = 0; i < 2; i++)
+            {
+              //digitalWrite(distractor_MFC[i], LOW);
+            }
+            break;
+          case 3: // MFCs ON
+            for (i = 0; i < 2; i++)
+            {
+              //digitalWrite(distractor_MFC[i], HIGH);
+            }
+            break;
           case 4: // target valves
             target_valve_state[0] = false;
             break;
@@ -463,6 +528,20 @@ void loop()
         }
         break;
       case 50: // update motor variables
+        serial_clock = millis();
+        while ( myUSB.available() < 2 && (millis() - serial_clock) < 1000 )
+        { } // wait for serial input or time-out
+        if (myUSB.available() < 2)
+        {
+          myUSB.writeUint16(1);
+        }
+        else
+        {
+          num_of_params = myUSB.readUint16(); // get number of params to be updated
+          //myUSB.readUint16Array(motor_zone_limits, num_of_params);
+          //myUSB.writeUint16Array(motor_zone_limits, num_of_params);
+          UpdateMotorParams(); // parse param array to variable names and update motor params
+        }
         break;
       case 60: // motor related
         switch (FSMheader - 60)
@@ -592,6 +671,9 @@ void UpdateAllParams()
   delay_feedback_by = ((int)target_on) * (param_array[22] - 1) / min_time_since_last_motor_call;
   // ensure that the dlay does not exceed buffer size
   delay_feedback_by = constrain(delay_feedback_by, 0, stimulus_array_size);
+
+  //distractor = (param_array[23] > 0);
+  //delay_distractor_by = ((int)distractor) * (param_array[23] - 1);
   for (i = 0; i < 3; i++)
   {
     fake_target_params[i] = param_array[24 + i]; // high lim, target, low lim
@@ -599,10 +681,18 @@ void UpdateAllParams()
   decouple_reward_and_stimulus = (fake_target_params[1] > 0);
   //param_array[27] = TF size;
   training_stage = param_array[28];
+  // update motor targets
+  // LeverToStimulus.UpdateTargetParams(target_params, fake_target_params, trial_trigger_level[1]);
+
   fake_lever = param_array[29];
   
   // update trial state params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
+}
+
+void UpdateMotorParams()
+{
+  myUSB.writeUint16(89);
 }
 
 void MoveMotor()

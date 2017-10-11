@@ -42,11 +42,12 @@ server_file_name=[foldername_server,filesep,animal_name,filesep,file_final_name]
 if ~exist(fileparts(server_file_name))
     mkdir(fileparts(server_file_name));
 end
+
 % read session settings
 load('C:\temp_data_files\session_settings.mat'); % loads variable settings
-session_data = settings;
+session_data = mysettings;
 session_data.timestamps = a(1,:)';
-session_data.trace = a(2:num_channels+1,:)';
+session_data.trace = a(2:end,:)';
 session_data.trace_legend = Connections_list();
 session_data.params = b';
 session_data.TF = c';

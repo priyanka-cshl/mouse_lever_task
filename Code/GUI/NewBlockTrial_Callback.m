@@ -9,7 +9,7 @@ end
 
 global IsRewardedTrial;
 
-display('----------New Trial------------------------------');
+disp(['---------- New Trial (#', num2str(h.current_trial_block.Data(2)),') ----------']);
 
 %% shuffle arrays of targets after all targets have been used
 h.target_level_array.Data = h.target_level_array.Data(randperm(length(h.target_level_array.Data)) );
@@ -21,8 +21,11 @@ h.current_trial_block.Data(1) = (rand(1)<h.TFLeftprobability.Data(1)); % 50% cha
 % block_num = block_num + 1;
 % h.current_trial_block.Data(1) = block_num; % update 'block number'
 
+% update performance
 for i = 1:size(h.ProgressReport.Data,1)
     h.ProgressReport.Data(i,3) = round(100*h.ProgressReport.Data(i,2)/h.ProgressReport.Data(i,1),0,'decimals');
+    h.ProgressReportLeft.Data(i,3) = round(100*h.ProgressReportLeft.Data(i,2)/h.ProgressReportLeft.Data(i,1),0,'decimals');
+    h.ProgressReportRight.Data(i,3) = round(100*h.ProgressReportRight.Data(i,2)/h.ProgressReportRight.Data(i,1),0,'decimals');
 end
 
 %% update target level
