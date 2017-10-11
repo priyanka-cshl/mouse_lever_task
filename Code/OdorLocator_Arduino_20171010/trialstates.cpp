@@ -33,8 +33,7 @@ int trialstates::WhichState(int trialstate, long lever_position, long time_since
   switch (_trialstate)
   {
     case 0: // pre-trial state
-      if ( (_lever_position > _trial_trigger_on)
-        & _time_since_last_change > _iti )
+      if (_lever_position > _trial_trigger_on)  
       {
         _trialstate = 1;
       }
@@ -66,11 +65,17 @@ int trialstates::WhichState(int trialstate, long lever_position, long time_since
       if ( (_lever_position < _trial_trigger_off)
            & _time_since_last_change < _min_trial_duration )
       {
-        _trialstate = 0;
+        _trialstate = 5;
       }
       // if time elapsed is more than _max_trial_duration
       // terminate trial
       if ( _time_since_last_change > _max_trial_duration )
+      {
+        _trialstate = 5;
+      }
+      break;
+    case 5: // in penalty ITI
+      if ( time_since_last_change > _iti )
       {
         _trialstate = 0;
       }

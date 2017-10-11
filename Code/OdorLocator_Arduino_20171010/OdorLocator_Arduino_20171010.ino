@@ -321,7 +321,7 @@ void loop()
     // note: reward_zone_timestamp will be updated when reward valve is turned off
     if ( trialstate[0]==4 && ( (reward_state==4)||(reward_state==7) ) && (micros() - reward_zone_timestamp)>trial_off_buffer)
     {
-      trialstate[1] = 0;
+      trialstate[1] = 5;
     }
     else
     {
@@ -332,7 +332,6 @@ void loop()
   {
     reward_state = (int)(trialstate[1] == 4); // trial was just activated, rewards can be triggered now
     trial_timestamp = micros();
-    time_in_target_zone = 0; // reset timespent value
     // manage odor valves
     if (timer_override)
     {
@@ -356,6 +355,7 @@ void loop()
         odor_ON = true;
         // reset long ITI
         trialstates.UpdateITI(long_iti); // will be changed to zero if animal receives a reward in the upcoming trial
+        time_in_target_zone = 0; // reset timespent value
       }
     }
     
