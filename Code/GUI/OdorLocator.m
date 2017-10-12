@@ -520,8 +520,8 @@ if usrans == 1
     session_data.trace_legend = Connections_list();
     session_data.params = b';
     session_data.TF = c';
-    session_data.ForNextSession = [handles.DAC_settings.Data' handles.TriggerHold.Data' handles.RewardControls.Data(3) handles.TFLeftprobability.Data(1)];
-    session_data.ForNextSession_Legends = {'DAQGain', 'DAQDC', 'TriggerHoldMin', 'TriggerHoldMean', 'TriggerHoldMax', 'RewardHold-II', 'LeftvsRightTFs' };
+    session_data.ForNextSession = [handles.DAC_settings.Data' handles.TriggerHold.Data' handles.RewardControls.Data(3) handles.TFLeftprobability.Data(1) handles.summedholdfactor.Data];
+    session_data.ForNextSession_Legends = {'DAQGain', 'DAQDC', 'TriggerHoldMin', 'TriggerHoldMean', 'TriggerHoldMax', 'RewardHold-II', 'LeftvsRightTFs', 'SummedHoldFactor' };
     
     save(filename,'session_data*');
     save(server_file_name,'session_data*');

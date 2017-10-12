@@ -51,7 +51,7 @@ switch caller
 %         param(2) = h.stimulus_map.Value;
         legend(2) = {'SummedTargetHold'};
         param(2) = h.TargetHold.Data(3)*h.summedholdfactor.Data(1);
-        
+
         legend(3:5) = {'HighLim' 'Target' 'LowLim'};
         %param(3:5) = h.NewTargetDefinition.Data;
         param(3:5) = h.TargetDefinition.Data;

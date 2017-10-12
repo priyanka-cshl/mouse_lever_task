@@ -13,15 +13,14 @@ if ~isempty(Allfiles)
         handles.locations_per_zone.Data = X.session_data.params(end,21:23)';
         handles.RewardControls.Data(1) = X.session_data.params(end,7);
         handles.ZoneLimitSettings.Data(1) = X.session_data.params(end,2);
-        handles.TriggerHold.Data(2) = X.session_data.params(end,12);
+        %handles.TriggerHold.Data(2) = X.session_data.params(end,12);
         %handles.TrialSettings.Data(4) = X.session_data.params(end,12);
         if isfield(X.session_data, 'ForNextSession')
             handles.DAC_settings.Data = X.session_data.ForNextSession(1:2)';
-            %handles.TrialSettings.Data(4) = X.session_data.ForNextSession(3);
-            if numel(X.session_data.ForNextSession)>3
-                handles.RewardControls.Data(3) = X.session_data.ForNextSession(4);
-                handles.TFLeftprobability.Data(1) = X.session_data.ForNextSession(5);
-            end
+            handles.TriggerHold.Data = X.session_data.ForNextSession(3:5)';
+            handles.RewardControls.Data(3) = X.session_data.ForNextSession(6);
+            handles.TFLeftprobability.Data(1) = X.session_data.ForNextSession(7);
+            %handles.summedholdfactor.Data = X.session_data.ForNextSession(8);
         end
         if strcmp(X.session_data.legends_trial(11),'IRI')
             handles.RewardControls.Data(2) = X.session_data.params(end,11);

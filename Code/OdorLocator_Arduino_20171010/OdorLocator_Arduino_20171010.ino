@@ -65,6 +65,7 @@ int rewarded_locations[2] = {101, 101};
 //variables : reward related
 int reward_state = 0;
 long reward_zone_timestamp = micros();
+long total_reward_zone_timestamp = micros();
 long trial_off_buffer = 0;
 int reward_params[] = {100, 40, 0}; // {hold for, duration, summed hold for} in ms
 unsigned short multi_reward_params[] = {200, 10}; // {hold for, duration} in ms for the subsequent rewards within a trial
@@ -225,6 +226,12 @@ void loop()
       in_target_zone[i] = (stimulus_state[1] == constrain(stimulus_state[1], rewarded_locations[0], rewarded_locations[1]));
     }
   }
+
+  if ((in_target_zone[1]) && trialstate[0] == 4)
+  {
+    time_in_target_zone = time_in_target_zone + (total_reward_zone_timestamp - micros());
+    total_reward_zone_timestamp = micros();
+  }
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
@@ -247,7 +254,6 @@ void loop()
         if (!in_target_zone[1] && (reward_state == 2))
         {
           reward_state = 1; // was in reward zone in this trial, but exited reward zone before getting a reward, retrigger reward availability
-          time_in_target_zone = time_in_target_zone + (reward_zone_timestamp - micros());
         }
         if (multiplerewards > 0)
         {
@@ -296,8 +302,8 @@ void loop()
   //----------------------------------------------------------------------------
   if (!cleaningON)
   {
-    digitalWrite(target_valves[0], (target_valve_state[0] || (trialstate[0] != 0) || !close_loop_mode) ); // open odor valve
-    digitalWrite(target_valves[1], (target_valve_state[1] || (trialstate[0] != 0) || !close_loop_mode) ); // open air valve
+    digitalWrite(target_valves[0], (target_valve_state[0] || ((trialstate[0] > 0) && (trialstate[0] < 5)) || !close_loop_mode) ); // open odor valve
+    digitalWrite(target_valves[1], (target_valve_state[1] || ((trialstate[0] > 0) && (trialstate[0] < 5)) || !close_loop_mode) ); // open air valve
   }
 
   digitalWrite(trial_reporter_pin, (trialstate[0] == 4)); // active trial?
@@ -356,6 +362,15 @@ void loop()
         // reset long ITI
         trialstates.UpdateITI(long_iti); // will be changed to zero if animal receives a reward in the upcoming trial
         time_in_target_zone = 0; // reset timespent value
+      }
+      else if ((trialstate[1]==5) && odor_ON)
+      {
+        digitalWrite(odor_valves[0],true);
+        for (i=1; i<4; i++)
+        {
+          digitalWrite(odor_valves[i],false);
+          odor_ON = false;
+        }
       }
     }
     
