@@ -65,7 +65,6 @@ int rewarded_locations[2] = {101, 101};
 //variables : reward related
 int reward_state = 0;
 long reward_zone_timestamp = micros();
-long total_reward_zone_timestamp = micros();
 long trial_off_buffer = 0;
 int reward_params[] = {100, 40, 0}; // {hold for, duration, summed hold for} in ms
 unsigned short multi_reward_params[] = {200, 10}; // {hold for, duration} in ms for the subsequent rewards within a trial
@@ -226,12 +225,6 @@ void loop()
       in_target_zone[i] = (stimulus_state[1] == constrain(stimulus_state[1], rewarded_locations[0], rewarded_locations[1]));
     }
   }
-
-  if ((in_target_zone[1]) && trialstate[0] == 4)
-  {
-    time_in_target_zone = time_in_target_zone + (total_reward_zone_timestamp - micros());
-    total_reward_zone_timestamp = micros();
-  }
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
@@ -254,6 +247,7 @@ void loop()
         if (!in_target_zone[1] && (reward_state == 2))
         {
           reward_state = 1; // was in reward zone in this trial, but exited reward zone before getting a reward, retrigger reward availability
+          time_in_target_zone = time_in_target_zone + (micros() - reward_zone_timestamp);
         }
         if (multiplerewards > 0)
         {
@@ -277,23 +271,27 @@ void loop()
   //----------------------------------------------------------------------------
   // 4) manage reward
   //----------------------------------------------------------------------------
-  if (reward_state == 2 && ((micros() - reward_zone_timestamp) > 1000 * reward_params[0]))
+  if (reward_state == 2)
   {
-    reward_state = 3; // flag reward valve opening
-    time_in_target_zone = 0; // reset timespent value
-    trialstates.UpdateITI(normal_iti); // don't impose any ITI
-    Timer4.start(1000 * reward_params[1]); // call reward timer
+    if ((micros() - reward_zone_timestamp) > 1000 * reward_params[0])
+    {
+      reward_state = 3; // flag reward valve opening
+      time_in_target_zone = 0; // reset timespent value
+      trialstates.UpdateITI(normal_iti); // don't impose any ITI
+      Timer4.start(1000 * reward_params[1]); // call reward timer
+    }
+    else if ((time_in_target_zone + (micros() - reward_zone_timestamp)) > 1000 * reward_params[2])
+    {
+      reward_state = 3; // flag reward valve opening
+      //time_in_target_zone = 0; // reset timespent value
+      trialstates.UpdateITI(normal_iti); // don't impose any ITI
+      Timer4.start(1000 * reward_params[1]); // call reward timer
+    }
   }
   if (reward_state == 5 && ((micros() - reward_zone_timestamp) > 1000 * multi_reward_params[0]))
   {
     reward_state = 6; // flag reward valve opening
     Timer4.start(1000 * multi_reward_params[1]); // call reward timer
-  }
-  if ( trialstate[0] == 4 && (time_in_target_zone > 1000 * reward_params[2]) )
-  {
-    reward_state = 3; // flag reward valve opening
-    time_in_target_zone = 0; // reset timespent value
-    Timer4.start(1000 * reward_params[1]); // call reward timer
   }
   //----------------------------------------------------------------------------
 
@@ -361,6 +359,9 @@ void loop()
         odor_ON = true;
         // reset long ITI
         trialstates.UpdateITI(long_iti); // will be changed to zero if animal receives a reward in the upcoming trial
+      }
+      else if (trialstate[1]==4) // trial has just started
+      {
         time_in_target_zone = 0; // reset timespent value
       }
       else if ((trialstate[1]==5) && odor_ON)
