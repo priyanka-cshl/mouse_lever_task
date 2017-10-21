@@ -54,6 +54,7 @@ handles.Zero_MFC.Value = 0;
 handles.startAcquisition.Enable = 'off';
 
 % rig specific settings
+handles.computername = textread('C:\Users\pgupta\Documents\hostname.txt','%s');
 [handles] = RigDefaults(handles);
 
 % defaults
@@ -116,11 +117,13 @@ end
 
 % set up NI acquisition and reset Arduino
 handles.sampling_rate_array = handles.DAQrates.Data;
-[handles.NI,handles.Arduino,handles.MFC,handles.Odors,handles.Teensy] = configure_NI_and_Arduino_ArCOM(handles);
+%[handles.NI,handles.Arduino,handles.MFC,handles.Odors,handles.Teensy] = configure_NI_and_Arduino_ArCOM(handles);
+[handles.NI,handles.MFC,handles] = configure_NIDAQ(handles);
+handles.Arduino = configure_ArduinoMain(handles);
 
 % initiate plots
 axes(handles.axes1); % main plot
-% three different trial plots - for different odor
+% three different trial plots - one for each odor
 handles.trial_on_1 = fill(NaN,NaN,[.8 .8 .8]);
 hold on;
 handles.trial_on_1.EdgeColor = 'none';
@@ -131,33 +134,29 @@ handles.trial_on_3.EdgeColor = 'none';
 
 handles.lever_DAC_plot = plot(NaN, NaN,'k','linewidth',1); %lever rescaled
 handles.lever_raw_plot = plot(NaN, NaN, 'color',Plot_Colors('b')); %lever raw
-handles.stimulus_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor location
-% handles.distractor_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % distractor location
-handles.respiration_1_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % respiration sensor 1
-handles.respiration_2_plot = plot(NaN, NaN, 'color',Plot_Colors('p')); % respiration sensor 2
-handles.homesensor_plot = plot(NaN, NaN,'k'); %homesensor
+handles.stimulus_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor location (rotary encoder)
 handles.in_target_zone_plot = fill(NaN,NaN,Plot_Colors('r'));
 handles.in_target_zone_plot.EdgeColor = 'none';
 handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
 handles.in_reward_zone_plot.EdgeColor = 'none';
-%handles.homesensor_plot = fill(NaN, NaN,Plot_Colors('g')); %homesensor
-%handles.homesensor_plot.EdgeColor = 'none';
-%handles.reward_plot = plot(NaN, NaN,'o','MarkerFaceColor',Plot_Colors('t'),'MarkerSize',10,'MarkerEdgeColor','none'); %rewards
 handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.25); %rewards
 handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1); %licks
-handles.fake_target_plot = plot(NaN, NaN, 'color',[.7 .7 .7]);
+handles.homesensor_plot = plot(NaN, NaN,'k'); %homesensor
 handles.targetzone = fill(NaN,NaN,[1 1 0],'FaceAlpha',0.2);
 handles.targetzone.EdgeColor = 'none';
-handles.minlim = plot(NaN, NaN, 'k','LineStyle',':'); % mark target zone
+handles.fake_target_plot = plot(NaN, NaN, 'color',[.7 .7 .7]);
+handles.minlim = plot(NaN, NaN, 'k','LineStyle',':'); % lower limit of lever range (trigger Off)
+
+% currently unused plots
+handles.respiration_1_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % respiration sensor 1
+handles.respiration_2_plot = plot(NaN, NaN, 'color',Plot_Colors('p')); % respiration sensor 2
+
 set(handles.axes1,'YLim',handles.Plot_YLim.Data);
 
 axes(handles.axes9); % Transfer function plot
-%handles.TF_plot = imagesc(abs((-50:1:50)')/50,[0 1]);
 handles.TF_plot = imagesc(((-50:1:50)')/50,[-1 1]);
-%colormap('hot');
-colormap(brewermap([11],'rdbu'));
+colormap(brewermap([handles.ManifoldOutlets],'rdbu'));
 axis off tight
-%set(handles.axes9,'YLim',handles.Plot_YLim.Data);
 set(handles.axes9,'YLim',[0 100]);
 
 axes(handles.axes4); % motor location plot
@@ -169,31 +168,20 @@ set(handles.axes4, 'Color', 'none');
 % for webcam
 handles.camera_available = 0;
 if ~isempty(webcamlist)
-    
     handles.mycam = webcam(1);
-    
     switch handles.mycam.Name
         case 'USB Video Device'
-            %mycam.Resolution = '320x240';
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
             handles.camera_available = 1;
             handles.focus_mode.Enable = 'off';
-            %handles.mycam.FocusMode = 'manual';
-            %handles.mycam.ExposureMode = 'auto';
             handles.exposure_mode.Enable = 'off';
-            %handles.focus_value.Data = 250;
-            %handles.mycam.Focus = 250;
             handles.exposure_value.Enable = 'off';
-            %handles.mycam.Zoom = 100;
         case 'Logitech HD Pro Webcam C920'
-            %mycam.Resolution = '320x240';
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
             handles.camera_available = 1;
             handles.focus_mode.Value = 2;
-            %handles.mycam.FocusMode = 'manual';
             handles.mycam.ExposureMode = 'auto';
             handles.exposure_mode.Value = 1;
-            %handles.focus_value.Data = 250;
             handles.mycam.Focus = 250;
             handles.exposure_value.Data = handles.mycam.Exposure;
             handles.mycam.Zoom = 100;
@@ -224,10 +212,12 @@ lever_raw_on_Callback(hObject,eventdata,handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
 ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Update_Params
 Update_MultiRewards(handles);
+
 % Zero MFCs
-Zero_MFC_Callback(hObject, eventdata, handles);
-% set all odor valves to default state
-% outputSingleScan(handles.Odors,[0, 0, 0, 0]);
+if ~isempty(handles.MFC)
+    Zero_MFC_Callback(hObject, eventdata, handles);
+end
+
 % disable motor override
 handles.motor_override.Value = 0;
 motor_override_Callback(hObject, eventdata, handles);
@@ -327,15 +317,16 @@ if get(handles.startAcquisition,'value')
         
         set(handles.reward_plot,'XData',NaN,'YData',NaN);
         set(handles.stimulus_plot,'XData',NaN,'YData',NaN);
-%         set(handles.distractor_plot,'XData',NaN,'YData',NaN);
         set(handles.respiration_1_plot,'XData',NaN,'YData',NaN);
         set(handles.respiration_2_plot,'XData',NaN,'YData',NaN);
         set(handles.lick_plot,'XData',NaN,'YData',NaN);
         
         % turn ON MFCs
-        handles.Zero_MFC.Value = 1;
-        handles.Zero_MFC.String = 'MFCs OFF';
-        Zero_MFC_Callback(hObject, eventdata, handles);
+        if ~isempty(handles.MFC)
+            handles.Zero_MFC.Value = 1;
+            handles.Zero_MFC.String = 'MFCs OFF';
+            Zero_MFC_Callback(hObject, eventdata, handles);
+        end
         
         % Calibrate Rotary encoder
         handles = CalibrateRotaryEncoder(handles);
@@ -347,8 +338,6 @@ if get(handles.startAcquisition,'value')
         motor_toggle_Callback(hObject, eventdata, handles);
         
         if handles.which_stage.Value>1
-            % start the teensy timer
-            %handles.Teensy.write(10, 'uint16'); %fwrite(handles.Arduino, char(11));
             % start the Arduino timer
             handles.Arduino.write(11, 'uint16'); %fwrite(handles.Arduino, char(11));
             tic
@@ -360,8 +349,7 @@ if get(handles.startAcquisition,'value')
                 disp('arduino: Motor Timer Started');
             end
         end
-        
-        
+
         % enable transfer function calibrator
         handles.calibrate_transfer_function.Enable = 'on';
         
@@ -413,12 +401,12 @@ else
    motor_toggle_Callback(hObject, eventdata, handles);
    
    % turn OFF MFCs
-   handles.Zero_MFC.Value = 0;
-   %handles.Zero_MFC.String = 'MFCs OFF';
-   Zero_MFC_Callback(hObject, eventdata, handles);
+   if ~isempty(handles.MFC)
+       handles.Zero_MFC.Value = 0;
+       Zero_MFC_Callback(hObject, eventdata, handles);
+   end
    
    % stop the Arduino timer
-   %handles.Teensy.write(11, 'uint16');
    handles.Arduino.write(12, 'uint16'); %fwrite(handles.Arduino, char(12));
    tic
    while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
@@ -481,7 +469,6 @@ if usrans == 1
     
     % read TF log
     f = fopen('C:\temp_data_files\transferfunction_log.bin');
-    %[~,params] = Current_Settings(handles,1);
     c = fread(f,[(3+handles.TransferFunction.Data(1)) 10000],'double');
     fclose(f);
     
@@ -534,31 +521,28 @@ end
 
 % --- Executes on button press in open_valve.
 function open_valve_Callback(hObject, eventdata, handles)
-handles.Arduino.write(80 + handles.open_valve.Value, 'uint16'); %fwrite(handles.Arduino, char(80 + handles.open_valve.Value));
+handles.Arduino.write(80 + handles.open_valve.Value, 'uint16'); 
 
 % --- Executes on button press in reward_now.
 function reward_now_Callback(hObject, eventdata, handles)
 if handles.which_stage.Value==1
     if ((handles.timestamp.Data - handles.lastrewardtime) > 20)
         handles.lastrewardtime = handles.timestamp.Data; % update 'last reward'
-        handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
-        %handles.RewardStatus.Data(2) = handles.RewardStatus.Data(2) + 1;
+        handles.Arduino.write(82, 'uint16');
         handles.Reward_Report.Data(1,3) = handles.Reward_Report.Data(1,3) + 1;
     end
 else
     handles.lastrewardtime = handles.timestamp.Data; % update 'last reward'
-    handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
-    %handles.RewardStatus.Data(2) = handles.RewardStatus.Data(2) + 1;
+    handles.Arduino.write(82, 'uint16'); 
     handles.Reward_Report.Data(1,3) = handles.Reward_Report.Data(1,3) + 1;
 end
-%handles.water_received.Data = handles.water_received.Data + 10*(handles.RewardControls.Data(1)*0.015 - 0.042);
 handles.Reward_Report.Data(1,1) = handles.Reward_Report.Data(1,1) + 10*(handles.RewardControls.Data(1)*0.015 - 0.042);
 handles.lastrewardtime = handles.timestamp.Data;
 guidata(hObject, handles);
 
 % --- Executes on button press in water_calibrate.
 function water_calibrate_Callback(hObject, eventdata, handles)
-handles.Arduino.write(83, 'uint16'); %fwrite(handles.Arduino, char(83));
+handles.Arduino.write(83, 'uint16'); 
 
 % --- Executes when entered data in editable cell(s) in RewardControls.
 function RewardControls_CellEditCallback(hObject, eventdata, handles)
@@ -584,13 +568,10 @@ function ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles)
 % compute new target definition
 [handles] = Compute_TargetDefinition(handles);
 guidata(hObject,handles);
-%handles.TargetDefinition.Data = handles.NewTargetDefinition.Data;
 Write_Params(handles);
 Update_TransferFunction_discrete(handles);
 pause(0.1);
-%handles.TargetDefinition.Data = handles.NewTargetDefinition.Data;
 Update_Params(handles);
-%handles.(['TargetLevel',num2str( 1 + mod(handles.current_trial_block.Data(1)-1,length(handles.target_level_array.Data)) )]).Value = 1;
 % --------------------------------------------------------------------
 
 % --- Executes on button press in stay_time_up.
@@ -610,7 +591,7 @@ handles.TargetHold.ForegroundColor = 'r';
 % --- Executes on button press in update_zones.
 function update_zones_Callback(hObject, eventdata, handles)
 % safety - turn motor off
-handles.Arduino.write(70, 'uint16'); %fwrite(handles.Arduino, char(70));
+handles.Arduino.write(70, 'uint16'); 
 set(handles.motor_status,'String','OFF')
 set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
 handles.motor_home.Enable = 'off';
@@ -622,7 +603,7 @@ handles.locations_per_zone.ForegroundColor = 'k';
 % Hint: get(hObject,'Value') returns toggle state of update_zones
 
 % turn motor on
-handles.Arduino.write(71, 'uint16'); %fwrite(handles.Arduino, char(71));
+handles.Arduino.write(71, 'uint16'); 
 set(handles.motor_status,'String','ON')
 set(handles.motor_status,'BackgroundColor',[0.5 0.94 0.94]);
 handles.motor_home.Enable = 'on';
@@ -640,7 +621,7 @@ Update_Params(handles);
 % --- Executes when entered data in editable cell(s) in DAC_settings.
 function DAC_settings_CellEditCallback(hObject, eventdata, handles)
 % safety - turn motor off
-handles.Arduino.write(70, 'uint16'); %fwrite(handles.Arduino, char(70));
+handles.Arduino.write(70, 'uint16'); 
 set(handles.motor_status,'String','OFF')
 set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
 handles.motor_home.Enable = 'off';
@@ -649,7 +630,7 @@ Update_Params(handles);
 Update_TransferFunction_discrete(handles);
 
 % turn motor on
-handles.Arduino.write(71, 'uint16'); %fwrite(handles.Arduino, char(71));
+handles.Arduino.write(71, 'uint16'); 
 set(handles.motor_status,'String','ON')
 set(handles.motor_status,'BackgroundColor',[0.5 0.94 0.94]);
 handles.motor_home.Enable = 'on';    
@@ -661,7 +642,7 @@ handles.NI.DurationInSeconds = 0.5;
 if isfield(handles,'lis')
     delete(handles.lis);
 end
-handles.Arduino.write(90, 'uint16'); %fwrite(handles.Arduino, char(90));
+handles.Arduino.write(90, 'uint16'); 
 guidata(hObject, handles);
 data = startForeground(handles.NI);
 handles.DAC_levels.Data = round([min(data(:,1)) max(data(:,1))]',4,'significant');
@@ -692,27 +673,6 @@ if hObject.Data(3)<hObject.Data(1)
 end
 guidata(hObject, handles);
 
-% function is_stimulus_on_Callback(hObject, eventdata, handles)
-% Update_Params(handles);
-
-% % --- Executes on button press in is_distractor_on.
-% function is_distractor_on_Callback(hObject, eventdata, handles)
-% if get(hObject,'Value')
-%     set(handles.distractor_plot,'LineStyle','-');
-% else
-%     set(handles.distractor_plot,'LineStyle','none');
-% end
-% delay_distractor_by_CellEditCallback(hObject, eventdata, handles);
-
-% % --- Executes when entered data in editable cell(s) in delay_distractor_by.
-% function delay_distractor_by_CellEditCallback(hObject, eventdata, handles)
-% Update_Params(handles);
-
-% % --- Executes on button press in stimulus_map.
-% function stimulus_map_Callback(hObject, eventdata, handles)
-% Update_Params(handles);
-
-
 % --- Executes on selection change in which_stage.
 function which_stage_Callback(hObject, eventdata, handles)
 switch get(hObject,'Value')
@@ -726,15 +686,6 @@ switch get(hObject,'Value')
 end
 Update_Params(handles);
 
-% --- Executes on selection change in which_perturbation.
-% function which_perturbation_Callback(hObject, eventdata, handles)
-% hObject    handle to which_perturbation (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns which_perturbation contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from which_perturbation
-
 % --- Executes on button press in motor_override.
 function motor_override_Callback(hObject, eventdata, handles)
 % hObject    handle to motor_override (see GCBO)
@@ -745,24 +696,21 @@ set(handles.motor_override,'BackgroundColor',[(0.94 - 0.44*handles.motor_overrid
 if handles.motor_override.Value
     % enable direct motor controls
     handles.motor_move.Enable = 'on';
-    %handles.motor_home.Enable = 'on';
     handles.change_motor_params.Enable = 'on';
 else
     % disable direct motor controls
     handles.motor_move.Enable = 'off';
-    %handles.motor_home.Enable = 'off';
     handles.change_motor_params.Enable = 'off';
 end
-    
 
 % --- Executes on button press in motor_toggle.
 function motor_toggle_Callback(hObject, eventdata, handles)
 if isequal(handles.motor_status.String,'ON')
-    handles.Arduino.write(70, 'uint16'); %fwrite(handles.Arduino, char(70));
+    handles.Arduino.write(70, 'uint16');
     set(handles.motor_status,'String','OFF')
     set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
 else    
-    handles.Arduino.write(71, 'uint16'); %fwrite(handles.Arduino, char(71));
+    handles.Arduino.write(71, 'uint16');
     set(handles.motor_status,'String','ON')
     set(handles.motor_status,'BackgroundColor',[0.5 0.94 0.94]);
 end
@@ -797,8 +745,7 @@ if ~isempty(userans)
     handles.motor_params = str2num(char(userans(2)))+1;
     guidata(hObject, handles);
     stepsize = handles.motor_params + 70;
-    handles.Arduino.write(stepsize, 'uint16'); %fwrite(h.Arduino, char(stepsize));
-    %Update_Motor_Params(handles);
+    handles.Arduino.write(stepsize, 'uint16');
 end
 
 % --- Executes on button press in calibrate_transfer_function.
@@ -833,20 +780,19 @@ function Zero_MFC_Callback(hObject, eventdata, handles)
 % hObject    handle to Zero_MFC (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-if handles.Zero_MFC.Value
-    if strcmp(handles.Zero_MFC.String,'MFCs OFF')
-        % ramp up MFCs
-        handles.Zero_MFC.String = '.......';
-        MFC_ramp(handles); %outputSingleScan(handles.MFC,handles.MFC_table.Data');
-        handles.Zero_MFC.String = 'MFCs ON';
-        odor_vial_Callback(hObject, eventdata, handles);
+if ~isempty(handles.MFC)
+    if handles.Zero_MFC.Value
+        if strcmp(handles.Zero_MFC.String,'MFCs OFF')
+            % ramp up MFCs
+            handles.Zero_MFC.String = '.......';
+            MFC_ramp(handles);
+            handles.Zero_MFC.String = 'MFCs ON';
+            odor_vial_Callback(hObject, eventdata, handles);
+        end
+    else
+        outputSingleScan(handles.MFC,0*handles.MFC_table.Data');
+        handles.Zero_MFC.String = 'MFCs OFF';
     end
-else
-    %handles.MFC_table.Data = 0*handles.MFC_table.Data;
-    outputSingleScan(handles.MFC,0*handles.MFC_table.Data');
-    handles.Zero_MFC.String = 'MFCs OFF';
-    % also turn OFF valves
-%     outputSingleScan(handles.Odors,[0, 0, 0, 0]);
 end
 
 % --- Executes on button press in valve_odor_A.
@@ -854,7 +800,7 @@ function valve_odor_A_Callback(hObject, eventdata, handles)
 % hObject    handle to valve_odor_A (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Arduino.write(44 + handles.valve_odor_A.Value, 'uint16'); %fwrite(handles.Arduino, char(44 + handles.valve_odor_A.Value));
+handles.Arduino.write(44 + handles.valve_odor_A.Value, 'uint16'); 
 if handles.valve_odor_A.Value
     set(handles.valve_odor_A,'String','odor ON')
     set(handles.valve_odor_A,'BackgroundColor',[0.5 0.94 0.94]);
@@ -863,13 +809,12 @@ else
     set(handles.valve_odor_A,'BackgroundColor',[0.94 0.94 0.94]);
 end
 
-
 % --- Executes on button press in valve_odor_B.
 function valve_odor_B_Callback(hObject, eventdata, handles)
 % hObject    handle to valve_odor_B (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-handles.Arduino.write(46 + handles.valve_odor_B.Value, 'uint16'); %fwrite(handles.Arduino, char(46 + handles.valve_odor_B.Value));
+handles.Arduino.write(46 + handles.valve_odor_B.Value, 'uint16'); 
 if handles.valve_odor_B.Value
     set(handles.valve_odor_B,'String','Air ON')
     set(handles.valve_odor_B,'BackgroundColor',[0.5 0.94 0.94]);
@@ -887,15 +832,10 @@ if handles.odor_vial.Value && length(handles.Odor_list.Value)==1
     MyVial = handles.Odor_list.Value;
     set(handles.odor_vial,'String',['Vial',num2str(MyVial),' ON'])
     set(handles.odor_vial,'BackgroundColor',[0.5 0.94 0.94]);
-%     odor_states = [0 0 0 0];
-%     odor_states(MyVial) = 1;
-%     outputSingleScan(handles.Odors,odor_states);
 else
     set(handles.odor_vial,'String','Vial OFF')
     set(handles.odor_vial,'BackgroundColor',[0.94 0.94 0.94]);
-%     outputSingleScan(handles.Odors,[0, 0, 0, 1]);
 end
-
 % Hint: get(hObject,'Value') returns toggle state of odor_vial
 
 % --- Executes on button press in startStopCamera.
@@ -912,7 +852,6 @@ else
     set(hObject,'BackgroundColor',[0.94 0.94 0.94]);
     closePreview(handles.mycam);
 end
-
 % Hint: get(hObject,'Value') returns toggle state of startStopCamera
 
 % --- Executes on button press in grab_camera.
@@ -976,28 +915,26 @@ handles.mycam.Exposure = hObject.Data;
 % --- Executes on button press in close_gui.
 function close_gui_Callback(hObject, eventdata, handles)
 % close valves and MFCs
-outputSingleScan(handles.MFC,0*handles.MFC_table.Data');
-% outputSingleScan(handles.Odors,[0, 0, 0, 0]);
+if ~isempty(handles.MFC)
+    outputSingleScan(handles.MFC,0*handles.MFC_table.Data');
+end
 handles.Arduino.write(44, 'uint16');
 delete(handles.figure1);
-handles.Arduino.write(12, 'uint16'); %fwrite(handles.Arduino, char(11));
+handles.Arduino.write(12, 'uint16');
 tic
 while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
 end
 if(handles.Arduino.Port.BytesAvailable == 0)
-    handles.Arduino.close;%fclose(instrfind);
+    handles.Arduino.close;
     error('arduino: arduino did not send confirmation byte in time')
 end
 if handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==7
-    handles.Arduino.close;%fclose(instrfind);
+    handles.Arduino.close;
     disp('arduino: disconnected, handshake successful');
 else
-    handles.Arduino.close;%fclose(instrfind);
+    handles.Arduino.close;
     disp('arduino: disconnected, handshake unsuccessful');
 end
-% if exist(handles)
-%     delete(handles.figure1);
-% end
 
 % --- Executes on button press in log_weight.
 function log_weight_Callback(hObject, eventdata, handles)
@@ -1099,18 +1036,22 @@ if handles.CleaningRoutine.Value
         disp('arduino: Cleaning Routine Started');
     end
     
-    % turn ON MFCs
-    handles.Zero_MFC.Value = 1;
-    handles.Zero_MFC.String = 'MFCs OFF';
-    Zero_MFC_Callback(hObject, eventdata, handles);
+    if ~isempty(handles.MFC)
+        % turn ON MFCs
+        handles.Zero_MFC.Value = 1;
+        handles.Zero_MFC.String = 'MFCs OFF';
+        Zero_MFC_Callback(hObject, eventdata, handles);
+    end
         
     set(handles.CleaningRoutine,'String','Cleaning...')
     set(handles.CleaningRoutine,'BackgroundColor',[0.5 0.94 0.94]);
-else
-    % turn OFF MFCs
-    handles.Zero_MFC.Value = 0;
-    Zero_MFC_Callback(hObject, eventdata, handles);
     
+else
+    if ~isempty(handles.MFC)
+        % turn OFF MFCs
+        handles.Zero_MFC.Value = 0;
+        Zero_MFC_Callback(hObject, eventdata, handles);
+    end
     handles.Arduino.write(14, 'uint16');
     tic
     while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
