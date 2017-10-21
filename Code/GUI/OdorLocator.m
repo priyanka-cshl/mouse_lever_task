@@ -70,22 +70,17 @@ handles.TargetDefinition.Data(2) = handles.target_level_array.Data(2);
 %handles.NewTargetDefinition.Data(2) = handles.target_level_array.Data(2);
 
 % clear indicators
-handles.RewardStatus.Data = [0 0 0]';
+%handles.RewardStatus.Data = [0 0 0]';
+handles.Reward_Report.Data = [0 0 0 0];
 handles.ProgressReport.Data = zeros(4,3);
 handles.ProgressReportLeft.Data = zeros(4,3);
 handles.ProgressReportRight.Data = zeros(4,3);
+handles.ProgressReportPerturbed.Data = zeros(4,3);
 handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
-handles.water_received.Data = 0;
+%handles.water_received.Data = 0;
 handles.Date.String = datestr(now, 'mm-dd-yy');
 handles.StartTime.Visible = 'off';
 handles.StopTime.Visible = 'off';
-
-% set progress report display type to All trials
-handles.reporttype = 0;
-handles.reporttag.String = 'All trials';
-handles.ProgressReport.Visible = 'on';
-handles.ProgressReportLeft.Visible = 'off';
-handles.ProgressReportRight.Visible = 'off';
 
 % load mouse specific settings
 handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
@@ -310,11 +305,13 @@ if get(handles.startAcquisition,'value')
         handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
 
         % clear indicators
-        handles.RewardStatus.Data = [0 0 0]';
+        %handles.RewardStatus.Data = [0 0 0]';
+        handles.Reward_Report.Data = [0 0 0 0];
         handles.ProgressReport.Data = zeros(4,3);
         handles.ProgressReportLeft.Data = zeros(4,3);
         handles.ProgressReportRight.Data = zeros(4,3);
-        handles.water_received.Data = 0;
+        handles.ProgressReportPerturbed.Data = zeros(4,3);
+        %handles.water_received.Data = 0;
         handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
         handles.update_call = 1;
         handles.timestamp.Data = 0;
@@ -545,14 +542,17 @@ if handles.which_stage.Value==1
     if ((handles.timestamp.Data - handles.lastrewardtime) > 20)
         handles.lastrewardtime = handles.timestamp.Data; % update 'last reward'
         handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
-        handles.RewardStatus.Data(2) = handles.RewardStatus.Data(2) + 1;
+        %handles.RewardStatus.Data(2) = handles.RewardStatus.Data(2) + 1;
+        handles.Reward_Report.Data(1,3) = handles.Reward_Report.Data(1,3) + 1;
     end
 else
     handles.lastrewardtime = handles.timestamp.Data; % update 'last reward'
     handles.Arduino.write(82, 'uint16'); %fwrite(handles.Arduino, char(82));
-    handles.RewardStatus.Data(2) = handles.RewardStatus.Data(2) + 1;
+    %handles.RewardStatus.Data(2) = handles.RewardStatus.Data(2) + 1;
+    handles.Reward_Report.Data(1,3) = handles.Reward_Report.Data(1,3) + 1;
 end
-handles.water_received.Data = handles.water_received.Data + 10*(handles.RewardControls.Data(1)*0.015 - 0.042);
+%handles.water_received.Data = handles.water_received.Data + 10*(handles.RewardControls.Data(1)*0.015 - 0.042);
+handles.Reward_Report.Data(1,1) = handles.Reward_Report.Data(1,1) + 10*(handles.RewardControls.Data(1)*0.015 - 0.042);
 handles.lastrewardtime = handles.timestamp.Data;
 guidata(hObject, handles);
 
@@ -1164,28 +1164,3 @@ handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
 guidata(hObject, handles);
 % Hint: get(hObject,'Value') returns toggle state of TargetLevel1Active
 
-
-% --- Executes on button press in trialtypetoggle.
-function trialtypetoggle_Callback(hObject, eventdata, handles)
-% hObject    handle to trialtypetoggle (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.reporttype = mod(handles.reporttype + 1,3); % toggles between 0,1,2
-switch handles.reporttype
-    case 0 % all trials
-        handles.reporttag.String = 'All trials';
-        handles.ProgressReport.Visible = 'on';
-        handles.ProgressReportLeft.Visible = 'off';
-        handles.ProgressReportRight.Visible = 'off';
-    case 1
-        handles.reporttag.String = 'Left trials';
-        handles.ProgressReport.Visible = 'off';
-        handles.ProgressReportLeft.Visible = 'on';
-        handles.ProgressReportRight.Visible = 'off';
-    case 2
-        handles.reporttag.String = 'Right trials';
-        handles.ProgressReport.Visible = 'off';
-        handles.ProgressReportLeft.Visible = 'off';
-        handles.ProgressReportRight.Visible = 'on';
-end
-guidata(hObject, handles);

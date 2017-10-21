@@ -20,7 +20,7 @@ if ~isempty(Allfiles)
             handles.TriggerHold.Data = X.session_data.ForNextSession(3:5)';
             handles.RewardControls.Data(3) = X.session_data.ForNextSession(6);
             handles.TFLeftprobability.Data(1) = X.session_data.ForNextSession(7);
-            %handles.summedholdfactor.Data = X.session_data.ForNextSession(8);
+            handles.summedholdfactor.Data = X.session_data.ForNextSession(8);
         end
         if strcmp(X.session_data.legends_trial(11),'IRI')
             handles.RewardControls.Data(2) = X.session_data.params(end,11);

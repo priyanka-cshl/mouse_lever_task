@@ -37,6 +37,7 @@ TotalTime = [ TotalTime(num_new_samples+1:end); event.TimeStamps ];
 TargetLevel = [TargetLevel(num_new_samples+1:end,:); h.TargetDefinition.Data(3)+0*event.Data(:,1) h.TargetDefinition.Data(1)+0*event.Data(:,1)];
 %which_target = find(sort(h.target_level_array.Data,'descend')==h.TargetDefinition.Data(2));
 which_target = floor(h.TargetDefinition.Data(2));
+which_fake_target = floor(h.fake_target_zone.Data(2));
 
 %% update MFC setpoints
 h.MFC_setpoints_IN.Data = round(mean(event.Data(:,h.NIchannels+1:h.NIchannels+2)),2,'significant')';
@@ -69,14 +70,19 @@ if TotalTime(end)>2
         end
     elseif any(diff(TotalData(end-num_new_samples:end,trial_channel)) > 0) % trial just turned ON
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1; % increment 'trial number'
-        h.ProgressReport.Data(4-which_target,1) = h.ProgressReport.Data(4-which_target,1) + 1;
-        h.ProgressReport.Data(4,1) = h.ProgressReport.Data(4,1) + 1;
-        if h.current_trial_block.Data(1)
-            h.ProgressReportLeft.Data(4-which_target,1) = h.ProgressReportLeft.Data(4-which_target,1) + 1;
-            h.ProgressReportLeft.Data(4,1) = h.ProgressReportLeft.Data(4,1) + 1;
+        if ~h.current_trial_block.Data(3) % not a perturbed trial
+            h.ProgressReport.Data(4-which_target,1) = h.ProgressReport.Data(4-which_target,1) + 1;
+            h.ProgressReport.Data(4,1) = h.ProgressReport.Data(4,1) + 1;
+            if h.current_trial_block.Data(1)
+                h.ProgressReportLeft.Data(4-which_target,1) = h.ProgressReportLeft.Data(4-which_target,1) + 1;
+                h.ProgressReportLeft.Data(4,1) = h.ProgressReportLeft.Data(4,1) + 1;
+            else
+                h.ProgressReportRight.Data(4-which_target,1) = h.ProgressReportRight.Data(4-which_target,1) + 1;
+                h.ProgressReportRight.Data(4,1) = h.ProgressReportRight.Data(4,1) + 1;
+            end
         else
-            h.ProgressReportRight.Data(4-which_target,1) = h.ProgressReportRight.Data(4-which_target,1) + 1;
-            h.ProgressReportRight.Data(4,1) = h.ProgressReportRight.Data(4,1) + 1;
+            h.ProgressReportPerturbed.Data(4-which_fake_target,1) = h.ProgressReportPerturbed.Data(4-which_fake_target,1) + 1;
+            h.ProgressReportPerturbed.Data(4,1) = h.ProgressReportPerturbed.Data(4,1) + 1;
         end
         IsRewardedTrial = 0;
     end
@@ -91,21 +97,32 @@ if TotalTime(end)>2
     if any(TotalData(end-num_new_samples+1:end,reward_channel))
         % increment 'total rewards' and 'rewards in block'
         if ~IsRewardedTrial
-            h.RewardStatus.Data(1) = h.RewardStatus.Data(1) + 1; 
-            h.ProgressReport.Data(4-which_target,2) = h.ProgressReport.Data(4-which_target,2) + 1;
-            h.ProgressReport.Data(4,2) = h.ProgressReport.Data(4,2) + 1;
-            if h.current_trial_block.Data(1)
-                h.ProgressReportLeft.Data(4-which_target,2) = h.ProgressReportLeft.Data(4-which_target,2) + 1;
-                h.ProgressReportLeft.Data(4,2) = h.ProgressReportLeft.Data(4,2) + 1;
+            %h.RewardStatus.Data(1) = h.RewardStatus.Data(1) + 1; 
+            h.Reward_Report.Data(1,2) = h.Reward_Report.Data(1,2) + 1;
+            %h.water_received.Data = h.water_received.Data + 10*(h.RewardControls.Data(1)*0.015 - 0.042);
+            h.Reward_Report.Data(1,1) = h.Reward_Report.Data(1,1) + 10*(h.RewardControls.Data(1)*0.015 - 0.042);
+            IsRewardedTrial = 1;
+            
+            if ~h.current_trial_block.Data(3) % not a perturbed trial
+                h.ProgressReport.Data(4-which_target,2) = h.ProgressReport.Data(4-which_target,2) + 1;
+                h.ProgressReport.Data(4,2) = h.ProgressReport.Data(4,2) + 1;
+                if h.current_trial_block.Data(1)
+                    h.ProgressReportLeft.Data(4-which_target,2) = h.ProgressReportLeft.Data(4-which_target,2) + 1;
+                    h.ProgressReportLeft.Data(4,2) = h.ProgressReportLeft.Data(4,2) + 1;
+                else
+                    h.ProgressReportRight.Data(4-which_target,2) = h.ProgressReportRight.Data(4-which_target,2) + 1;
+                    h.ProgressReportRight.Data(4,2) = h.ProgressReportRight.Data(4,2) + 1;
+                end
             else
-                h.ProgressReportRight.Data(4-which_target,2) = h.ProgressReportRight.Data(4-which_target,2) + 1;
-                h.ProgressReportRight.Data(4,2) = h.ProgressReportRight.Data(4,2) + 1;
+                h.ProgressReportPerturbed.Data(4-which_fake_target,2) = h.ProgressReportPerturbed.Data(4-which_fake_target,2) + 1;
+                h.ProgressReportPerturbed.Data(4,2) = h.ProgressReportPerturbed.Data(4,2) + 1;
             end
-            h.water_received.Data = h.water_received.Data + 10*(h.RewardControls.Data(1)*0.015 - 0.042);
-             IsRewardedTrial = 1;
+            
         else
-            h.RewardStatus.Data(3) = h.RewardStatus.Data(3) + 1; 
-            h.water_received.Data = h.water_received.Data + 10*(h.RewardControls.Data(4)*0.015 - 0.042);
+            %h.RewardStatus.Data(3) = h.RewardStatus.Data(3) + 1; 
+            h.Reward_Report.Data(1,4) = h.Reward_Report.Data(1,4) + 1;
+            %h.water_received.Data = h.water_received.Data + 10*(h.RewardControls.Data(4)*0.015 - 0.042);
+            h.Reward_Report.Data(1,1) = h.Reward_Report.Data(1,1) + 10*(h.RewardControls.Data(4)*0.015 - 0.042);
         end
     end
     
@@ -200,8 +217,10 @@ end
 set(h.minlim,'XData',TotalTime(indices_to_plot),'YData',...
     h.TrialSettings.Data(2) + 0*TotalTime(indices_to_plot));
 if h.current_trial_block.Data(3) == 1 && h.which_perturbation.Value == 2
+%     set(h.fake_target_plot,'XData',TotalTime(indices_to_plot),'YData',...
+%         h.PerturbationSettings.Data(4) + 0*TotalTime(indices_to_plot));
     set(h.fake_target_plot,'XData',TotalTime(indices_to_plot),'YData',...
-        h.PerturbationSettings.Data(4) + 0*TotalTime(indices_to_plot));
+        h.fake_target_zone.Data(2) + 0*TotalTime(indices_to_plot));
 else
     set(h.fake_target_plot,'XData',TotalTime(indices_to_plot),'YData',...
         NaN + TotalTime(indices_to_plot));

@@ -91,7 +91,8 @@ switch caller
         
         legend(11:13) = {'FakeHighLim' 'FakeTarget' 'FakeLowLim'};
         if h.which_perturbation.Value == 2 && h.current_trial_block.Data(3) == 1
-            param(11:13) = h.PerturbationSettings.Data(3:5);
+            param(11:13) = h.fake_target_zone.Data(1:3);
+            %param(11:13) = h.PerturbationSettings.Data(3:5);
             % convert to integers for Arduino communication purpose
             not_ints = [not_ints 11:13];
         else
