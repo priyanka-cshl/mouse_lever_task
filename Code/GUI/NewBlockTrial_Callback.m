@@ -13,7 +13,6 @@ disp(['---------- New Trial (#', num2str(h.current_trial_block.Data(2)),') -----
 
 %% shuffle arrays of targets after all targets have been used
 h.target_level_array.Data = h.target_level_array.Data(randperm(length(h.target_level_array.Data)) );
-
 % invert TF if needed
 h.current_trial_block.Data(1) = (rand(1)<h.TFLeftprobability.Data(1)); % 50% chance of inverting TF
 
@@ -26,6 +25,7 @@ for i = 1:size(h.ProgressReport.Data,1)
     h.ProgressReport.Data(i,3) = round(100*h.ProgressReport.Data(i,2)/h.ProgressReport.Data(i,1),0,'decimals');
     h.ProgressReportLeft.Data(i,3) = round(100*h.ProgressReportLeft.Data(i,2)/h.ProgressReportLeft.Data(i,1),0,'decimals');
     h.ProgressReportRight.Data(i,3) = round(100*h.ProgressReportRight.Data(i,2)/h.ProgressReportRight.Data(i,1),0,'decimals');
+    h.ProgressReportPerturbed.Data(i,3) = round(100*h.ProgressReportPerturbed.Data(i,2)/h.ProgressReportPerturbed.Data(i,1),0,'decimals');
 end
 
 %% update target level
@@ -95,11 +95,14 @@ if (h.which_perturbation.Value)
         %unused_targets = setdiff(h.target_level_array.Data,h.NewTargetDefinition.Data(2));
         unused_targets = setdiff(h.target_level_array.Data,h.TargetDefinition.Data(2));
         new_fake_target = unused_targets(randi(length(unused_targets)));
-        if  h.PerturbationSettings.Data(4) ~= new_fake_target % fake target has changed
-            h.PerturbationSettings.Data(4) = new_fake_target;
+        if  h.fake_target_zone.Data(2) ~= new_fake_target % fake target has changed
+            h.fake_target_zone.Data(2) = new_fake_target;
         end
+        h.fake_target_zone.ForegroundColor = [0 0 0];
         %h.current_trial_block.Data(5) = h.TargetHold.Data(3);
-    end      
+    else
+        h.fake_target_zone.ForegroundColor = [0.65 0.65 0.65];
+    end
 end
 
 %% invoke target definition callback (this automatically calls Update_Params)

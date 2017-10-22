@@ -1,11 +1,12 @@
 function [handles] = RigDefaults(handles)
 % rig specific settings
-handles.computername = textread('C:\Users\pgupta\Documents\hostname.txt','%s'); %#ok<*DTXTRD>
+%handles.computername = textread('C:\Users\pgupta\Documents\hostname.txt','%s'); %#ok<*DTXTRD>
 switch char(handles.computername)
     case {'marbprec', 'PRIYANKA-HP'}
         handles.file_names.Data(2) = {'C:\Data\Behavior'};
         handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\Behavior'};
-        handles.NIchannels = 12;
+        %handles.NIchannels = 12;
+        handles.ManifoldOutlets = 16;
         handles.DAC_settings.Data = [2.0 0.55]';
         % motor location settings
         handles.motor_params = 4;
@@ -32,6 +33,7 @@ switch char(handles.computername)
         handles.TargetLevel1Active.Value = 1;
         handles.TargetLevel2Active.Value = 1;
         handles.TargetLevel3Active.Value = 1;
+        handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),find(handles.targets_to_use)));
         handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
         handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
         % shrink target zone
@@ -40,7 +42,8 @@ switch char(handles.computername)
     case 'PRIYANKA-PC'
         handles.file_names.Data(2) = {'C:\Data\Behavior'};
         handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\Behavior'};
-        handles.NIchannels = 11;
+        %handles.NIchannels = 11;
+        handles.ManifoldOutlets = 16;
         % motor location settings
         handles.motor_params = 4;
         % disable transfer function calibrator
