@@ -54,7 +54,7 @@ handles.Zero_MFC.Value = 0;
 handles.startAcquisition.Enable = 'off';
 
 % rig specific settings
-handles.computername = textread('C:\Users\pgupta\Documents\hostname.txt','%s');
+handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
 [handles] = RigDefaults(handles);
 
 % defaults
@@ -118,7 +118,7 @@ end
 % set up NI acquisition and reset Arduino
 handles.sampling_rate_array = handles.DAQrates.Data;
 %[handles.NI,handles.Arduino,handles.MFC,handles.Odors,handles.Teensy] = configure_NI_and_Arduino_ArCOM(handles);
-[handles.NI,handles.MFC,handles] = configure_NIDAQ(handles);
+[handles.NI,handles.MFC,handles.Channels,handles.NIchannels] = configure_NIDAQ(handles);
 handles.Arduino = configure_ArduinoMain(handles);
 
 % initiate plots

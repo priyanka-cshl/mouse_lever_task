@@ -1,33 +1,33 @@
-function [NI_session, MFC_session, handles]=configure_NIDAQ(handles)
+function [NI_session, MFC_session, Channels, NIchannels]=configure_NIDAQ(handles)
 
 % rig specific settings
 switch char(handles.computername)
     case {'marbprec', 'PRIYANKA-HP'}
         DeviceName = 'Dev2';
-        handles.AnalogChannelNames = {'LeverDAC','LeverRaw','EncoderA','EncoderB','RespirationA','RespirationB'};
+        Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','RespirationA','RespirationB'};
         AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai12'};
-        handles.DigitalChannelNames = {'trial_on', 'in_target_zone', 'in_reward_zone', 'rewards', 'licks', 'homesensor'};
+        Channels.Digital = {'trial_on', 'in_target_zone', 'in_reward_zone', 'rewards', 'licks', 'homesensor'};
         DigitalChannelIDs = {'Port0/Line0:5'};
         % channel map for plotting 
-        handles.trial_channel = 7;
-        handles.reward_channel = 10;
-        handles.lick_channel = 11;
-        handles.homesensor_channel = 12;
-        handles.MFCChannelNames = {'MFCAir','MFCOdor'};
+        Channels.trial_channel = 7;
+        Channels.reward_channel = 10;
+        Channels.lick_channel = 11;
+        Channels.homesensor_channel = 12;
+        Channels.MFC = {'MFCAir','MFCOdor'};
         MFCSetPointChannelIDs = {'ai6','ai7'};
         MFCControlChannelIDs = {'ao0','ao1'};
         
     case 'PRIYANKA-PC'
         DeviceName = 'Dev2';
-        handles.AnalogChannelNames = {'LeverDAC','LeverRaw','EncoderA','EncoderB','RespirationA','RespirationB'};
+        Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','RespirationA','RespirationB'};
         AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai12'};
-        handles.DigitalChannelNames = {'trial_on', 'in_target_zone', 'in_reward_zone', 'rewards', 'licks', 'homesensor'};
+        Channels.Digital = {'trial_on', 'in_target_zone', 'in_reward_zone', 'rewards', 'licks', 'homesensor'};
         DigitalChannelIDs = {'Port0/Line0:4'};
-        handles.trial_channel = 7;
-        handles.reward_channel = 10;
-        handles.lick_channel = 11;
-        handles.homesensor_channel = 12;
-        handles.MFCChannelNames = {};
+        Channels.trial_channel = 7;
+        Channels.reward_channel = 10;
+        Channels.lick_channel = 11;
+        Channels.homesensor_channel = 12;
+        Channels.MFC = {};
         MFCSetPointChannelIDs = {};
         MFCControlChannelIDs = {};
         
@@ -46,9 +46,10 @@ for i = 1:size(AnalogChannelIDs,2)
 end
 
 % Configure Digital Channels
-DAQchannels(i +(1:size(handles.DigitalChannelNames,2)) ) =  addDigitalChannel(NI_session,DeviceName,DigitalChannelIDs,'InputOnly');
+DAQchannels(i +(1:size(Channels.Digital,2)) ) =  addDigitalChannel(NI_session,DeviceName,DigitalChannelIDs,'InputOnly');
 
-i = size(handles.AnalogChannelNames,2) + size(handles.DigitalChannelNames,2);
+i = size(Channels.Analog,2) + size(Channels.Digital,2);
+NIchannels = i;
 
 if ~isempty(MFCSetPointChannelIDs)
     for j = 1:size(MFCSetPointChannelIDs,2)
@@ -56,9 +57,9 @@ if ~isempty(MFCSetPointChannelIDs)
         DAQchannels(i+j).TerminalConfig = 'SingleEnded';
         DAQchannels(i+j).Range = [-5 5];
     end
-    handles.NIchannels = i+j;
+    Channels.Total = i+j;  
 else
-    handles.NIchannels = i;
+    Channels.Total = i;
 end
 
 % set sampling rates

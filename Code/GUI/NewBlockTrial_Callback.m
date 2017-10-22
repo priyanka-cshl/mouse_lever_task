@@ -98,11 +98,11 @@ if (h.which_perturbation.Value)
         if  h.fake_target_zone.Data(2) ~= new_fake_target % fake target has changed
             h.fake_target_zone.Data(2) = new_fake_target;
         end
-        h.fake_target_zone.Enable = 'on';
+        h.fake_target_zone.ForegroundColor = [0 0 0];
         %h.current_trial_block.Data(5) = h.TargetHold.Data(3);
+    else
+        h.fake_target_zone.ForegroundColor = [0.65 0.65 0.65];
     end
-else
-    h.fake_target_zone.Enable = 'off';
 end
 
 %% invoke target definition callback (this automatically calls Update_Params)

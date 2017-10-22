@@ -38,15 +38,15 @@ end
 odorID = h.current_trial_block.Data(4);
 
 %% populate TotalData with newly available data
-for i = 1:h.reward_channel-1
+for i = 1:h.Channels.reward_channel-1
     samples_new = event.Data(:,i);
-    if i == h.trial_channel
+    if i == h.Channels.trial_channel
         samples_new = samples_new*odorID;
     end
     TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];
 end
 
-for i = h.homesensor_channel
+for i = h.Channels.homesensor_channel
     samples_new = event.Data(:,i);
     TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];
 end
@@ -54,12 +54,12 @@ end
 if TotalTime(end)>2 
 
     % register if the trial was turned ON or OFF
-    if any(diff(TotalData(end-num_new_samples:end,h.trial_channel)) < 0)
+    if any(diff(TotalData(end-num_new_samples:end,h.Channels.trial_channel)) < 0)
         trial_just_ended = 1;
         if mod(h.current_trial_block.Data(2),h.TransferFunction.Data(2)) == 0
             call_new_block = 1;
         end
-    elseif any(diff(TotalData(end-num_new_samples:end,h.trial_channel)) > 0) % trial just turned ON
+    elseif any(diff(TotalData(end-num_new_samples:end,h.Channels.trial_channel)) > 0) % trial just turned ON
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1; % increment 'trial number'
         if ~h.current_trial_block.Data(3) % not a perturbed trial
             h.ProgressReport.Data(4-which_target,1) = h.ProgressReport.Data(4-which_target,1) + 1;
@@ -79,10 +79,10 @@ if TotalTime(end)>2
     end
     
     % reward channel
-    TotalData(:,h.reward_channel) = [ TotalData(num_new_samples+1:end,h.reward_channel); ...
-        diff([last_data_value(h.reward_channel); event.Data(:,h.reward_channel)])==1 ];
+    TotalData(:,h.Channels.reward_channel) = [ TotalData(num_new_samples+1:end,h.Channels.reward_channel); ...
+        diff([last_data_value(h.Channels.reward_channel); event.Data(:,h.Channels.reward_channel)])==1 ];
     % check if there were any rewards and update block accordingly
-    if any(TotalData(end-num_new_samples+1:end,h.reward_channel))
+    if any(TotalData(end-num_new_samples+1:end,h.Channels.reward_channel))
         % increment 'total rewards' and 'rewards in block'
         if ~IsRewardedTrial
             h.Reward_Report.Data(1,2) = h.Reward_Report.Data(1,2) + 1;
@@ -111,12 +111,12 @@ if TotalTime(end)>2
     end
     
     % lick channel
-    if h.NIchannels >= h.lick_channel
-        TotalData(:,h.lick_channel) = [ TotalData(num_new_samples+1:end,h.lick_channel); ...
-        diff([last_data_value(h.lick_channel); event.Data(:,h.lick_channel)])==1 ];
+    if h.NIchannels >= h.Channels.lick_channel
+        TotalData(:,h.Channels.lick_channel) = [ TotalData(num_new_samples+1:end,h.Channels.lick_channel); ...
+        diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1 ];
     end
     
-    if ~isempty(find(diff([last_data_value(h.lick_channel); event.Data(:,h.lick_channel)])==1,1))
+    if ~isempty(find(diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1,1))
         if h.which_stage.Value==1
                 callreward = 1;
         end
@@ -144,19 +144,19 @@ set(h.respiration_1_plot,'XData',TotalTime(indices_to_plot),'YData',...
     -1*h.RS_scaling.Data(1)*TotalData(indices_to_plot,5) + h.RS_scaling.Data(2) );
 set(h.respiration_2_plot,'XData',TotalTime(indices_to_plot),'YData',...
     -1*h.RS_scaling.Data(1)*TotalData(indices_to_plot,6) + h.RS_scaling.Data(2) );
-set(h.homesensor_plot,'XData',TotalTime(indices_to_plot),'YData', 5 + 0.5*TotalData(indices_to_plot,h.homesensor_channel));
+set(h.homesensor_plot,'XData',TotalTime(indices_to_plot),'YData', 5 + 0.5*TotalData(indices_to_plot,h.Channels.homesensor_channel));
 
 % trial_on
-[h] = PlotToPatch_Trial(h, TotalData(:,h.trial_channel), TotalTime, [0 5]);
+[h] = PlotToPatch_Trial(h, TotalData(:,h.Channels.trial_channel), TotalTime, [0 5]);
 [h.targetzone] = PlotToPatch_TargetZone(h.targetzone, TargetLevel, TotalTime);
 
 % in_target_zone, in_reward_zone
-[h.in_target_zone_plot] = PlotToPatch(h.in_target_zone_plot, TotalData(:,h.trial_channel+1), TotalTime, [-1 0]);
-[h.in_reward_zone_plot] = PlotToPatch(h.in_reward_zone_plot, TotalData(:,h.trial_channel+2), TotalTime, [-1 -0.2]);
+[h.in_target_zone_plot] = PlotToPatch(h.in_target_zone_plot, TotalData(:,h.Channels.trial_channel+1), TotalTime, [-1 0]);
+[h.in_reward_zone_plot] = PlotToPatch(h.in_reward_zone_plot, TotalData(:,h.Channels.trial_channel+2), TotalTime, [-1 -0.2]);
 
 % rewards
-if h.reward_channel<=size(TotalData,2)
-    tick_timestamps = TotalTime(TotalData(:,h.reward_channel)==1);
+if h.Channels.reward_channel<=size(TotalData,2)
+    tick_timestamps = TotalTime(TotalData(:,h.Channels.reward_channel)==1);
     tick_x = [tick_timestamps'; tick_timestamps'; ...
         NaN(1,numel(tick_timestamps))]; % creates timestamp1 timestamp1 NaN timestamp2 timestamp2..
     tick_x = tick_x(:);
@@ -166,8 +166,8 @@ if h.reward_channel<=size(TotalData,2)
 end
 
 % licks
-if h.lick_channel<=size(TotalData,2)
-    tick_timestamps = TotalTime(TotalData(:,h.lick_channel)==1);
+if h.Channels.lick_channel<=size(TotalData,2)
+    tick_timestamps = TotalTime(TotalData(:,h.Channels.lick_channel)==1);
     tick_x = [tick_timestamps'; tick_timestamps'; ...
         NaN(1,numel(tick_timestamps))]; % creates timestamp1 timestamp1 NaN timestamp2 timestamp2..
     tick_x = tick_x(:);
@@ -206,7 +206,7 @@ end
 
 %% write data to disk
 data = [TotalTime(end-num_new_samples+1:end) TotalData(end-num_new_samples+1:end,:)]';
-data(h.trial_channel+1,:) = h.current_trial_block.Data(4)*data(h.trial_channel+1,:);
+data(h.Channels.trial_channel+1,:) = h.current_trial_block.Data(4)*data(h.Channels.trial_channel+1,:);
 % rescale stimulus position plot (save it in distractor location column
 data(5,:) = MapRotaryEncoderToTFColorMap(h,data(4,:),1);
 fwrite(fid1,data,'double');
