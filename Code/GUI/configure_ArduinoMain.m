@@ -6,7 +6,7 @@ switch char(handles.computername)
         DueCOMPort = 3;
         
     case 'PRIYANKA-PC'
-        DueCOMPort = 3;
+        DueCOMPort = 4;
 end
 
 % initialize Arduino as Serial Object

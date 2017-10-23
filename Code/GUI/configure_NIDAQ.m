@@ -18,18 +18,24 @@ switch char(handles.computername)
         MFCControlChannelIDs = {'ao0','ao1'};
         
     case 'PRIYANKA-PC'
-        DeviceName = 'Dev2';
+        DeviceName = 'Dev1';
         Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','RespirationA','RespirationB'};
         AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai12'};
         Channels.Digital = {'trial_on', 'in_target_zone', 'in_reward_zone', 'rewards', 'licks', 'homesensor'};
-        DigitalChannelIDs = {'Port0/Line0:4'};
+        DigitalChannelIDs = {'Port0/Line0:5'};
         Channels.trial_channel = 7;
         Channels.reward_channel = 10;
         Channels.lick_channel = 11;
         Channels.homesensor_channel = 12;
-        Channels.MFC = {};
-        MFCSetPointChannelIDs = {};
-        MFCControlChannelIDs = {};
+        Channels.MFC = {'MFCAir','MFCOdor'};
+        MFCSetPointChannelIDs = {'ai6','ai7'};
+        MFCControlChannelIDs = {'ao0','ao1'};
+%         Channels.MFC = {};
+%         MFCSetPointChannelIDs = {};
+%         MFCControlChannelIDs = {};
+        % magic commands to make USB DAQ work on this compouter
+        daq.reset
+        daq.HardwareInfo.getInstance('DisableReferenceClockSynchronization',true);
         
 end
 
