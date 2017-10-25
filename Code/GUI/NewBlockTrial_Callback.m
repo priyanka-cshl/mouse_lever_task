@@ -8,6 +8,7 @@ if h.motor_home.BackgroundColor(1) == 0.5
 end
 
 global IsRewardedTrial;
+global TrialsToPerturb;
 
 disp(['---------- New Trial (#', num2str(h.current_trial_block.Data(2)),') ----------']);
 
@@ -82,22 +83,34 @@ while (x + h.TriggerHold.Data(2)) > h.TriggerHold.Data(3)
 end
 h.TrialSettings.Data(3) = round(h.TriggerHold.Data(2)+x,0);
 
+
 %% feedback perturbation settings
-if (h.which_perturbation.Value)
+if (h.which_perturbation.Value>1)
+    % shuffle perturbed trial vector if needed
+    if ~mod(h.current_trial_block.Data(2),numel(TrialsToPerturb))
+        TrialsToPerturb = TrialsToPerturb([randperm(floor(numel(TrialsToPerturb)/2)) ...
+            floor(numel(TrialsToPerturb)/2)+(1:floor(numel(TrialsToPerturb)/2))]);
+    end
     % bsed on the user set probability,
     % check if the trial is to be perturbed or not
-    perturb = (rand(1) <= h.PerturbationSettings.Data(1));
-    if (perturb ~= h.current_trial_block.Data(3))
-        h.current_trial_block.Data(3) = perturb;
-    end
-    if perturb && (h.which_perturbation.Value == 2) % decouple feedback
-        % select randomly a target level that is not currently in use
+    % perturb = (rand(1) <= h.PerturbationSettings.Data(1));
+    
+    %if (perturb ~= h.current_trial_block.Data(3))
+    %    h.current_trial_block.Data(3) = perturb;
+    %end
+    h.current_trial_block.Data(3) = TrialsToPerturb(mod(h.current_trial_block.Data(2),numel(TrialsToPerturb)) + 1);
+    if h.current_trial_block.Data(3) && (h.which_perturbation.Value == 2) % decouple feedback
+        % select randomly a target level from a zone that's not of the
+        % target zone
+        unused_targets = h.target_level_array.Data(find(floor(h.target_level_array.Data)~=...
+            floor(h.TargetDefinition.Data(2))));
         %unused_targets = setdiff(h.target_level_array.Data,h.NewTargetDefinition.Data(2));
-        unused_targets = setdiff(h.target_level_array.Data,h.TargetDefinition.Data(2));
-        new_fake_target = unused_targets(randi(length(unused_targets)));
-        if  h.fake_target_zone.Data(2) ~= new_fake_target % fake target has changed
-            h.fake_target_zone.Data(2) = new_fake_target;
-        end
+        %unused_targets = setdiff(h.target_level_array.Data,h.TargetDefinition.Data(2));
+        h.fake_target_zone.Data(2) = unused_targets(randi(length(unused_targets)));
+%         new_fake_target = unused_targets(randi(length(unused_targets)));
+%         if  h.fake_target_zone.Data(2) ~= new_fake_target % fake target has changed
+%             h.fake_target_zone.Data(2) = new_fake_target;
+%         end
         h.fake_target_zone.ForegroundColor = [0 0 0];
         %h.current_trial_block.Data(5) = h.TargetHold.Data(3);
     else

@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 30-Sep-2017 18:21:20
+% Last Modified by GUIDE v2.5 25-Oct-2017 10:17:59
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -242,6 +242,7 @@ global TotalTime;
 global samplenum;
 global TargetLevel;
 global IsRewardedTrial;
+global TrialsToPerturb;
 
 if get(handles.startAcquisition,'value')    
     % checks whether last file was saved and enable quiting if not
@@ -279,6 +280,10 @@ if get(handles.startAcquisition,'value')
         samplenum = handles.samplenum;
         TargetLevel = handles.targetlevel;
         IsRewardedTrial = 1;
+        if handles.PerturbationSettings.Data(1)
+            TrialsToPerturb = zeros(1,ceil(1/handles.PerturbationSettings.Data(1)));
+            TrialsToPerturb(1) = 1;
+        end
         
         set(handles.startAcquisition,'String','Running');
         set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
@@ -1105,3 +1110,20 @@ handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
 guidata(hObject, handles);
 % Hint: get(hObject,'Value') returns toggle state of TargetLevel1Active
 
+
+
+% --- Executes when entered data in editable cell(s) in PerturbationSettings.
+function PerturbationSettings_CellEditCallback(hObject, eventdata, handles)
+% hObject    handle to PerturbationSettings (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
+%	Indices: row and column indices of the cell(s) edited
+%	PreviousData: previous data for the cell(s) edited
+%	EditData: string(s) entered by the user
+%	NewData: EditData or its converted form set on the Data property. Empty if Data was not changed
+%	Error: error string when failed to convert EditData to appropriate value for Data
+% handles    structure with handles and user data (see GUIDATA)
+global TrialsToPerturb;
+if handles.PerturbationSettings.Data(1) > 0
+    TrialsToPerturb = zeros(1,ceil(1/handles.PerturbationSettings.Data(1)));
+    TrialsToPerturb(1) = 1;
+end
