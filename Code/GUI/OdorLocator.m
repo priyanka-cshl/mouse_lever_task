@@ -176,6 +176,12 @@ if ~isempty(webcamlist)
             handles.focus_mode.Enable = 'off';
             handles.exposure_mode.Enable = 'off';
             handles.exposure_value.Enable = 'off';
+        case 'USB2.0 PC CAMERA'
+            handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
+            handles.camera_available = 1;
+            handles.focus_mode.Enable = 'off';
+            handles.exposure_mode.Enable = 'off';
+            handles.exposure_value.Enable = 'off';
         case {'Logitech HD Pro Webcam C920','HD Pro Webcam C920'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
             handles.camera_available = 1;
