@@ -312,26 +312,34 @@ void loop()
   //----------------------------------------------------------------------------
   // 6) determine trial mode
   //----------------------------------------------------------------------------
-  if (training_stage == 2)
+  if (timer_override)
   {
-    trialstate[1] = 4 * in_target_zone[1];
-  }
-  else
-  {
-    // if trialstate is active and reward has been received 
-    // - trialstate should be pushed to 0 after a buffer time has elapsed
-    // buffer time = multi_reward_params[0] if multiplerewards==0
-    // buffer time = multiplerewards if multiplerewards!=0
-    // note: reward_zone_timestamp will be updated when reward valve is turned off
-    if ( trialstate[0]==4 && ( (reward_state==4)||(reward_state==7) ) && (micros() - reward_zone_timestamp)>trial_off_buffer)
+    if (training_stage == 2)
     {
-      trialstate[1] = 5;
+      trialstate[1] = 4 * in_target_zone[1];
     }
     else
     {
-      trialstate[1] = trialstates.WhichState(trialstate[0], lever_position, (micros() - trial_timestamp));
+      // if trialstate is active and reward has been received 
+      // - trialstate should be pushed to 0 after a buffer time has elapsed
+      // buffer time = multi_reward_params[0] if multiplerewards==0
+      // buffer time = multiplerewards if multiplerewards!=0
+      // note: reward_zone_timestamp will be updated when reward valve is turned off
+      if ( trialstate[0]==4 && ( (reward_state==4)||(reward_state==7) ) && (micros() - reward_zone_timestamp)>trial_off_buffer)
+      {
+        trialstate[1] = 5;
+      }
+      else
+      {
+        trialstate[1] = trialstates.WhichState(trialstate[0], lever_position, (micros() - trial_timestamp));
+      }
     }
   }
+  else
+  {
+    trialstate[1] = 0;
+  }
+  
   if (trialstate[1] != trialstate[0]) // trial state changes
   {
     reward_state = (int)(trialstate[1] == 4); // trial was just activated, rewards can be triggered now
@@ -358,7 +366,15 @@ void loop()
       {
         odor_ON = true;
         // reset long ITI
-        trialstates.UpdateITI(long_iti); // will be changed to zero if animal receives a reward in the upcoming trial
+        if (decouple_reward_and_stimulus)
+        {
+          trialstates.UpdateITI(normal_iti); // will be changed to zero if animal receives a reward in the upcoming trial
+        }
+        else
+        {
+          trialstates.UpdateITI(long_iti); // will be changed to zero if animal receives a reward in the upcoming trial
+        }
+        //trialstates.UpdateITI(long_iti);
       }
       else if (trialstate[1]==4) // trial has just started
       {
