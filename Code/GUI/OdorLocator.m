@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 25-Oct-2017 10:17:59
+% Last Modified by GUIDE v2.5 03-Nov-2017 17:26:54
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -575,12 +575,12 @@ Update_Params(handles);
 Update_MultiRewards(handles);
 
 % --- Executes when entered data in editable cell(s) in ZoneLimitSettings.
-function ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles)
+function ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles)        
 % compute new target definition
-[handles] = Compute_TargetDefinition(handles);
+[handles] = Compute_TargetDefinition_fixspeed(handles);
 guidata(hObject,handles);
 Write_Params(handles);
-Update_TransferFunction_discrete(handles);
+Update_TransferFunction_fixspeed(handles);
 pause(0.1);
 Update_Params(handles);
 % --------------------------------------------------------------------
@@ -843,11 +843,28 @@ if handles.odor_vial.Value && length(handles.Odor_list.Value)==1
     MyVial = handles.Odor_list.Value;
     set(handles.odor_vial,'String',['Vial',num2str(MyVial),' ON'])
     set(handles.odor_vial,'BackgroundColor',[0.5 0.94 0.94]);
+    handles.Arduino.write(51 + MyVial, 'uint16'); 
 else
     set(handles.odor_vial,'String','Vial OFF')
     set(handles.odor_vial,'BackgroundColor',[0.94 0.94 0.94]);
+    handles.Arduino.write(50, 'uint16');
 end
 % Hint: get(hObject,'Value') returns toggle state of odor_vial
+% --- Executes on button press in BlankVial.
+function BlankVial_Callback(hObject, eventdata, handles)
+% hObject    handle to BlankVial (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if handles.BlankVial.Value && ~handles.odor_vial.Value
+    set(handles.BlankVial,'String','Blank ON')
+    set(handles.BlankVial,'BackgroundColor',[0.5 0.94 0.94]);
+    handles.Arduino.write(51, 'uint16'); 
+else
+    set(handles.BlankVial,'String','Blank OFF')
+    set(handles.BlankVial,'BackgroundColor',[0.94 0.94 0.94]);
+    handles.Arduino.write(50, 'uint16');
+end
+% Hint: get(hObject,'Value') returns toggle state of BlankVial
 
 % --- Executes on button press in startStopCamera.
 function startStopCamera_Callback(hObject, eventdata, handles)
@@ -1133,3 +1150,6 @@ if handles.PerturbationSettings.Data(1) > 0
     TrialsToPerturb = zeros(1,ceil(1/handles.PerturbationSettings.Data(1)));
     TrialsToPerturb(1) = 1;
 end
+
+
+
