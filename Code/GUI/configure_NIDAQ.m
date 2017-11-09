@@ -13,9 +13,12 @@ switch char(handles.computername)
         Channels.reward_channel = 10;
         Channels.lick_channel = 11;
         Channels.homesensor_channel = 12;
-        Channels.MFC = {'MFCAir','MFCOdor'};
-        MFCSetPointChannelIDs = {'ai6','ai7'};
-        MFCControlChannelIDs = {'ao0','ao1'};
+%         Channels.MFC = {'MFCAir','MFCOdor'};
+%         MFCSetPointChannelIDs = {'ai6','ai7'};
+%         MFCControlChannelIDs = {'ao0','ao1'};
+        Channels.MFC = {};
+        MFCSetPointChannelIDs = {};
+        MFCControlChannelIDs = {};
         
     case 'PRIYANKA-PC'
         DeviceName = 'Dev1';
