@@ -733,14 +733,14 @@ handles.Arduino.write(62, 'uint16'); % handler - move motor to specific location
 % get chosen location
 contents = cellstr(get(handles.all_locations,'String'));
 my_location = str2num(char(contents(handles.all_locations.Value)));
-handles.Arduino.write(my_location+101, 'uint16'); % which location
+handles.Arduino.write(my_location+handles.MotorLocations+1, 'uint16'); % which location
 
 % --- Executes on button press in motor_home.
 function motor_home_Callback(hObject, eventdata, handles)
 if handles.motor_override.Value
     pause(0.01);
     handles.Arduino.write(62, 'uint16'); % handler - move motor to specific location
-    handles.Arduino.write(101, 'uint16'); % home location       
+    handles.Arduino.write(handles.MotorLocations+1, 'uint16'); % home location       
 else
     set(handles.motor_home,'BackgroundColor',[0.5 0.94 0.94]);
 end

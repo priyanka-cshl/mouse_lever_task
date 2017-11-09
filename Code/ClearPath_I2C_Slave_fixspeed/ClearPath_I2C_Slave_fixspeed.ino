@@ -15,7 +15,7 @@ const byte SDA_pin = 20;
 const byte SCL_pin = 21;
 const byte home_out = 47;
 bool motor_ON = false;
-int home_location = 101;
+int home_location = 121;
 bool cheat = false;
 
 // motor position variables

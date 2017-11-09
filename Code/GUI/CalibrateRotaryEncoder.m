@@ -17,7 +17,7 @@ for i = 1:3
     handles.Arduino.write(62, 'uint16'); % handler - move motor to specific location
     % get chosen location
     pause(0.1);
-    handles.Arduino.write(my_location(i)+101, 'uint16'); % which location
+    handles.Arduino.write(my_location(i)+handles.MotorLocations+1, 'uint16'); % which location
     pause(1);
     % read the rotary encoder output
     temp_duration = handles.NI.DurationInSeconds;

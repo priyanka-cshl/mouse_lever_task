@@ -67,6 +67,7 @@ switch caller
 
         legend(6:8) = {'target_locations' 'skip_locations' 'offtarget_locations'};
         param(6:8) = h.locations_per_zone.Data(1:3);
+        param(7) = h.MotorLocations + 1;
         
 %         legend(9) = {'StimulusDelay'};
 %         if (h.is_stimulus_on.Value)

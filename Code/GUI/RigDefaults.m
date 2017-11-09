@@ -37,7 +37,7 @@ switch char(handles.computername)
         handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
         % shrink target zone
         handles.ShrinkTargetLocations.Value = 1;
-        handles.MotorLocations = 80;
+        handles.MotorLocations = 120;
         handles.minimumtarget = 1;
         
     case 'PRIYANKA-PC'
@@ -76,7 +76,7 @@ switch char(handles.computername)
         handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
         % shrink target zone
         handles.ShrinkTargetLocations.Value = 1;
-        handles.MotorLocations = 80;
+        handles.MotorLocations = 120;
         handles.minimumtarget = 1;
 end
 end

@@ -21,7 +21,7 @@ function [x] = LeverTransferFunction_fixspeed(target_limits, total_motor_locatio
     % calculate stepsize - lever displacement corresponding to one location
     stepsize = (max_val-min_target)/(total_motor_locations + 0.5);
     start_location = numel(target:stepsize:max_val);
-    end_location = -1*numel(target:-stepsize:min_val);
+    end_location = -numel(target:-stepsize:min_val);
     
-    x = linspace(start_location,end_location,total_locations);
+    x = linspace(end_location,start_location,total_locations);
 end

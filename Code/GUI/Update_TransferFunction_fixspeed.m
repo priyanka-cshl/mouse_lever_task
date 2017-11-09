@@ -8,13 +8,16 @@ Zone_limits = h.locations_per_zone.Data;
 [TF] = LeverTransferFunction_fixspeed(target_limits,h.MotorLocations,...
     h.TransferFunction.Data(1));
 
+TF(TF>h.MotorLocations) = h.MotorLocations;
+TF(TF<-h.MotorLocations) = -h.MotorLocations;
+
 if ~h.current_trial_block.Data(1)
     TF = -TF; % invert the TF
 end
 
 TF_4_plot = TF; % use later for colormap update
 
-TF = TF'+101; % get rid of negative values % transform to a column vector
+TF = TF'+ h.MotorLocations + 1; % get rid of negative values % transform to a column vector
 sent = 0;
 sending_attempts = 0;
 
@@ -43,7 +46,7 @@ while (sent == 0) && (sending_attempts <=8 )
             TF = TF_4_plot;
             %h.TF_plot.CData = abs(TF(length(TF):-1:1))'/max(TF);
             %h.TF_plot.CData = flipud(TF')/max(TF);
-            h.TF_plot.CData = (TF')/h.MotorLocations;
+            h.TF_plot.CData = flipud(TF')/h.MotorLocations;
             %h.all_locations.String = num2str(unique(TF)');
             h.all_locations.String = num2str((-h.MotorLocations:1:h.MotorLocations)');
         else

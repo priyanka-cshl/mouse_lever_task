@@ -638,8 +638,8 @@ void UpdateAllParams()
   //  target_params[i] = param_array[16 + i]; // high lim, target, low lim
   //}
   // params[19-21] = 'target_locations' 'skip_locations' 'offtarget_locations'
-  rewarded_locations[0] = 101 - param_array[19];
-  rewarded_locations[1] = 101 + param_array[19];
+  rewarded_locations[0] = param_array[20] - param_array[19];
+  rewarded_locations[1] = param_array[20] + param_array[19];
   //target_on = (param_array[22] > 0);
   long_iti = param_array[22];
   //delay_feedback_by = ((int)target_on) * (param_array[22] - 1) / min_time_since_last_motor_call;
