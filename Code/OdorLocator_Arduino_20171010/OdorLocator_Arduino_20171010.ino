@@ -12,7 +12,7 @@ ArCOM myUSB(SerialUSB); // Create an ArCOM wrapper for the SerialUSB interface
 // ----------------------------------------------------------------------------
 
 //pins
-int lever_in = A0; // 
+int lever_in = A0; //
 int fake_lever_in = A8; // signal generator
 
 int trial_reporter_pin = 41;
@@ -117,7 +117,7 @@ void setup()
     pinMode(odor_valves[i], OUTPUT);
     digitalWrite(odor_valves[i], LOW);
   }
-  
+
   pinMode(reward_valve_pin, OUTPUT);
   digitalWrite(reward_valve_pin, LOW);
   pinMode(in_reward_zone_reporter_pin, OUTPUT);
@@ -157,7 +157,7 @@ void setup()
 
   // Timer for odor machine cleaning
   Timer5.attachInterrupt(CleaningRoutine);
-  
+
   // analog read - lever position
   analogReadResolution(12);
 
@@ -173,7 +173,7 @@ void loop()
   // 1) process the incoming lever position data - and resend to DAC
   //----------------------------------------------------------------------------
   // read lever position as analog val
-  if (fake_lever==0)
+  if (fake_lever == 0)
   {
     lever_position = analogRead(lever_in);
   }
@@ -238,8 +238,8 @@ void loop()
       // update reward zone time stamp, if needed
       if (trialstate[0] == 4)
       {
-        if (in_target_zone[1] && (reward_state == 1)) 
-        // in trial, entered target zone, and has not received reward in this trial
+        if (in_target_zone[1] && (reward_state == 1))
+          // in trial, entered target zone, and has not received reward in this trial
         {
           reward_zone_timestamp = micros();
           reward_state = 2;
@@ -251,7 +251,7 @@ void loop()
         }
         if (multiplerewards > 0)
         {
-          if ( in_target_zone[1] && ((reward_state == 4)||(reward_state == 7)) && (micros() - reward_zone_timestamp)<= 1000*multiplerewards )
+          if ( in_target_zone[1] && ((reward_state == 4) || (reward_state == 7)) && (micros() - reward_zone_timestamp) <= 1000 * multiplerewards )
           {
             reward_zone_timestamp = micros();
             reward_state = 5;
@@ -306,7 +306,7 @@ void loop()
 
   digitalWrite(trial_reporter_pin, (trialstate[0] == 4)); // active trial?
   digitalWrite(in_target_zone_reporter_pin, in_target_zone[1]); // in_target_zone?
-  digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2)||(reward_state == 5)); // in_reward_zone?
+  digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2) || (reward_state == 5)); // in_reward_zone?
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
@@ -320,12 +320,12 @@ void loop()
     }
     else
     {
-      // if trialstate is active and reward has been received 
+      // if trialstate is active and reward has been received
       // - trialstate should be pushed to 0 after a buffer time has elapsed
       // buffer time = multi_reward_params[0] if multiplerewards==0
       // buffer time = multiplerewards if multiplerewards!=0
       // note: reward_zone_timestamp will be updated when reward valve is turned off
-      if ( trialstate[0]==4 && ( (reward_state==4)||(reward_state==7) ) && (micros() - reward_zone_timestamp)>trial_off_buffer)
+      if ( trialstate[0] == 4 && ( (reward_state == 4) || (reward_state == 7) ) && (micros() - reward_zone_timestamp) > trial_off_buffer)
       {
         trialstate[1] = 5;
       }
@@ -339,7 +339,7 @@ void loop()
   {
     trialstate[1] = 0;
   }
-  
+
   if (trialstate[1] != trialstate[0]) // trial state changes
   {
     reward_state = (int)(trialstate[1] == 4); // trial was just activated, rewards can be triggered now
@@ -347,22 +347,22 @@ void loop()
     // manage odor valves
     if (timer_override)
     {
-      if ( (trialstate[1]==0) && odor_ON)
+      if ( (trialstate[1] == 0) && odor_ON)
       {
-        for (i=0; i<4; i++)
+        for (i = 0; i < 4; i++)
         {
-          digitalWrite(odor_valves[i],(i==trialstate[1]));
+          digitalWrite(odor_valves[i], (i == trialstate[1]));
           odor_ON = false;
         }
       }
-      else if ( (trialstate[1]==1) && (trialstate[0]==0) )
+      else if ( (trialstate[1] == 1) && (trialstate[0] == 0) )
       {
-        for (i=0; i<4; i++)
+        for (i = 0; i < 4; i++)
         {
-          digitalWrite(odor_valves[i],(i==which_odor));
+          digitalWrite(odor_valves[i], (i == which_odor));
         }
       }
-      else if (trialstate[1]==2)
+      else if (trialstate[1] == 2)
       {
         odor_ON = true;
         // reset long ITI
@@ -376,21 +376,21 @@ void loop()
         }
         //trialstates.UpdateITI(long_iti);
       }
-      else if (trialstate[1]==4) // trial has just started
+      else if (trialstate[1] == 4) // trial has just started
       {
         time_in_target_zone = 0; // reset timespent value
       }
-      else if ((trialstate[1]==5) && odor_ON)
+      else if ((trialstate[1] == 5) && odor_ON)
       {
-        digitalWrite(odor_valves[0],true);
-        for (i=1; i<4; i++)
+        digitalWrite(odor_valves[0], true);
+        for (i = 1; i < 4; i++)
         {
-          digitalWrite(odor_valves[i],false);
+          digitalWrite(odor_valves[i], false);
           odor_ON = false;
         }
       }
     }
-    
+
     trialstate[0] = trialstate[1];
   }
   //----------------------------------------------------------------------------
@@ -417,7 +417,7 @@ void loop()
             stimulus_state[0] = 20;
             stimulus_state[1] = 20;
 
-            digitalWrite(odor_valves[0],HIGH);
+            digitalWrite(odor_valves[0], HIGH);
             odor_ON = true;
             timer_override = true;
             camera_on = 1;
@@ -426,9 +426,9 @@ void loop()
             myUSB.writeUint16(7);
             timer_override = false;
             // turn off all odor valves as caution
-            for (i=0; i<4; i++)
+            for (i = 0; i < 4; i++)
             {
-              digitalWrite(odor_valves[i],LOW);
+              digitalWrite(odor_valves[i], LOW);
             }
             camera_on = 1;
             break;
@@ -438,46 +438,46 @@ void loop()
             timer_override = false;
             camera_on = 1;
             cleaningON = true;
-            Timer5.start(1000*1000);
+            Timer5.start(1000 * 1000);
             break;
           case 4: // Cleaning Routine stop
             myUSB.writeUint16(4);
             timer_override = false;
             // turn off all odor valves as caution
-            for (i=0; i<4; i++)
+            for (i = 0; i < 4; i++)
             {
-              digitalWrite(odor_valves[i],LOW);
+              digitalWrite(odor_valves[i], LOW);
             }
             camera_on = 1;
             cleaningON = false;
             Timer5.stop();
-            break;            
+            break;
         }
         break;
       case 20: // update variables
-          num_of_params = myUSB.readUint16(); // get number of params to be updated
-          myUSB.readUint16Array(param_array, num_of_params);
-          myUSB.writeUint16Array(param_array, num_of_params);
-          UpdateAllParams(); // parse param array to variable names and update motor params
+        num_of_params = myUSB.readUint16(); // get number of params to be updated
+        myUSB.readUint16Array(param_array, num_of_params);
+        myUSB.writeUint16Array(param_array, num_of_params);
+        UpdateAllParams(); // parse param array to variable names and update motor params
         break;
       case 30: // update transfer function or calibrate transfer function
-          switch (FSMheader - 30)
-          {
-            case 0: // close loop
-              num_of_locations = myUSB.readUint16(); // get number of params to be updated
-              min_time_since_last_motor_call = min_time_since_last_motor_call_default;
-              close_loop_mode = 1;
-              break;
-            case 1: // open loop
-              num_of_locations = myUSB.readUint16();
-              min_time_since_last_motor_call = myUSB.readUint16();
-              close_loop_mode = 0;
-              break;
-          }
-          myUSB.readUint16Array(transfer_function, num_of_locations);
-          myUSB.writeUint16Array(transfer_function, num_of_locations);
-          myUSB.writeUint16(83);
-          transfer_function_pointer = 0;
+        switch (FSMheader - 30)
+        {
+          case 0: // close loop
+            num_of_locations = myUSB.readUint16(); // get number of params to be updated
+            min_time_since_last_motor_call = min_time_since_last_motor_call_default;
+            close_loop_mode = 1;
+            break;
+          case 1: // open loop
+            num_of_locations = myUSB.readUint16();
+            min_time_since_last_motor_call = myUSB.readUint16();
+            close_loop_mode = 0;
+            break;
+        }
+        myUSB.readUint16Array(transfer_function, num_of_locations);
+        myUSB.writeUint16Array(transfer_function, num_of_locations);
+        myUSB.writeUint16(83);
+        transfer_function_pointer = 0;
         break;
       case 40: // toggle MFCs or odor valves
         switch (FSMheader - 40)
@@ -496,7 +496,22 @@ void loop()
             break;
         }
         break;
-      case 50: // update motor variables
+      case 50: // open odor vials
+        if ((FSMheader - 50) > 0)
+        {
+          which_odor = (FSMheader - 51);
+          for (i = 0; i < 4; i++)
+          {
+            digitalWrite(odor_valves[i], (i == which_odor));
+          }
+        }
+        else
+        {
+          for (i = 0; i < 4; i++)
+          {
+            digitalWrite(odor_valves[i], false);
+          }
+        }
         break;
       case 60: // motor related
         switch (FSMheader - 60)
@@ -545,7 +560,7 @@ void loop()
             { } // wait for serial input or time-out
             myUSB.readUint16Array(multi_reward_params, 2);
             myUSB.writeUint16Array(multi_reward_params, 2);
-          break;
+            break;
         }
         break;
       case 90: // SPI communication
@@ -600,21 +615,21 @@ void UpdateAllParams()
   {
     trial_trigger_timing[i] = param_array[10 + i]; // trig_hold, min_trial, max_trial
   }
-  
+
   // copy trig_smooth to multiplerewards
   multiplerewards = param_array[13];
 
   if (multiplerewards == 0)
   {
-    trial_off_buffer = 1000*param_array[0];
+    trial_off_buffer = 1000 * param_array[0];
   }
   else
   {
-    trial_off_buffer = 1000*multiplerewards;
+    trial_off_buffer = 1000 * multiplerewards;
   }
 
   camera_on = param_array[1];
-  
+
   // param[14] = timestamp
   which_odor = param_array[14]; // odor vial number
   //target_which = param_array[15];
@@ -636,7 +651,7 @@ void UpdateAllParams()
   //param_array[27] = TF size;
   training_stage = param_array[28];
   fake_lever = param_array[29];
-  
+
   // update trial state params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
 }
@@ -653,13 +668,13 @@ void MoveMotor()
     // roll over the TF array pointer
     transfer_function_pointer = (transfer_function_pointer + 1) % num_of_locations;
   }
-    camera = camera_on*(!camera);
-    digitalWrite(camera_pin,camera);
+  camera = camera_on * (!camera);
+  digitalWrite(camera_pin, camera);
 }
 
 void RewardNow()
 {
-  if ( ((reward_state == 3)||(reward_state == 6)) && timer_override )
+  if ( ((reward_state == 3) || (reward_state == 6)) && timer_override )
   {
     digitalWrite(reward_valve_pin, HIGH);
     digitalWrite(reward_reporter_pin, HIGH);
@@ -683,11 +698,11 @@ void CleaningRoutine()
   if (odorON)
   {
     // update the odor vial index
-    whichOdor = (whichOdor + 1)%4;
+    whichOdor = (whichOdor + 1) % 4;
     // update valve state
-    for (i=0; i<4; i++)
+    for (i = 0; i < 4; i++)
     {
-      digitalWrite(odor_valves[i],(i==whichOdor));
+      digitalWrite(odor_valves[i], (i == whichOdor));
     }
   }
 }
