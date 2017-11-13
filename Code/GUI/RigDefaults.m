@@ -39,6 +39,8 @@ switch char(handles.computername)
         handles.ShrinkTargetLocations.Value = 1;
         handles.MotorLocations = 120;
         handles.minimumtarget = 1;
+        handles.MotorLocationsRange = 140;
+        handles.watercoeffs = [0.00995 -0.044]; % water per drop = coeef(1)*time +coeef(2)
         
     case 'PRIYANKA-PC'
         handles.file_names.Data(2) = {'C:\Data\Behavior'};

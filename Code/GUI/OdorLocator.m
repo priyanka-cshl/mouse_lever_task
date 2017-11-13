@@ -547,7 +547,7 @@ else
     handles.Arduino.write(82, 'uint16'); 
     handles.Reward_Report.Data(1,3) = handles.Reward_Report.Data(1,3) + 1;
 end
-handles.Reward_Report.Data(1,1) = handles.Reward_Report.Data(1,1) + 10*(handles.RewardControls.Data(1)*0.015 - 0.042);
+handles.Reward_Report.Data(1,1) = handles.Reward_Report.Data(1,1) + 10*(handles.RewardControls.Data(1)*handles.watercoeffs(1) + handles.watercoeffs(2));
 handles.lastrewardtime = handles.timestamp.Data;
 guidata(hObject, handles);
 

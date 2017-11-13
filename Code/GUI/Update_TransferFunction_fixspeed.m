@@ -5,7 +5,7 @@ function Update_TransferFunction_fixspeed(h)
 target_limits = [h.TrialSettings.Data(2) h.TargetDefinition.Data(3:-1:1)' h.TrialSettings.Data(1)];
 DAC_limits = h.DAC_levels.Data;
 Zone_limits = h.locations_per_zone.Data;
-[TF] = LeverTransferFunction_fixspeed(target_limits,h.MotorLocations,...
+[TF] = LeverTransferFunction_fixspeed(target_limits,h.MotorLocationsRange,...
     h.TransferFunction.Data(1));
 
 TF(TF>h.MotorLocations) = h.MotorLocations;

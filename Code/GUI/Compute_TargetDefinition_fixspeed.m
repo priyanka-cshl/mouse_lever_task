@@ -41,6 +41,6 @@ h.fake_target_zone.Data(3) = h.fake_target_zone.Data(2) - ...
 %h.TargetDefinition.Data = h.NewTargetDefinition.Data;
 
 % update target locations
-h.locations_per_zone.Data(1) = floor(h.ZoneLimitSettings.Data(1)/((h.TrialSettings.Data(1) - h.minimumtarget)/(h.MotorLocations + 0.5)));
+h.locations_per_zone.Data(1) = floor(h.ZoneLimitSettings.Data(1)/((h.TrialSettings.Data(1) - h.minimumtarget)/(h.MotorLocationsRange + 0.5)));
         
 end
