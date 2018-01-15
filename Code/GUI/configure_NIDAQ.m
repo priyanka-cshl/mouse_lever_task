@@ -20,7 +20,7 @@ switch char(handles.computername)
         MFCSetPointChannelIDs = {};
         MFCControlChannelIDs = {};
         
-    case 'PRIYANKA-PC'
+    case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
         DeviceName = 'Dev1';
         Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','RespirationA','RespirationB'};
         AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai12'};

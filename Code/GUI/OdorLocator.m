@@ -172,30 +172,28 @@ set(handles.axes4, 'Color', 'none');
 % for webcam
 handles.camera_available = 0;
 if ~isempty(webcamlist)
-    handles.mycam = webcam(1);
-    switch handles.mycam.Name
-        case 'USB Video Device'
-            handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
-            handles.camera_available = 1;
-            handles.focus_mode.Enable = 'off';
-            handles.exposure_mode.Enable = 'off';
-            handles.exposure_value.Enable = 'off';
-        case 'USB2.0 PC CAMERA'
-            handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
-            handles.camera_available = 1;
-            handles.focus_mode.Enable = 'off';
-            handles.exposure_mode.Enable = 'off';
-            handles.exposure_value.Enable = 'off';
-        case {'Logitech HD Pro Webcam C920','HD Pro Webcam C920'}
+    
+    switch char(handles.computername)
+        case {'marbprec', 'PRIYANKA-HP'}
+            handles.mycam = webcam(1); %{'Logitech HD Pro Webcam C920','HD Pro Webcam C920'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
             handles.camera_available = 1;
             handles.focus_mode.Value = 2;
             handles.mycam.ExposureMode = 'auto';
-            handles.exposure_mode.Value = 1;
+            handles.exposure_mode.Value = 1;                                                                      
             handles.mycam.Focus = 250;
             handles.exposure_value.Data = handles.mycam.Exposure;
             handles.mycam.Zoom = 100;
+            handles.mycam = webcam(1);
+        case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
+            handles.mycam = webcam(2);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
+            handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
+            handles.camera_available = 1;
+            handles.focus_mode.Enable = 'off';
+            handles.exposure_mode.Enable = 'off';
+            handles.exposure_value.Enable = 'off';
     end
+
 end
 % display webcam image, if available
 axes(handles.cameraAxes);

@@ -42,7 +42,7 @@ switch char(handles.computername)
         handles.MotorLocationsRange = 140;
         handles.watercoeffs = [0.00995 -0.044]; % water per drop = coeef(1)*time +coeef(2)
         
-    case 'PRIYANKA-PC'
+    case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
         handles.file_names.Data(2) = {'C:\Data\Behavior'};
         handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\Behavior'};
         %handles.NIchannels = 11;
@@ -80,5 +80,8 @@ switch char(handles.computername)
         handles.ShrinkTargetLocations.Value = 1;
         handles.MotorLocations = 120;
         handles.minimumtarget = 1;
+        handles.MotorLocationsRange = 140;
+        handles.watercoeffs = [0.00995 -0.044]; % water per drop = coeef(1)*time +coeef(2)
+        
 end
 end
