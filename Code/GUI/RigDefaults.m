@@ -81,7 +81,7 @@ switch char(handles.computername)
         handles.MotorLocations = 120;
         handles.minimumtarget = 1;
         handles.MotorLocationsRange = 140;
-        handles.watercoeffs = [0.00995 -0.044]; % water per drop = coeef(1)*time +coeef(2)
+        handles.watercoeffs = [0.03362 -0.1036]; % water per drop = coeef(1)*time +coeef(2)
         
 end
 end
