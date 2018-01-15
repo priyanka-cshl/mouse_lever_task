@@ -61,14 +61,7 @@ handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostn
 handles.DAQrates.Data = [500 20]';
 handles.which_perturbation.Value = 1;
 handles.TransferFunction.Data(2) = 1;
-%handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
-% populate target levels
-handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),handles.targets_to_use));
-% handles.target_level_array.Data 
-%handles.NewTargetDefinition.Data(2) = handles.target_level_array.Data(2);
-handles.TargetDefinition.Data(2) = handles.target_level_array.Data(2);
-%handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
-%handles.NewTargetDefinition.Data(2) = handles.target_level_array.Data(2);
+
 
 % clear indicators
 %handles.RewardStatus.Data = [0 0 0]';
@@ -97,6 +90,17 @@ if ~exist(fullfile(foldername_server,animal_name),'dir')
     mkdir(fullfile(foldername_server,animal_name));
     disp('making remote data directory');
 end
+
+% mouse specific settings
+[handles] = MouseDefaults(handles);
+%handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
+% populate target levels
+handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),handles.targets_to_use));
+% handles.target_level_array.Data 
+%handles.NewTargetDefinition.Data(2) = handles.target_level_array.Data(2);
+handles.TargetDefinition.Data(2) = handles.target_level_array.Data(2);
+%handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
+%handles.NewTargetDefinition.Data(2) = handles.target_level_array.Data(2);
 
 % load settings
 handles = LoadSettings(handles);

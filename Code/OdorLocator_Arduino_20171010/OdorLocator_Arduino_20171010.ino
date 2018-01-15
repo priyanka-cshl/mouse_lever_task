@@ -695,6 +695,7 @@ void CleaningRoutine()
   odorON = !odorON; // toggle the state of the final valves
   digitalWrite(target_valves[0], odorON );
   digitalWrite(target_valves[1], odorON );
+  digitalWrite(camera_pin, odorON);
   if (odorON)
   {
     // update the odor vial index
