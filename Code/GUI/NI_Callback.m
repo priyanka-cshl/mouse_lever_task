@@ -48,6 +48,9 @@ end
 
 for i = h.Channels.homesensor_channel
     samples_new = event.Data(:,i);
+    if h.fliphome
+        samples_new = 1 - samples_new;
+    end
     TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];
 end
              
