@@ -40,7 +40,12 @@ switch char(handles.computername)
         handles.MotorLocations = 120;
         handles.minimumtarget = 1;
         handles.MotorLocationsRange = 140;
+<<<<<<< HEAD
         handles.watercoeffs = [0.01181 -0.0066]; % water per drop = coeef(1)*time +coeef(2)
+=======
+        handles.watercoeffs = [0.03672 -0.2488]; % water per drop = coeef(1)*time +coeef(2)
+        handles.fliphome = 0; 
+>>>>>>> f6340cb1d243a97136ba38f3fdb9ae1fc2a43d2c
         
     case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
         handles.file_names.Data(2) = {'C:\Data\Behavior'};
@@ -82,6 +87,7 @@ switch char(handles.computername)
         handles.minimumtarget = 1;
         handles.MotorLocationsRange = 140;
         handles.watercoeffs = [0.03362 -0.1036]; % water per drop = coeef(1)*time +coeef(2)
+        handles.fliphome = 1;
         
 end
 end
