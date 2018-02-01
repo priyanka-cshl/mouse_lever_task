@@ -617,8 +617,9 @@ set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
 handles.motor_home.Enable = 'off';
 
 % update transfer function
+Update_TransferFunction_fixspeed(handles);
 Update_Params(handles);
-Update_TransferFunction_discrete(handles);
+%Update_TransferFunction_discrete(handles);
 handles.locations_per_zone.ForegroundColor = 'k';
 % Hint: get(hObject,'Value') returns toggle state of update_zones
 
@@ -645,9 +646,10 @@ handles.Arduino.write(70, 'uint16');
 set(handles.motor_status,'String','OFF')
 set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
 handles.motor_home.Enable = 'off';
-    
+
+Update_TransferFunction_fixspeed(handles);
 Update_Params(handles);
-Update_TransferFunction_discrete(handles);
+%Update_TransferFunction_discrete(handles);
 
 % turn motor on
 handles.Arduino.write(71, 'uint16'); 
@@ -674,12 +676,12 @@ if get(handles.lever_raw_on,'Value')
     set(handles.lever_raw_on,'BackgroundColor',[0.5 0.94 0.94]);
     set(handles.lever_raw_plot,'LineStyle','none');
     set(handles.respiration_1_plot,'LineStyle','none');
-    set(handles.respiration_2_plot,'LineStyle','none');
+    %set(handles.respiration_2_plot,'LineStyle','none');
 else
     set(handles.lever_raw_on,'BackgroundColor',[0.94 0.94 0.94]);
     set(handles.lever_raw_plot,'LineStyle','-');
     set(handles.respiration_1_plot,'LineStyle','-');
-    set(handles.respiration_2_plot,'LineStyle','-');
+    %set(handles.respiration_2_plot,'LineStyle','-');
 end
 guidata(hObject, handles);
 
@@ -787,8 +789,9 @@ if get(hObject,'Value')
     end
 else
     
+    Update_TransferFunction_fixspeed(handles);
     Update_Params(handles);
-    Update_TransferFunction_discrete(handles);
+    %Update_TransferFunction_discrete(handles);
 end
 
 % --- Executes when entered data in editable cell(s) in MFC_table.
