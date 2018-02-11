@@ -6,7 +6,7 @@ switch char(handles.computername)
         handles.file_names.Data(2) = {'C:\Data\Behavior'};
         handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\Behavior'};
         handles.ManifoldOutlets = 16;
-        handles.DAC_settings.Data = [2.0 0.55]';
+        handles.DAC_settings.Data = [2.2 0.5]';
         % motor location settings
         handles.motor_params = 4;
         % disable transfer function calibrator
@@ -18,7 +18,7 @@ switch char(handles.computername)
         % TF - locations per zone
         handles.locations_per_zone.Data = [20 0 60]';
         % Trial settings
-        handles.TrialSettings.Data = [4.8 0.2 200 100 3500 5000]';
+        handles.TrialSettings.Data = [4.8 0.2 200 100 3500 200]';
         % zone width
         handles.ZoneLimitSettings.Data(1) = 0.4;%[0.5 0.1]';
         % reward settings
@@ -40,7 +40,7 @@ switch char(handles.computername)
         handles.MotorLocations = 120;
         handles.minimumtarget = 1;
         handles.MotorLocationsRange = 140;
-        handles.watercoeffs = [0.03672 -0.2488]; % water per drop = coeef(1)*time +coeef(2)
+        handles.watercoeffs = [0.01181 -0.0066]; % water per drop = coeef(1)*time +coeef(2)
         handles.fliphome = 0; 
         
     case {'PRIYANKA-PC','DESKTOP-05QAM9D'}

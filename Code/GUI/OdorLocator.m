@@ -174,7 +174,7 @@ handles.camera_available = 0;
 if ~isempty(webcamlist)
     
     switch char(handles.computername)
-        case {'marbprec', 'PRIYANKA-HP'}
+        case {'marbprec'}
             handles.mycam = webcam(1); %{'Logitech HD Pro Webcam C920','HD Pro Webcam C920'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
             handles.camera_available = 1;
@@ -185,6 +185,13 @@ if ~isempty(webcamlist)
             handles.exposure_value.Data = handles.mycam.Exposure;
             handles.mycam.Zoom = 100;
             handles.mycam = webcam(1);
+       case {'PRIYANKA-HP'}
+            handles.mycam = webcam(1);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
+            handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
+            handles.camera_available = 1;
+            handles.focus_mode.Enable = 'off';
+            handles.exposure_mode.Enable = 'off';
+            handles.exposure_value.Enable = 'off';
         case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
             handles.mycam = webcam(2);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
@@ -610,8 +617,9 @@ set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
 handles.motor_home.Enable = 'off';
 
 % update transfer function
+Update_TransferFunction_fixspeed(handles);
 Update_Params(handles);
-Update_TransferFunction_discrete(handles);
+%Update_TransferFunction_discrete(handles);
 handles.locations_per_zone.ForegroundColor = 'k';
 % Hint: get(hObject,'Value') returns toggle state of update_zones
 
@@ -638,9 +646,10 @@ handles.Arduino.write(70, 'uint16');
 set(handles.motor_status,'String','OFF')
 set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
 handles.motor_home.Enable = 'off';
-    
+
+Update_TransferFunction_fixspeed(handles);
 Update_Params(handles);
-Update_TransferFunction_discrete(handles);
+%Update_TransferFunction_discrete(handles);
 
 % turn motor on
 handles.Arduino.write(71, 'uint16'); 
@@ -667,12 +676,12 @@ if get(handles.lever_raw_on,'Value')
     set(handles.lever_raw_on,'BackgroundColor',[0.5 0.94 0.94]);
     set(handles.lever_raw_plot,'LineStyle','none');
     set(handles.respiration_1_plot,'LineStyle','none');
-    set(handles.respiration_2_plot,'LineStyle','none');
+    %set(handles.respiration_2_plot,'LineStyle','none');
 else
     set(handles.lever_raw_on,'BackgroundColor',[0.94 0.94 0.94]);
     set(handles.lever_raw_plot,'LineStyle','-');
     set(handles.respiration_1_plot,'LineStyle','-');
-    set(handles.respiration_2_plot,'LineStyle','-');
+    %set(handles.respiration_2_plot,'LineStyle','-');
 end
 guidata(hObject, handles);
 
@@ -780,8 +789,9 @@ if get(hObject,'Value')
     end
 else
     
+    Update_TransferFunction_fixspeed(handles);
     Update_Params(handles);
-    Update_TransferFunction_discrete(handles);
+    %Update_TransferFunction_discrete(handles);
 end
 
 % --- Executes when entered data in editable cell(s) in MFC_table.
