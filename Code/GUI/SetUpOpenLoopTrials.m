@@ -2,8 +2,11 @@ function [h] = SetUpOpenLoopTrials(h)
 
 % motor locations to use
 all_locations = [-h.SessionSettings.Data(2):h.SessionSettings.Data(3):h.SessionSettings.Data(2)];
-all_odors = h.Odor_list.Value
+all_odors = h.Odor_list.Value;
 num_repeats = h.SessionSettings.Data(1);
+
+% trials/repeat
+h.current_trial_block.Data(3) = numel(all_locations)*numel(all_odors);
 
 Trial_list = [repmat(all_locations',numel(all_odors),1) ...
     reshape(repmat(all_odors,numel(all_locations),1), numel(all_locations)*numel(all_odors),1)];

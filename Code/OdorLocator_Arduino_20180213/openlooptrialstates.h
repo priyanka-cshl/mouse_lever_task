@@ -19,6 +19,8 @@ class openlooptrialstates
     int _odor_duration; // in ms
     int _post_odor_duration; // in ms
     int _iti_duration; // in ms
+    long _time_since_last_change;
+    int _openlooptrialstate;
 };
 
 #endif

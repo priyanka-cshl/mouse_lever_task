@@ -1,15 +1,15 @@
 // ---- adding libraries ------------------------------------------------------
 #include <SPI.h> // library for SPI communication - to DAC
 #include "trialstates.h" // function to process trial states
-#include "openlooptrialstates.h" // function to process trial 
 #include <Wire.h> // library for I2C communication - to slave Arduinos
 #include <DueTimer.h> // Import the ArCOM library
 #include "ArCOM.h"
+#include "openlooptrialstates.h" // function to process open loop trial states 13.02.18
 // ----------------------------------------------------------------------------
 
 // ---- initialize function calls ---------------------------------------------
 trialstates trialstates;
-openlooptrialstates openlooptrialstates;
+openlooptrialstates openlooptrialstates; // open loop trial states 13.02.18
 ArCOM myUSB(SerialUSB); // Create an ArCOM wrapper for the SerialUSB interface
 // ----------------------------------------------------------------------------
 
@@ -84,7 +84,7 @@ int trial_trigger_timing[] = {10, 600, 3000}; // trigger hold, trigger smooth, t
 int long_iti = 0;
 int normal_iti = 0;
 
-// open_loop_related - 23.01.2018
+// open_loop_related - 13.02.18
 int open_loop_mode = 0; // deliver odor stimuli at different locations
 int open_loop_trial_timing[] = {500, 500, 500, 500, 500}; //motor_settle, pre-odor, odor, post-odor, iti in ms
 int open_loop_odor = 0;
@@ -173,7 +173,7 @@ void setup()
   // first call to set up params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
   trialstates.UpdateITI(normal_iti);
-  openlooptrialstates.UpdateOpenLoopTrialParams(open_loop_trial_timing); // 23.01.2018
+  openlooptrialstates.UpdateOpenLoopTrialParams(open_loop_trial_timing); // 13.02.18
 }
 
 
@@ -212,12 +212,12 @@ void loop()
     motor_location = map(lever_position, 0, 65534, 0, num_of_locations - 1);
     stimulus_state[1] = transfer_function[motor_location];
   }
-  else if (open_loop_mode) // 23.01.2018
+  else if (open_loop_mode) // 13.02.18
   {
     lever_position = 0;
     motor_location = map(open_loop_location, 0, 65534, 0, 300); // max location is 256 - 8 bit
     SPIWriter(dac_spi_pin, motor_location);
-  } 
+  }
   else
   {
     // write motor command position to DAC
@@ -246,7 +246,7 @@ void loop()
   //----------------------------------------------------------------------------
   // 3) update stimulus state, direction etc. if the stimulus_state has changed
   //----------------------------------------------------------------------------
-  if ((stimulus_state[1] != stimulus_state[0]) && !open_loop_mode)
+  if (stimulus_state[1] != stimulus_state[0])
   {
     if ( ((micros() - stimulus_state_timestamp) >= 1000 * min_time_since_last_motor_call) )
     {
@@ -328,32 +328,35 @@ void loop()
   //----------------------------------------------------------------------------
   // 6) determine trial mode
   //----------------------------------------------------------------------------
-  if (timer_override && !open_loop_mode)
+  if (timer_override)
   {
-    if (training_stage == 2)
+    if (close_loop_mode)
     {
-      trialstate[1] = 4 * in_target_zone[1];
-    }
-    else
-    {
-      // if trialstate is active and reward has been received
-      // - trialstate should be pushed to 0 after a buffer time has elapsed
-      // buffer time = multi_reward_params[0] if multiplerewards==0
-      // buffer time = multiplerewards if multiplerewards!=0
-      // note: reward_zone_timestamp will be updated when reward valve is turned off
-      if ( trialstate[0] == 4 && ( (reward_state == 4) || (reward_state == 7) ) && (micros() - reward_zone_timestamp) > trial_off_buffer)
+      if (training_stage == 2)
       {
-        trialstate[1] = 5;
+        trialstate[1] = 4 * in_target_zone[1];
       }
       else
       {
-        trialstate[1] = trialstates.WhichState(trialstate[0], lever_position, (micros() - trial_timestamp));
+        // if trialstate is active and reward has been received
+        // - trialstate should be pushed to 0 after a buffer time has elapsed
+        // buffer time = multi_reward_params[0] if multiplerewards==0
+        // buffer time = multiplerewards if multiplerewards!=0
+        // note: reward_zone_timestamp will be updated when reward valve is turned off
+        if ( trialstate[0] == 4 && ( (reward_state == 4) || (reward_state == 7) ) && (micros() - reward_zone_timestamp) > trial_off_buffer)
+        {
+          trialstate[1] = 5;
+        }
+        else
+        {
+          trialstate[1] = trialstates.WhichState(trialstate[0], lever_position, (micros() - trial_timestamp));
+        }
       }
     }
-  }
-  else if (open_loop_mode)
-  {
-    trialstate[1] = openlooptrialstates.WhichState(trialstate[0], (micros() - trial_timestamp)); 
+    else if (open_loop_mode)
+    {
+      trialstate[1] = openlooptrialstates.WhichState(trialstate[0], (micros() - trial_timestamp));
+    }
   }
   else
   {
@@ -449,7 +452,6 @@ void loop()
       }
     }
   }
-
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
@@ -477,7 +479,7 @@ void loop()
             odor_ON = true;
             timer_override = true;
             camera_on = 1;
-            open_loop_mode = 0;
+            open_loop_mode = 0; //13.02.18
             break;
           case 2: // Acquisition stop handshake
             myUSB.writeUint16(7);
@@ -534,13 +536,13 @@ void loop()
             }
             camera_on = 1;
             open_loop_mode = 0;
-            break;  
+            break;
         }
         break;
       case 20: // update variables
         switch (FSMheader - 20)
         {
-          case 0: // update variables for close loop mode
+          case 0:
             num_of_params = myUSB.readUint16(); // get number of params to be updated
             myUSB.readUint16Array(param_array, num_of_params);
             myUSB.writeUint16Array(param_array, num_of_params);
@@ -552,7 +554,8 @@ void loop()
             myUSB.writeUint16Array(open_loop_param_array, num_of_params);
             UpdateOpenLoopParams(); // parse param array to variable names and update motor params
             break;  
-        }        
+        }
+        break;
       case 30: // update transfer function or calibrate transfer function
         switch (FSMheader - 30)
         {

@@ -1,36 +1,36 @@
-function varargout = OdorLocator(varargin)
+function varargout = OpenLoopOdorLocator(varargin)
 
-% ODORLOCATOR MATLAB code for OdorLocator.fig (GUI)
-%      ODORLOCATOR, by itself, creates a new ODORLOCATOR or raises the existing
+% OPENLOOPODORLOCATOR MATLAB code for OpenLoopOdorLocator.fig (GUI)
+%      OPENLOOPODORLOCATOR, by itself, creates a new OPENLOOPODORLOCATOR or raises the existing
 %      singleton*.
 %
-%      H = ODORLOCATOR returns the handle to a new ODORLOCATOR or the handle to
+%      H = OPENLOOPODORLOCATOR returns the handle to a new OPENLOOPODORLOCATOR or the handle to
 %      the existing singleton*.
 %zeros
-%      ODORLOCATOR('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in ODORLOCATOR.M with the given input arguments.
+%      OPENLOOPODORLOCATOR('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in OPENLOOPODORLOCATOR.M with the given input arguments.
 %
-%      ODORLOCATOR('Property','Value',...) creates a new ODORLOCATOR or raises the
+%      OPENLOOPODORLOCATOR('Property','Value',...) creates a new OPENLOOPODORLOCATOR or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before OdorLocator_OpeningFcn gets called.  An
+%      applied to the GUI before OpenLoopOdorLocator_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to OdorLocator_OpeningFcn via varargin.
+%      stop.  All inputs are passed to OpenLoopOdorLocator_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help OdorLocator
+% Edit the above text to modify the response to help OpenLoopOdorLocator
 
-% Last Modified by GUIDE v2.5 03-Nov-2017 17:26:54
+% Last Modified by GUIDE v2.5 12-Feb-2018 21:30:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @OdorLocator_OpeningFcn, ...
-                   'gui_OutputFcn',  @OdorLocator_OutputFcn, ...
+                   'gui_OpeningFcn', @OpenLoopOdorLocator_OpeningFcn, ...
+                   'gui_OutputFcn',  @OpenLoopOdorLocator_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -44,9 +44,8 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-
-% --- Executes just before OdorLocator is made visible.
-function OdorLocator_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before OpenLoopOdorLocator is made visible.
+function OpenLoopOdorLocator_OpeningFcn(hObject, eventdata, handles, varargin)
 % basic housekeeping
 handles.output = hObject;
 handles.mfilename = mfilename;
@@ -54,14 +53,13 @@ handles.startAcquisition.Enable = 'off';
 
 % rig specific settings
 handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
-% [handles] = RigDefaults(handles);
+[handles] = RigDefaults(handles);
 
 % defaults
 handles.DAQrates.Data = [500 20]';
 
 % clear indicators
-handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
-%handles.water_received.Data = 0;
+handles.current_trial_block.Data(1:7,1) = zeros(7,1);
 handles.Date.String = datestr(now, 'mm-dd-yy');
 handles.StartTime.Visible = 'off';
 handles.StopTime.Visible = 'off';
@@ -81,23 +79,8 @@ if ~exist(fullfile(foldername_server,animal_name),'dir')
     disp('making remote data directory');
 end
 
-% mouse specific settings
-[handles] = MouseDefaults(handles);
-%handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
-% populate target levels
-handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),handles.targets_to_use));
-% handles.target_level_array.Data 
-%handles.NewTargetDefinition.Data(2) = handles.target_level_array.Data(2);
-handles.TargetDefinition.Data(2) = handles.target_level_array.Data(2);
-%handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
-%handles.NewTargetDefinition.Data(2) = handles.target_level_array.Data(2);
-
-% load settings
-handles = LoadSettings(handles);
-
 % set up NI acquisition and reset Arduino
 handles.sampling_rate_array = handles.DAQrates.Data;
-%[handles.NI,handles.Arduino,handles.MFC,handles.Odors,handles.Teensy] = configure_NI_and_Arduino_ArCOM(handles);
 [handles.NI,handles.MFC,handles.Channels,handles.NIchannels] = configure_NIDAQ(handles);
 handles.Arduino = configure_ArduinoMain(handles);
 
@@ -116,14 +99,15 @@ handles.lever_DAC_plot = plot(NaN, NaN,'k','linewidth',1); %lever rescaled
 handles.stimulus_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor location (rotary encoder)
 handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1); %licks
 handles.homesensor_plot = plot(NaN, NaN,'k'); %homesensor
-
 handles.respiration_1_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % respiration sensor 1
 handles.respiration_2_plot = plot(NaN, NaN, 'color',Plot_Colors('p')); % respiration sensor 2
 
 set(handles.axes1,'YLim',handles.Plot_YLim.Data);
 
 axes(handles.axes9); % Transfer function plot
-handles.TF_plot = imagesc(((-120:1:120)')/120,[-1 1]);
+handles.TF_plot = ...
+    imagesc(((-handles.MotorLocations:1:handles.MotorLocations)')/...
+    handles.MotorLocations,[-1 1]);
 colormap(brewermap([handles.ManifoldOutlets],'rdbu'));
 axis off tight
 set(handles.axes9,'YLim',[0 100]);
@@ -136,8 +120,7 @@ set(handles.axes4, 'Color', 'none');
 
 % for webcam
 handles.camera_available = 0;
-if ~isempty(webcamlist)
-    
+if ~isempty(webcamlist)    
     switch char(handles.computername)
         case {'marbprec'}
             handles.mycam = webcam(1); %{'Logitech HD Pro Webcam C920','HD Pro Webcam C920'}
@@ -154,18 +137,11 @@ if ~isempty(webcamlist)
             handles.mycam = webcam(1);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
             handles.camera_available = 1;
-%             handles.focus_mode.Enable = 'off';
-%             handles.exposure_mode.Enable = 'off';
-%             handles.exposure_value.Enable = 'off';
-        case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
+       case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
             handles.mycam = webcam(2);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
             handles.camera_available = 1;
-%             handles.focus_mode.Enable = 'off';
-%             handles.exposure_mode.Enable = 'off';
-%             handles.exposure_value.Enable = 'off';
     end
-
 end
 % display webcam image, if available
 axes(handles.cameraAxes);
@@ -185,7 +161,7 @@ handles.update_call = 0;
 % Update handles structure
 guidata(hObject, handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
-ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Update_Params
+Update_Callback(hObject,eventdata,handles); % auto calls Update_Params
 
 % disable motor override
 handles.motor_override.Value = 0;
@@ -193,9 +169,8 @@ motor_override_Callback(hObject, eventdata, handles);
 handles.startAcquisition.Enable = 'on';
 warning('off','MATLAB:callback:error');
 
-
 % --- Outputs from this function are returned to the command line.
-function varargout = OdorLocator_OutputFcn(hObject, eventdata, handles)  %#ok<*INUSL>
+function varargout = OpenLoopOdorLocator_OutputFcn(hObject, eventdata, handles)  %#ok<*INUSL>
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -229,6 +204,7 @@ if get(handles.startAcquisition,'value')
         mysettings.TrialSequence = handles.TrialSequence;
         % main settings - only change in the beginning of each session
         [mysettings.legends, mysettings.params] = OpenLoop_Settings(handles);
+        [mysettings.legends_trial, params] = Current_Settings(handles,2);
         save('C:\temp_data_files\session_settings.mat','mysettings*');
         
         % dynamic settings - change within a session
@@ -243,7 +219,7 @@ if get(handles.startAcquisition,'value')
         TotalData = handles.traces;
         TotalTime = handles.timestamps;
         samplenum = handles.samplenum;
-        
+
         set(handles.startAcquisition,'String','Running');
         set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
         time = regexp(char(datetime('now')),' ','split');
@@ -251,11 +227,9 @@ if get(handles.startAcquisition,'value')
         handles.StartTime.String = char(time(2));
         handles.StartTime.Visible = 'on';
         handles.StopTime.Visible = 'off';
-        
-        % update locations to use etc...
-        
+
         % clear indicators
-        handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
+        handles.current_trial_block.Data(1:7,1) = zeros(7,1);
         handles.update_call = 1;
         handles.timestamp.Data = 0;
         
@@ -276,7 +250,8 @@ if get(handles.startAcquisition,'value')
         set(handles.motor_status,'String','OFF')
         motor_toggle_Callback(hObject, eventdata, handles);
         
-        handles.Arduino.write(15, 'uint16');
+        % start the Arduino timer
+        handles.Arduino.write(15, 'uint16'); 
         tic
         while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
         end
@@ -328,9 +303,9 @@ else
    % disable the motors
    set(handles.motor_status,'String','ON')
    motor_toggle_Callback(hObject, eventdata, handles);
-    
+   
    % stop the Arduino timer
-   handles.Arduino.write(16, 'uint16'); %fwrite(handles.Arduino, char(12));
+   handles.Arduino.write(16, 'uint16');
    tic
    while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
    end
@@ -339,6 +314,7 @@ else
    elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==9
        disp('arduino: Motor Timer Stopped');
    end
+
 end
 
 handles.traces = TotalData;
@@ -428,10 +404,9 @@ if usrans == 1
     guidata(hObject, handles);
 end
 
-% --- Executes on button press in Update
-function Update_Callback(hObject, eventdata, handles)      
-Update_OpenLoopParams(h);
-% --------------------------------------------------------------------
+% --- Executes when entered data in editable cell(s) in ZoneLimitSettings.
+function Update_Callback(hObject, eventdata, handles)        
+Update_OpenLoopParams(handles);
 
 % --- Executes when entered data in editable cell(s) in DAC_settings.
 function DAC_settings_CellEditCallback(hObject, eventdata, handles)
@@ -440,10 +415,6 @@ handles.Arduino.write(70, 'uint16');
 set(handles.motor_status,'String','OFF')
 set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
 handles.motor_home.Enable = 'off';
-
-Update_TransferFunction_fixspeed(handles);
-Update_Params(handles);
-%Update_TransferFunction_discrete(handles);
 
 % turn motor on
 handles.Arduino.write(71, 'uint16'); 
@@ -624,3 +595,17 @@ end
 
 % --- Executes during object deletion, before destroying properties.
 function figure1_DeleteFcn(hObject, eventdata, handles)
+
+% --- Executes when entered data in editable cell(s) in SessionSettings.
+function SessionSettings_CellEditCallback(hObject, eventdata, handles)
+% hObject    handle to SessionSettings (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
+%	Indices: row and column indices of the cell(s) edited
+%	PreviousData: previous data for the cell(s) edited
+%	EditData: string(s) entered by the user
+%	NewData: EditData or its converted form set on the Data property. Empty if Data was not changed
+%	Error: error string when failed to convert EditData to appropriate value for Data
+% handles    structure with handles and user data (see GUIDATA)
+all_locations = -handles.SessionSettings.Data(2):handles.SessionSettings.Data(3):handles.SessionSettings.Data(2);
+handles.TF_plot.CData = flipud(all_locations')/handles.MotorLocations;
+h.all_locations.String = num2str(all_locations');
