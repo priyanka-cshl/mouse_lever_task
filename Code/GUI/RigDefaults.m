@@ -48,7 +48,7 @@ switch char(handles.computername)
         handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\Behavior'};
         %handles.NIchannels = 11;
         handles.ManifoldOutlets = 16;
-        handles.DAC_settings.Data = [2.0 0.55]';
+        handles.DAC_settings.Data = [2.75 0.7]';
         % motor location settings
         handles.motor_params = 4;
         % disable transfer function calibrator
