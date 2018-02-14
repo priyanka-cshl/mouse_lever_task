@@ -53,7 +53,7 @@ handles.startAcquisition.Enable = 'off';
 
 % rig specific settings
 handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
-[handles] = RigDefaults(handles);
+[handles] = OpenLoopDefaults(handles);
 
 % defaults
 handles.DAQrates.Data = [500 20]';
@@ -161,6 +161,7 @@ handles.update_call = 0;
 % Update handles structure
 guidata(hObject, handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
+SessionSettings_CellEditCallback(hObject, eventdata, handles);
 Update_Callback(hObject,eventdata,handles); % auto calls Update_Params
 
 % disable motor override
@@ -204,7 +205,6 @@ if get(handles.startAcquisition,'value')
         mysettings.TrialSequence = handles.TrialSequence;
         % main settings - only change in the beginning of each session
         [mysettings.legends, mysettings.params] = OpenLoop_Settings(handles);
-        [mysettings.legends_trial, params] = Current_Settings(handles,2);
         save('C:\temp_data_files\session_settings.mat','mysettings*');
         
         % dynamic settings - change within a session
@@ -608,4 +608,5 @@ function SessionSettings_CellEditCallback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 all_locations = -handles.SessionSettings.Data(2):handles.SessionSettings.Data(3):handles.SessionSettings.Data(2);
 handles.TF_plot.CData = flipud(all_locations')/handles.MotorLocations;
-h.all_locations.String = num2str(all_locations');
+set(handles.axes9,'YLim',[0 length(handles.TF_plot.CData)]);
+handles.all_locations.String = num2str(all_locations');
