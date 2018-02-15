@@ -85,6 +85,9 @@ foldername_server = char(handles.file_names.Data(3));
 if ~exist(fullfile(foldername_local,animal_name),'dir')
     mkdir(fullfile(foldername_local,animal_name));
     disp('making local data directory');
+    handles.TargetHold.Data = [10 5 15]';
+    handles.TriggerHold.Data = [10 5 15]';
+    handles.TrialSettings.Data(end) = 200;
 end
 if ~exist(fullfile(foldername_server,animal_name),'dir')
     mkdir(fullfile(foldername_server,animal_name));
@@ -532,10 +535,10 @@ if usrans == 1
     clear a b c session_data
     display(['saved to ' filename])
     display(['saved to ' server_file_name])
-    set(gcf,'PaperPositionMode','auto')
-    print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
-        '-dpng','-r0');
-    display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
+%     set(gcf,'PaperPositionMode','auto')
+%     print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
+%         '-dpng','-r0');
+%     display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
     guidata(hObject, handles);
 end
 

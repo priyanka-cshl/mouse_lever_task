@@ -50,6 +50,7 @@ switch char(handles.computername)
         %handles.NIchannels = 11;
         handles.ManifoldOutlets = 16;
         handles.DAC_settings.Data = [2.75 0.7]';
+        handles.RS_scaling.Data = [-1 5.5]';
         % motor location settings
         handles.motor_params = 4;
         % disable transfer function calibrator
