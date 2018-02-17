@@ -1,12 +1,21 @@
-function Update_TransferFunction_discrete(h)
+function Update_TransferFunction(h, whichcase)
 
 % get current transfer function
 %target_limits = [h.TrialSettings.Data(2) h.NewTargetDefinition.Data(3:-1:1)' h.TrialSettings.Data(1)];
 target_limits = [h.TrialSettings.Data(2) h.TargetDefinition.Data(3:-1:1)' h.TrialSettings.Data(1)];
 DAC_limits = h.DAC_levels.Data;
 Zone_limits = h.locations_per_zone.Data;
-[TF] = LeverTransferFunction_discrete(target_limits,DAC_limits,Zone_limits,...
-    h.TransferFunction.Data(1));
+switch whichcase
+    case 0
+        [TF] = LeverTransferFunction_fixspeed(target_limits,h.MotorLocationsRange,...
+            h.TransferFunction.Data(1));
+    case 1
+        [TF] = LeverTransferFunction_discrete(target_limits,DAC_limits,Zone_limits,...
+            h.TransferFunction.Data(1));
+end
+
+TF(TF>h.MotorLocations) = h.MotorLocations;
+TF(TF<-h.MotorLocations) = -h.MotorLocations;
 
 if ~h.current_trial_block.Data(1)
     TF = -TF; % invert the TF
@@ -14,7 +23,7 @@ end
 
 TF_4_plot = TF; % use later for colormap update
 
-TF = TF'+ h.MotorLocationArduinoMax + 1; % get rid of negative values % transform to a column vector
+TF = TF'+ h.MotorLocations + 1; % get rid of negative values % transform to a column vector
 sent = 0;
 sending_attempts = 0;
 
@@ -42,8 +51,10 @@ while (sent == 0) && (sending_attempts <=8 )
             %update transfer function colormap
             TF = TF_4_plot;
             %h.TF_plot.CData = abs(TF(length(TF):-1:1))'/max(TF);
-            h.TF_plot.CData = flipud(TF')/max(TF);
-            h.all_locations.String = num2str(unique(TF)');
+            %h.TF_plot.CData = flipud(TF')/max(TF);
+            h.TF_plot.CData = flipud(TF')/h.MotorLocations;
+            %h.all_locations.String = num2str(unique(TF)');
+            h.all_locations.String = num2str((-h.MotorLocations:1:h.MotorLocations)');
         else
             pause(.1);
             sending_attempts = sending_attempts + 1';

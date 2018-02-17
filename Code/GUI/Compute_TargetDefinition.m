@@ -33,8 +33,8 @@ h.fake_target_zone.Data(3) = h.fake_target_zone.Data(2) - ...
 
 % shrink target Zone if needed
 if h.ShrinkTargetLocations.Value
-    h.locations_per_zone.Data(1) = round(sum(h.locations_per_zone.Data) * (h.ZoneLimitSettings.Data(1)*2)/total_range);
-    h.locations_per_zone.Data(3) = 80 - sum(h.locations_per_zone.Data(1:2));
+    h.locations_per_zone.Data(1) = round(h.MotorLocations * (h.ZoneLimitSettings.Data(1)*2)/total_range);
+    h.locations_per_zone.Data(3) = h.MotorLocations - sum(h.locations_per_zone.Data(1:2));
 end
 %h.TargetDefinition.Data = h.NewTargetDefinition.Data;
 end

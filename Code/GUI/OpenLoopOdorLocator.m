@@ -202,6 +202,7 @@ if get(handles.startAcquisition,'value')
         
         % set up trial sequence
         [handles] = SetUpOpenLoopTrials(handles);
+        %guidata(hObject,handles);
         mysettings.TrialSequence = handles.TrialSequence;
         % main settings - only change in the beginning of each session
         [mysettings.legends, mysettings.params] = OpenLoop_Settings(handles);
@@ -229,7 +230,7 @@ if get(handles.startAcquisition,'value')
         handles.StopTime.Visible = 'off';
 
         % clear indicators
-        handles.current_trial_block.Data(1:7,1) = zeros(7,1);
+        handles.current_trial_block.Data([2 4 5 6 7],1) = 0;
         handles.update_call = 1;
         handles.timestamp.Data = 0;
         
@@ -282,8 +283,8 @@ if get(handles.startAcquisition,'value')
         NewOpenLoopTrial_Callback(handles);
         
         % update pointer to match motor location
-        handles.axes4.YLim = [0 handles.TransferFunction.Data(1)];
-        handles.motor_location.YData = MapRotaryEncoderToTFColorMap(handles, handles.Rotary.Limits(3));
+        handles.axes4.YLim = [0 size(handles.all_locations.String,1)];
+        handles.motor_location.YData = MapRotaryEncoderToTFColorMapOpenLoop(handles, handles.Rotary.Limits(3));
        
         handles.lis = handles.NI.addlistener('DataAvailable', @(src,evt) OpenLoopNI_Callback(src,evt,handles,hObject,fid1));
         handles.NI.startBackground();

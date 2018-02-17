@@ -38,11 +38,13 @@ switch char(handles.computername)
         handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
         % shrink target zone
         handles.ShrinkTargetLocations.Value = 1;
-        handles.MotorLocations = 120;
+        handles.MotorLocations = 100;
+        handles.MotorLocationArduinoMax = 120;
         handles.minimumtarget = 1;
         handles.MotorLocationsRange = 140;
-        handles.watercoeffs = [0.01181 -0.0066]; % water per drop = coeef(1)*time +coeef(2)
+        handles.watercoeffs = [0.009211 -0.0299]; % water per drop = coeef(1)*time +coeef(2)
         handles.fliphome = 0; 
+        handles.TFtype = 0; % 1 = fix speed, 0 = fixed start
         
     case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
         handles.file_names.Data(2) = {'C:\Data\Behavior'};

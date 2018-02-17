@@ -589,10 +589,18 @@ Update_MultiRewards(handles);
 % --- Executes when entered data in editable cell(s) in ZoneLimitSettings.
 function ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles)        
 % compute new target definition
-[handles] = Compute_TargetDefinition_fixspeed(handles);
+if handles.TFtype
+    [handles] = Compute_TargetDefinition_fixspeed(handles);
+else
+    [handles] = Compute_TargetDefinition(handles);
+end
 guidata(hObject,handles);
 Write_Params(handles);
-Update_TransferFunction_fixspeed(handles);
+if handles.TFtype
+    Update_TransferFunction_fixspeed(handles);
+else
+    Update_TransferFunction_discrete(handles);
+end
 pause(0.1);
 Update_Params(handles);
 % --------------------------------------------------------------------
@@ -620,7 +628,11 @@ set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
 handles.motor_home.Enable = 'off';
 
 % update transfer function
-Update_TransferFunction_fixspeed(handles);
+if handles.TFtype
+    Update_TransferFunction_fixspeed(handles);
+else
+    Update_TransferFunction_discrete(handles);
+end
 Update_Params(handles);
 %Update_TransferFunction_discrete(handles);
 handles.locations_per_zone.ForegroundColor = 'k';
@@ -650,7 +662,11 @@ set(handles.motor_status,'String','OFF')
 set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
 handles.motor_home.Enable = 'off';
 
-Update_TransferFunction_fixspeed(handles);
+if handles.TFtype
+    Update_TransferFunction_fixspeed(handles);
+else
+    Update_TransferFunction_discrete(handles);
+end
 Update_Params(handles);
 %Update_TransferFunction_discrete(handles);
 
@@ -747,14 +763,14 @@ handles.Arduino.write(62, 'uint16'); % handler - move motor to specific location
 % get chosen location
 contents = cellstr(get(handles.all_locations,'String'));
 my_location = str2num(char(contents(handles.all_locations.Value)));
-handles.Arduino.write(my_location+handles.MotorLocations+1, 'uint16'); % which location
+handles.Arduino.write(my_location+handles.MotorLocationArduinoMax+1, 'uint16'); % which location
 
 % --- Executes on button press in motor_home.
 function motor_home_Callback(hObject, eventdata, handles)
 if handles.motor_override.Value
     pause(0.01);
     handles.Arduino.write(62, 'uint16'); % handler - move motor to specific location
-    handles.Arduino.write(handles.MotorLocations+1, 'uint16'); % home location       
+    handles.Arduino.write(handles.MotorLocationArduinoMax+1, 'uint16'); % home location       
 else
     set(handles.motor_home,'BackgroundColor',[0.5 0.94 0.94]);
 end
@@ -792,7 +808,11 @@ if get(hObject,'Value')
     end
 else
     
-    Update_TransferFunction_fixspeed(handles);
+    if handles.TFtype
+        Update_TransferFunction_fixspeed(handles);
+    else
+        Update_TransferFunction_discrete(handles);
+    end
     Update_Params(handles);
     %Update_TransferFunction_discrete(handles);
 end

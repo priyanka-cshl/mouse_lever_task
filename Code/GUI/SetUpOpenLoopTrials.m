@@ -18,3 +18,4 @@ end
 
 h.TrialSequence = AllTrials;
 h.current_trial_block.Data(1) = size(AllTrials,1);
+%guidata(h.hObject,h);

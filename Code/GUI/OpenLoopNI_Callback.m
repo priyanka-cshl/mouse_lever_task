@@ -23,7 +23,7 @@ trial_just_ended = 0;
 TotalTime = [ TotalTime(num_new_samples+1:end); event.TimeStamps ];
 
 % multiply trial_channel by odor value
-odorID = h.current_trial_block.Data(4);
+odorID = h.current_trial_block.Data(6);
 
 %% populate TotalData with newly available data
 for i = 1:h.Channels.reward_channel-1
@@ -47,19 +47,17 @@ if TotalTime(end)>2
     % register if the trial was turned ON or OFF
     if any(diff(TotalData(end-num_new_samples:end,h.Channels.trial_channel)) < 0)
         trial_just_ended = 1;
-    elseif any(diff(TotalData(end-num_new_samples:end,h.Channels.trial_channel)) > 0) % trial just turned ON
-        h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1; % increment 'trial number'
     end
     
-    % reward channel
-    TotalData(:,h.Channels.reward_channel) = [ TotalData(num_new_samples+1:end,h.Channels.reward_channel); ...
-        diff([last_data_value(h.Channels.reward_channel); event.Data(:,h.Channels.reward_channel)])==1 ];
-    
-    % lick channel
-    if h.NIchannels >= h.Channels.lick_channel
-        TotalData(:,h.Channels.lick_channel) = [ TotalData(num_new_samples+1:end,h.Channels.lick_channel); ...
-        diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1 ];
-    end
+%     % reward channel
+%     TotalData(:,h.Channels.reward_channel) = [ TotalData(num_new_samples+1:end,h.Channels.reward_channel); ...
+%         diff([last_data_value(h.Channels.reward_channel); event.Data(:,h.Channels.reward_channel)])==1 ];
+%     
+%     % lick channel
+%     if h.NIchannels >= h.Channels.lick_channel
+%         TotalData(:,h.Channels.lick_channel) = [ TotalData(num_new_samples+1:end,h.Channels.lick_channel); ...
+%         diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1 ];
+%     end
 
 else % for calls to function earlier than 2 seconds from session start
     TotalData(samplenum:lastsample,5:h.NIchannels) = 0;
