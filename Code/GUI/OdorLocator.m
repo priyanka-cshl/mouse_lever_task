@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 03-Nov-2017 17:26:54
+% Last Modified by GUIDE v2.5 17-Feb-2018 13:15:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1186,5 +1186,11 @@ if handles.PerturbationSettings.Data(1) > 0
     TrialsToPerturb(1) = 1;
 end
 
-
-
+% --- Executes on button press in reward_trial_initiation.
+function reward_trial_initiation_Callback(hObject, eventdata, handles)
+% hObject    handle to reward_trial_initiation (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Update_Params(handles);
+Update_MultiRewards(handles);
+% Hint: get(hObject,'Value') returns toggle state of reward_trial_initiation

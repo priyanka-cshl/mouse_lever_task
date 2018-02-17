@@ -3,7 +3,8 @@ function Update_MultiRewards(h)
 %% send params to Arduino
 sent = 0;
 sending_attempts = 0;
-ParamArray = h.RewardControls.Data(3:4)'; % replace timestamp with 0
+ParamArray = [h.RewardControls.Data(3:4)' ...
+    h.reward_trial_initiation.Value*h.RewardControls.Data(4)]; % trial initiation rewards
 
 while (sent == 0) && (sending_attempts <=8 )
     if h.Arduino.Port.BytesAvailable

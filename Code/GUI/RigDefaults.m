@@ -44,6 +44,7 @@ switch char(handles.computername)
         handles.MotorLocationsRange = 140;
         handles.watercoeffs = [0.009211 -0.0299]; % water per drop = coeef(1)*time +coeef(2)
         handles.fliphome = 0; 
+        handles.rewardvalvepolarity = 1; 
         handles.TFtype = 0; % 1 = fix speed, 0 = fixed start
         
     case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
@@ -88,5 +89,6 @@ switch char(handles.computername)
         handles.MotorLocationsRange = 140;
         handles.watercoeffs = [0.03362 -0.1036]; % water per drop = coeef(1)*time +coeef(2)
         handles.fliphome = 1;        
+        handles.rewardvalvepolarity = 0; 
 end
 end
