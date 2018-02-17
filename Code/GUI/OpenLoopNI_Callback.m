@@ -49,15 +49,15 @@ if TotalTime(end)>2
         trial_just_ended = 1;
     end
     
-%     % reward channel
-%     TotalData(:,h.Channels.reward_channel) = [ TotalData(num_new_samples+1:end,h.Channels.reward_channel); ...
-%         diff([last_data_value(h.Channels.reward_channel); event.Data(:,h.Channels.reward_channel)])==1 ];
-%     
-%     % lick channel
-%     if h.NIchannels >= h.Channels.lick_channel
-%         TotalData(:,h.Channels.lick_channel) = [ TotalData(num_new_samples+1:end,h.Channels.lick_channel); ...
-%         diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1 ];
-%     end
+    % reward channel
+    TotalData(:,h.Channels.reward_channel) = [ TotalData(num_new_samples+1:end,h.Channels.reward_channel); ...
+        diff([last_data_value(h.Channels.reward_channel); event.Data(:,h.Channels.reward_channel)])==1 ];
+    
+    % lick channel
+    if h.NIchannels >= h.Channels.lick_channel
+        TotalData(:,h.Channels.lick_channel) = [ TotalData(num_new_samples+1:end,h.Channels.lick_channel); ...
+        diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1 ];
+    end
 
 else % for calls to function earlier than 2 seconds from session start
     TotalData(samplenum:lastsample,5:h.NIchannels) = 0;
@@ -74,7 +74,7 @@ set(h.lever_DAC_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indice
 set(h.stimulus_plot,'XData',TotalTime(indices_to_plot),'YData',...
     -1*h.RE_scaling.Data(1)*(TotalData(indices_to_plot,3) - h.RE_scaling.Data(2)) );
 
-h.motor_location.YData = MapRotaryEncoderToTFColorMap(h,mean(event.Data(:,3)));
+h.motor_location.YData = MapRotaryEncoderToTFColorMapOpenLoop(h,mean(event.Data(:,3)));
 
 % respiration sensors
 set(h.respiration_1_plot,'XData',TotalTime(indices_to_plot),'YData',...
@@ -113,7 +113,7 @@ end
 data = [TotalTime(end-num_new_samples+1:end) TotalData(end-num_new_samples+1:end,:)]';
 data(h.Channels.trial_channel+1,:) = h.current_trial_block.Data(4)*data(h.Channels.trial_channel+1,:);
 % rescale stimulus position plot (save it in distractor location column
-data(5,:) = MapRotaryEncoderToTFColorMap(h,data(4,:),1);
+data(5,:) = MapRotaryEncoderToTFColorMapOpenLoop(h,data(4,:));
 fwrite(fid1,data,'double');
 
 %% for next round

@@ -14,6 +14,7 @@ switch char(handles.computername)
         handles.Odor_list.Value = [1 2 3]';
         % target levels
         handles.MotorLocations = 120;
+        handles.MotorLocationArduinoMax = 120;
         handles.MotorLocationsRange = 140;
         handles.fliphome = 0; 
         

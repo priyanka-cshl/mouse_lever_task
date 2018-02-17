@@ -215,7 +215,7 @@ void loop()
   else if (open_loop_mode) // 13.02.18
   {
     lever_position = 0;
-    motor_location = map(open_loop_location, 0, 65534, 0, 300); // max location is 256 - 8 bit
+    motor_location = map(open_loop_location, 0, 300, 0, 65534); // max location is 256 - 8 bit
     SPIWriter(dac_spi_pin, motor_location);
   }
   else
@@ -316,8 +316,8 @@ void loop()
   //----------------------------------------------------------------------------
   if (!cleaningON)
   {
-    digitalWrite(target_valves[0], (target_valve_state[0] || ((trialstate[0] > 0) && (trialstate[0] < 5)) || !close_loop_mode) ); // open odor valve
-    digitalWrite(target_valves[1], (target_valve_state[1] || ((trialstate[0] > 0) && (trialstate[0] < 5)) || !close_loop_mode) ); // open air valve
+    digitalWrite(target_valves[0], (target_valve_state[0] || ((trialstate[0] > 0) && (trialstate[0] < 5)))); // || !close_loop_mode) ); // open odor valve
+    digitalWrite(target_valves[1], (target_valve_state[1] || ((trialstate[0] > 0) && (trialstate[0] < 5)))); // || !close_loop_mode) ); // open air valve
   }
 
   digitalWrite(trial_reporter_pin, (trialstate[0] == 4)); // active trial?
@@ -451,6 +451,7 @@ void loop()
           break;
       }
     }
+    trialstate[0] = trialstate[1];
   }
   //----------------------------------------------------------------------------
 
