@@ -84,11 +84,13 @@ switch char(handles.computername)
         handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
         % shrink target zone
         handles.ShrinkTargetLocations.Value = 1;
-        handles.MotorLocations = 120;
+        handles.MotorLocations = 100;
+        handles.MotorLocationArduinoMax = 120;
         handles.minimumtarget = 1;
         handles.MotorLocationsRange = 140;
         handles.watercoeffs = [0.03362 -0.1036]; % water per drop = coeef(1)*time +coeef(2)
         handles.fliphome = 1;        
         handles.rewardvalvepolarity = 0; 
+        handles.TFtype = 0; % 1 = fix speed, 0 = fixed start
 end
 end
