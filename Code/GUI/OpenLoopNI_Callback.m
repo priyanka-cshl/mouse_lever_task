@@ -113,7 +113,7 @@ end
 data = [TotalTime(end-num_new_samples+1:end) TotalData(end-num_new_samples+1:end,:)]';
 data(h.Channels.trial_channel+1,:) = h.current_trial_block.Data(4)*data(h.Channels.trial_channel+1,:);
 % rescale stimulus position plot (save it in distractor location column
-data(5,:) = MapRotaryEncoderToTFColorMapOpenLoop(h,data(4,:));
+data(5,:) = MapRotaryEncoderToTFColorMapOpenLoop(h,data(4,:),1);
 fwrite(fid1,data,'double');
 
 %% for next round

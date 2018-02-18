@@ -542,6 +542,8 @@ void loop()
             {
               digitalWrite(odor_valves[i], LOW);
             }
+            target_valve_state[0] = false;
+            target_valve_state[1] = false;
             camera_on = 1;
             open_loop_mode = 0;
             break;
