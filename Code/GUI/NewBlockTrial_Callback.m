@@ -46,11 +46,16 @@ if (sum([h.TargetLevel1AntiBias.Value,h.TargetLevel2AntiBias.Value,h.TargetLevel
 end
 
 if NoAntiBias
-    %h.NewTargetDefinition.Data(2) = h.target_level_array.Data(1);
-    h.TargetDefinition.Data(2) = h.target_level_array.Data(1);
+    if ~h.PseudoRandomZones.Value
+        %h.NewTargetDefinition.Data(2) = h.target_level_array.Data(1);
+        h.TargetDefinition.Data(2) = h.target_level_array.Data(1);
         %h.target_level_array.Data( 1 + mod(block_num-1,length(h.target_level_array.Data)) );
-    % Update current target level radio button
-    % h.(['TargetLevel',num2str( 1 + mod(block_num-1,length(h.target_level_array.Data)) )]).Value = 1;
+        % Update current target level radio button
+        % h.(['TargetLevel',num2str( 1 + mod(block_num-1,length(h.target_level_array.Data)) )]).Value = 1;
+    else
+        unused_targets = h.target_level_array.Data(find(floor(h.target_level_array.Data)~=floor(h.TargetDefinition.Data(2))));
+        h.TargetDefinition.Data(2) = unused_targets(1);
+    end
 end
 
 % %% switch target and distractor if needed

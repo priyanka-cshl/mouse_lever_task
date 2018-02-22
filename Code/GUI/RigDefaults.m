@@ -19,9 +19,9 @@ switch char(handles.computername)
         % TF - locations per zone
         handles.locations_per_zone.Data = [20 0 60]';
         % Trial settings
-        handles.TrialSettings.Data = [4.8 0.2 200 100 3500 200]';
+        handles.TrialSettings.Data = [4.8 0.2 200 100 3500 5000]';
         % zone width
-        handles.ZoneLimitSettings.Data(1) = 0.4;%[0.5 0.1]';
+        handles.ZoneLimitSettings.Data(1) = 0.35;%[0.5 0.1]';
         % reward settings
         handles.RewardControls.Data = [25 100 50 5]';
         % odor panel
