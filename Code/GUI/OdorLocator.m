@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 17-Feb-2018 13:15:55
+% Last Modified by GUIDE v2.5 21-Feb-2018 17:30:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1194,3 +1194,11 @@ function reward_trial_initiation_Callback(hObject, eventdata, handles)
 Update_Params(handles);
 Update_MultiRewards(handles);
 % Hint: get(hObject,'Value') returns toggle state of reward_trial_initiation
+
+
+% --- Executes on button press in PseudoRandomZones.
+function PseudoRandomZones_Callback(hObject, eventdata, handles)
+% hObject    handle to PseudoRandomZones (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Hint: get(hObject,'Value') returns toggle state of PseudoRandomZones
