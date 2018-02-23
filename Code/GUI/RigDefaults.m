@@ -21,7 +21,7 @@ switch char(handles.computername)
         % Trial settings
         handles.TrialSettings.Data = [4.8 0.2 200 100 3500 5000]';
         % zone width
-        handles.ZoneLimitSettings.Data(1) = 0.35;%[0.5 0.1]';
+        handles.ZoneLimitSettings.Data(1) = 0.4;%[0.5 0.1]';
         % reward settings
         handles.RewardControls.Data = [25 100 50 5]';
         % odor panel
@@ -44,7 +44,6 @@ switch char(handles.computername)
         handles.MotorLocationsRange = 140;
         handles.watercoeffs = [0.009211 -0.0299]; % water per drop = coeef(1)*time +coeef(2)
         handles.fliphome = 0; 
-        handles.rewardvalvepolarity = 1; 
         handles.TFtype = 0; % 1 = fix speed, 0 = fixed start
         
     case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
@@ -52,7 +51,7 @@ switch char(handles.computername)
         handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\Behavior'};
         %handles.NIchannels = 11;
         handles.ManifoldOutlets = 16;
-        handles.DAC_settings.Data = [2.75 0.7]';
+        handles.DAC_settings.Data = [2.8 0.65]';
         handles.RS_scaling.Data = [-1 5.5]';
         % motor location settings
         handles.motor_params = 4;
@@ -90,7 +89,6 @@ switch char(handles.computername)
         handles.MotorLocationsRange = 140;
         handles.watercoeffs = [0.01051 -0.1061]; % water per drop = coeef(1)*time +coeef(2)
         handles.fliphome = 1;        
-        handles.rewardvalvepolarity = 0; 
         handles.TFtype = 0; % 1 = fix speed, 0 = fixed start
 end
 end

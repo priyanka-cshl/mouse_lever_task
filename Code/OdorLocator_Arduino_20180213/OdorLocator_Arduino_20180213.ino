@@ -69,7 +69,7 @@ int reward_state = 0;
 long reward_zone_timestamp = micros();
 long trial_off_buffer = 0;
 int reward_params[] = {100, 40, 0}; // {hold for, duration, summed hold for} in ms
-unsigned short multi_reward_params[] = {200, 10, 10, 1}; // {hold for, duration, trial init reward} in ms for the subsequent rewards within a trial
+unsigned short multi_reward_params[] = {200, 10, 10}; // {hold for, duration, trial init reward} in ms for the subsequent rewards within a trial
 // 4th entry is reward valve polarity
 int multiplerewards = 0; // only one reward per trial
 long time_in_target_zone = 0;
@@ -641,10 +641,10 @@ void loop()
         switch (FSMheader - 80)
         {
           case 0: // close reward valve
-            digitalWrite(reward_valve_pin, !multi_reward_params[3]);
+            digitalWrite(reward_valve_pin, LOW);
             break;
           case 1: // open reward valve
-            digitalWrite(reward_valve_pin, multi_reward_params[3]);
+            digitalWrite(reward_valve_pin, HIGH);
             break;
           case 2: // open reward valve for reward valve duration
             reward_state = 3; // flag reward valve opening
@@ -654,9 +654,9 @@ void loop()
           case 3: // for reward calibration
             for (int i = 0; i < 100; i++)
             {
-              digitalWrite(reward_valve_pin, multi_reward_params[3]);
+              digitalWrite(reward_valve_pin, HIGH);
               delay(reward_params[1]);
-              digitalWrite(reward_valve_pin, !multi_reward_params[3]);
+              digitalWrite(reward_valve_pin, LOW);
               delay(500);
             }
             break;
@@ -664,8 +664,8 @@ void loop()
             serial_clock = millis();
             while ( myUSB.available() < 2 && (millis() - serial_clock) < 1000 )
             { } // wait for serial input or time-out
-            myUSB.readUint16Array(multi_reward_params, 4);
-            myUSB.writeUint16Array(multi_reward_params, 4);
+            myUSB.readUint16Array(multi_reward_params, 3);
+            myUSB.writeUint16Array(multi_reward_params, 3);
             break;
         }
         break;
@@ -797,21 +797,21 @@ void RewardNow()
 {
   if ( ((reward_state == 3) || (reward_state == 6)) && timer_override )
   {
-    digitalWrite(reward_valve_pin, multi_reward_params[3]);
+    digitalWrite(reward_valve_pin, HIGH);
     digitalWrite(reward_reporter_pin, HIGH);
     reward_state = reward_state + 1;
     reward_zone_timestamp = micros();
   }
   else if (reward_state == -1)
   {
-    digitalWrite(reward_valve_pin, multi_reward_params[3]);
+    digitalWrite(reward_valve_pin, HIGH);
     digitalWrite(reward_reporter_pin, HIGH);
     reward_state = reward_state + 1;
   }
   else
   {
     Timer4.stop();
-    digitalWrite(reward_valve_pin, !multi_reward_params[3]);
+    digitalWrite(reward_valve_pin, LOW);
     digitalWrite(reward_reporter_pin, LOW);
   }
 }
