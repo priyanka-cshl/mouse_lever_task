@@ -53,7 +53,8 @@ if NoAntiBias
         % Update current target level radio button
         % h.(['TargetLevel',num2str( 1 + mod(block_num-1,length(h.target_level_array.Data)) )]).Value = 1;
     else
-        unused_targets = h.target_level_array.Data(find(floor(h.target_level_array.Data)~=floor(h.TargetDefinition.Data(2))));
+        %unused_targets = h.target_level_array.Data(find(floor(h.target_level_array.Data)~=floor(h.TargetDefinition.Data(2))));
+        unused_targets = h.target_level_array.Data(find(abs(h.target_level_array.Data-h.TargetDefinition.Data(2))>0.5));
         h.TargetDefinition.Data(2) = unused_targets(1);
     end
 end
@@ -98,28 +99,23 @@ if (h.which_perturbation.Value>1)
     end
     % bsed on the user set probability,
     % check if the trial is to be perturbed or not
-    % perturb = (rand(1) <= h.PerturbationSettings.Data(1));
-    
-    %if (perturb ~= h.current_trial_block.Data(3))
-    %    h.current_trial_block.Data(3) = perturb;
-    %end
     h.current_trial_block.Data(3) = TrialsToPerturb(mod(h.current_trial_block.Data(2),numel(TrialsToPerturb)) + 1);
+    
+    % perturbation type = decouple water and odor
     if h.current_trial_block.Data(3) && (h.which_perturbation.Value == 2) % decouple feedback
-        % select randomly a target level from a zone that's not of the
-        % target zone
+        % select randomly a target level from a zone that's not of the target zone
         unused_targets = h.target_level_array.Data(find(floor(h.target_level_array.Data)~=...
             floor(h.TargetDefinition.Data(2))));
-        %unused_targets = setdiff(h.target_level_array.Data,h.NewTargetDefinition.Data(2));
-        %unused_targets = setdiff(h.target_level_array.Data,h.TargetDefinition.Data(2));
         h.fake_target_zone.Data(2) = unused_targets(randi(length(unused_targets)));
-%         new_fake_target = unused_targets(randi(length(unused_targets)));
-%         if  h.fake_target_zone.Data(2) ~= new_fake_target % fake target has changed
-%             h.fake_target_zone.Data(2) = new_fake_target;
-%         end
         h.fake_target_zone.ForegroundColor = [0 0 0];
-        %h.current_trial_block.Data(5) = h.TargetHold.Data(3);
     else
         h.fake_target_zone.ForegroundColor = [0.65 0.65 0.65];
+    end
+    
+    % perturbation type = decouple water and odor
+    if h.current_trial_block.Data(3) && (h.which_perturbation.Value == 3) % no odor
+        % select randomly a target level from a zone that's not of the target zone
+        h.current_trial_block.Data(4) = 4;
     end
 end
 

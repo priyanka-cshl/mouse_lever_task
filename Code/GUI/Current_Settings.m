@@ -100,8 +100,15 @@ switch caller
             param(11:13) = [0 0 0];
         end
         
-        legend(14) = {'TFsize'};
-        param(14) = h.TransferFunction.Data(1);
+%         legend(14) = {'TFsize'};
+%         param(14) = h.TransferFunction.Data(1);
+
+        legend(14) = {'FlipMapping'};
+        if h.which_perturbation.Value == 4 && h.current_trial_block.Data(3) == 1
+            param(14) = 1;
+        else
+            param(14) = 0;
+        end
         
         legend(15) = {'Stage'};
         param(15) = h.which_stage.Value;

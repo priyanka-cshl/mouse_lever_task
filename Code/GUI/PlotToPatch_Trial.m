@@ -3,7 +3,7 @@ if nargin<5
     whichcase = 0;
 end
 % data_in must be a column vector
-for i = 1:3 % three odors
+for i = 1:4 % three odors
     f = find(trial_in(:,1)==i);
     data_in = zeros(length(trial_in),1);
     data_in(f,1) = 1;

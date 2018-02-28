@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 21-Feb-2018 17:30:11
+% Last Modified by GUIDE v2.5 27-Feb-2018 14:40:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -138,6 +138,8 @@ handles.trial_on_2 = fill(NaN,NaN,[0.8941    0.9412    0.9020]);
 handles.trial_on_2.EdgeColor = 'none';
 handles.trial_on_3 = fill(NaN,NaN,[0.8706    0.9216    0.9804]);
 handles.trial_on_3.EdgeColor = 'none';
+handles.trial_on_4 = fill(NaN,NaN,[0.93    0.84    0.84]);
+handles.trial_on_4.EdgeColor = 'none';
 
 handles.lever_DAC_plot = plot(NaN, NaN,'k','linewidth',1); %lever rescaled
 handles.lever_raw_plot = plot(NaN, NaN, 'color',Plot_Colors('b')); %lever raw
@@ -1202,3 +1204,4 @@ function PseudoRandomZones_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % Hint: get(hObject,'Value') returns toggle state of PseudoRandomZones
+

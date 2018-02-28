@@ -5,7 +5,7 @@ function Update_Params(h)
 %% send params to Arduino
 sent = 0;
 sending_attempts = 0;
-ParamArray = [params1 h.current_trial_block.Data(4) params2(2:end)]; % replace timestamp with odor vial number
+ParamArray = [params1 mod(h.current_trial_block.Data(4),4) params2(2:end)]; % replace timestamp with odor vial number
 ParamArray(1) = h.RewardControls.Data(2); % trial OFF lag - cheat
 ParamArray(2) = h.grab_camera.Value; % another cheat to trigger point grey camera
 %% convert voltage values to int16 range before sending
