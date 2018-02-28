@@ -117,6 +117,11 @@ if (h.which_perturbation.Value>1)
         % select randomly a target level from a zone that's not of the target zone
         h.current_trial_block.Data(4) = 4;
     end
+    if h.current_trial_block.Data(3) && (h.which_perturbation.Value == 4) % no odor
+        % select randomly a target level from a zone that's not of the target zone
+        h.current_trial_block.Data(5) = 4*h.current_trial_block.Data(5);
+    end
+    
 end
 
 %% invoke target definition callback (this automatically calls Update_Params)
