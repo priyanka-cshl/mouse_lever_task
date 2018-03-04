@@ -60,6 +60,7 @@ unsigned int num_of_locations = 100;
 unsigned short transfer_function[99] = {0}; // ArCOM aray needs unsigned shorts
 int motor_location = 1;
 int offset_location = 1;
+int perturbation_offset_location = 1;
 int transfer_function_pointer = 0; // for transfer function calibration
 unsigned int my_location = 101;
 unsigned int left_first = 1;
@@ -81,6 +82,8 @@ bool decouple_reward_and_stimulus = false;
 //variables: flip mapping mid-trial
 bool flip_lever = false;
 bool flip_lever_trial = false;
+int use_offset_perturbation = 0;
+int offset_perturbation_trial = 0;
 
 //variables : trial related
 int trialstate[] = {0, 0}; // old, new
@@ -221,6 +224,12 @@ void loop()
       motor_location = constrain((offset_location - (motor_location - offset_location)), 0, num_of_locations - 1);
     }
     stimulus_state[1] = transfer_function[motor_location];
+    if (use_offset_perturbation)
+    {
+      stimulus_state[1] = stimulus_state[1] + perturbation_offset_location;
+      stimulus_state[1] = constrain(stimulus_state[1], 0, 240);
+    }
+
   }
   else if (open_loop_mode) // 13.02.18
   {
@@ -304,6 +313,15 @@ void loop()
   //----------------------------------------------------------------------------
   if (reward_state == 2)
   {
+    if ((perturbation_offset_location != 0) && (!use_offset_perturbation))
+    {
+      if ((micros() - reward_zone_timestamp) > 500 * reward_params[0])
+      {
+        reward_state = 1; // reset reward state
+        time_in_target_zone = 0; // reset timespent value
+        use_offset_perturbation = 1;
+      }
+    }
     if ((micros() - reward_zone_timestamp) > 1000 * reward_params[0])
     {
       reward_state = 3; // flag reward valve opening
@@ -413,7 +431,7 @@ void loop()
           trialstates.UpdateITI(long_iti); // will be changed to zero if animal receives a reward in the upcoming trial
         }
         //trialstates.UpdateITI(long_iti);
-        // give small reward for trial initiation 
+        // give small reward for trial initiation
         if (multi_reward_params[2] > 0)
         {
           reward_state = -1;
@@ -433,6 +451,7 @@ void loop()
           odor_ON = false;
         }
         flip_lever = false;
+        use_offset_perturbation = 0;
       }
     }
 
@@ -578,7 +597,7 @@ void loop()
             myUSB.readUint16Array(open_loop_param_array, num_of_params);
             myUSB.writeUint16Array(open_loop_param_array, num_of_params);
             UpdateOpenLoopParams(); // parse param array to variable names and update motor params
-            break;  
+            break;
         }
         break;
       case 30: // update transfer function or calibrate transfer function
@@ -730,6 +749,7 @@ void UpdateAllParams()
   reward_params[1] = param_array[5];
   reward_params[2] = param_array[15]; // originally target_which, now summed hold duration
   // param_array[6-7] : [rewards_per_block perturb_probability]
+
   trial_trigger_level[0] = param_array[8];
   trial_trigger_level[1] = param_array[9];
   for (i = 0; i < 3; i++)
@@ -761,6 +781,12 @@ void UpdateAllParams()
   // params[19-21] = 'target_locations' 'skip_locations' 'offtarget_locations'
   rewarded_locations[0] = param_array[20] - param_array[19];
   rewarded_locations[1] = param_array[20] + param_array[19];
+
+  if (param_array[7])
+  {
+    perturbation_offset_location = param_array[7] - param_array[20];
+  }
+
   //target_on = (param_array[22] > 0);
   long_iti = param_array[22];
   //delay_feedback_by = ((int)target_on) * (param_array[22] - 1) / min_time_since_last_motor_call;
@@ -772,8 +798,10 @@ void UpdateAllParams()
   //param_array[27] = TF size;
   flip_lever_trial = param_array[27];
   training_stage = param_array[28];
-  fake_lever = param_array[29];
-
+  //fake_lever = param_array[29];
+  offset_perturbation_trial = param_array[29];
+  perturbation_offset_location = offset_perturbation_trial*perturbation_offset_location;
+  
   // update trial state params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
 }

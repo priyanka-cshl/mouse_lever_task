@@ -101,25 +101,31 @@ if (h.which_perturbation.Value>1)
     % check if the trial is to be perturbed or not
     h.current_trial_block.Data(3) = TrialsToPerturb(mod(h.current_trial_block.Data(2),numel(TrialsToPerturb)) + 1);
     
-    % perturbation type = decouple water and odor
-    if h.current_trial_block.Data(3) && (h.which_perturbation.Value == 2) % decouple feedback
-        % select randomly a target level from a zone that's not of the target zone
-        unused_targets = h.target_level_array.Data(find(floor(h.target_level_array.Data)~=...
-            floor(h.TargetDefinition.Data(2))));
-        h.fake_target_zone.Data(2) = unused_targets(randi(length(unused_targets)));
-        h.fake_target_zone.ForegroundColor = [0 0 0];
+    if h.current_trial_block.Data(3) && h.which_perturbation.Value>1
+        switch h.which_perturbation.Value
+            case 2 % decouple water and odor
+                % select randomly a target level from a zone that's not of the target zone
+                unused_targets = h.target_level_array.Data(find(floor(h.target_level_array.Data)~=...
+                    floor(h.TargetDefinition.Data(2))));
+                h.fake_target_zone.Data(2) = unused_targets(randi(length(unused_targets)));
+                h.fake_target_zone.ForegroundColor = [0 0 0];
+                
+            case 3 % no odor
+                h.current_trial_block.Data(4) = 4;
+                
+            case 4 % flip map
+                h.current_trial_block.Data(5) = 2000; % increase hold time in this trial
+                
+            case 5 % location offset
+                h.current_trial_block.Data(5) = 400;
+                if rand(1)>0.5
+                    h.PerturbationSettings.Data(3) = -abs(h.PerturbationSettings.Data(3));
+                else
+                    h.PerturbationSettings.Data(3) = abs(h.PerturbationSettings.Data(3));
+                end
+        end
     else
         h.fake_target_zone.ForegroundColor = [0.65 0.65 0.65];
-    end
-    
-    % perturbation type = decouple water and odor
-    if h.current_trial_block.Data(3) && (h.which_perturbation.Value == 3) % no odor
-        % select randomly a target level from a zone that's not of the target zone
-        h.current_trial_block.Data(4) = 4;
-    end
-    if h.current_trial_block.Data(3) && (h.which_perturbation.Value == 4) % no odor
-        % select randomly a target level from a zone that's not of the target zone
-        h.current_trial_block.Data(5) = 4*h.current_trial_block.Data(5);
     end
     
 end
