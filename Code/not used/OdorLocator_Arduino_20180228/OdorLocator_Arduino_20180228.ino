@@ -82,8 +82,7 @@ bool decouple_reward_and_stimulus = false;
 //variables: flip mapping mid-trial
 bool flip_lever = false;
 bool flip_lever_trial = false;
-int use_offset_perturbation = 0;
-int offset_perturbation_trial = 0;
+bool use_offset_perturbation = false;
 
 //variables : trial related
 int trialstate[] = {0, 0}; // old, new
@@ -319,7 +318,7 @@ void loop()
       {
         reward_state = 1; // reset reward state
         time_in_target_zone = 0; // reset timespent value
-        use_offset_perturbation = 1;
+        //use_offset_perturbation = true;
       }
     }
     if ((micros() - reward_zone_timestamp) > 1000 * reward_params[0])
@@ -451,7 +450,7 @@ void loop()
           odor_ON = false;
         }
         flip_lever = false;
-        use_offset_perturbation = 0;
+        use_offset_perturbation = false;
       }
     }
 
@@ -782,9 +781,14 @@ void UpdateAllParams()
   rewarded_locations[0] = param_array[20] - param_array[19];
   rewarded_locations[1] = param_array[20] + param_array[19];
 
-  if (param_array[7])
+  if (param_array[6] > 0)
   {
-    perturbation_offset_location = param_array[7] - param_array[20];
+    use_offset_perturbation = false;
+    perturbation_offset_location = param_array[6] - param_array[19];
+  }
+  else
+  {
+    perturbation_offset_location = 0;
   }
 
   //target_on = (param_array[22] > 0);
@@ -798,10 +802,8 @@ void UpdateAllParams()
   //param_array[27] = TF size;
   flip_lever_trial = param_array[27];
   training_stage = param_array[28];
-  //fake_lever = param_array[29];
-  offset_perturbation_trial = param_array[29];
-  perturbation_offset_location = offset_perturbation_trial*perturbation_offset_location;
-  
+  fake_lever = param_array[29];
+
   // update trial state params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
 }
@@ -823,6 +825,7 @@ void UpdateOpenLoopParams() // 23.01.2018
 
 void MoveMotor()
 {
+  //digitalWrite(camera_pin, camera_on);
   if (!motor_override)// && (trialstate[1] == 4))
   {
     I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
@@ -835,6 +838,7 @@ void MoveMotor()
   }
   camera = camera_on * (!camera);
   digitalWrite(camera_pin, camera);
+  //digitalWrite(camera_pin, LOW);
 }
 
 void RewardNow()

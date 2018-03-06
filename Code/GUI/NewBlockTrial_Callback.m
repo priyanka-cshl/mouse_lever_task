@@ -117,7 +117,7 @@ if (h.which_perturbation.Value>1)
                 h.current_trial_block.Data(5) = 2000; % increase hold time in this trial
                 
             case 5 % location offset
-                h.current_trial_block.Data(5) = 400;
+                %h.current_trial_block.Data(5) = 100;
                 if rand(1)>0.5
                     h.PerturbationSettings.Data(3) = -abs(h.PerturbationSettings.Data(3));
                 else

@@ -24,10 +24,9 @@ switch caller
         
 %         legend(7) = {'MaxPerBlock'};
 %         param(7) = h.TransferFunction.Data(2);
-        legend(7) = {'LocationOffset'};
+        legend(8) = {'LocationOffset'};
         if h.which_perturbation.Value == 5 && h.current_trial_block.Data(3) == 1
             param(8) = h.PerturbationSettings.Data(3) + h.MotorLocationArduinoMax + 1;
-            param(8)
         else
             param(8) = 0;
         end

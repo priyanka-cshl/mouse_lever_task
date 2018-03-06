@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 27-Feb-2018 14:40:06
+% Last Modified by GUIDE v2.5 05-Mar-2018 13:41:20
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -316,6 +316,7 @@ if get(handles.startAcquisition,'value')
         % update target levels
         handles.targets_to_use = [handles.TargetLevel1Active.Value handles.TargetLevel2Active.Value handles.TargetLevel3Active.Value];
         handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),find(handles.targets_to_use)));
+        skipzones_Callback(hObject, eventdata, handles);
         handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
         handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
 
@@ -1205,3 +1206,23 @@ function PseudoRandomZones_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 % Hint: get(hObject,'Value') returns toggle state of PseudoRandomZones
 
+
+
+% --- Executes on button press in skiptoptwo.
+function skipzones_Callback(hObject, eventdata, handles)
+% hObject    handle to skiptoptwo (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),find(handles.targets_to_use)));
+if handles.skiptoptwo.Value
+    f = find(handles.target_level_array.Data>=3.5);
+    handles.target_level_array.Data(f,:) = [];
+end
+if handles.skipbottomtwo.Value
+    f = find(handles.target_level_array.Data<1.5);
+    handles.target_level_array.Data(f,:) = [];
+end    
+handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
+handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
+guidata(hObject, handles);
+% Hint: get(hObject,'Value') returns toggle state of skiptoptwo
