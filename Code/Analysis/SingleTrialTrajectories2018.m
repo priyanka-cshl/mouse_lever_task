@@ -1,10 +1,10 @@
-function [Trajectories] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones, DoPlot, Handedness)
+function [Trajectories] = SingleTrialTrajectories2018(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, DoPlot, Handedness)
 % plot all (or many) trajectories, separate failures and rewards and
 % perturbations
 
-if nargin<6
+if nargin<7
     Handedness = 0; % All TFs together, 1 = left only, 2 = right only
-    if nargin<5
+    if nargin<6
         DoPlot = 0;
     end
 end
@@ -48,7 +48,7 @@ for Z = 1:numel(ZonesToUse)
     % failures
     failures = intersect(all_trials, find(TrialInfo.Success==0));
     % all trials that were perturbed
-    perturbed = intersect(total_trials, find(myfakezone>0));
+    perturbed = intersect(total_trials, find(myfakezone~=0));
     % all trials where the fake zone was the same
     fake = intersect(idx, find(myfakezone==ZonesToUse(Z)));
     
@@ -58,11 +58,11 @@ for Z = 1:numel(ZonesToUse)
     Trajectories.TrialIDs.Perturbed(Z) = {perturbed};
     Trajectories.TrialIDs.Fake(Z) = {fake};
     
-    Trajectories.MeanTrace.All(Z) = { Mean_NoNaNs(LeverReAligned(all_trials,:)) };
-    Trajectories.MeanTrace.Successes(Z) = { Mean_NoNaNs(LeverReAligned(successes,:)) };
-    Trajectories.MeanTrace.Failures(Z) = { Mean_NoNaNs(LeverReAligned(failures,:)) };
-    Trajectories.MeanTrace.Perturbed(Z) = { Mean_NoNaNs(LeverReAligned(perturbed,:)) };
-    Trajectories.MeanTrace.Fake(Z) = { Mean_NoNaNs(LeverReAligned(fake,:)) };
+    Trajectories.All(Z) = {LeverReAligned(all_trials,:)};
+    Trajectories.Successes(Z) = {LeverReAligned(successes,:)};
+    Trajectories.Failures(Z) = {LeverReAligned(failures,:)};
+    Trajectories.Perturbed(Z) = {LeverReAligned(perturbed,:)};
+    Trajectories.Fake(Z) = {LeverReAligned(fake,:)};
 end
 
 if DoPlot
@@ -92,28 +92,26 @@ if DoPlot
         for trialtype = 1:num_rows
             trialtag = Tags(trialtype);
             subplot_idx = Z + ((trialtype-1)*numel(ZonesToUse));
+            
             % subplot initializations
             figure(figureHandle1);
             h = subplot(num_rows,numel(ZonesToUse),subplot_idx);
             hold on
             h.LineWidth = 1;
             h.Box = 'on';
+            h.TickDir = 'out';
             h.Title.String = num2str(numel(cell2mat(Trajectories.TrialIDs.(char(trialtag))(Z)))); % no. of trials being plotted
             
-            % plot all TargetZones
-            for j = 1:numel(ZonesToUse)
-                y = [ TargetZones(ZonesToUse(j),[1 3]) TargetZones(ZonesToUse(j),[3 1]) ];
-                fill( [mylim(1) mylim(1) mylim(2) mylim(2)], y, ZoneColors(j), 'FaceAlpha', 0.4, 'EdgeColor', 'none');
-            end
-            % demarcate the active zone
-            j = Z;
-            line(mylim,TargetZones(ZonesToUse(j),[1 1]),'color','k','LineStyle','--');
-            line(mylim,TargetZones(ZonesToUse(j),[3 3]),'color','k','LineStyle','--');
+            % Plot the Target zone
+            myzone = [ TargetZones(ZonesToUse(Z),[1 3]) TargetZones(ZonesToUse(Z),[3 1]) ];
+            fill( [mylim(1) mylim(1) mylim(2) mylim(2)], myzone, [1 1 0],'FaceAlpha',0.2, 'EdgeColor', 'none');
             
             % plot the mean and error bars
-            MyTrace = cell2mat(Trajectories.MeanTrace.(char(trialtag))(Z));
-            MyShadedErrorBar(1:size(MyTrace,2),MyTrace(1,:),MyTrace(4,:),'k',[],0.5);
-            
+            if ~isempty (cell2mat(Trajectories.(char(trialtag))(Z)))
+                MyTrace = cell2mat(Trajectories.(char(trialtag))(Z));
+                plot(1:size(MyTrace,2),MyTrace,'k');
+                %MyShadedErrorBar(1:size(MyTrace,2),MyTrace(1,:),MyTrace(4,:),'k',[],0.5);
+            end
             % Ticks and axis limits
             set(gca,'YLim',[0 5],'XLim',mylim,'Fontsize',12,'FontWeight','b');
             if Z == 1
