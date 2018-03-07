@@ -118,6 +118,7 @@ if (h.which_perturbation.Value>1)
                 
             case 5 % location offset
                 %h.current_trial_block.Data(5) = 100;
+                h.TargetDefinition.Data(2) = 2 + h.TargetDefinition.Data(2) - floor(h.TargetDefinition.Data(2)); % only z2 trials
                 if rand(1)>0.5
                     h.PerturbationSettings.Data(3) = -abs(h.PerturbationSettings.Data(3));
                 else
