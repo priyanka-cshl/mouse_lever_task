@@ -14,7 +14,7 @@ end
 
 TF_4_plot = TF; % use later for colormap update
 
-TF = TF'+101; % get rid of negative values % transform to a column vector
+TF = TF'+ h.MotorLocationArduinoMax + 1; % get rid of negative values % transform to a column vector
 sent = 0;
 sending_attempts = 0;
 

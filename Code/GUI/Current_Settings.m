@@ -22,11 +22,18 @@ switch caller
         param(5) = h.current_trial_block.Data(5);
         param(6) = h.RewardControls.Data(1);
         
-        legend(7) = {'MaxPerBlock'};
-        param(7) = h.TransferFunction.Data(2);
+%         legend(7) = {'MaxPerBlock'};
+%         param(7) = h.TransferFunction.Data(2);
+        legend(8) = {'LocationOffset'};
+        if h.which_perturbation.Value == 5 && h.current_trial_block.Data(3) == 1
+            param(8) = h.PerturbationSettings.Data(3) + h.MotorLocationArduinoMax + 1;
+        else
+            param(8) = 0;
+        end
+        
         
         legend(8) = {'PerturbationProbability'};
-        param(8) = h.PerturbationSettings.Data(1);
+%         param(8) = h.PerturbationSettings.Data(1);
         
         legend(9:10) = {'TriggerON' 'TriggerOFF'};
         param(9:10) = h.TrialSettings.Data(1:2);
@@ -50,7 +57,11 @@ switch caller
 %         legend(2) = {'WhichTarget'};
 %         param(2) = h.stimulus_map.Value;
         legend(2) = {'SummedTargetHold'};
-        param(2) = h.TargetHold.Data(3)*h.summedholdfactor.Data(1);
+        if (h.which_perturbation.Value >= 4 && h.current_trial_block.Data(3) == 1)
+            param(2) = h.TrialSettings.Data(5);
+        else
+            param(2) = h.TargetHold.Data(3)*h.summedholdfactor.Data(1);
+        end
 
         legend(3:5) = {'HighLim' 'Target' 'LowLim'};
         %param(3:5) = h.NewTargetDefinition.Data;
@@ -67,7 +78,7 @@ switch caller
 
         legend(6:8) = {'target_locations' 'skip_locations' 'offtarget_locations'};
         param(6:8) = h.locations_per_zone.Data(1:3);
-        param(7) = h.MotorLocations + 1;
+        param(7) = h.MotorLocationArduinoMax + 1;
         
 %         legend(9) = {'StimulusDelay'};
 %         if (h.is_stimulus_on.Value)
@@ -100,14 +111,27 @@ switch caller
             param(11:13) = [0 0 0];
         end
         
-        legend(14) = {'TFsize'};
-        param(14) = h.TransferFunction.Data(1);
+%         legend(14) = {'TFsize'};
+%         param(14) = h.TransferFunction.Data(1);
+
+        legend(14) = {'FlipMapping'};
+        if h.which_perturbation.Value == 4 && h.current_trial_block.Data(3) == 1
+            param(14) = 1;
+        else
+            param(14) = 0;
+        end
         
         legend(15) = {'Stage'};
         param(15) = h.which_stage.Value;
         
-        legend(16) = {'signal_generator'};
+        legend(16) = {'offsetperturb'};
         param(16) = h.fake_lever_signal.Value;
+        if h.which_perturbation.Value == 5 && h.current_trial_block.Data(3) == 1
+            param(16) = 1;
+        else
+            param(14) = 0;
+        end
+        
 end
 
 if newlegends

@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 03-Nov-2017 17:26:54
+% Last Modified by GUIDE v2.5 05-Mar-2018 13:41:20
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -85,6 +85,9 @@ foldername_server = char(handles.file_names.Data(3));
 if ~exist(fullfile(foldername_local,animal_name),'dir')
     mkdir(fullfile(foldername_local,animal_name));
     disp('making local data directory');
+    handles.TargetHold.Data = [10 5 15]';
+    handles.TriggerHold.Data = [10 5 15]';
+    handles.TrialSettings.Data(end) = 200;
 end
 if ~exist(fullfile(foldername_server,animal_name),'dir')
     mkdir(fullfile(foldername_server,animal_name));
@@ -135,6 +138,8 @@ handles.trial_on_2 = fill(NaN,NaN,[0.8941    0.9412    0.9020]);
 handles.trial_on_2.EdgeColor = 'none';
 handles.trial_on_3 = fill(NaN,NaN,[0.8706    0.9216    0.9804]);
 handles.trial_on_3.EdgeColor = 'none';
+handles.trial_on_4 = fill(NaN,NaN,[0.93    0.84    0.84]);
+handles.trial_on_4.EdgeColor = 'none';
 
 handles.lever_DAC_plot = plot(NaN, NaN,'k','linewidth',1); %lever rescaled
 handles.lever_raw_plot = plot(NaN, NaN, 'color',Plot_Colors('b')); %lever raw
@@ -311,6 +316,7 @@ if get(handles.startAcquisition,'value')
         % update target levels
         handles.targets_to_use = [handles.TargetLevel1Active.Value handles.TargetLevel2Active.Value handles.TargetLevel3Active.Value];
         handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),find(handles.targets_to_use)));
+        skipzones_Callback(hObject, eventdata, handles);
         handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
         handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
 
@@ -532,10 +538,10 @@ if usrans == 1
     clear a b c session_data
     display(['saved to ' filename])
     display(['saved to ' server_file_name])
-    set(gcf,'PaperPositionMode','auto')
-    print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
-        '-dpng','-r0');
-    display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
+%     set(gcf,'PaperPositionMode','auto')
+%     print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
+%         '-dpng','-r0');
+%     display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
     guidata(hObject, handles);
 end
 
@@ -586,10 +592,18 @@ Update_MultiRewards(handles);
 % --- Executes when entered data in editable cell(s) in ZoneLimitSettings.
 function ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles)        
 % compute new target definition
-[handles] = Compute_TargetDefinition_fixspeed(handles);
+if handles.TFtype
+    [handles] = Compute_TargetDefinition_fixspeed(handles);
+else
+    [handles] = Compute_TargetDefinition(handles);
+end
 guidata(hObject,handles);
 Write_Params(handles);
-Update_TransferFunction_fixspeed(handles);
+if handles.TFtype
+    Update_TransferFunction_fixspeed(handles);
+else
+    Update_TransferFunction_discrete(handles);
+end
 pause(0.1);
 Update_Params(handles);
 % --------------------------------------------------------------------
@@ -617,7 +631,11 @@ set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
 handles.motor_home.Enable = 'off';
 
 % update transfer function
-Update_TransferFunction_fixspeed(handles);
+if handles.TFtype
+    Update_TransferFunction_fixspeed(handles);
+else
+    Update_TransferFunction_discrete(handles);
+end
 Update_Params(handles);
 %Update_TransferFunction_discrete(handles);
 handles.locations_per_zone.ForegroundColor = 'k';
@@ -647,7 +665,11 @@ set(handles.motor_status,'String','OFF')
 set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
 handles.motor_home.Enable = 'off';
 
-Update_TransferFunction_fixspeed(handles);
+if handles.TFtype
+    Update_TransferFunction_fixspeed(handles);
+else
+    Update_TransferFunction_discrete(handles);
+end
 Update_Params(handles);
 %Update_TransferFunction_discrete(handles);
 
@@ -744,14 +766,14 @@ handles.Arduino.write(62, 'uint16'); % handler - move motor to specific location
 % get chosen location
 contents = cellstr(get(handles.all_locations,'String'));
 my_location = str2num(char(contents(handles.all_locations.Value)));
-handles.Arduino.write(my_location+handles.MotorLocations+1, 'uint16'); % which location
+handles.Arduino.write(my_location+handles.MotorLocationArduinoMax+1, 'uint16'); % which location
 
 % --- Executes on button press in motor_home.
 function motor_home_Callback(hObject, eventdata, handles)
 if handles.motor_override.Value
     pause(0.01);
     handles.Arduino.write(62, 'uint16'); % handler - move motor to specific location
-    handles.Arduino.write(handles.MotorLocations+1, 'uint16'); % home location       
+    handles.Arduino.write(handles.MotorLocationArduinoMax+1, 'uint16'); % home location       
 else
     set(handles.motor_home,'BackgroundColor',[0.5 0.94 0.94]);
 end
@@ -789,7 +811,11 @@ if get(hObject,'Value')
     end
 else
     
-    Update_TransferFunction_fixspeed(handles);
+    if handles.TFtype
+        Update_TransferFunction_fixspeed(handles);
+    else
+        Update_TransferFunction_discrete(handles);
+    end
     Update_Params(handles);
     %Update_TransferFunction_discrete(handles);
 end
@@ -1163,5 +1189,40 @@ if handles.PerturbationSettings.Data(1) > 0
     TrialsToPerturb(1) = 1;
 end
 
+% --- Executes on button press in reward_trial_initiation.
+function reward_trial_initiation_Callback(hObject, eventdata, handles)
+% hObject    handle to reward_trial_initiation (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+Update_Params(handles);
+Update_MultiRewards(handles);
+% Hint: get(hObject,'Value') returns toggle state of reward_trial_initiation
 
 
+% --- Executes on button press in PseudoRandomZones.
+function PseudoRandomZones_Callback(hObject, eventdata, handles)
+% hObject    handle to PseudoRandomZones (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% Hint: get(hObject,'Value') returns toggle state of PseudoRandomZones
+
+
+
+% --- Executes on button press in skiptoptwo.
+function skipzones_Callback(hObject, eventdata, handles)
+% hObject    handle to skiptoptwo (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),find(handles.targets_to_use)));
+if handles.skiptoptwo.Value
+    f = find(handles.target_level_array.Data>=3.5);
+    handles.target_level_array.Data(f,:) = [];
+end
+if handles.skipbottomtwo.Value
+    f = find(handles.target_level_array.Data<1.5);
+    handles.target_level_array.Data(f,:) = [];
+end    
+handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
+handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
+guidata(hObject, handles);
+% Hint: get(hObject,'Value') returns toggle state of skiptoptwo

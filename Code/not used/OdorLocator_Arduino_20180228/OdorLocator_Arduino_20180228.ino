@@ -1,15 +1,15 @@
 // ---- adding libraries ------------------------------------------------------
 #include <SPI.h> // library for SPI communication - to DAC
 #include "trialstates.h" // function to process trial states
-#include "openlooptrialstates.h" // function to process trial 
 #include <Wire.h> // library for I2C communication - to slave Arduinos
 #include <DueTimer.h> // Import the ArCOM library
 #include "ArCOM.h"
+#include "openlooptrialstates.h" // function to process open loop trial states 13.02.18
 // ----------------------------------------------------------------------------
 
 // ---- initialize function calls ---------------------------------------------
 trialstates trialstates;
-openlooptrialstates openlooptrialstates;
+openlooptrialstates openlooptrialstates; // open loop trial states 13.02.18
 ArCOM myUSB(SerialUSB); // Create an ArCOM wrapper for the SerialUSB interface
 // ----------------------------------------------------------------------------
 
@@ -59,6 +59,8 @@ int min_time_since_last_motor_call = 10; // in ms - timer period
 unsigned int num_of_locations = 100;
 unsigned short transfer_function[99] = {0}; // ArCOM aray needs unsigned shorts
 int motor_location = 1;
+int offset_location = 1;
+int perturbation_offset_location = 1;
 int transfer_function_pointer = 0; // for transfer function calibration
 unsigned int my_location = 101;
 unsigned int left_first = 1;
@@ -69,12 +71,18 @@ int reward_state = 0;
 long reward_zone_timestamp = micros();
 long trial_off_buffer = 0;
 int reward_params[] = {100, 40, 0}; // {hold for, duration, summed hold for} in ms
-unsigned short multi_reward_params[] = {200, 10}; // {hold for, duration} in ms for the subsequent rewards within a trial
+unsigned short multi_reward_params[] = {200, 10, 10}; // {hold for, duration, trial init reward} in ms for the subsequent rewards within a trial
+// 4th entry is reward valve polarity
 int multiplerewards = 0; // only one reward per trial
 long time_in_target_zone = 0;
 
 //variables : perturbation related - water delivery decoupled from stimulus
 bool decouple_reward_and_stimulus = false;
+
+//variables: flip mapping mid-trial
+bool flip_lever = false;
+bool flip_lever_trial = false;
+bool use_offset_perturbation = false;
 
 //variables : trial related
 int trialstate[] = {0, 0}; // old, new
@@ -84,7 +92,7 @@ int trial_trigger_timing[] = {10, 600, 3000}; // trigger hold, trigger smooth, t
 int long_iti = 0;
 int normal_iti = 0;
 
-// open_loop_related - 23.01.2018
+// open_loop_related - 13.02.18
 int open_loop_mode = 0; // deliver odor stimuli at different locations
 int open_loop_trial_timing[] = {500, 500, 500, 500, 500}; //motor_settle, pre-odor, odor, post-odor, iti in ms
 int open_loop_odor = 0;
@@ -173,7 +181,7 @@ void setup()
   // first call to set up params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
   trialstates.UpdateITI(normal_iti);
-  openlooptrialstates.UpdateOpenLoopTrialParams(open_loop_trial_timing); // 23.01.2018
+  openlooptrialstates.UpdateOpenLoopTrialParams(open_loop_trial_timing); // 13.02.18
 }
 
 
@@ -210,14 +218,24 @@ void loop()
 
     // stimulus_state[1] = LeverToStimulus.WhichZone(1, lever_position);
     motor_location = map(lever_position, 0, 65534, 0, num_of_locations - 1);
+    if (flip_lever)
+    {
+      motor_location = constrain((offset_location - (motor_location - offset_location)), 0, num_of_locations - 1);
+    }
     stimulus_state[1] = transfer_function[motor_location];
+    if (use_offset_perturbation)
+    {
+      stimulus_state[1] = stimulus_state[1] + perturbation_offset_location;
+      stimulus_state[1] = constrain(stimulus_state[1], 0, 240);
+    }
+
   }
-  else if (open_loop_mode) // 23.01.2018
+  else if (open_loop_mode) // 13.02.18
   {
     lever_position = 0;
-    motor_location = map(open_loop_location, 0, 65534, 0, 300); // max location is 256 - 8 bit
+    motor_location = map(open_loop_location, 0, 300, 0, 65534); // max location is 256 - 8 bit
     SPIWriter(dac_spi_pin, motor_location);
-  } 
+  }
   else
   {
     // write motor command position to DAC
@@ -246,7 +264,7 @@ void loop()
   //----------------------------------------------------------------------------
   // 3) update stimulus state, direction etc. if the stimulus_state has changed
   //----------------------------------------------------------------------------
-  if ((stimulus_state[1] != stimulus_state[0]) && !open_loop_mode)
+  if (stimulus_state[1] != stimulus_state[0])
   {
     if ( ((micros() - stimulus_state_timestamp) >= 1000 * min_time_since_last_motor_call) )
     {
@@ -259,6 +277,11 @@ void loop()
         {
           reward_zone_timestamp = micros();
           reward_state = 2;
+          if (flip_lever_trial && !flip_lever)
+          {
+            flip_lever = true;
+            offset_location = motor_location;
+          }
         }
         if (!in_target_zone[1] && (reward_state == 2))
         {
@@ -289,6 +312,15 @@ void loop()
   //----------------------------------------------------------------------------
   if (reward_state == 2)
   {
+    if ((perturbation_offset_location != 0) && (!use_offset_perturbation))
+    {
+      if ((micros() - reward_zone_timestamp) > 500 * reward_params[0])
+      {
+        reward_state = 1; // reset reward state
+        time_in_target_zone = 0; // reset timespent value
+        //use_offset_perturbation = true;
+      }
+    }
     if ((micros() - reward_zone_timestamp) > 1000 * reward_params[0])
     {
       reward_state = 3; // flag reward valve opening
@@ -316,8 +348,8 @@ void loop()
   //----------------------------------------------------------------------------
   if (!cleaningON)
   {
-    digitalWrite(target_valves[0], (target_valve_state[0] || ((trialstate[0] > 0) && (trialstate[0] < 5)) || !close_loop_mode) ); // open odor valve
-    digitalWrite(target_valves[1], (target_valve_state[1] || ((trialstate[0] > 0) && (trialstate[0] < 5)) || !close_loop_mode) ); // open air valve
+    digitalWrite(target_valves[0], (target_valve_state[0] || ((trialstate[0] > 0) && (trialstate[0] < 5)))); // || !close_loop_mode) ); // open odor valve
+    digitalWrite(target_valves[1], (target_valve_state[1] || ((trialstate[0] > 0) && (trialstate[0] < 5)))); // || !close_loop_mode) ); // open air valve
   }
 
   digitalWrite(trial_reporter_pin, (trialstate[0] == 4)); // active trial?
@@ -328,32 +360,35 @@ void loop()
   //----------------------------------------------------------------------------
   // 6) determine trial mode
   //----------------------------------------------------------------------------
-  if (timer_override && !open_loop_mode)
+  if (timer_override)
   {
-    if (training_stage == 2)
+    if (close_loop_mode)
     {
-      trialstate[1] = 4 * in_target_zone[1];
-    }
-    else
-    {
-      // if trialstate is active and reward has been received
-      // - trialstate should be pushed to 0 after a buffer time has elapsed
-      // buffer time = multi_reward_params[0] if multiplerewards==0
-      // buffer time = multiplerewards if multiplerewards!=0
-      // note: reward_zone_timestamp will be updated when reward valve is turned off
-      if ( trialstate[0] == 4 && ( (reward_state == 4) || (reward_state == 7) ) && (micros() - reward_zone_timestamp) > trial_off_buffer)
+      if (training_stage == 2)
       {
-        trialstate[1] = 5;
+        trialstate[1] = 4 * in_target_zone[1];
       }
       else
       {
-        trialstate[1] = trialstates.WhichState(trialstate[0], lever_position, (micros() - trial_timestamp));
+        // if trialstate is active and reward has been received
+        // - trialstate should be pushed to 0 after a buffer time has elapsed
+        // buffer time = multi_reward_params[0] if multiplerewards==0
+        // buffer time = multiplerewards if multiplerewards!=0
+        // note: reward_zone_timestamp will be updated when reward valve is turned off
+        if ( trialstate[0] == 4 && ( (reward_state == 4) || (reward_state == 7) ) && (micros() - reward_zone_timestamp) > trial_off_buffer)
+        {
+          trialstate[1] = 5;
+        }
+        else
+        {
+          trialstate[1] = trialstates.WhichState(trialstate[0], lever_position, (micros() - trial_timestamp));
+        }
       }
     }
-  }
-  else if (open_loop_mode)
-  {
-    trialstate[1] = openlooptrialstates.WhichState(trialstate[0], (micros() - trial_timestamp)); 
+    else if (open_loop_mode)
+    {
+      trialstate[1] = openlooptrialstates.WhichState(trialstate[0], (micros() - trial_timestamp));
+    }
   }
   else
   {
@@ -395,6 +430,12 @@ void loop()
           trialstates.UpdateITI(long_iti); // will be changed to zero if animal receives a reward in the upcoming trial
         }
         //trialstates.UpdateITI(long_iti);
+        // give small reward for trial initiation
+        if (multi_reward_params[2] > 0)
+        {
+          reward_state = -1;
+          Timer4.start(1000 * multi_reward_params[2]); // call reward timer
+        }
       }
       else if (trialstate[1] == 4) // trial has just started
       {
@@ -408,6 +449,8 @@ void loop()
           digitalWrite(odor_valves[i], false);
           odor_ON = false;
         }
+        flip_lever = false;
+        use_offset_perturbation = false;
       }
     }
 
@@ -448,8 +491,8 @@ void loop()
           break;
       }
     }
+    trialstate[0] = trialstate[1];
   }
-
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
@@ -477,7 +520,7 @@ void loop()
             odor_ON = true;
             timer_override = true;
             camera_on = 1;
-            open_loop_mode = 0;
+            open_loop_mode = 0; //13.02.18
             break;
           case 2: // Acquisition stop handshake
             myUSB.writeUint16(7);
@@ -532,15 +575,17 @@ void loop()
             {
               digitalWrite(odor_valves[i], LOW);
             }
+            target_valve_state[0] = false;
+            target_valve_state[1] = false;
             camera_on = 1;
             open_loop_mode = 0;
-            break;  
+            break;
         }
         break;
       case 20: // update variables
         switch (FSMheader - 20)
         {
-          case 0: // update variables for close loop mode
+          case 0:
             num_of_params = myUSB.readUint16(); // get number of params to be updated
             myUSB.readUint16Array(param_array, num_of_params);
             myUSB.writeUint16Array(param_array, num_of_params);
@@ -551,8 +596,9 @@ void loop()
             myUSB.readUint16Array(open_loop_param_array, num_of_params);
             myUSB.writeUint16Array(open_loop_param_array, num_of_params);
             UpdateOpenLoopParams(); // parse param array to variable names and update motor params
-            break;  
-        }        
+            break;
+        }
+        break;
       case 30: // update transfer function or calibrate transfer function
         switch (FSMheader - 30)
         {
@@ -651,8 +697,8 @@ void loop()
             serial_clock = millis();
             while ( myUSB.available() < 2 && (millis() - serial_clock) < 1000 )
             { } // wait for serial input or time-out
-            myUSB.readUint16Array(multi_reward_params, 2);
-            myUSB.writeUint16Array(multi_reward_params, 2);
+            myUSB.readUint16Array(multi_reward_params, 3);
+            myUSB.writeUint16Array(multi_reward_params, 3);
             break;
         }
         break;
@@ -702,6 +748,7 @@ void UpdateAllParams()
   reward_params[1] = param_array[5];
   reward_params[2] = param_array[15]; // originally target_which, now summed hold duration
   // param_array[6-7] : [rewards_per_block perturb_probability]
+
   trial_trigger_level[0] = param_array[8];
   trial_trigger_level[1] = param_array[9];
   for (i = 0; i < 3; i++)
@@ -733,6 +780,17 @@ void UpdateAllParams()
   // params[19-21] = 'target_locations' 'skip_locations' 'offtarget_locations'
   rewarded_locations[0] = param_array[20] - param_array[19];
   rewarded_locations[1] = param_array[20] + param_array[19];
+
+  if (param_array[6] > 0)
+  {
+    use_offset_perturbation = false;
+    perturbation_offset_location = param_array[6] - param_array[19];
+  }
+  else
+  {
+    perturbation_offset_location = 0;
+  }
+
   //target_on = (param_array[22] > 0);
   long_iti = param_array[22];
   //delay_feedback_by = ((int)target_on) * (param_array[22] - 1) / min_time_since_last_motor_call;
@@ -742,6 +800,7 @@ void UpdateAllParams()
   }
   decouple_reward_and_stimulus = (fake_target_params[1] > 0);
   //param_array[27] = TF size;
+  flip_lever_trial = param_array[27];
   training_stage = param_array[28];
   fake_lever = param_array[29];
 
@@ -766,6 +825,7 @@ void UpdateOpenLoopParams() // 23.01.2018
 
 void MoveMotor()
 {
+  //digitalWrite(camera_pin, camera_on);
   if (!motor_override)// && (trialstate[1] == 4))
   {
     I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
@@ -778,6 +838,7 @@ void MoveMotor()
   }
   camera = camera_on * (!camera);
   digitalWrite(camera_pin, camera);
+  //digitalWrite(camera_pin, LOW);
 }
 
 void RewardNow()
@@ -788,6 +849,12 @@ void RewardNow()
     digitalWrite(reward_reporter_pin, HIGH);
     reward_state = reward_state + 1;
     reward_zone_timestamp = micros();
+  }
+  else if (reward_state == -1)
+  {
+    digitalWrite(reward_valve_pin, HIGH);
+    digitalWrite(reward_reporter_pin, HIGH);
+    reward_state = reward_state + 1;
   }
   else
   {
