@@ -23,7 +23,7 @@ function varargout = OdorLocator(varargin)
 
 % Edit the above text to modify the response to help OdorLocator
 
-% Last Modified by GUIDE v2.5 05-Mar-2018 13:41:20
+% Last Modified by GUIDE v2.5 08-Mar-2018 09:18:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1226,3 +1226,12 @@ handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
 handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
 guidata(hObject, handles);
 % Hint: get(hObject,'Value') returns toggle state of skiptoptwo
+
+
+% --- Executes on button press in preloaded_sequence.
+function preloaded_sequence_Callback(hObject, eventdata, handles)
+% hObject    handle to preloaded_sequence (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of preloaded_sequence
