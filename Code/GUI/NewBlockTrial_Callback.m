@@ -46,7 +46,13 @@ if (sum([h.TargetLevel1AntiBias.Value,h.TargetLevel2AntiBias.Value,h.TargetLevel
 end
 
 if NoAntiBias
-    if ~h.PseudoRandomZones.Value
+    if h.preloaded_sequence.Value
+        foo = sort(h.target_level_array.Data);
+        whichzone = 1 + mod(h.current_trial_block.Data(2)-1,numel(h.trialsequence));
+        h.current_trial_block.Data(5) = h.holdtimes(whichzone);
+        whichzone = h.trialsequence(whichzone);
+        h.TargetDefinition.Data(2) = foo(whichzone);
+    elseif ~h.PseudoRandomZones.Value
         %h.NewTargetDefinition.Data(2) = h.target_level_array.Data(1);
         h.TargetDefinition.Data(2) = h.target_level_array.Data(1);
         %h.target_level_array.Data( 1 + mod(block_num-1,length(h.target_level_array.Data)) );
@@ -76,11 +82,14 @@ h.current_trial_block.Data(4) = h.Odor_list.Value(odor_list(1));
 % outputSingleScan(h.Odors,odor_states);
 
 %% update target hold time
-x = exprnd(h.TargetHold.Data(1));
-while (x + h.TargetHold.Data(2)) > h.TargetHold.Data(3)
+if ~h.preloaded_sequence.Value
     x = exprnd(h.TargetHold.Data(1));
+    while (x + h.TargetHold.Data(2)) > h.TargetHold.Data(3)
+        x = exprnd(h.TargetHold.Data(1));
+    end
+    h.current_trial_block.Data(5) = round(h.TargetHold.Data(2)+x,0);
 end
-h.current_trial_block.Data(5) = round(h.TargetHold.Data(2)+x,0);
+
 
 %% update trigger hold time
 x = exprnd(h.TriggerHold.Data(1));
@@ -105,8 +114,9 @@ if (h.which_perturbation.Value>1)
         switch h.which_perturbation.Value
             case 2 % decouple water and odor
                 % select randomly a target level from a zone that's not of the target zone
-                unused_targets = h.target_level_array.Data(find(floor(h.target_level_array.Data)~=...
-                    floor(h.TargetDefinition.Data(2))));
+%                 unused_targets = h.target_level_array.Data(find(floor(h.target_level_array.Data)~=...
+%                     floor(h.TargetDefinition.Data(2))));
+                unused_targets = h.target_level_array.Data(find(abs(h.target_level_array.Data-h.TargetDefinition.Data(2))>0.5));
                 h.fake_target_zone.Data(2) = unused_targets(randi(length(unused_targets)));
                 h.fake_target_zone.ForegroundColor = [0 0 0];
                 
@@ -118,8 +128,10 @@ if (h.which_perturbation.Value>1)
                 
             case 5 % location offset
                 %h.current_trial_block.Data(5) = 100;
-                h.TargetDefinition.Data(2) = 2 + h.TargetDefinition.Data(2) - floor(h.TargetDefinition.Data(2)); % only z2 trials
-                if rand(1)>0.5
+                %h.TargetDefinition.Data(2) = 2 + h.TargetDefinition.Data(2) - floor(h.TargetDefinition.Data(2)); % only z2 trials
+                h.TargetDefinition.Data(2) = h.PerturbationSettings.Data(4);
+                %if h.PerturbationSettings.Data(3)>0
+                if rand(1)<0.5
                     h.PerturbationSettings.Data(3) = -abs(h.PerturbationSettings.Data(3));
                 else
                     h.PerturbationSettings.Data(3) = abs(h.PerturbationSettings.Data(3));

@@ -41,10 +41,12 @@ switch char(handles.computername)
         handles.MotorLocations = 100;
         handles.MotorLocationArduinoMax = 120;
         handles.minimumtarget = 1;
-        handles.MotorLocationsRange = 140;
+        handles.MotorLocationsRange = 140; %165; %165;
         handles.watercoeffs = [0.009211 -0.0299]; % water per drop = coeef(1)*time +coeef(2)
         handles.fliphome = 0; 
         handles.TFtype = 0; % 1 = fix speed, 0 = fixed start
+        handles.trialsequence = [8 11 5 10 3];% 8 4 1 6 2 8 2 11 2 11 3 8 4 7 1];
+        handles.holdtimes = [310 262 239 203 350];
         
     case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
         handles.file_names.Data(2) = {'C:\Data\Behavior'};

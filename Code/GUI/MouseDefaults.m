@@ -5,7 +5,7 @@ switch char(handles.file_names.Data(1))
     case ('PM32')
         handles.all_targets = [1.0:0.25:3.75]';
     case ('PM34')
-        handles.all_targets = [1.0:0.25:3.25]';
+        handles.all_targets = [1.0:0.25:3.75]';
     case ('PM35')
         handles.all_targets = [1.0:0.25:3.25]';
     case ('PM36')
