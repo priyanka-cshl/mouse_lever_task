@@ -41,7 +41,7 @@ for t = 1:size(TrialInfo.Timestamps,1)
     % for trials without any perturbation
     if ~WasPerturbed(t)
         if ~isempty( find(TZoneTemp)) % entered TargetZone in this trial
-            if ~isempty(intersect(find(HomeTemp),find(TZoneTemp)))
+            if numel(intersect(find(HomeTemp),find(TZoneTemp)))>5
                 idx = intersect(find(HomeTemp),find(TZoneTemp));
                 %LeverAtHome(t,1) = median(LeverTemp(idx));
                 LeverVals = LeverTemp(idx);
@@ -56,15 +56,19 @@ for t = 1:size(TrialInfo.Timestamps,1)
             % the TF was
         end
     else
-        % find the longest stretch when home was on
-        HomeOn = find(diff(HomeTemp));
-        HomeOff = find(diff(HomeTemp)==-1);
-        foo = min(numel(HomeOn),numel(HomeOff));
-        HomeStays = [HomeOn(1:foo,1) HomeOff(1:foo,1)];
-        HomeStays(:,3) = HomeStays(:,2)-HomeStays(:,1);
-        [~,idx] = max(HomeStays(:,3));
-        LeverVals = LeverTemp(HomeOn(idx):HomeOff(idx));
-        %LeverAtHome(t,1) = median(LeverTemp(HomeOn(idx):HomeOff(idx)));
+        if WasPerturbed(t)>20
+            LeverVals = TargetZones(TrialInfo.TargetZoneType(t),2);
+        else
+            % find the longest stretch when home was on
+            HomeOn = find(diff(HomeTemp));
+            HomeOff = find(diff(HomeTemp)==-1);
+            foo = min(numel(HomeOn),numel(HomeOff));
+            HomeStays = [HomeOn(1:foo,1) HomeOff(1:foo,1)];
+            HomeStays(:,3) = HomeStays(:,2)-HomeStays(:,1);
+            [~,idx] = max(HomeStays(:,3));
+            LeverVals = LeverTemp(HomeOn(idx):HomeOff(idx));
+            %LeverAtHome(t,1) = median(LeverTemp(HomeOn(idx):HomeOff(idx)));
+        end
     end
     LeverAtHome(t,1) = median(LeverVals);
     if (LeverAtHome(t,1)>TargetZones(TrialInfo.TargetZoneType(t),1)) | ...
@@ -82,4 +86,5 @@ for t = 1:size(TrialInfo.Timestamps,1)
         SuggestedZone(t,1) = NaN;
     end
 end
+disp(['fixing ',num2str(numel(find(Mismatch))),' targetzone assignments']);
 end
