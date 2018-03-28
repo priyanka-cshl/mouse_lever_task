@@ -15,7 +15,7 @@ computername = char(textread('hostname.txt','%s'));
 switch computername
     case 'priyanka-gupta.cshl.edu'
         DataRoot = '/Volumes/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
-    case 'priyanka-gupta.home'
+    case {'priyanka-gupta.home', 'priyanka-gupta.local'}
         if exist('/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior','dir')
             DataRoot = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior'; % local copy
         else
@@ -71,15 +71,18 @@ for i = 1:size(FileNames,2)
     end
     
     %% Trajectory Analysis
-     [Trajectories] = SortTrajectories2018(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, 1);
-     [Trajectories] = SingleTrialTrajectories2018(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, 1);
-%     if i == 1
+     [Trajectories] = SortTrajectories2018(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, Data.(['session',num2str(i)]).settings, 1);
+   %  [Trajectories] = SingleTrialTrajectories2018(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, 1);
+%     [Trajectories] = SingleTrialTrajectoriesLocationOffset2018(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, Data.(['session',num2str(i)]).settings, 1);
+   %  SortMotorTrajectories2018(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, Data.(['session',num2str(i)]).settings, 1);
+
+     %     if i == 1
 %         [Trajectories] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones, 1);
 %     else
 %         [Trajectories] = OverLayTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones,1);
 %     end
     %% Basic session statistics
-    %[NumTrials] = SessionStats(TrialInfo,Trajectories,ZonesToUse,TargetZones,1);    
+    [NumTrials] = SessionStats(TrialInfo,Trajectories,ZonesToUse,TargetZones,1);    
     
     % if number of Zones>6 split the data set into two
     

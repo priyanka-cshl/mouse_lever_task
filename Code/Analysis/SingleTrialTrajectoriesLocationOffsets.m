@@ -1,26 +1,20 @@
-function [Trajectories] = SingleTrialTrajectories2018(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, DoPlot, Handedness)
+function [Trajectories] = SingleTrialTrajectoriesLocationOffsets(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, Params, DoPlot)
 % plot all (or many) trajectories, separate failures and rewards and
 % perturbations
 
-if nargin<7
-    Handedness = 0; % All TFs together, 1 = left only, 2 = right only
-    if nargin<6
-        DoPlot = 0;
-    end
+if nargin<6
+    DoPlot = 0;
 end
 
 %% Align all trajectories to the time-point when they start moving the lever
 % ie. lever voltage goes below thershold for Trigger ON = ~4.8V
-LeverReAligned = []; idx = []; MotorReAligned = [];
+LeverReAligned = []; idx = [];
 for i = 1:size(LeverTruncated,1) % each trial
-    temp_lever = LeverTruncated(i,:);
-    temp_motor = MotorTruncated(i,:);
-    t = find(temp_lever<4.75, 1);
+    temp = LeverTruncated(i,:);
+    t = find(temp<4.75, 1);
     if ~isempty(t)
-        temp_lever = [temp_lever(t:end) NaN*ones(1,t-1)];
-        temp_motor = [temp_motor(t:end) NaN*ones(1,t-1)];
-        LeverReAligned = [LeverReAligned; temp_lever];
-        MotorReAligned = [MotorReAligned; temp_motor];
+        temp = [temp(t:end) NaN*ones(1,t-1)];
+        LeverReAligned = [LeverReAligned; temp];
         idx = [idx; i];
     end
 end

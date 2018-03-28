@@ -1,4 +1,4 @@
-function [Odors, ZonesToUse, Lever_mat, Motor_mat] = TruncateTrials(Lever, Motor, TrialInfo, Zones)
+function [Odors, ZonesToUse, Lever_mat, Motor_mat] = TruncateTrials(Lever, Motor,TrialInfo, Zones, Params)
 clear Lever_mat;
 clear Motor_mat;
 
@@ -33,5 +33,23 @@ for i = 1:size(Lever,2)
         Motor_mat(i,timepoints_to_keep:timepoints_max) = NaN;
     end
 end
+
+%% Align all trajectories to the time-point when they start moving the lever
+% ie. lever voltage goes below thershold for Trigger ON = ~4.8V
+LeverReAligned = []; idx = [];
+for i = 1:size(Lever_mat,1) % each trial
+    temp_lever = Lever_mat(i,:);
+    temp_motor = Motor_mat(i,:);
+    t = find(temp_lever<4.75, 1);
+    if ~isempty(t)
+        temp_lever = [temp_lever(t:end) NaN*ones(1,t-1)];
+        temp_motor = [temp_motor(t:end) NaN*ones(1,t-1)];
+        LeverReAligned = [LeverReAligned; temp_lever];
+        MotorReAligned = [MotorReAligned; temp_motor];
+        idx = [idx; i];
+    end
+end
+
+%% find time-point at which location offset perturbation started
 
 end

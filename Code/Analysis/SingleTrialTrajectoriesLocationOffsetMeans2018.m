@@ -1,26 +1,23 @@
-function [Trajectories] = SingleTrialTrajectories2018(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, DoPlot, Handedness)
+function [Trajectories] = SingleTrialTrajectoriesLocationOffsetMeans2018(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, Params, DoPlot, Handedness)
 % plot all (or many) trajectories, separate failures and rewards and
 % perturbations
 
-if nargin<7
+if nargin<8
     Handedness = 0; % All TFs together, 1 = left only, 2 = right only
-    if nargin<6
+    if nargin<7
         DoPlot = 0;
     end
 end
 
 %% Align all trajectories to the time-point when they start moving the lever
 % ie. lever voltage goes below thershold for Trigger ON = ~4.8V
-LeverReAligned = []; idx = []; MotorReAligned = [];
+LeverReAligned = []; idx = [];
 for i = 1:size(LeverTruncated,1) % each trial
-    temp_lever = LeverTruncated(i,:);
-    temp_motor = MotorTruncated(i,:);
-    t = find(temp_lever<4.75, 1);
+    temp = LeverTruncated(i,:);
+    t = find(temp<4.75, 1);
     if ~isempty(t)
-        temp_lever = [temp_lever(t:end) NaN*ones(1,t-1)];
-        temp_motor = [temp_motor(t:end) NaN*ones(1,t-1)];
-        LeverReAligned = [LeverReAligned; temp_lever];
-        MotorReAligned = [MotorReAligned; temp_motor];
+        temp = [temp(t:end) NaN*ones(1,t-1)];
+        LeverReAligned = [LeverReAligned; temp];
         idx = [idx; i];
     end
 end
@@ -114,13 +111,29 @@ if DoPlot
                 if (trialtype == 3 && any(cell2mat(Trajectories.TrialIDs.Perturbed(Z))>20))
                     all_perturbed_traces = cell2mat(Trajectories.(char(trialtag))(Z));
                     all_offsets = myfakezone(cell2mat(Trajectories.TrialIDs.Perturbed(Z)));
+                    all_hold_times = Params(cell2mat(Trajectories.TrialIDs.Perturbed(Z)),6);
+                    realigned_perturbed_traces = ReAlignOffsetPerturbations(all_perturbed_traces,all_hold_times,all_offsets,TargetZones(ZonesToUse(Z),1:3));
+                    
                     % positive location offset 
                     if any(all_offsets>121)
-                        plot(1:size(all_perturbed_traces,2),all_perturbed_traces(find(all_offsets>121),:),'k');
+                        %plot(1:size(realigned_perturbed_traces,2),realigned_perturbed_traces(find(all_offsets>121),:),'k');
+                        MyTrace = Mean_NoNaNs(realigned_perturbed_traces(find(all_offsets>121),:));
+                        MyShadedErrorBar(1:size(MyTrace,2),MyTrace(1,:),MyTrace(4,:),'k',[],0.5);
                     end
                     % negative location offset
                     if any(all_offsets<121)
-                        plot(1:size(all_perturbed_traces,2),all_perturbed_traces(find(all_offsets<121),:),'r');
+                        plot(1:size(realigned_perturbed_traces,2),realigned_perturbed_traces(find(all_offsets<121),:),'r');
+                    end
+                    
+                    if any(all_offsets>121)
+                        
+                        %plot(1:size(all_perturbed_traces,2),all_perturbed_traces(find(all_offsets>121),:),'k');
+                    end
+                    % negative location offset
+                    if any(all_offsets<121)
+                        MyTrace = Mean_NoNaNs(all_perturbed_traces(find(all_offsets<121),:));
+                        MyShadedErrorBar(1:size(MyTrace,2),MyTrace(1,:),MyTrace(4,:),'r',[],0.5);
+                        %plot(1:size(all_perturbed_traces,2),all_perturbed_traces(find(all_offsets<121),:),'r');
                     end
                 else
                     MyTrace = cell2mat(Trajectories.(char(trialtag))(Z));
