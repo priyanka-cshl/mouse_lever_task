@@ -408,11 +408,28 @@ void loop()
       {
         for (i = 0; i < 4; i++)
         {
-          digitalWrite(odor_valves[i], (i == trialstate[1]));
+          //digitalWrite(odor_valves[i], (i == trialstate[1]));
+          digitalWrite(odor_valves[i], false);
           odor_ON = false;
         }
       }
-      else if ( (trialstate[1] == 1) && (trialstate[0] == 0) )
+      if ( (trialstate[1] == 1) && odor_ON)
+      {
+        for (i = 0; i < 4; i++)
+        {
+          //digitalWrite(odor_valves[i], (i == trialstate[1]));
+          digitalWrite(odor_valves[i], false);
+          odor_ON = false;
+        }
+      }
+//      else if ( (trialstate[1] == 1) && (trialstate[0] == 0) )
+//      {
+//        for (i = 0; i < 4; i++)
+//        {
+//          digitalWrite(odor_valves[i], (i == which_odor));
+//        }
+//      }
+      else if ( (trialstate[1] == 2) && (trialstate[0] == 1) )
       {
         for (i = 0; i < 4; i++)
         {
@@ -443,13 +460,24 @@ void loop()
       {
         time_in_target_zone = 0; // reset timespent value
       }
-      else if ((trialstate[1] == 5) && odor_ON)
+//      else if ((trialstate[1] == 5) && odor_ON)
+//      {
+//        digitalWrite(odor_valves[0], true);
+//        for (i = 1; i < 4; i++)
+//        {
+//          digitalWrite(odor_valves[i], false);
+//          odor_ON = false;
+//        }
+//        flip_lever = false;
+//        use_offset_perturbation = 0;
+//      }
+      else if ((trialstate[1] == 5) && (trialstate[0] == 4))
       {
         digitalWrite(odor_valves[0], true);
         for (i = 1; i < 4; i++)
         {
           digitalWrite(odor_valves[i], false);
-          odor_ON = false;
+          //odor_ON = false;
         }
         flip_lever = false;
         use_offset_perturbation = 0;
