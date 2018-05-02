@@ -1,44 +1,29 @@
-function [Trajectories] = SingleTrialTrajectories2018(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, DoPlot, Handedness)
+function [Trajectories] = PIDTrajectories(LeverTruncated, MotorTruncated, PIDTruncated, TrialInfo, ZonesToUse, TargetZones, Params, DoPlot, Handedness)
 % plot all (or many) trajectories, separate failures and rewards and
 % perturbations
 
-if nargin<7
-    Handedness = 0; % All TFs together, 1 = left only, 2 = right only
-    if nargin<6
-        DoPlot = 0;
-    end
-end
+DoPlot = 1;
 
 %% Align all trajectories to the time-point when they start moving the lever
 % ie. lever voltage goes below thershold for Trigger ON = ~4.8V
-LeverReAligned = []; idx = []; MotorReAligned = [];
+LeverReAligned = []; idx = []; MotorReAligned = []; PIDReAligned = [];
 for i = 1:size(LeverTruncated,1) % each trial
     temp_lever = LeverTruncated(i,:);
     temp_motor = MotorTruncated(i,:);
+    temp_pid = PIDTruncated(i,:);
     t = find(temp_lever<4.75, 1);
     if ~isempty(t)
         temp_lever = [temp_lever(t:end) NaN*ones(1,t-1)];
         temp_motor = [temp_motor(t:end) NaN*ones(1,t-1)];
+        temp_pid = [temp_pid(t:end) NaN*ones(1,t-1)];
         LeverReAligned = [LeverReAligned; temp_lever];
         MotorReAligned = [MotorReAligned; temp_motor];
+        PIDReAligned = [PIDReAligned; temp_pid];
         idx = [idx; i];
     end
 end
 
-% keep only idx-s for the user-desired left or right TF functions
-switch Handedness
-    case 0
-    case 1 % Left only
-        idx = intersect(idx, find(TrialInfo.TransferFunctionLeft));
-    case 2
-        idx = intersect(idx, find(~TrialInfo.TransferFunctionLeft));
-end
-
 %% sort trajectories by zones, separate successes, failures, and perturbations.
-
-% create a logical vector to get values of perturbed zones
-myfakezone = cell2mat(cellfun(@(x) max([x; 0]), TrialInfo.FakeZone, 'UniformOutput', false))';
-
 % go zone-by-zone and group trajectories (trialIDs) into All - unperturbed,
 % rewarded - unpertubed, failures - unperturbed, and perturbed
 for Z = 1:numel(ZonesToUse)
@@ -61,11 +46,30 @@ for Z = 1:numel(ZonesToUse)
     Trajectories.TrialIDs.Perturbed(Z) = {perturbed};
     Trajectories.TrialIDs.Fake(Z) = {fake};
     
+    Trajectories.MeanTrace.All(Z) = { Mean_NoNaNs(LeverReAligned(all_trials,:)) };
+    Trajectories.MeanTrace.Successes(Z) = { Mean_NoNaNs(LeverReAligned(successes,:)) };
+    Trajectories.MeanTrace.Failures(Z) = { Mean_NoNaNs(LeverReAligned(failures,:)) };
+    Trajectories.MeanTrace.Perturbed(Z) = { Mean_NoNaNs(LeverReAligned(perturbed,:)) };
+    Trajectories.MeanTrace.Fake(Z) = { Mean_NoNaNs(LeverReAligned(fake,:)) };
+    
     Trajectories.All(Z) = {LeverReAligned(all_trials,:)};
     Trajectories.Successes(Z) = {LeverReAligned(successes,:)};
     Trajectories.Failures(Z) = {LeverReAligned(failures,:)};
     Trajectories.Perturbed(Z) = {LeverReAligned(perturbed,:)};
     Trajectories.Fake(Z) = {LeverReAligned(fake,:)};
+    
+    PIDTrajectories.MeanTrace.All(Z) = { Mean_NoNaNs(PIDReAligned(all_trials,:)) };
+    PIDTrajectories.MeanTrace.Successes(Z) = { Mean_NoNaNs(PIDReAligned(successes,:)) };
+    PIDTrajectories.MeanTrace.Failures(Z) = { Mean_NoNaNs(PIDReAligned(failures,:)) };
+    PIDTrajectories.MeanTrace.Perturbed(Z) = { Mean_NoNaNs(PIDReAligned(perturbed,:)) };
+    PIDTrajectories.MeanTrace.Fake(Z) = { Mean_NoNaNs(PIDReAligned(fake,:)) };
+    
+    PIDTrajectories.All(Z) = {PIDReAligned(all_trials,:)};
+    PIDTrajectories.Successes(Z) = {PIDReAligned(successes,:)};
+    PIDTrajectories.Failures(Z) = {PIDReAligned(failures,:)};
+    PIDTrajectories.Perturbed(Z) = {PIDReAligned(perturbed,:)};
+    PIDTrajectories.Fake(Z) = {PIDReAligned(fake,:)};
+    
 end
 
 if DoPlot
@@ -92,7 +96,7 @@ if DoPlot
     
     for Z = 1:numel(ZonesToUse)
         % Run three loops, one each for all trials, Failures and perturbed
-        for trialtype = 1:num_rows
+        for trialtype = 1%:num_rows
             trialtag = Tags(trialtype);
             subplot_idx = Z + ((trialtype-1)*numel(ZonesToUse));
             
@@ -110,41 +114,46 @@ if DoPlot
             fill( [mylim(1) mylim(1) mylim(2) mylim(2)], myzone, [1 1 0],'FaceAlpha',0.2, 'EdgeColor', 'none');
             
             % plot the mean and error bars
-            if ~isempty (cell2mat(Trajectories.(char(trialtag))(Z)))
-                if (trialtype == 3 && any(cell2mat(Trajectories.TrialIDs.Perturbed(Z))>20))
-                    all_perturbed_traces = cell2mat(Trajectories.(char(trialtag))(Z));
-                    all_offsets = myfakezone(cell2mat(Trajectories.TrialIDs.Perturbed(Z)));
-                    % positive location offset 
-                    if any(all_offsets>121)
-                        plot(1:size(all_perturbed_traces,2),all_perturbed_traces(find(all_offsets>121),:),'k');
-                    end
-                    % negative location offset
-                    if any(all_offsets<121)
-                        plot(1:size(all_perturbed_traces,2),all_perturbed_traces(find(all_offsets<121),:),'r');
-                    end
-                else
-                    MyTrace = cell2mat(Trajectories.(char(trialtag))(Z));
-                    plot(1:size(MyTrace,2),MyTrace,'k');
-                end
-                %MyShadedErrorBar(1:size(MyTrace,2),MyTrace(1,:),MyTrace(4,:),'k',[],0.5);
-            end
+            MyTrace = cell2mat(Trajectories.MeanTrace.(char(trialtag))(Z));
+            MyShadedErrorBar(1:size(MyTrace,2),MyTrace(1,:),MyTrace(4,:),'k',[],0.5);
             
-            % Ticks and axis limits
             set(gca,'YLim',[0 5],'XLim',mylim,'Fontsize',12,'FontWeight','b');
-            if Z == 1
-                h.YTick = [0 5];
-                h.YLabel.String = char(trialtag);
-                h.YLabel.FontSize = 12;
-            else
-                h.YTick = [];
-            end
-            if trialtype == num_rows
-                h.XTick = [0 1250]; % 1250 samples = 2.5 sec @ 500Hz
-                h.XTickLabel = {'0', '2.5s'};
-            else
-                h.XTick = [];
-            end
+            
+            % plot PID data
+            subplot_idx = Z + ((trialtype)*numel(ZonesToUse));
+            
+            % subplot initializations
+            figure(figureHandle1);
+            h = subplot(num_rows,numel(ZonesToUse),subplot_idx);
+            hold on
+            h.LineWidth = 1;
+            h.Box = 'on';
+            h.TickDir = 'out';
+            h.Title.String = num2str(numel(cell2mat(Trajectories.TrialIDs.(char(trialtag))(Z)))); % no. of trials being plotted
+            
+            % plot PID traces
+            MyTrace = cell2mat(PIDTrajectories.All(Z));
+            
+            
+            
+        end
+        
+        % Ticks and axis limits
+        set(gca,'YLim',[0 5],'XLim',mylim,'Fontsize',12,'FontWeight','b');
+        if Z == 1
+            h.YTick = [0 5];
+            h.YLabel.String = char(trialtag);
+            h.YLabel.FontSize = 12;
+        else
+            h.YTick = [];
+        end
+        if trialtype == num_rows
+            h.XTick = [0 1250]; % 1250 samples = 2.5 sec @ 500Hz
+            h.XTickLabel = {'0', '2.5s'};
+        else
+            h.XTick = [];
         end
     end
+end
 end
 end

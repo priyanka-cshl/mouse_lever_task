@@ -46,7 +46,7 @@ function [Lever, Motor, TrialInfo, TargetZones] = ChunkUpTrials(MyData, TargetZo
         % perturbation - fake zone
         WhichFakeZone = FakeTargetZones(find(FakeTargetZones(:,1)==mode( MyData(TrialOn(t):TrialOff(t), 11) )),2);
         %TrialInfo.FakeZone(t) = {find(TargetZones(:,1)==mode( MyData(TrialOn(t):TrialOff(t), 11) ))};
-        if WhichFakeZone>20
+        if isempty(find(TargetZones(:,2)==WhichFakeZone))
             TrialInfo.FakeZone(t) = {WhichFakeZone};
         else
             TrialInfo.FakeZone(t) = {find(TargetZones(:,2)==WhichFakeZone)};
