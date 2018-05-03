@@ -5,17 +5,18 @@ if nargin<1
 end
 
 %% defaults
-timewindow = [-1 25]; % seconds
-video_framerate = 50; % Hz
+timewindow = [-0.25 2]; % seconds
+video_framerate = 100; % Hz
 data_samplerate = 500;
 framerate = video_framerate*(data_samplerate/1000); % 25; % w.r.t to sample rate of 500 Hz, actual rate = 50Hz
 %frames_to_show = diff(timewindow)*framerate;
 frames_to_show = max(timewindow)*framerate;
 
 %% FilePaths
-vid_folder = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior/Movies/Raw/PM27_170728_t5';
-filetag = 'fc2_save_2017-07-28-174142-'; %0000';
-DataFile = fullfile('/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior/PM27/PM27_20170728_r1.mat');
+vid_folder = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior/PG03_20180306_r1_v1';
+filetag = 'fc2_save_2018-03-06-182941-'; %0000';
+DataFile = fullfile('/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior/PG03/PG03_20180306_r1.mat');
+%DataFile = fullfile('/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior/PM27/PM27_20170728_r1.mat');
 
 %% Read the Data File - correct target zone mismatch
 [MyData, MySettings, TargetZones, FakeTargetZones] = ExtractSessionData(DataFile);
@@ -26,14 +27,19 @@ DataFile = fullfile('/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior/PM27/PM27_
 % time at which save camera was turned on
 %tstart = MySettings(find(diff(MySettings(1:end,16))==1)+1,1);
 updateAT = MySettings(find(diff(MySettings(1:end,16))==1)+1,1); % +1 because of diff
-tstart = TrialInfo.Timestamps(find(TrialInfo.Timestamps(:,1)>updateAT(1),1)-1,2); % time of previous trial off
+tstart = TrialInfo.Timestamps(find(TrialInfo.Timestamps(:,1)>updateAT(2),1)-1,2); % time of previous trial off
 datastart = find(MyData(:,1)>=tstart(1),1);
 t0 = MyData(datastart,1);
-base_offset = 0.3; % to allow for delays in matlab to arduino communication
+base_offset = 0; % 0.3 to allow for delays in matlab to arduino communication
+%base_offset = 0;
 t0 = base_offset + t0;
-time_desired = 160; 
+time_desired = t0 + 158; 
 %frame_offset = round((time_desired - t0)*video_framerate) - 22;
-frame_offset = round((time_desired - t0)*framerate) - 22;
+%frame_offset = round((time_desired - t0)*framerate) - 22;
+%frame_offset = round((time_desired - t0)*framerate) - 22;
+
+frame_offset = 3970 + 3885;
+%frame_offset = 0;
 t0 = time_desired;
  
 %% Video related initializations
@@ -127,7 +133,7 @@ handles.H6.Position = handles.H5.Position;
 handles.H6.Position(1) = handles.H6.Position(1) + handles.H5.Position(3);
 handles.motor_location = plot([1],[2],'r<','MarkerFaceColor','k','MarkerEdgeColor','k');
 axis off tight
-set(handles.H6,'YLim',[0 100]);
+set(handles.H6,'YLim',[0 120]);
 set(handles.H6, 'Color', 'none');
 
 % % add another axes to mark the targetzone boundaries
@@ -160,7 +166,7 @@ for i = 1:frames_to_show;
     
     t0 = t0 + (1/framerate);
     handles.bar.XData = [t0 t0];
-    pause(1/framerate);
+    pause(1/(framerate/5));
     
     % encoding of trial state
     t1 = find(abs(MyData(:,1)-t0)==min(abs(MyData(:,1)-t0)),1);

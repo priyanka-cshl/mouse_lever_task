@@ -1,8 +1,16 @@
 % test script to extract behavior data and replot session
-function [MyData, params, TargetZones, FakeTargetZones] = ExtractSessionData(FileName)
+function [MyData, params, TargetZones, FakeTargetZones] = ExtractSessionData(FileName, PIDflag)
+    if nargin<2
+        PIDflag = 0;
+    end
+    
     % load the file
     Temp = load(FileName,'session_data');
-    MyData = Temp.session_data.trace(:,[1 3 7:11]);
+    if PIDflag
+        MyData = Temp.session_data.trace(:,[6 3 7:11]);
+    else
+        MyData = Temp.session_data.trace(:,[1 3 7:11]);
+    end
         
     % add three columns in the beginning - 1 for timestamp and 2 for target zone levels
     % add two columns in the end - for fake target zone levels
@@ -81,4 +89,9 @@ function [MyData, params, TargetZones, FakeTargetZones] = ExtractSessionData(Fil
         foo(find(foo==0),:) = [];
         FakeTargetZones = [FakeTargetZones; repmat(foo, 1, 3)];
     end
+    % Sanity check
+    foo = FakeTargetZones;
+    foo(:,2) = foo(:,2) - foo(:,1);
+    FakeTargetZones(find((foo(:,2)==0)&(foo(:,1)<20)&(foo(:,1)>0)),:) = [];
+    
 end

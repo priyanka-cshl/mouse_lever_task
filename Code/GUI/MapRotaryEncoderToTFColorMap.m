@@ -3,11 +3,13 @@ function [idx] = MapRotaryEncoderToTFColorMap(h,motor_location,whichcase)
 % motor_location is in Volts
 % convert to motor position
 motor_location = (motor_location - h.Rotary.Limits(3))/(h.Rotary.Limits(1)-h.Rotary.Limits(3));
-motor_location = (motor_location*2*sum(h.locations_per_zone.Data)) - sum(h.locations_per_zone.Data);
-
+%motor_location = (motor_location*2*sum(h.locations_per_zone.Data)) - sum(h.locations_per_zone.Data);
+motor_location = (motor_location*2*abs(h.Rotary.Locations(1))) - abs(h.Rotary.Locations(1));
 if nargin < 3
     % normalize motor location to max
-    motor_location = motor_location/sum(h.locations_per_zone.Data);
+    %motor_location = motor_location/sum(h.locations_per_zone.Data);
+    motor_location = motor_location/abs(h.Rotary.Locations(1));
+    
     
     
     % get a signed color map

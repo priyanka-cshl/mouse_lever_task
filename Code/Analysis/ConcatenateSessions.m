@@ -11,13 +11,13 @@ computername = char(textread('hostname.txt','%s'));
 switch computername
     case 'priyanka-gupta.cshl.edu'
         DataRoot = '/Volumes/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
-    case 'priyanka-gupta.home'
+    case {'priyanka-gupta.home', 'priyanka-gupta.local'}
         if exist('/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior','dir')
             DataRoot = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior'; % local copy
         else
             DataRoot = '/Volumes/Albeanu-Norepl/pgupta/Behavior'; 
         end
-    case {'Priyanka-PC','PRIYANKA-HP'}
+    case 'Priyanka-PC'
         DataRoot = 'C:\Data\Behavior'; % location on rig computer
     otherwise
         DataRoot = '//sonas-hs.cshl.edu/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
@@ -53,14 +53,17 @@ for i = 1:size(FileNames,2)
     session_data.trace = [session_data.trace; Temp.session_data.trace];
     if i > 1
         % delete first two param entries
-        myparams = Temp.session_data.params(3:end,:);
+        myparams = Temp.session_data.params;
+        myparams(1:find(myparams(:,1)==0,1,'last'),:) = [];
     else
         myparams = Temp.session_data.params;
     end
-    myparams(:,1) = myparams(:,1) + Timestamp_offset;
+    
+    myparams(myparams(:,1)>0,1) = myparams(myparams(:,1)>0,1)  + Timestamp_offset;
+    myparams(myparams(:,1)<0,1) = myparams(myparams(:,1)<0,1)  - Timestamp_offset;
     session_data.params = [session_data.params; myparams];
     
-    Timestamp_offset = Temp.session_data.timestamps(end);
+    Timestamp_offset = session_data.timestamps(end);
     
 end
 % keep params of the last session for next session upload
