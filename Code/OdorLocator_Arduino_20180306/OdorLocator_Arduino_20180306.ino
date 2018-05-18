@@ -504,7 +504,7 @@ void loop()
             digitalWrite(odor_valves[i], false);
           }
           break;
-        case 2: // odor, switch odor vial to odor
+        case 4: // odor, switch odor vial to odor
           for (i = 0; i < 4; i++)
           {
             digitalWrite(odor_valves[i], (i == open_loop_odor));
@@ -599,7 +599,6 @@ void loop()
             break;
           case 6: // open loop stop
             myUSB.writeUint16(9);
-            timer_override = false;
             // turn off all odor valves as caution
             for (i = 0; i < 4; i++)
             {
@@ -607,6 +606,11 @@ void loop()
             }
             target_valve_state[0] = false;
             target_valve_state[1] = false;
+            digitalWrite(target_valves[0], LOW);
+            digitalWrite(target_valves[1], LOW);
+            trialstate[0] = 0;
+            trialstate[1] = 0;
+            timer_override = false;
             camera_on = 1;
             open_loop_mode = 0;
             break;

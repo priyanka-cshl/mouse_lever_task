@@ -50,6 +50,7 @@ function OpenLoopOdorLocator_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 handles.mfilename = mfilename;
 handles.startAcquisition.Enable = 'off';
+handles.openloop = 1;
 
 % rig specific settings
 handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
@@ -346,17 +347,18 @@ if usrans == 1
     a = fread(f,[handles.NIchannels+1 10800000],'double');
     fclose(f);
     
-    % read settings log
-    f = fopen('C:\temp_data_files\settings_log.bin');
-    [~,params1] = Current_Settings(handles,0);
-    [~,params2] = Current_Settings(handles,1);
-    b = fread(f,[1 + length(params1)+length(params2) 10000],'double'); % params vector + timestamp
-    fclose(f);
+%     % read settings log
+%     f = fopen('C:\temp_data_files\settings_log.bin');
+%     %[~,params1] = Current_Settings(handles,0);
+%     %[~,params2] = Current_Settings(handles,1);
+%     [~,params1] = OpenLoop_Settings(0);
+%     b = fread(f,[1 + length(params1)+length(params2) 10000],'double'); % params vector + timestamp
+%     fclose(f);
     
-    % read TF log
-    f = fopen('C:\temp_data_files\transferfunction_log.bin');
-    c = fread(f,[(3+handles.TransferFunction.Data(1)) 10000],'double');
-    fclose(f);
+%     % read TF log
+%     f = fopen('C:\temp_data_files\transferfunction_log.bin');
+%     c = fread(f,[(3+handles.TransferFunction.Data(1)) 10000],'double');
+%     fclose(f);
     
     % filename for writing data
     animal_name = char(handles.file_names.Data(1));
@@ -388,20 +390,20 @@ if usrans == 1
     session_data.timestamps = a(1,:)';
     session_data.trace = a(2:handles.NIchannels+1,:)';
     session_data.trace_legend = Connections_list();
-    session_data.params = b';
-    session_data.TF = c';
-    session_data.ForNextSession = [handles.DAC_settings.Data' handles.TriggerHold.Data' handles.RewardControls.Data(3) handles.TFLeftprobability.Data(1) handles.summedholdfactor.Data];
-    session_data.ForNextSession_Legends = {'DAQGain', 'DAQDC', 'TriggerHoldMin', 'TriggerHoldMean', 'TriggerHoldMax', 'RewardHold-II', 'LeftvsRightTFs', 'SummedHoldFactor' };
+%     session_data.params = b';
+%     session_data.TF = c';
+%     session_data.ForNextSession = [handles.DAC_settings.Data' handles.TriggerHold.Data' handles.RewardControls.Data(3) handles.TFLeftprobability.Data(1) handles.summedholdfactor.Data];
+%     session_data.ForNextSession_Legends = {'DAQGain', 'DAQDC', 'TriggerHoldMin', 'TriggerHoldMean', 'TriggerHoldMax', 'RewardHold-II', 'LeftvsRightTFs', 'SummedHoldFactor' };
     
     save(filename,'session_data*');
     save(server_file_name,'session_data*');
     clear a b c session_data
     display(['saved to ' filename])
     display(['saved to ' server_file_name])
-    set(gcf,'PaperPositionMode','auto')
-    print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
-        '-dpng','-r0');
-    display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
+%     set(gcf,'PaperPositionMode','auto')
+%     print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
+%         '-dpng','-r0');
+%     display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
     guidata(hObject, handles);
 end
 

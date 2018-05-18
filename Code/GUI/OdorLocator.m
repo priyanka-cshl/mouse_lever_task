@@ -52,6 +52,7 @@ handles.output = hObject;
 handles.mfilename = mfilename;
 handles.Zero_MFC.Value = 0;
 handles.startAcquisition.Enable = 'off';
+handles.openloop = 0;
 
 % rig specific settings
 handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');

@@ -9,7 +9,7 @@ switch char(handles.computername)
         % motor location settings
         handles.motor_params = 4;
         % Trial settings
-        handles.TrialSettings.Data = [500 500 500 500 500]';
+        handles.TrialSettings.Data = [500 2000 2000 2000 15000]';
         % odor panel
         handles.Odor_list.Value = [1 2 3]';
         % target levels
@@ -25,7 +25,7 @@ switch char(handles.computername)
         % motor location settings
         handles.motor_params = 4;
         % Trial settings
-        handles.TrialSettings.Data = [500 500 500 500 500]';
+        handles.TrialSettings.Data = [500 2000 2000 2000 15000]';
         % odor panel
         handles.Odor_list.Value = [1 2 3]';
         % target levels
