@@ -613,6 +613,7 @@ void loop()
             timer_override = false;
             camera_on = 1;
             open_loop_mode = 0;
+            close_loop_mode = 1;
             break;
         }
         break;
