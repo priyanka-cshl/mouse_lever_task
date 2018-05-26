@@ -401,44 +401,28 @@ void loop()
   {
     reward_state = (int)(trialstate[1] == 4); // trial was just activated, rewards can be triggered now
     trial_timestamp = micros();
+
     // manage odor valves
     if (timer_override)
     {
-      if ( (trialstate[1] == 0) && odor_ON)
+      if ( (trialstate[1] == 0) && !odor_ON)
       {
-        for (i = 0; i < 4; i++)
+        for (i = 1; i < 4; i++)
         {
-          //digitalWrite(odor_valves[i], (i == trialstate[1]));
           digitalWrite(odor_valves[i], false);
-          odor_ON = false;
         }
+        digitalWrite(odor_valves[0], true);
       }
-      if ( (trialstate[1] == 1) && odor_ON)
-      {
-        for (i = 0; i < 4; i++)
-        {
-          //digitalWrite(odor_valves[i], (i == trialstate[1]));
-          digitalWrite(odor_valves[i], false);
-          odor_ON = false;
-        }
-      }
-//      else if ( (trialstate[1] == 1) && (trialstate[0] == 0) )
-//      {
-//        for (i = 0; i < 4; i++)
-//        {
-//          digitalWrite(odor_valves[i], (i == which_odor));
-//        }
-//      }
-      else if ( (trialstate[1] == 2) && (trialstate[0] == 1) )
+      if ( (trialstate[1] == 1) && !odor_ON)
       {
         for (i = 0; i < 4; i++)
         {
           digitalWrite(odor_valves[i], (i == which_odor));
+          odor_ON = true;
         }
       }
       else if (trialstate[1] == 2)
       {
-        odor_ON = true;
         // reset long ITI
         if (decouple_reward_and_stimulus)
         {
@@ -460,25 +444,14 @@ void loop()
       {
         time_in_target_zone = 0; // reset timespent value
       }
-//      else if ((trialstate[1] == 5) && odor_ON)
-//      {
-//        digitalWrite(odor_valves[0], true);
-//        for (i = 1; i < 4; i++)
-//        {
-//          digitalWrite(odor_valves[i], false);
-//          odor_ON = false;
-//        }
-//        flip_lever = false;
-//        use_offset_perturbation = 0;
-//      }
-      else if ((trialstate[1] == 5) && (trialstate[0] == 4))
+      else if ((trialstate[1] == 5) && odor_ON)
       {
-        digitalWrite(odor_valves[0], true);
         for (i = 1; i < 4; i++)
         {
           digitalWrite(odor_valves[i], false);
-          //odor_ON = false;
+          odor_ON = false;
         }
+        digitalWrite(odor_valves[0], true);
         flip_lever = false;
         use_offset_perturbation = 0;
       }
@@ -547,9 +520,10 @@ void loop()
             stimulus_state[0] = 20;
             stimulus_state[1] = 20;
             digitalWrite(odor_valves[0], HIGH);
-            odor_ON = true;
+            odor_ON = false;
             timer_override = true;
-            camera_on = 1;
+            camera_on = 0;
+            camera = 0;
             open_loop_mode = 0; //13.02.18
             break;
           case 2: // Acquisition stop handshake
@@ -862,7 +836,7 @@ void UpdateOpenLoopParams() // 23.01.2018
 
 void MoveMotor()
 {
-  digitalWrite(camera_pin, camera_on);
+  //digitalWrite(camera_pin, camera_on);
   if (!motor_override)// && (trialstate[1] == 4))
   {
     I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
@@ -873,9 +847,9 @@ void MoveMotor()
     // roll over the TF array pointer
     transfer_function_pointer = (transfer_function_pointer + 1) % num_of_locations;
   }
-  //camera = camera_on * (!camera);
-  //digitalWrite(camera_pin, camera);
-  digitalWrite(camera_pin, LOW);
+  camera = camera_on * (!camera);
+  digitalWrite(camera_pin, camera);
+  //digitalWrite(camera_pin, LOW);
 }
 
 void RewardNow()
