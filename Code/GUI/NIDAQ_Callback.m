@@ -221,6 +221,6 @@ samplenum = samplenum + num_new_samples;
 last_data_value = event.Data(end,:);
 %disp(last_data_value);
 if callreward
-    OdorLocator('reward_now_Callback',h.hObject,[],h);
+    OdorLocatorTabbed('reward_now_Callback',h.hObject,[],h);
 end
 

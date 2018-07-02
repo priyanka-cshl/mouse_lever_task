@@ -121,5 +121,5 @@ end
 set(h.motor_home,'BackgroundColor',[0.94 0.94 0.94]);
 guidata(h.hObject, h);
 % display('params modified by new block call');
-OdorLocator('ZoneLimitSettings_CellEditCallback',h.hObject,[],h);
+OdorLocatorTabbed('ZoneLimitSettings_CellEditCallback',h.hObject,[],h);
 
