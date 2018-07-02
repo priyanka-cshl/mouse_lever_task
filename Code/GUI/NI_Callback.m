@@ -88,8 +88,8 @@ if TotalTime(end)>2
     if any(TotalData(end-num_new_samples+1:end,h.Channels.reward_channel))
         % increment 'total rewards' and 'rewards in block'
         if ~IsRewardedTrial
-            h.Reward_Report.Data(1,2) = h.Reward_Report.Data(1,2) + 1;
-            h.Reward_Report.Data(1,1) = h.Reward_Report.Data(1,1) + 10*(h.RewardControls.Data(1)*h.watercoeffs(1) + h.watercoeffs(2));
+            h.Reward_Report.Data(2) = h.Reward_Report.Data(2) + 1;
+            h.Reward_Report.Data(1) = h.Reward_Report.Data(1) + 10*(h.RewardControls.Data(1)*h.watercoeffs(1) + h.watercoeffs(2));
             IsRewardedTrial = 1;
             
             if ~h.current_trial_block.Data(3) % not a perturbed trial
@@ -108,8 +108,8 @@ if TotalTime(end)>2
             end
             
         else
-            h.Reward_Report.Data(1,4) = h.Reward_Report.Data(1,4) + 1;
-            h.Reward_Report.Data(1,1) = h.Reward_Report.Data(1,1) + 10*(h.RewardControls.Data(4)*h.watercoeffs(1) + h.watercoeffs(2));
+            h.Reward_Report.Data(4) = h.Reward_Report.Data(4) + 1;
+            h.Reward_Report.Data(1) = h.Reward_Report.Data(1) + 10*(h.RewardControls.Data(4)*h.watercoeffs(1) + h.watercoeffs(2));
         end
     end
     
