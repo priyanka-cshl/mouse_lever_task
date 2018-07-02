@@ -23,7 +23,7 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
-% Last Modified by GUIDE v2.5 01-Jul-2018 20:21:19
+% Last Modified by GUIDE v2.5 02-Jul-2018 11:02:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,7 +61,6 @@ set(handles.P2,'Parent',handles.tab2)
 set(handles.P2,'position',get(handles.P1,'position'));
 %set(handles.P3,'position',get(handles.P1,'position'));
 
-
 % basic housekeeping
 handles.output = hObject;
 handles.mfilename = mfilename;
@@ -71,19 +70,18 @@ handles.openloop = 0;
 
 % rig specific settings
 handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
-[handles] = RigDefaults(handles);
+[handles] = RigDefaultParams(handles);
 
 % defaults
 handles.DAQrates.Data = [500 20]';
 handles.which_perturbation.Value = 1;
 handles.TransferFunction.Data(2) = 1;
 
-
 % clear indicators
 %handles.RewardStatus.Data = [0 0 0]';
 handles.Reward_Report.Data = 0*handles.Reward_Report.Data;
-handles.ProgressReport.Data = zeros(4,3);
-handles.ProgressReportPerturbed.Data = zeros(4,3);
+handles.ProgressReport.Data = 0*handles.ProgressReport.Data;
+handles.ProgressReportPerturbed.Data = 0*handles.ProgressReportPerturbed.Data;
 handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
 %handles.water_received.Data = 0;
 handles.Date.String = datestr(now, 'mm-dd-yy');
@@ -99,8 +97,8 @@ foldername_server = char(handles.file_names.Data(3));
 if ~exist(fullfile(foldername_local,animal_name),'dir')
     mkdir(fullfile(foldername_local,animal_name));
     disp('making local data directory');
-    handles.TargetHold.Data = [10 5 15]';
-    handles.TriggerHold.Data = [10 5 15]';
+    handles.TargetHold.Data = [5 10 15]';
+    handles.TriggerHold.Data = [5 10 15]';
     handles.TrialSettings.Data(end) = 200;
 end
 if ~exist(fullfile(foldername_server,animal_name),'dir')
@@ -110,14 +108,11 @@ end
 
 % mouse specific settings
 [handles] = MouseDefaults(handles);
-%handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
-% populate target levels
-handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),handles.targets_to_use));
-% handles.target_level_array.Data 
-%handles.NewTargetDefinition.Data(2) = handles.target_level_array.Data(2);
+handles.target_level_array.Data = handles.all_targets(find(handles.TargetsActive.Data));
+handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
+handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
+% initialize targetdefinition
 handles.TargetDefinition.Data(2) = handles.target_level_array.Data(2);
-%handles.NewTargetDefinition.Data = handles.TargetDefinition.Data;
-%handles.NewTargetDefinition.Data(2) = handles.target_level_array.Data(2);
 
 % load settings
 handles = LoadSettings(handles);
@@ -244,7 +239,7 @@ handles.lever_raw_on.Value = 1;
 guidata(hObject, handles);
 lever_raw_on_Callback(hObject,eventdata,handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
-ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Update_Params
+ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Send2Arduino
 Update_MultiRewards(handles);
 
 % Zero MFCs
@@ -294,8 +289,8 @@ if get(handles.startAcquisition,'value')
         fid3 = fopen('C:\temp_data_files\transferfunction_log.bin','w');
         
         % main settings - only change in the beginning of each session
-        [mysettings.legends_main, mysettings.params_main] = Current_Settings(handles,0);
-        [mysettings.legends_trial, params] = Current_Settings(handles,2);
+        [mysettings.legends_main, mysettings.params_main] = GetSettings(handles,0);
+        [mysettings.legends_trial, params] = GetSettings(handles,2);
         save('C:\temp_data_files\session_settings.mat','mysettings*');
         
         % dynamic settings - change within a session
@@ -328,17 +323,15 @@ if get(handles.startAcquisition,'value')
         handles.StopTime.Visible = 'off';
         
         % update target levels
-        handles.targets_to_use = [handles.TargetLevel1Active.Value handles.TargetLevel2Active.Value handles.TargetLevel3Active.Value];
-        handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),find(handles.targets_to_use)));
-        skipzones_Callback(hObject, eventdata, handles);
+        handles.target_level_array.Data = handles.all_targets(find(handles.TargetsActive.Data));
         handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
         handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
 
         % clear indicators
         %handles.RewardStatus.Data = [0 0 0]';
         handles.Reward_Report.Data = 0*handles.Reward_Report.Data;
-        handles.ProgressReport.Data = zeros(4,3);
-        handles.ProgressReportPerturbed.Data = zeros(4,3);
+        handles.ProgressReport.Data = 0*handles.ProgressReport.Data;
+        handles.ProgressReportPerturbed.Data = 0*handles.ProgressReportPerturbed.Data;
         %handles.water_received.Data = 0;
         handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
         handles.update_call = 1;
@@ -413,13 +406,13 @@ if get(handles.startAcquisition,'value')
         handles.axes9.Position(4) = Height;
         handles.axes4.Position(2) = Y_position;
         handles.axes4.Position(4) = Height;
-        NewBlockTrial_Callback(handles);
+        NextTrial_Callback(handles);
         
         % update pointer to match motor location
         handles.axes4.YLim = [0 handles.TransferFunction.Data(1)];
         handles.motor_location.YData = MapRotaryEncoderToTFColorMap(handles, handles.Rotary.Limits(3));
        
-        handles.lis = handles.NI.addlistener('DataAvailable', @(src,evt) NI_Callback(src,evt,handles,hObject,fid1));
+        handles.lis = handles.NI.addlistener('DataAvailable', @(src,evt) NIDAQ_Callback(src,evt,handles,hObject,fid1));
         handles.NI.startBackground();
         wait(handles.NI);
         guidata(hObject,handles);
@@ -500,8 +493,8 @@ if usrans == 1
     
     % read settings log
     f = fopen('C:\temp_data_files\settings_log.bin');
-    [~,params1] = Current_Settings(handles,0);
-    [~,params2] = Current_Settings(handles,1);
+    [~,params1] = GetSettings(handles,0);
+    [~,params2] = GetSettings(handles,1);
     b = fread(f,[1 + length(params1)+length(params2) 10000],'double'); % params vector + timestamp
     fclose(f);
     
@@ -586,7 +579,7 @@ handles.Arduino.write(83, 'uint16');
 
 % --- Executes when entered data in editable cell(s) in RewardControls.
 function RewardControls_CellEditCallback(hObject, eventdata, handles)
-Update_Params(handles);
+Send2Arduino(handles);
 Update_MultiRewards(handles);
 
 % --- Executes on button press in MultiRewards.
@@ -600,7 +593,7 @@ else
     handles.RewardControls.RowName(3) = {'OFFlag'};
     handles.RewardControls.RowName(4) = {'--'};
 end
-Update_Params(handles);
+Send2Arduino(handles);
 Update_MultiRewards(handles);
 
 % --- Executes when entered data in editable cell(s) in ZoneLimitSettings.
@@ -612,28 +605,24 @@ else
     [handles] = Compute_TargetDefinition(handles);
 end
 guidata(hObject,handles);
-Write_Params(handles);
+Params2File(handles);
 if handles.TFtype
     Update_TransferFunction_fixspeed(handles);
 else
     Update_TransferFunction_discrete(handles);
 end
 pause(0.1);
-Update_Params(handles);
+Send2Arduino(handles);
 % --------------------------------------------------------------------
 
 % --- Executes on button press in stay_time_up.
 function stay_time_up_Callback(hObject, eventdata, handles)
-handles.TargetHold.Data(3) = handles.TargetHold.Data(3) + 25;
-handles.TargetHold.Data(2) = handles.TargetHold.Data(2) + 25;
-handles.TargetHold.Data(1) = handles.TargetHold.Data(1) + 25;
+handles.TargetHold.Data = handles.TargetHold.Data + 25;
 handles.TargetHold.ForegroundColor = 'r';
 
 % --- Executes on button press in stay_time_down.
 function stay_time_down_Callback(hObject, eventdata, handles)
-handles.TargetHold.Data(3) = handles.TargetHold.Data(3) - 25;
-handles.TargetHold.Data(2) = handles.TargetHold.Data(2) - 25;
-handles.TargetHold.Data(1) = handles.TargetHold.Data(1) - 25;
+handles.TargetHold.Data = handles.TargetHold.Data - 25;
 handles.TargetHold.ForegroundColor = 'r';
 
 % --- Executes on button press in update_zones.
@@ -650,7 +639,7 @@ if handles.TFtype
 else
     Update_TransferFunction_discrete(handles);
 end
-Update_Params(handles);
+Send2Arduino(handles);
 %Update_TransferFunction_discrete(handles);
 handles.locations_per_zone.ForegroundColor = 'k';
 % Hint: get(hObject,'Value') returns toggle state of update_zones
@@ -669,7 +658,7 @@ function fake_lever_signal_Callback(hObject, eventdata, handles)
 % hObject    handle to fake_lever_signal (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Update_Params(handles);
+Send2Arduino(handles);
 
 % --- Executes when entered data in editable cell(s) in DAC_settings.
 function DAC_settings_CellEditCallback(hObject, eventdata, handles)
@@ -684,7 +673,7 @@ if handles.TFtype
 else
     Update_TransferFunction_discrete(handles);
 end
-Update_Params(handles);
+Send2Arduino(handles);
 %Update_TransferFunction_discrete(handles);
 
 % turn motor on
@@ -742,7 +731,7 @@ switch get(hObject,'Value')
         
     case 3
 end
-Update_Params(handles);
+Send2Arduino(handles);
 
 % --- Executes on button press in motor_override.
 function motor_override_Callback(hObject, eventdata, handles)
@@ -830,7 +819,7 @@ else
     else
         Update_TransferFunction_discrete(handles);
     end
-    Update_Params(handles);
+    Send2Arduino(handles);
     %Update_TransferFunction_discrete(handles);
 end
 
@@ -933,15 +922,6 @@ else
     closePreview(handles.mycam);
 end
 % Hint: get(hObject,'Value') returns toggle state of startStopCamera
-
-% --- Executes on button press in grab_camera.
-function grab_camera_Callback(hObject, eventdata, handles)
-% if get(hObject,'Value') && handles.startStopCamera.Value
-%     closePreview(handles.mycam);
-%     set(handles.startStopCamera,'String','Cam OFF');
-%     set(handles.startStopCamera,'BackgroundColor',[0.94 0.94 0.94]);
-% end
-% Hint: get(hObject,'Value') returns toggle state of grab_camera
 
 % --- Executes on selection change in focus_mode.
 function focus_mode_Callback(hObject, eventdata, handles)
@@ -1099,7 +1079,6 @@ end
 % --- Executes during object deletion, before destroying properties.
 function figure1_DeleteFcn(hObject, eventdata, handles)
 
-
 % --- Executes on button press in CleaningRoutine.
 function CleaningRoutine_Callback(hObject, eventdata, handles)
 % hObject    handle to CleaningRoutine (see GCBO)
@@ -1146,46 +1125,12 @@ else
     set(handles.CleaningRoutine,'BackgroundColor',[0.94 0.94 0.94]);
 end
 
-% Hint: get(hObject,'Value') returns toggle state of CleaningRoutine
-% --- Executes on button press in TargetLevel3Active.
-function TargetLevelActive_Callback(hObject, eventdata, handles)
-% hObject    handle to TargetLevel3Active (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.targets_to_use = [handles.TargetLevel1Active.Value handles.TargetLevel2Active.Value handles.TargetLevel3Active.Value];
-handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),find(handles.targets_to_use)));
+% --- Executes when entered data in editable cell(s) in TargetsActive.
+function TargetsActive_CellEditCallback(hObject, eventdata, handles)
+handles.target_level_array.Data = handles.all_targets(find(handles.TargetsActive.Data));
 handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
 handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
 guidata(hObject, handles);
-% Hint: get(hObject,'Value') returns toggle state of TargetLevel3Active
-
-
-% --- Executes on button press in TargetLevel2Active.
-function TargetLevel2Active_Callback(hObject, eventdata, handles)
-% hObject    handle to TargetLevel2Active (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.targets_to_use(2) = get(hObject,'Value');
-handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),find(handles.targets_to_use)));
-handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
-handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
-guidata(hObject, handles);
-% Hint: get(hObject,'Value') returns toggle state of TargetLevel2Active
-
-
-% --- Executes on button press in TargetLevel1Active.
-function TargetLevel1Active_Callback(hObject, eventdata, handles)
-% hObject    handle to TargetLevel1Active (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.targets_to_use(1) = get(hObject,'Value');
-handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),find(handles.targets_to_use)));
-handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
-handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
-guidata(hObject, handles);
-% Hint: get(hObject,'Value') returns toggle state of TargetLevel1Active
-
-
 
 % --- Executes when entered data in editable cell(s) in PerturbationSettings.
 function PerturbationSettings_CellEditCallback(hObject, eventdata, handles)
@@ -1208,7 +1153,7 @@ function reward_trial_initiation_Callback(hObject, eventdata, handles)
 % hObject    handle to reward_trial_initiation (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-Update_Params(handles);
+Send2Arduino(handles);
 Update_MultiRewards(handles);
 % Hint: get(hObject,'Value') returns toggle state of reward_trial_initiation
 
@@ -1219,28 +1164,6 @@ function PseudoRandomZones_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % Hint: get(hObject,'Value') returns toggle state of PseudoRandomZones
-
-
-
-% --- Executes on button press in skiptoptwo.
-function skipzones_Callback(hObject, eventdata, handles)
-% hObject    handle to skiptoptwo (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.target_level_array.Data = handles.all_targets(ismember(floor(handles.all_targets),find(handles.targets_to_use)));
-if handles.skiptoptwo.Value
-    f = find(handles.target_level_array.Data>=3.5);
-    handles.target_level_array.Data(f,:) = [];
-end
-if handles.skipbottomtwo.Value
-    f = find(handles.target_level_array.Data<1.5);
-    handles.target_level_array.Data(f,:) = [];
-end    
-handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
-handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
-guidata(hObject, handles);
-% Hint: get(hObject,'Value') returns toggle state of skiptoptwo
-
 
 % --- Executes on button press in preloaded_sequence.
 function preloaded_sequence_Callback(hObject, eventdata, handles)
