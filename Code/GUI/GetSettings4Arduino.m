@@ -25,11 +25,11 @@ param(12:14) = [h.current_trial_block.Data(6) h.TrialSettings.Data(4:5)];
 legend(15) = {'IRI'}; param(15) = h.MultiRewards.Value*h.RewardControls.Data(3);
 legend(16) = {'PostRewardbuffer'}; param(16) = h.RewardControls.Data(5);
 
-legend(17) = {'TFsize'}; param(17) = h.TransferFunction.Data(1);
+legend(17:19) = {'HighLim' 'Target' 'LowLim'};
+param(17:19) = h.TargetDefinition.Data;
+not_ints = [not_ints 17:19]; % convert to integers for Arduino communication purpose
+legend(20) = {'TFsize'}; param(20) = h.TransferFunction.Data(1);
 
-legend(18:20) = {'HighLim' 'Target' 'LowLim'};
-param(18:20) = h.TargetDefinition.Data;
-not_ints = [not_ints 18:20]; % convert to integers for Arduino communication purpose
 legend(21) = {'HalfZoneSize'}; param(21) = h.locations_per_zone.Data(1);
 legend(22) = {'MotorZero'}; param(22) = h.MotorLocationArduinoMax + 1;
 
@@ -62,7 +62,9 @@ if h.which_perturbation.Value == 2 && h.current_trial_block.Data(3) == 1
 else
     param(27:29) = [0 0 0];
 end
+
 legend(30) = {'FeedbackDelay'}; param(30) = 0;
 legend(31) = {'Stage'}; param(31) = h.which_stage.Value;
-     
+% 32 and 33 are for sending numbers back from Arduino
+legend(34:35) = {'SampleRate' 'RefreshRate'}; param(34:35) = h.DAQrates.Data;
 end
