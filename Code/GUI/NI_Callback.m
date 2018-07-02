@@ -67,13 +67,13 @@ if TotalTime(end)>2
         if ~h.current_trial_block.Data(3) % not a perturbed trial
             h.ProgressReport.Data(4-which_target,1) = h.ProgressReport.Data(4-which_target,1) + 1;
             h.ProgressReport.Data(4,1) = h.ProgressReport.Data(4,1) + 1;
-            if h.current_trial_block.Data(1)
-                h.ProgressReportLeft.Data(4-which_target,1) = h.ProgressReportLeft.Data(4-which_target,1) + 1;
-                h.ProgressReportLeft.Data(4,1) = h.ProgressReportLeft.Data(4,1) + 1;
-            else
-                h.ProgressReportRight.Data(4-which_target,1) = h.ProgressReportRight.Data(4-which_target,1) + 1;
-                h.ProgressReportRight.Data(4,1) = h.ProgressReportRight.Data(4,1) + 1;
-            end
+%             if h.current_trial_block.Data(1)
+%                 h.ProgressReportLeft.Data(4-which_target,1) = h.ProgressReportLeft.Data(4-which_target,1) + 1;
+%                 h.ProgressReportLeft.Data(4,1) = h.ProgressReportLeft.Data(4,1) + 1;
+%             else
+%                 h.ProgressReportRight.Data(4-which_target,1) = h.ProgressReportRight.Data(4-which_target,1) + 1;
+%                 h.ProgressReportRight.Data(4,1) = h.ProgressReportRight.Data(4,1) + 1;
+%             end
         else
             h.ProgressReportPerturbed.Data(4-which_fake_target,1) = h.ProgressReportPerturbed.Data(4-which_fake_target,1) + 1;
             h.ProgressReportPerturbed.Data(4,1) = h.ProgressReportPerturbed.Data(4,1) + 1;
@@ -95,13 +95,13 @@ if TotalTime(end)>2
             if ~h.current_trial_block.Data(3) % not a perturbed trial
                 h.ProgressReport.Data(4-which_target,2) = h.ProgressReport.Data(4-which_target,2) + 1;
                 h.ProgressReport.Data(4,2) = h.ProgressReport.Data(4,2) + 1;
-                if h.current_trial_block.Data(1)
-                    h.ProgressReportLeft.Data(4-which_target,2) = h.ProgressReportLeft.Data(4-which_target,2) + 1;
-                    h.ProgressReportLeft.Data(4,2) = h.ProgressReportLeft.Data(4,2) + 1;
-                else
-                    h.ProgressReportRight.Data(4-which_target,2) = h.ProgressReportRight.Data(4-which_target,2) + 1;
-                    h.ProgressReportRight.Data(4,2) = h.ProgressReportRight.Data(4,2) + 1;
-                end
+%                 if h.current_trial_block.Data(1)
+%                     h.ProgressReportLeft.Data(4-which_target,2) = h.ProgressReportLeft.Data(4-which_target,2) + 1;
+%                     h.ProgressReportLeft.Data(4,2) = h.ProgressReportLeft.Data(4,2) + 1;
+%                 else
+%                     h.ProgressReportRight.Data(4-which_target,2) = h.ProgressReportRight.Data(4-which_target,2) + 1;
+%                     h.ProgressReportRight.Data(4,2) = h.ProgressReportRight.Data(4,2) + 1;
+%                 end
             else
                 h.ProgressReportPerturbed.Data(4-which_fake_target,2) = h.ProgressReportPerturbed.Data(4-which_fake_target,2) + 1;
                 h.ProgressReportPerturbed.Data(4,2) = h.ProgressReportPerturbed.Data(4,2) + 1;

@@ -83,8 +83,6 @@ handles.TransferFunction.Data(2) = 1;
 %handles.RewardStatus.Data = [0 0 0]';
 handles.Reward_Report.Data = 0*handles.Reward_Report.Data;
 handles.ProgressReport.Data = zeros(4,3);
-handles.ProgressReportLeft.Data = zeros(4,3);
-handles.ProgressReportRight.Data = zeros(4,3);
 handles.ProgressReportPerturbed.Data = zeros(4,3);
 handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
 %handles.water_received.Data = 0;
@@ -340,8 +338,6 @@ if get(handles.startAcquisition,'value')
         %handles.RewardStatus.Data = [0 0 0]';
         handles.Reward_Report.Data = 0*handles.Reward_Report.Data;
         handles.ProgressReport.Data = zeros(4,3);
-        handles.ProgressReportLeft.Data = zeros(4,3);
-        handles.ProgressReportRight.Data = zeros(4,3);
         handles.ProgressReportPerturbed.Data = zeros(4,3);
         %handles.water_received.Data = 0;
         handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
