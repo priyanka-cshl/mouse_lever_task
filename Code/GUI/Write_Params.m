@@ -14,6 +14,6 @@ if get(h.startAcquisition,'value')
     params1(end-2) = h.TargetHold.Data(1); % StayMean
     params1(end-1) = h.TargetHold.Data(2); % StayMin
     params1(end) = h.TargetHold.Data(3); % StayMax
-    params2(1) = h.trigger_ext_camera.Value; % camera on or not
+    params2(1) = h.grab_camera.Value; % camera on or not
     fwrite(h.settingsfileID,[-1*h.timestamp.Data params1 params2],'double');
 end

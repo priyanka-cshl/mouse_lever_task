@@ -7,7 +7,7 @@ sent = 0;
 sending_attempts = 0;
 ParamArray = [params1 mod(h.current_trial_block.Data(4),4) params2(2:end)]; % replace timestamp with odor vial number
 ParamArray(1) = h.RewardControls.Data(2); % trial OFF lag - cheat
-ParamArray(2) = h.trigger_ext_camera.Value; % another cheat to trigger point grey camera
+ParamArray(2) = h.grab_camera.Value; % another cheat to trigger point grey camera
 %% convert voltage values to int16 range before sending
 not_ints = [not_ints1 (length(params1) + not_ints2)];
 voltage_to_int = round(inv(h.DAC_levels.Data(2)/(2^16)));
