@@ -45,9 +45,7 @@ switch caller
         % overwrite trigger mean value as zero in the arduino array - this
         % is the smoothing parameter
         % h.TrialSettings.Data(3) = h.TrialSettings.Data(4) + round(100*rand,0,'decimals');
-        param(11:13) = [h.TrialSettings.Data(3:5)];
-        %param(11:14) = [h.TrialSettings.Data(3:6)];
-        
+        param(11:13) = [h.current_trial_block.Data(6) h.TrialSettings.Data(4:5)];        
         param(14) = h.MultiRewards.Value*h.RewardControls.Data(2);
         
     case 1 % settings that update within a session
@@ -132,18 +130,5 @@ switch caller
             param(14) = 0;
         end
         
-end
-
-if newlegends
-    legend(16:31) = legend(1:16);
-    legend(1) = {'Timestamp'};
-    legend(2:3) = {'MinWidth' 'IRI'};        
-    legend(4:5) = {'DACgain' 'DACdc'};
-    legend(6:7) = {'RewardHoldTime' 'RewardDuration'};
-    legend(8) = {'MaxPerBlock'};
-    legend(9) = {'PerturbationProbability'};
-    legend(10:11) = {'TriggerON' 'MultirewardIRI'};
-    legend(12:15) = {'TriggerHOLD' 'StayMean' 'StayMin' 'StayMax'};
-    legend(16) = {'CameraON'};
 end
 end

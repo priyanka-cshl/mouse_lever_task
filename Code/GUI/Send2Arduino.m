@@ -1,15 +1,18 @@
 function Send2Arduino(h)
 %% pull all params
-[~, params1, not_ints1] = GetSettings(h,0);
-[~, params2, not_ints2] = GetSettings(h,1);
+% [~, params1, not_ints1] = GetSettings(h,0);
+% [~, params2, not_ints2] = GetSettings(h,1);
 %% send params to Arduino
 sent = 0;
 sending_attempts = 0;
-ParamArray = [params1 mod(h.current_trial_block.Data(4),4) params2(2:end)]; % replace timestamp with odor vial number
-ParamArray(1) = h.RewardControls.Data(2); % trial OFF lag - cheat
-ParamArray(2) = h.trigger_ext_camera.Value; % another cheat to trigger point grey camera
-%% convert voltage values to int16 range before sending
-not_ints = [not_ints1 (length(params1) + not_ints2)];
+% ParamArray = [params1 mod(h.current_trial_block.Data(4),4) params2(2:end)]; % replace timestamp with odor vial number
+% % ParamArray(1) = h.RewardControls.Data(2); % trial OFF lag - cheat
+% % ParamArray(2) = h.trigger_ext_camera.Value; % another cheat to trigger point grey camera
+% %% convert voltage values to int16 range before sending
+% not_ints = [not_ints1 (length(params1) + not_ints2)];
+
+[~, ParamArray, not_ints] = GetSettings4Arduino(h);
+params = ParamArray;
 voltage_to_int = round(inv(h.DAC_levels.Data(2)/(2^16)));
 ParamArray(not_ints) = round(ParamArray(not_ints)*voltage_to_int);
 ParamArray(ParamArray>2^16-1) = 2^16-1;
@@ -53,13 +56,13 @@ end
 if get(h.startAcquisition,'value') && (sent == 1)
     % replace last three values in params1 to store Stay Time min and Stay
     % Time Max
-    params1(1) = h.ZoneLimitSettings.Data(1); % MinWidth
-    %params1(2) = h.ZoneLimitSettings.Data(2); % PropWidth
-    params1(2) = h.RewardControls.Data(2); % IRI - when multirewards is off
-    params1(end-4) = h.MultiRewards.Value*h.RewardControls.Data(2); % IRI
-    params1(end-2) = h.TargetHold.Data(2); % StayMean
-    params1(end-1) = h.TargetHold.Data(1); % StayMin
-    params1(end) = h.TargetHold.Data(3); % StayMax
-    params2(1) = h.trigger_ext_camera.Value; % camera on or not
-    fwrite(h.settingsfileID,[h.timestamp.Data params1 params2],'double');
+%     params(1) = h.ZoneLimitSettings.Data(1); % MinWidth
+%     %params1(2) = h.ZoneLimitSettings.Data(2); % PropWidth
+%     params1(2) = h.RewardControls.Data(2); % IRI - when multirewards is off
+%     params1(end-4) = h.MultiRewards.Value*h.RewardControls.Data(2); % IRI
+%     params1(end-2) = h.TargetHold.Data(2); % StayMean
+%     params1(end-1) = h.TargetHold.Data(1); % StayMin
+%     params1(end) = h.TargetHold.Data(3); % StayMax
+%     params2(1) = h.trigger_ext_camera.Value; % camera on or not
+    fwrite(h.settingsfileID,[h.timestamp.Data params],'double');
 end

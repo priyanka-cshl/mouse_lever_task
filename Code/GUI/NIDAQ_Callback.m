@@ -111,7 +111,7 @@ if TotalTime(end)>2
             
         else
             h.Reward_Report.Data(4) = h.Reward_Report.Data(4) + 1;
-            h.Reward_Report.Data(1) = h.Reward_Report.Data(1) + 10*(h.RewardControls.Data(4)*h.watercoeffs(1) + h.watercoeffs(2));
+            h.Reward_Report.Data(1) = h.Reward_Report.Data(1) + 10*(h.RewardControls.Data(2)*h.watercoeffs(1) + h.watercoeffs(2));
         end
     end
     

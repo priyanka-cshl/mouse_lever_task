@@ -23,7 +23,7 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
-% Last Modified by GUIDE v2.5 02-Jul-2018 11:02:50
+% Last Modified by GUIDE v2.5 02-Jul-2018 14:00:57
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -240,7 +240,6 @@ guidata(hObject, handles);
 lever_raw_on_Callback(hObject,eventdata,handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
 ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Send2Arduino
-Update_MultiRewards(handles);
 
 % Zero MFCs
 if ~isempty(handles.MFC)
@@ -289,8 +288,9 @@ if get(handles.startAcquisition,'value')
         fid3 = fopen('C:\temp_data_files\transferfunction_log.bin','w');
         
         % main settings - only change in the beginning of each session
-        [mysettings.legends_main, mysettings.params_main] = GetSettings(handles,0);
-        [mysettings.legends_trial, params] = GetSettings(handles,2);
+%         [mysettings.legends_main, mysettings.params_main] = GetSettings(handles,0);
+%         [mysettings.legends_trial, params] = GetSettings(handles,2);
+        [mysettings.legends, mysettings.params] = GetSettings4Arduino(handles);
         save('C:\temp_data_files\session_settings.mat','mysettings*');
         
         % dynamic settings - change within a session
@@ -493,9 +493,8 @@ if usrans == 1
     
     % read settings log
     f = fopen('C:\temp_data_files\settings_log.bin');
-    [~,params1] = GetSettings(handles,0);
-    [~,params2] = GetSettings(handles,1);
-    b = fread(f,[1 + length(params1)+length(params2) 10000],'double'); % params vector + timestamp
+    [~,params] = GetSettings4Arduino(handles);
+    b = fread(f,[1 + length(params) 10000],'double'); % params vector + timestamp
     fclose(f);
     
     % read TF log
@@ -535,7 +534,7 @@ if usrans == 1
     session_data.trace_legend = Connections_list();
     session_data.params = b';
     session_data.TF = c';
-    session_data.ForNextSession = [handles.DAC_settings.Data' handles.TriggerHold.Data' handles.RewardControls.Data(3) handles.TFLeftprobability.Data(1) handles.summedholdfactor.Data];
+    session_data.ForNextSession = [handles.DAC_settings.Data' handles.TriggerHold.Data' handles.RewardControls.Data(4) handles.TFLeftprobability.Data(1) handles.summedholdfactor.Data];
     session_data.ForNextSession_Legends = {'DAQGain', 'DAQDC', 'TriggerHoldMin', 'TriggerHoldMean', 'TriggerHoldMax', 'RewardHold-II', 'LeftvsRightTFs', 'SummedHoldFactor' };
     
     save(filename,'session_data*');
@@ -580,21 +579,10 @@ handles.Arduino.write(83, 'uint16');
 % --- Executes when entered data in editable cell(s) in RewardControls.
 function RewardControls_CellEditCallback(hObject, eventdata, handles)
 Send2Arduino(handles);
-Update_MultiRewards(handles);
 
 % --- Executes on button press in MultiRewards.
 function MultiRewards_Callback(hObject, eventdata, handles)
-if handles.MultiRewards.Value
-    handles.RewardControls.RowName(2) = {'IRI'};
-    handles.RewardControls.RowName(3) = {'hold-II'};
-    handles.RewardControls.RowName(4) = {'time-II'};
-else
-    handles.RewardControls.RowName(2) = {'---'};
-    handles.RewardControls.RowName(3) = {'OFFlag'};
-    handles.RewardControls.RowName(4) = {'--'};
-end
 Send2Arduino(handles);
-Update_MultiRewards(handles);
 
 % --- Executes when entered data in editable cell(s) in ZoneLimitSettings.
 function ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles)        
@@ -655,9 +643,6 @@ hObject.ForegroundColor = 'r';
 
 % --- Executes on button press in fake_lever_signal.
 function fake_lever_signal_Callback(hObject, eventdata, handles)
-% hObject    handle to fake_lever_signal (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 Send2Arduino(handles);
 
 % --- Executes when entered data in editable cell(s) in DAC_settings.
@@ -735,9 +720,6 @@ Send2Arduino(handles);
 
 % --- Executes on button press in motor_override.
 function motor_override_Callback(hObject, eventdata, handles)
-% hObject    handle to motor_override (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 handles.Arduino.write(60 + handles.motor_override.Value, 'uint16');
 set(handles.motor_override,'BackgroundColor',[(0.94 - 0.44*handles.motor_override.Value) 0.94 0.94]);
 if handles.motor_override.Value
@@ -829,9 +811,6 @@ function MFC_table_CellEditCallback(hObject, eventdata, handles)
 
 % --- Executes on button press in Zero_MFC.
 function Zero_MFC_Callback(hObject, eventdata, handles)
-% hObject    handle to Zero_MFC (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 if ~isempty(handles.MFC)
     if handles.Zero_MFC.Value
         if strcmp(handles.Zero_MFC.String,'MFCs OFF')
@@ -849,9 +828,6 @@ end
 
 % --- Executes on button press in valve_odor_A.
 function valve_odor_A_Callback(hObject, eventdata, handles)
-% hObject    handle to valve_odor_A (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 handles.Arduino.write(44 + handles.valve_odor_A.Value, 'uint16'); 
 if handles.valve_odor_A.Value
     set(handles.valve_odor_A,'String','odor ON')
@@ -863,9 +839,6 @@ end
 
 % --- Executes on button press in valve_odor_B.
 function valve_odor_B_Callback(hObject, eventdata, handles)
-% hObject    handle to valve_odor_B (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 handles.Arduino.write(46 + handles.valve_odor_B.Value, 'uint16'); 
 if handles.valve_odor_B.Value
     set(handles.valve_odor_B,'String','Air ON')
@@ -877,9 +850,6 @@ end
 
 % --- Executes on button press in odor_vial.
 function odor_vial_Callback(hObject, eventdata, handles)
-% hObject    handle to odor_vial (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 if handles.odor_vial.Value && length(handles.Odor_list.Value)==1
     MyVial = handles.Odor_list.Value;
     set(handles.odor_vial,'String',['Vial',num2str(MyVial),' ON'])
@@ -890,12 +860,9 @@ else
     set(handles.odor_vial,'BackgroundColor',[0.94 0.94 0.94]);
     handles.Arduino.write(50, 'uint16');
 end
-% Hint: get(hObject,'Value') returns toggle state of odor_vial
+
 % --- Executes on button press in BlankVial.
 function BlankVial_Callback(hObject, eventdata, handles)
-% hObject    handle to BlankVial (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 if handles.BlankVial.Value && ~handles.odor_vial.Value
     set(handles.BlankVial,'String','Blank ON')
     set(handles.BlankVial,'BackgroundColor',[0.5 0.94 0.94]);
@@ -909,9 +876,6 @@ end
 
 % --- Executes on button press in startStopCamera.
 function startStopCamera_Callback(hObject, eventdata, handles)
-% hObject    handle to startStopCamera (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 if get(hObject,'Value')
     set(hObject,'String','Cam ON');
     set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
@@ -1081,9 +1045,6 @@ function figure1_DeleteFcn(hObject, eventdata, handles)
 
 % --- Executes on button press in CleaningRoutine.
 function CleaningRoutine_Callback(hObject, eventdata, handles)
-% hObject    handle to CleaningRoutine (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 if handles.CleaningRoutine.Value
     handles.Arduino.write(13, 'uint16');
     tic
@@ -1134,14 +1095,6 @@ guidata(hObject, handles);
 
 % --- Executes when entered data in editable cell(s) in PerturbationSettings.
 function PerturbationSettings_CellEditCallback(hObject, eventdata, handles)
-% hObject    handle to PerturbationSettings (see GCBO)
-% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
-%	Indices: row and column indices of the cell(s) edited
-%	PreviousData: previous data for the cell(s) edited
-%	EditData: string(s) entered by the user
-%	NewData: EditData or its converted form set on the Data property. Empty if Data was not changed
-%	Error: error string when failed to convert EditData to appropriate value for Data
-% handles    structure with handles and user data (see GUIDATA)
 global TrialsToPerturb;
 if handles.PerturbationSettings.Data(1) > 0
     TrialsToPerturb = zeros(1,ceil(1/handles.PerturbationSettings.Data(1)));
@@ -1150,26 +1103,14 @@ end
 
 % --- Executes on button press in reward_trial_initiation.
 function reward_trial_initiation_Callback(hObject, eventdata, handles)
-% hObject    handle to reward_trial_initiation (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 Send2Arduino(handles);
-Update_MultiRewards(handles);
-% Hint: get(hObject,'Value') returns toggle state of reward_trial_initiation
-
 
 % --- Executes on button press in PseudoRandomZones.
 function PseudoRandomZones_Callback(hObject, eventdata, handles)
-% hObject    handle to PseudoRandomZones (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% Hint: get(hObject,'Value') returns toggle state of PseudoRandomZones
 
 % --- Executes on button press in preloaded_sequence.
 function preloaded_sequence_Callback(hObject, eventdata, handles)
-% hObject    handle to preloaded_sequence (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of preloaded_sequence
+% --- Executes on button press in adaptive_holds.
+function adaptive_holds_Callback(hObject, eventdata, handles)
 
