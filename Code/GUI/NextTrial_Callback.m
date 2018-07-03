@@ -50,9 +50,20 @@ if NoAntiBias
 end
 
 %% update odor
-% shuffle odor list
-odor_list = randperm(length(h.Odor_list.Value));
-h.current_trial_block.Data(4) = h.Odor_list.Value(odor_list(1));
+if h.odor_priors.Value
+    which_target = find(h.all_targets == h.TargetDefinition.Data(2));
+    odor_probability = [zeros(60,1); ones(30,1)]; %2/3rds chance of being a priored odor, 1/3rd un-priored
+    odor_probability = randperm(length(odor_probability));
+    if odor_probability(1)
+        h.current_trial_block.Data(4) = 3; % odor 3
+    else
+        h.current_trial_block.Data(4) = 1 + (which_target>6); % 1 if upper 6 zones, 2 if lower six zones
+    end
+else
+    % no biases - any TF can be any odor - pick randomly
+    odor_list = randperm(length(h.Odor_list.Value)); % shuffle odor list
+    h.current_trial_block.Data(4) = h.Odor_list.Value(odor_list(1));
+end
 
 %% update target hold time
 if ~h.preloaded_sequence.Value

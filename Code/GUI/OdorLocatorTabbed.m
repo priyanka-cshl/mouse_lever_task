@@ -23,7 +23,7 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
-% Last Modified by GUIDE v2.5 02-Jul-2018 14:00:57
+% Last Modified by GUIDE v2.5 02-Jul-2018 21:18:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1114,3 +1114,5 @@ function preloaded_sequence_Callback(hObject, eventdata, handles)
 % --- Executes on button press in adaptive_holds.
 function adaptive_holds_Callback(hObject, eventdata, handles)
 
+% --- Executes on button press in odor_priors.
+function odor_priors_Callback(hObject, eventdata, handles)
