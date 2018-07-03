@@ -20,107 +20,106 @@ lastsample = samplenum + num_new_samples - 1;
 
 % flags for event calls
 trial_just_ended = 0;
-call_new_block = 0;
 callreward = 0;
 
 %% populate TotalTime with newly available timestamps
 TotalTime = [ TotalTime(num_new_samples+1:end); event.TimeStamps ];
 TargetLevel = [TargetLevel(num_new_samples+1:end,:); h.TargetDefinition.Data(3)+0*event.Data(:,1) h.TargetDefinition.Data(1)+0*event.Data(:,1)];
-% which_target = floor(h.TargetDefinition.Data(2));
-% which_fake_target = floor(h.fake_target_zone.Data(2));
+% variables used later for plotting etc
 which_target = find(h.all_targets == h.TargetDefinition.Data(2));
 which_fake_target = find(h.all_targets == h.fake_target_zone.Data(2));
+odorID = h.current_trial_block.Data(4);
 
 %% update MFC setpoints
 if ~isempty(h.MFC)
     h.MFC_setpoints_IN.Data = round(mean(event.Data(:,h.NIchannels+1:h.NIchannels+2)),2,'significant')';
 end
 
-% multiply trial_channel by odor value
-odorID = h.current_trial_block.Data(4);
-
 %% populate TotalData with newly available data
 for i = 1:h.Channels.reward_channel-1
     samples_new = event.Data(:,i);
-    if i == h.Channels.trial_channel
-        samples_new = samples_new*odorID;
+    switch i
+        case (h.Channels.trial_channel) % trial channel
+            samples_new = samples_new*odorID;
+        case (h.Channels.homesensor_channel) % homesensor channel
+            if h.fliphome
+                samples_new = 1 - samples_new;
+            end
     end
     TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];
 end
 
-for i = h.Channels.homesensor_channel
-    samples_new = event.Data(:,i);
-    if h.fliphome
-        samples_new = 1 - samples_new;
-    end
-    TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];
-end
-             
+%% detect significant events - trial transitions and rewards
 if TotalTime(end)>2 
-
-    % register if the trial was turned ON or OFF
-    if any(diff(TotalData(end-num_new_samples:end,h.Channels.trial_channel)) < 0)
-        trial_just_ended = 1;
-        if mod(h.current_trial_block.Data(2),h.TransferFunction.Data(2)) == 0
-            call_new_block = 1;
-        end
-    elseif any(diff(TotalData(end-num_new_samples:end,h.Channels.trial_channel)) > 0) % trial just turned ON
-        h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1; % increment 'trial number'
-        if ~h.current_trial_block.Data(3) % not a perturbed trial
-            h.ProgressReport.Data(4-which_target,1) = h.ProgressReport.Data(4-which_target,1) + 1;
-            h.ProgressReport.Data(4,1) = h.ProgressReport.Data(4,1) + 1;
-%             if h.current_trial_block.Data(1)
-%                 h.ProgressReportLeft.Data(4-which_target,1) = h.ProgressReportLeft.Data(4-which_target,1) + 1;
-%                 h.ProgressReportLeft.Data(4,1) = h.ProgressReportLeft.Data(4,1) + 1;
-%             else
-%                 h.ProgressReportRight.Data(4-which_target,1) = h.ProgressReportRight.Data(4-which_target,1) + 1;
-%                 h.ProgressReportRight.Data(4,1) = h.ProgressReportRight.Data(4,1) + 1;
-%             end
-        else
-            h.ProgressReportPerturbed.Data(4-which_fake_target,1) = h.ProgressReportPerturbed.Data(4-which_fake_target,1) + 1;
-            h.ProgressReportPerturbed.Data(4,1) = h.ProgressReportPerturbed.Data(4,1) + 1;
-        end
-        IsRewardedTrial = 0;
-    end
     
-    % reward channel
+    %% REWARDS
+    % append new sampples and take diff to get events
     TotalData(:,h.Channels.reward_channel) = [ TotalData(num_new_samples+1:end,h.Channels.reward_channel); ...
         diff([last_data_value(h.Channels.reward_channel); event.Data(:,h.Channels.reward_channel)])==1 ];
-    % check if there were any rewards and update block accordingly
+    
+    % any rewards?
     if any(TotalData(end-num_new_samples+1:end,h.Channels.reward_channel))
-        % increment 'total rewards' and 'rewards in block'
+        
+        % First reward in the current trial?
         if ~IsRewardedTrial
+            
+            % raise rewarded flag
+            IsRewardedTrial = 1;
+            % Update reward table (#s and uL)
             h.Reward_Report.Data(2) = h.Reward_Report.Data(2) + 1;
             h.Reward_Report.Data(1) = h.Reward_Report.Data(1) + 10*(h.RewardControls.Data(1)*h.watercoeffs(1) + h.watercoeffs(2));
-            IsRewardedTrial = 1;
-            
+            % Update # correct trials in performance plots
             if ~h.current_trial_block.Data(3) % not a perturbed trial
-                h.ProgressReport.Data(4-which_target,2) = h.ProgressReport.Data(4-which_target,2) + 1;
-                h.ProgressReport.Data(4,2) = h.ProgressReport.Data(4,2) + 1;
-%                 if h.current_trial_block.Data(1)
-%                     h.ProgressReportLeft.Data(4-which_target,2) = h.ProgressReportLeft.Data(4-which_target,2) + 1;
-%                     h.ProgressReportLeft.Data(4,2) = h.ProgressReportLeft.Data(4,2) + 1;
-%                 else
-%                     h.ProgressReportRight.Data(4-which_target,2) = h.ProgressReportRight.Data(4-which_target,2) + 1;
-%                     h.ProgressReportRight.Data(4,2) = h.ProgressReportRight.Data(4,2) + 1;
-%                 end
+                h.ProgressReport.Data(which_target,2) = h.ProgressReport.Data(which_target,2) + 1;
+                h.ProgressReport.Data(end,2) = h.ProgressReport.Data(end,2) + 1;
             else
-                h.ProgressReportPerturbed.Data(4-which_fake_target,2) = h.ProgressReportPerturbed.Data(4-which_fake_target,2) + 1;
-                h.ProgressReportPerturbed.Data(4,2) = h.ProgressReportPerturbed.Data(4,2) + 1;
+                h.ProgressReportPerturbed.Data(which_fake_target,2) = h.ProgressReportPerturbed.Data(which_fake_target,2) + 1;
+                h.ProgressReportPerturbed.Data(end,2) = h.ProgressReportPerturbed.Data(end,2) + 1;
             end
-            
+        
+        % secondary rewards within a trial (IsRewarded is already true)
         else
+            
+            % Update reward table (#reward-IIs and uL)
             h.Reward_Report.Data(4) = h.Reward_Report.Data(4) + 1;
             h.Reward_Report.Data(1) = h.Reward_Report.Data(1) + 10*(h.RewardControls.Data(2)*h.watercoeffs(1) + h.watercoeffs(2));
+            
         end
     end
     
-    % lick channel
+    %% trial just turned ON or OFF
+    % trial ON
+    if any(diff(TotalData(end-num_new_samples:end,h.Channels.trial_channel)) < 0)
+        
+        trial_just_ended = 1;
+    
+    % trial OFF
+    elseif any(diff(TotalData(end-num_new_samples:end,h.Channels.trial_channel)) > 0)
+        
+        % pull down rewarded flag
+        IsRewardedTrial = 0;
+        
+        % increment 'trial number'
+        h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1; 
+        
+        % increment trials done in the progress reporst
+        if ~h.current_trial_block.Data(3) % not a perturbed trial
+            h.ProgressReport.Data(which_target,1) = h.ProgressReport.Data(which_target,1) + 1;
+            h.ProgressReport.Data(end,1) = h.ProgressReport.Data(end,1) + 1;
+        else
+            h.ProgressReportPerturbed.Data(which_fake_target,1) = h.ProgressReportPerturbed.Data(which_fake_target,1) + 1;
+            h.ProgressReportPerturbed.Data(end,1) = h.ProgressReportPerturbed.Data(end,1) + 1;
+        end
+        
+    end
+        
+    %% LICKS
     if h.NIchannels >= h.Channels.lick_channel
         TotalData(:,h.Channels.lick_channel) = [ TotalData(num_new_samples+1:end,h.Channels.lick_channel); ...
         diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1 ];
     end
     
+    %% In early training - give water when animal licks
     if ~isempty(find(diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1,1))
         if h.which_stage.Value==1
                 callreward = 1;
@@ -133,7 +132,7 @@ end
     
 %% Update plots
 xwin = h.Xwin.Data;
-YTick_Locations = linspace(h.Plot_YLim.Data(1),h.Plot_YLim.Data(2),9)';
+%YTick_Locations = linspace(h.Plot_YLim.Data(1),h.Plot_YLim.Data(2),9)';
 indices_to_plot = find( TotalTime>TotalTime(end)-xwin & TotalTime>=0 );
 
 % lever positions, motor locations 
@@ -181,7 +180,6 @@ if h.Channels.lick_channel<=size(TotalData,2)
     set(h.lick_plot,'XData',tick_x,'YData',tick_y);
 end
 
-
 % target zone demarcation plots
 set(h.minlim,'XData',TotalTime(indices_to_plot),'YData',...
     h.TrialSettings.Data(2) + 0*TotalTime(indices_to_plot));
@@ -201,25 +199,20 @@ if get(h.startAcquisition,'value') == 0
     src.stop();
 end
 
-if call_new_block && trial_just_ended
+if trial_just_ended
     NextTrial_Callback(h);
-elseif call_new_block
-    %NewBlock_Callback(h);
-elseif trial_just_ended
-    %NewTrial_Callback(h);
 end
 
 %% write data to disk
 data = [TotalTime(end-num_new_samples+1:end) TotalData(end-num_new_samples+1:end,:)]';
 data(h.Channels.trial_channel+1,:) = h.current_trial_block.Data(4)*data(h.Channels.trial_channel+1,:);
-% rescale stimulus position plot (save it in distractor location column
+% rescale stimulus position plot (save it in distractor location column)
 data(5,:) = MapRotaryEncoderToTFColorMap(h,data(4,:),1);
 fwrite(fid1,data,'double');
 
 %% for next round
 samplenum = samplenum + num_new_samples;
 last_data_value = event.Data(end,:);
-%disp(last_data_value);
 if callreward
     OdorLocatorTabbed('reward_now_Callback',h.hObject,[],h);
 end

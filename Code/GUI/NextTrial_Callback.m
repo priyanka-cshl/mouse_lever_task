@@ -74,15 +74,12 @@ if ~h.preloaded_sequence.Value
     h.current_trial_block.Data(5) = round(h.TargetHold.Data(1)+x,0);
 end
 
-
 %% update trigger hold time
 x = exprnd(h.TriggerHold.Data(2));
 while (x + h.TriggerHold.Data(1)) > h.TriggerHold.Data(3)
     x = exprnd(h.TriggerHold.Data(2));
 end
 h.current_trial_block.Data(6) = round(h.TriggerHold.Data(1)+x,0);
-%h.TrialSettings.Data(3) = round(h.TriggerHold.Data(1)+x,0);
-
 
 %% feedback perturbation settings
 if (h.which_perturbation.Value>1)
@@ -91,16 +88,15 @@ if (h.which_perturbation.Value>1)
         TrialsToPerturb = TrialsToPerturb([randperm(floor(numel(TrialsToPerturb)/2)) ...
             floor(numel(TrialsToPerturb)/2)+(1:floor(numel(TrialsToPerturb)/2))]);
     end
-    % bsed on the user set probability,
-    % check if the trial is to be perturbed or not
+    % bsed on the user set probability: check if the trial is to be perturbed or not
     h.current_trial_block.Data(3) = TrialsToPerturb(mod(h.current_trial_block.Data(2),numel(TrialsToPerturb)) + 1);
     
-    if h.current_trial_block.Data(3) && h.which_perturbation.Value>1
+    % if perturbation trial
+    if h.current_trial_block.Data(3) %&& h.which_perturbation.Value>1
         switch h.which_perturbation.Value
             case 2 % decouple water and odor
                 % select randomly a target level from a zone that's not of the target zone
-%                 unused_targets = h.target_level_array.Data(find(floor(h.target_level_array.Data)~=...
-%                     floor(h.TargetDefinition.Data(2))));
+                % and not too close to the actual sensory zone
                 unused_targets = h.target_level_array.Data(find(abs(h.target_level_array.Data-h.TargetDefinition.Data(2))>0.5));
                 h.fake_target_zone.Data(2) = unused_targets(randi(length(unused_targets)));
                 h.fake_target_zone.ForegroundColor = [0 0 0];
@@ -109,13 +105,13 @@ if (h.which_perturbation.Value>1)
                 h.current_trial_block.Data(4) = 4;
                 
             case 4 % flip map
-                h.current_trial_block.Data(5) = 2000; % increase hold time in this trial
+                h.current_trial_block.Data(5) = 2000; % increase target hold time in this trial
                 
             case 5 % location offset
-                %h.current_trial_block.Data(5) = 100;
-                %h.TargetDefinition.Data(2) = 2 + h.TargetDefinition.Data(2) - floor(h.TargetDefinition.Data(2)); % only z2 trials
+                % only applies to particular target zones
+                % so force current zone to TZ of choice
                 h.TargetDefinition.Data(2) = h.PerturbationSettings.Data(4);
-                %if h.PerturbationSettings.Data(3)>0
+                % randomly choose if its an upward or a downward shift
                 if rand(1)<0.5
                     h.PerturbationSettings.Data(3) = -abs(h.PerturbationSettings.Data(3));
                 else
@@ -131,6 +127,5 @@ end
 %% invoke target definition callback (this automatically calls Send2Arduino)
 set(h.motor_home,'BackgroundColor',[0.94 0.94 0.94]);
 guidata(h.hObject, h);
-% display('params modified by new block call');
 OdorLocatorTabbed('ZoneLimitSettings_CellEditCallback',h.hObject,[],h);
 

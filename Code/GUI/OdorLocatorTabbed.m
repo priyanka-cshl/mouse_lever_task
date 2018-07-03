@@ -50,8 +50,8 @@ function OdorLocatorTabbed_OpeningFcn(hObject, eventdata, handles, varargin)
 
 %Create tab group
 handles.tgroup = uitabgroup('Parent', handles.figure1,'TabLocation', 'top');
-handles.tab1 = uitab('Parent', handles.tgroup, 'Title', 'My Tab Label 1');
-handles.tab2 = uitab('Parent', handles.tgroup, 'Title', 'My Tab Label 2');
+handles.tab1 = uitab('Parent', handles.tgroup, 'Title', 'Main');
+handles.tab2 = uitab('Parent', handles.tgroup, 'Title', 'Extras');
 %handles.tab3 = uitab('Parent', handles.tgroup, 'Title', 'My Tab Label 3');
 %Place panels into each tab
 set(handles.P1,'Parent',handles.tab1)
@@ -102,7 +102,7 @@ if ~exist(fullfile(foldername_local,animal_name),'dir')
     handles.TrialSettings.Data(end) = 200;
 end
 if ~exist(fullfile(foldername_server,animal_name),'dir')
-    mkdir(fullfile(foldername_server,animal_name));
+%    mkdir(fullfile(foldername_server,animal_name));
     disp('making remote data directory');
 end
 
@@ -115,7 +115,7 @@ handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
 handles.TargetDefinition.Data(2) = handles.target_level_array.Data(2);
 
 % load settings
-handles = LoadSettings(handles);
+%handles = LoadSettings(handles);
 
 % get weight data if available
 % check if the weight log file exists
@@ -295,7 +295,7 @@ if get(handles.startAcquisition,'value')
         
         % dynamic settings - change within a session
         handles.settingsfileID = fid2;
-        fwrite(fid2,[handles.timestamp.Data mysettings.params_main params],'double');
+        fwrite(fid2,[handles.timestamp.Data mysettings.params],'double');
         handles.TransferFunctionfileID = fid3;
         
         handles.hObject = hObject;

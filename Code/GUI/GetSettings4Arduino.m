@@ -21,7 +21,7 @@ legend(9) = {'RewardDuration-II'}; param(9) = h.MultiRewards.Value*h.RewardContr
 legend(10:11) = {'TriggerON' 'TriggerOFF'}; param(10:11) = h.TrialSettings.Data(1:2);
 not_ints = [not_ints 10:11];
 legend(12:14) = {'TriggerHOLD' 'MinTrialLength' 'MaxTrialLength'};
-param(12:14) = [h.current_trial_block.Data(6) h.TrialSettings.Data(4:5)];
+param(12:14) = [h.current_trial_block.Data(6); h.TrialSettings.Data(4:5)];
 legend(15) = {'IRI'}; param(15) = h.MultiRewards.Value*h.RewardControls.Data(3);
 legend(16) = {'PostRewardbuffer'}; param(16) = h.RewardControls.Data(5);
 
