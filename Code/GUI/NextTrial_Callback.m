@@ -14,6 +14,14 @@ disp(['---------- New Trial (#', num2str(h.current_trial_block.Data(2)),') -----
 h.ProgressReport.Data(:,3) = round(100*(h.ProgressReport.Data(:,2)./h.ProgressReport.Data(:,1)),0,'decimals');
 h.ProgressReportPerturbed.Data(:,3) = round(100*(h.ProgressReportPerturbed.Data(:,2)./h.ProgressReportPerturbed.Data(:,1)),0,'decimals');
 
+%% update mean hold times for each target zone
+for i = 1:numel(h.all_targets)
+    f = find(h.hold_times.Data(:,1)==i);
+    if ~isempty(f)
+        h.MeanHoldTimes.Data(i) = floor(median(h.hold_times.Data(f,3)));
+    end
+end
+
 %% invert TF if needed
 h.current_trial_block.Data(1) = (rand(1)<h.TFLeftprobability.Data(1)); % 50% chance of inverting TF
 
@@ -49,11 +57,13 @@ if NoAntiBias
     end
 end
 
+h.which_target.Data = find(h.all_targets == h.TargetDefinition.Data(2));
+
 %% update odor
 if h.odor_priors.Value
-    which_target = find(h.all_targets == h.TargetDefinition.Data(2));
+    which_target = h.which_target.Data;
     odor_probability = [zeros(60,1); ones(30,1)]; %2/3rds chance of being a priored odor, 1/3rd un-priored
-    odor_probability = randperm(length(odor_probability));
+    odor_probability = odor_probability(randperm(length(odor_probability)));
     if odor_probability(1)
         h.current_trial_block.Data(4) = 3; % odor 3
     else
@@ -67,11 +77,16 @@ end
 
 %% update target hold time
 if ~h.preloaded_sequence.Value
-    x = exprnd(h.TargetHold.Data(2));
-    while (x + h.TargetHold.Data(1)) > h.TargetHold.Data(3)
+    if h.adaptive_holds.Value
+        % get mean holds for this particular target zone
+        h.current_trial_block.Data(5) = 25 + h.MeanHoldTimes.Data(h.which_target.Data);
+    else
         x = exprnd(h.TargetHold.Data(2));
+        while (x + h.TargetHold.Data(1)) > h.TargetHold.Data(3)
+            x = exprnd(h.TargetHold.Data(2));
+        end
+        h.current_trial_block.Data(5) = round(h.TargetHold.Data(1)+x,0);
     end
-    h.current_trial_block.Data(5) = round(h.TargetHold.Data(1)+x,0);
 end
 
 %% update trigger hold time
@@ -93,6 +108,7 @@ if (h.which_perturbation.Value>1)
     
     % if perturbation trial
     if h.current_trial_block.Data(3) %&& h.which_perturbation.Value>1
+        h.hold_times.Data(h.current_trial_block.Data(2)-1,2) = NaN;
         switch h.which_perturbation.Value
             case 2 % decouple water and odor
                 % select randomly a target level from a zone that's not of the target zone
@@ -100,6 +116,7 @@ if (h.which_perturbation.Value>1)
                 unused_targets = h.target_level_array.Data(find(abs(h.target_level_array.Data-h.TargetDefinition.Data(2))>0.5));
                 h.fake_target_zone.Data(2) = unused_targets(randi(length(unused_targets)));
                 h.fake_target_zone.ForegroundColor = [0 0 0];
+                h.which_fake_target.Data = find(h.all_targets == h.fake_target_zone.Data(2));
                 
             case 3 % no odor
                 h.current_trial_block.Data(4) = 4;

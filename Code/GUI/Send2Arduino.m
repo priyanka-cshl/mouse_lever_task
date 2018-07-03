@@ -65,7 +65,10 @@ end
 
 %% if acquisition is Running and params were sent - update settings file
 if get(h.startAcquisition,'value') && (sent == 1)
-    h.hold_times.Data(h.current_trial_block.Data(2),3) = ParamsBack(1);
+    if (h.current_trial_block.Data(2)-1>0)
+        h.hold_times.Data(h.current_trial_block.Data(2)-1,1) = h.which_target.Data;
+        h.hold_times.Data(h.current_trial_block.Data(2)-1,3) = ParamsBack(1);
+    end
     % replace last three values in params1 to store Stay Time min and Stay
     % Time Max
 %     params(1) = h.ZoneLimitSettings.Data(1); % MinWidth

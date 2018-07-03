@@ -438,12 +438,6 @@ void loop()
           trialstates.UpdateITI(long_iti); // will be changed to zero if animal receives a reward in the upcoming trial
         }
         //trialstates.UpdateITI(long_iti);
-        // give small reward for trial initiation
-        if (multi_reward_params[2] > 0)
-        {
-          reward_state = -1;
-          Timer4.start(1000 * multi_reward_params[2]); // call reward timer
-        }
       }
       else if (trialstate[1] == 4) // trial has just started
       {

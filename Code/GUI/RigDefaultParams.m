@@ -28,7 +28,7 @@ switch char(handles.computername)
         handles.Odor_list.Value = [1 2 3]';
         % target levels
         %handles.target_level_array.Data = [1:0.25:3.75]'; %[3:0.25:3.75]';
-        handles.all_targets = [1:0.25:3.75]';
+        handles.all_targets = flipud([1:0.25:3.75]');
         handles.TargetsActive.Data = 1 + 0*handles.TargetsActive.Data;
         handles.target_level_array.Data = handles.all_targets(find(handles.TargetsActive.Data));
         handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
@@ -72,7 +72,7 @@ switch char(handles.computername)
         handles.Odor_list.Value = [1 2 3]';
         % target levels
         %handles.target_level_array.Data = [1:0.25:3.75]'; %[3:0.25:3.75]';
-        handles.all_targets = [1:0.25:3.75]';
+        handles.all_targets = flipud([1:0.25:3.75]');
         handles.TargetsActive.Data = 1 + 0*handles.TargetsActive.Data;
         handles.target_level_array.Data = handles.all_targets(find(handles.TargetsActive.Data));
         handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);

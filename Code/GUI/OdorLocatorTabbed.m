@@ -23,7 +23,7 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
-% Last Modified by GUIDE v2.5 02-Jul-2018 21:18:34
+% Last Modified by GUIDE v2.5 03-Jul-2018 16:23:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -48,18 +48,41 @@ end
 % --- Executes just before OdorLocatorTabbed is made visible.
 function OdorLocatorTabbed_OpeningFcn(hObject, eventdata, handles, varargin)
 
-%Create tab group
-handles.tgroup = uitabgroup('Parent', handles.figure1,'TabLocation', 'top');
-handles.tab1 = uitab('Parent', handles.tgroup, 'Title', 'Main');
-handles.tab2 = uitab('Parent', handles.tgroup, 'Title', 'Extras');
-%handles.tab3 = uitab('Parent', handles.tgroup, 'Title', 'My Tab Label 3');
+%Create tab groupA - motor and odors
+handles.tgroupA = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
+    'Position', [0 0 0.14300 0.4500] );
+handles.tabA1 = uitab('Parent', handles.tgroupA, 'Title', 'ClearPathMotor');
+handles.tabA2 = uitab('Parent', handles.tgroupA, 'Title', 'Odors');
 %Place panels into each tab
-set(handles.P1,'Parent',handles.tab1)
-set(handles.P2,'Parent',handles.tab2)
-%set(handles.P3,'Parent',handles.tab3)
+set(handles.A1,'Parent',handles.tabA1)
+set(handles.A2,'Parent',handles.tabA2)
 %Reposition each panel to same location as panel 1
-set(handles.P2,'position',get(handles.P1,'position'));
-%set(handles.P3,'position',get(handles.P1,'position'));
+handles.A1.Position = [1.000    0.1   25.6000   24.0000];
+set(handles.A2,'position',get(handles.A1,'position'));
+
+%Create tab groupB - Session controls, Extra controls
+handles.tgroupB = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
+    'Position',[0.144 0 0.434 0.4500]);
+handles.tabB1 = uitab('Parent', handles.tgroupB, 'Title', 'Session controls');
+handles.tabB2 = uitab('Parent', handles.tgroupB, 'Title', 'Additional controls');
+%Place panels into each tab
+set(handles.B1,'Parent',handles.tabB1)
+set(handles.B2,'Parent',handles.tabB2)
+%Reposition each panel to same location as panel 1
+handles.B1.Position = [1    0.1   84.6000   24.0000];
+set(handles.B2,'position',get(handles.B1,'position'));
+
+%Create tab groupC - Session controls, Extra controls
+handles.tgroupC = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
+    'Position',[0.579 0 0.422 0.4800]);
+handles.tabC1 = uitab('Parent', handles.tgroupC, 'Title', 'Session Status');
+handles.tabC2 = uitab('Parent', handles.tgroupC, 'Title', 'Session Extras');
+%Place panels into each tab
+set(handles.C1,'Parent',handles.tabC1)
+set(handles.C2,'Parent',handles.tabC2)
+%Reposition each panel to same location as panel 1
+handles.C1.Position = [1.0000    0.1000   82.0000   25.6154];
+set(handles.C2,'position',get(handles.C1,'position'));
 
 % basic housekeeping
 handles.output = hObject;
@@ -79,9 +102,11 @@ handles.TransferFunction.Data(2) = 1;
 
 % clear indicators
 %handles.RewardStatus.Data = [0 0 0]';
-handles.Reward_Report.Data = 0*handles.Reward_Report.Data;
-handles.ProgressReport.Data = 0*handles.ProgressReport.Data;
-handles.ProgressReportPerturbed.Data = 0*handles.ProgressReportPerturbed.Data;
+handles.Reward_Report.Data = zeros(size(handles.Reward_Report.Data));
+handles.ProgressReport.Data = zeros(size(handles.ProgressReport.Data));
+handles.ProgressReportPerturbed.Data = zeros(size(handles.ProgressReportPerturbed.Data));
+handles.hold_times.Data = zeros(size(handles.hold_times.Data));
+handles.MeanHoldTimes.Data = zeros(size(handles.MeanHoldTimes.Data));
 handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
 %handles.water_received.Data = 0;
 handles.Date.String = datestr(now, 'mm-dd-yy');
@@ -115,7 +140,7 @@ handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
 handles.TargetDefinition.Data(2) = handles.target_level_array.Data(2);
 
 % load settings
-%handles = LoadSettings(handles);
+%handles = LastSessionSettings(handles);
 
 % get weight data if available
 % check if the weight log file exists
@@ -169,7 +194,7 @@ handles.minlim = plot(NaN, NaN, 'k','LineStyle',':'); % lower limit of lever ran
 handles.respiration_1_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % respiration sensor 1
 handles.respiration_2_plot = plot(NaN, NaN, 'color',Plot_Colors('p')); % respiration sensor 2
 
-set(handles.axes1,'YLim',handles.Plot_YLim.Data);
+set(handles.axes1,'YLim',handles.Plot_YLim.Data,'YTick',[]);
 
 axes(handles.axes9); % Transfer function plot
 handles.TF_plot = imagesc(((-50:1:50)')/50,[-1 1]);
@@ -329,9 +354,11 @@ if get(handles.startAcquisition,'value')
 
         % clear indicators
         %handles.RewardStatus.Data = [0 0 0]';
-        handles.Reward_Report.Data = 0*handles.Reward_Report.Data;
-        handles.ProgressReport.Data = 0*handles.ProgressReport.Data;
-        handles.ProgressReportPerturbed.Data = 0*handles.ProgressReportPerturbed.Data;
+        handles.Reward_Report.Data = zeros(size(handles.Reward_Report.Data));
+        handles.ProgressReport.Data = zeros(size(handles.ProgressReport.Data));
+        handles.ProgressReportPerturbed.Data = zeros(size(handles.ProgressReportPerturbed.Data));
+        handles.hold_times.Data = zeros(size(handles.hold_times.Data));
+        handles.MeanHoldTimes.Data = zeros(size(handles.MeanHoldTimes.Data));
         %handles.water_received.Data = 0;
         handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
         handles.update_call = 1;
@@ -568,7 +595,8 @@ else
     %handles.Reward_Report.Data(1,3) = handles.Reward_Report.Data(1,3) + 1;
     handles.Reward_Report.Data(3) = handles.Reward_Report.Data(3) + 1;
 end
-handles.Reward_Report.Data(1) = handles.Reward_Report.Data(1) + 10*(handles.RewardControls.Data(1)*handles.watercoeffs(1) + handles.watercoeffs(2));
+handles.Reward_Report.Data(1) = floor(handles.Reward_Report.Data(1) + ...
+    10*(handles.RewardControls.Data(1)*handles.watercoeffs(1) + handles.watercoeffs(2)));
 handles.lastrewardtime = handles.timestamp.Data;
 guidata(hObject, handles);
 
@@ -1100,10 +1128,6 @@ if handles.PerturbationSettings.Data(1) > 0
     TrialsToPerturb = zeros(1,ceil(1/handles.PerturbationSettings.Data(1)));
     TrialsToPerturb(1) = 1;
 end
-
-% --- Executes on button press in reward_trial_initiation.
-function reward_trial_initiation_Callback(hObject, eventdata, handles)
-Send2Arduino(handles);
 
 % --- Executes on button press in PseudoRandomZones.
 function PseudoRandomZones_Callback(hObject, eventdata, handles)
