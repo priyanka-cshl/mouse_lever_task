@@ -232,7 +232,7 @@ void Housekeeping(int which_case)
   }
   else
   { // change stepsize, range = 1-5
-    stepsize = which_case - 4;
+    stepsize = which_case - 2;
   }
 }
 

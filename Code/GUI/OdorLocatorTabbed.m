@@ -23,7 +23,7 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
-% Last Modified by GUIDE v2.5 03-Jul-2018 16:23:16
+% Last Modified by GUIDE v2.5 13-Jul-2018 15:48:56
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -48,6 +48,7 @@ end
 % --- Executes just before OdorLocatorTabbed is made visible.
 function OdorLocatorTabbed_OpeningFcn(hObject, eventdata, handles, varargin)
 
+%% GUI Tabs
 %Create tab groupA - motor and odors
 handles.tgroupA = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
     'Position', [0 0 0.14300 0.4500] );
@@ -84,34 +85,14 @@ set(handles.C2,'Parent',handles.tabC2)
 handles.C1.Position = [1.0000    0.1000   82.0000   25.6154];
 set(handles.C2,'position',get(handles.C1,'position'));
 
-% basic housekeeping
+%% Load Settings
 handles.output = hObject;
 handles.mfilename = mfilename;
-handles.Zero_MFC.Value = 0;
 handles.startAcquisition.Enable = 'off';
-handles.openloop = 0;
 
 % rig specific settings
 handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
 [handles] = RigDefaultParams(handles);
-
-% defaults
-handles.DAQrates.Data = [500 20]';
-handles.which_perturbation.Value = 1;
-handles.TransferFunction.Data(2) = 1;
-
-% clear indicators
-%handles.RewardStatus.Data = [0 0 0]';
-handles.Reward_Report.Data = zeros(size(handles.Reward_Report.Data));
-handles.ProgressReport.Data = zeros(size(handles.ProgressReport.Data));
-handles.ProgressReportPerturbed.Data = zeros(size(handles.ProgressReportPerturbed.Data));
-handles.hold_times.Data = zeros(size(handles.hold_times.Data));
-handles.MeanHoldTimes.Data = zeros(size(handles.MeanHoldTimes.Data));
-handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
-%handles.water_received.Data = 0;
-handles.Date.String = datestr(now, 'mm-dd-yy');
-handles.StartTime.Visible = 'off';
-handles.StopTime.Visible = 'off';
 
 % load mouse specific settings
 handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
@@ -127,12 +108,13 @@ if ~exist(fullfile(foldername_local,animal_name),'dir')
     handles.TrialSettings.Data(end) = 200;
 end
 if ~exist(fullfile(foldername_server,animal_name),'dir')
-%    mkdir(fullfile(foldername_server,animal_name));
+    mkdir(fullfile(foldername_server,animal_name));
     disp('making remote data directory');
 end
 
 % mouse specific settings
 [handles] = MouseDefaults(handles);
+% update targets accordingly
 handles.target_level_array.Data = handles.all_targets(find(handles.TargetsActive.Data));
 handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
 handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
@@ -143,8 +125,6 @@ handles.TargetDefinition.Data(2) = handles.target_level_array.Data(2);
 %handles = LastSessionSettings(handles);
 
 % get weight data if available
-% check if the weight log file exists
-
 filename = [foldername_local, filesep, animal_name, '_WeightLog.mat'];
 if exist(filename) %#ok<*EXIST>
     load(filename);
@@ -156,13 +136,32 @@ else
     handles.WeightString.String = 'weight data unavailable';
 end
 
-% set up NI acquisition and reset Arduino
+%% set up NI acquisition and reset Arduino
 handles.sampling_rate_array = handles.DAQrates.Data;
 %[handles.NI,handles.Arduino,handles.MFC,handles.Odors,handles.Teensy] = configure_NI_and_Arduino_ArCOM(handles);
 [handles.NI,handles.MFC,handles.Channels,handles.NIchannels] = configure_NIDAQ(handles);
 handles.Arduino = configure_ArduinoMain(handles);
 
-% initiate plots
+%% Files - for data logging
+handles.was_last_file_saved = 1;
+handles.traces = zeros(5,5);
+handles.timestamps = ones(5,1)*-1;
+handles.samplenum = 1;
+handles.targetLevel = zeros(2,2);
+handles.update_call = 0;
+
+%% clear indicators
+handles.Reward_Report.Data = zeros(size(handles.Reward_Report.Data));
+handles.ProgressReport.Data = zeros(size(handles.ProgressReport.Data));
+handles.ProgressReportPerturbed.Data = zeros(size(handles.ProgressReportPerturbed.Data));
+handles.hold_times.Data = zeros(size(handles.hold_times.Data));
+handles.MeanHoldTimes.Data = zeros(size(handles.MeanHoldTimes.Data));
+handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
+handles.Date.String = datestr(now, 'mm-dd-yy');
+handles.StartTime.Visible = 'off';
+handles.StopTime.Visible = 'off';
+
+%% initiate plots
 axes(handles.axes1); % main plot
 % three different trial plots - one for each odor
 handles.trial_on_1 = fill(NaN,NaN,[.8 .8 .8]);
@@ -183,16 +182,17 @@ handles.in_target_zone_plot.EdgeColor = 'none';
 handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
 handles.in_reward_zone_plot.EdgeColor = 'none';
 handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.25); %rewards
-handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1); %licks
+handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('r'),'Linewidth',1); %licks
 handles.homesensor_plot = plot(NaN, NaN,'k'); %homesensor
+handles.camerasync_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1); %point-grey cam sync
 handles.targetzone = fill(NaN,NaN,[1 1 0],'FaceAlpha',0.2);
 handles.targetzone.EdgeColor = 'none';
 handles.fake_target_plot = plot(NaN, NaN, 'color',[.7 .7 .7]);
 handles.minlim = plot(NaN, NaN, 'k','LineStyle',':'); % lower limit of lever range (trigger Off)
 
 % currently unused plots
-handles.respiration_1_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % respiration sensor 1
-handles.respiration_2_plot = plot(NaN, NaN, 'color',Plot_Colors('p')); % respiration sensor 2
+handles.respiration_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % respiration sensor 1
+handles.lickpiezo_plot = plot(NaN, NaN, 'color',Plot_Colors('p')); % respiration sensor 2
 
 set(handles.axes1,'YLim',handles.Plot_YLim.Data,'YTick',[]);
 
@@ -208,22 +208,11 @@ axis off tight
 set(handles.axes4,'YLim',[0 100]);
 set(handles.axes4, 'Color', 'none');
 
-% for webcam
+%% webcam
 handles.camera_available = 0;
 if ~isempty(webcamlist)
     
     switch char(handles.computername)
-        case {'marbprec'}
-            handles.mycam = webcam(1); %{'Logitech HD Pro Webcam C920','HD Pro Webcam C920'}
-            handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
-            handles.camera_available = 1;
-            handles.focus_mode.Value = 2;
-            handles.mycam.ExposureMode = 'auto';
-            handles.exposure_mode.Value = 1;                                                                      
-            handles.mycam.Focus = 250;
-            handles.exposure_value.Data = handles.mycam.Exposure;
-            handles.mycam.Zoom = 100;
-            handles.mycam = webcam(1);
        case {'PRIYANKA-HP'}
             handles.mycam = webcam(1);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
@@ -249,19 +238,9 @@ end
 set(handles.cameraAxes,'XTick',[],'XTickLabel',' ','XTickMode','manual','XTickLabelMode','manual');
 set(handles.cameraAxes,'YTick',[],'YTickLabel',' ','YTickMode','manual','YTickLabelMode','manual');
 
-% for data logging
-handles.was_last_file_saved = 1;
-handles.traces = zeros(5,5);
-handles.timestamps = ones(5,1)*-1;
-handles.samplenum = 1;
-handles.targetLevel = zeros(2,2);
-handles.update_call = 0;
-
-% hide extra traces
-handles.lever_raw_on.Value = 1;
-
-% Update handles structure
-guidata(hObject, handles);
+%% Others
+handles.lever_raw_on.Value = 1; % hide extra traces
+guidata(hObject, handles); % Update handles structure
 lever_raw_on_Callback(hObject,eventdata,handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
 ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Send2Arduino
@@ -312,19 +291,17 @@ if get(handles.startAcquisition,'value')
         fid2 = fopen('C:\temp_data_files\settings_log.bin','w');
         fid3 = fopen('C:\temp_data_files\transferfunction_log.bin','w');
         
-        % main settings - only change in the beginning of each session
-%         [mysettings.legends_main, mysettings.params_main] = GetSettings(handles,0);
-%         [mysettings.legends_trial, params] = GetSettings(handles,2);
+        % get settings and write to file
         [mysettings.legends, mysettings.params] = GetSettings4Arduino(handles);
         save('C:\temp_data_files\session_settings.mat','mysettings*');
-        
-        % dynamic settings - change within a session
         handles.settingsfileID = fid2;
         fwrite(fid2,[handles.timestamp.Data mysettings.params],'double');
+        
         handles.TransferFunctionfileID = fid3;
         
         handles.hObject = hObject;
         handles.traces = zeros(6000,handles.NIchannels); %???500*60*60*4
+        disp(handles.NIchannels)
         handles.timestamps = -ones(6000,1);
         handles.samplenum = 1;
         handles.targetlevel = zeros(6000,2);
@@ -334,6 +311,7 @@ if get(handles.startAcquisition,'value')
         samplenum = handles.samplenum;
         TargetLevel = handles.targetlevel;
         IsRewardedTrial = 1;
+        % set up perturbation trial order
         if handles.PerturbationSettings.Data(1)
             TrialsToPerturb = zeros(1,ceil(1/handles.PerturbationSettings.Data(1)));
             TrialsToPerturb(1) = 1;
@@ -352,14 +330,12 @@ if get(handles.startAcquisition,'value')
         handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
         handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
 
-        % clear indicators
-        %handles.RewardStatus.Data = [0 0 0]';
+        % clear indicators and reset flags
         handles.Reward_Report.Data = zeros(size(handles.Reward_Report.Data));
         handles.ProgressReport.Data = zeros(size(handles.ProgressReport.Data));
         handles.ProgressReportPerturbed.Data = zeros(size(handles.ProgressReportPerturbed.Data));
         handles.hold_times.Data = zeros(size(handles.hold_times.Data));
         handles.MeanHoldTimes.Data = zeros(size(handles.MeanHoldTimes.Data));
-        %handles.water_received.Data = 0;
         handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
         handles.update_call = 1;
         handles.timestamp.Data = 0;
@@ -372,11 +348,10 @@ if get(handles.startAcquisition,'value')
         handles.in_target_zone_plot.Faces = [];
         handles.in_reward_zone_plot.Vertices = [];
         handles.in_reward_zone_plot.Faces = [];
-        
         set(handles.reward_plot,'XData',NaN,'YData',NaN);
         set(handles.stimulus_plot,'XData',NaN,'YData',NaN);
-        set(handles.respiration_1_plot,'XData',NaN,'YData',NaN);
-        set(handles.respiration_2_plot,'XData',NaN,'YData',NaN);
+        set(handles.respiration_plot,'XData',NaN,'YData',NaN);
+        set(handles.lickpiezo_plot,'XData',NaN,'YData',NaN);
         set(handles.lick_plot,'XData',NaN,'YData',NaN);
         
         % turn ON MFCs
@@ -385,6 +360,19 @@ if get(handles.startAcquisition,'value')
             handles.Zero_MFC.String = 'MFCs OFF';
             Zero_MFC_Callback(hObject, eventdata, handles);
         end
+        
+        % disable/enable controls
+        handles.calibrate_transfer_function.Enable = 'on';
+        handles.water_calibrate.Enable = 'off';
+        handles.open_valve.Enable = 'off';
+        handles.CleaningRoutine.Value = 0;
+        handles.CleaningRoutine.Enable = 'off';
+        handles.TFtype.Enable = 'off';
+        
+        % update motor stepsize 
+        % different for fixgain (stepsize = 2) vs. variable gain (stepsize = 1)
+        handles.Arduino.write(73 + handles.TFtype.Value,'uint16');
+        %handles.Arduino.write(73);
         
         % Calibrate Rotary encoder
         handles = CalibrateRotaryEncoder(handles);
@@ -408,14 +396,6 @@ if get(handles.startAcquisition,'value')
             end
         end
 
-        % enable transfer function calibrator
-        handles.calibrate_transfer_function.Enable = 'on';
-        
-        handles.water_calibrate.Enable = 'off';
-        handles.open_valve.Enable = 'off';
-        handles.CleaningRoutine.Value = 0;
-        handles.CleaningRoutine.Enable = 'off';
-        
         guidata(hObject,handles);
         if isfield(handles,'lis')
             handles.lis.delete
@@ -444,7 +424,9 @@ if get(handles.startAcquisition,'value')
         wait(handles.NI);
         guidata(hObject,handles);
     end
+    
 else
+    
    handles.NI.stop;
    release(handles.NI);
    fclose('all');
@@ -483,10 +465,10 @@ else
    
    % disable transfer function calibrator
     handles.calibrate_transfer_function.Enable = 'off';
-    
     handles.water_calibrate.Enable = 'on';
     handles.open_valve.Enable = 'on';
     handles.CleaningRoutine.Enable = 'on';
+    handles.TFtype.Enable = 'on';
 end
 
 handles.traces = TotalData;
@@ -615,18 +597,13 @@ Send2Arduino(handles);
 % --- Executes when entered data in editable cell(s) in ZoneLimitSettings.
 function ZoneLimitSettings_CellEditCallback(hObject, eventdata, handles)        
 % compute new target definition
-if handles.TFtype
-    [handles] = Compute_TargetDefinition_fixspeed(handles);
-else
-    [handles] = Compute_TargetDefinition(handles);
-end
+GetTargetDefinition(handles);
 guidata(hObject,handles);
 Params2File(handles);
-if handles.TFtype
-    Update_TransferFunction_fixspeed(handles);
-else
-    Update_TransferFunction_discrete(handles);
-end
+
+[handles] = UpdateTransferFunction(handles);
+guidata(hObject,handles);
+
 pause(0.1);
 Send2Arduino(handles);
 % --------------------------------------------------------------------
@@ -650,13 +627,10 @@ set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
 handles.motor_home.Enable = 'off';
 
 % update transfer function
-if handles.TFtype
-    Update_TransferFunction_fixspeed(handles);
-else
-    Update_TransferFunction_discrete(handles);
-end
+[handles] = UpdateTransferFunction(handles);
+guidata(hObject,handles);
+
 Send2Arduino(handles);
-%Update_TransferFunction_discrete(handles);
 handles.locations_per_zone.ForegroundColor = 'k';
 % Hint: get(hObject,'Value') returns toggle state of update_zones
 
@@ -681,13 +655,9 @@ set(handles.motor_status,'String','OFF')
 set(handles.motor_status,'BackgroundColor',[0.94 0.94 0.94]);
 handles.motor_home.Enable = 'off';
 
-if handles.TFtype
-    Update_TransferFunction_fixspeed(handles);
-else
-    Update_TransferFunction_discrete(handles);
-end
+[handles] = UpdateTransferFunction(handles);
+guidata(hObject,handles);
 Send2Arduino(handles);
-%Update_TransferFunction_discrete(handles);
 
 % turn motor on
 handles.Arduino.write(71, 'uint16'); 
@@ -713,23 +683,23 @@ function lever_raw_on_Callback(hObject, eventdata, handles)
 if get(handles.lever_raw_on,'Value')
     set(handles.lever_raw_on,'BackgroundColor',[0.5 0.94 0.94]);
     set(handles.lever_raw_plot,'LineStyle','none');
-    set(handles.respiration_1_plot,'LineStyle','none');
+    set(handles.respiration_plot,'LineStyle','none');
     %set(handles.respiration_2_plot,'LineStyle','none');
 else
     set(handles.lever_raw_on,'BackgroundColor',[0.94 0.94 0.94]);
     set(handles.lever_raw_plot,'LineStyle','-');
-    set(handles.respiration_1_plot,'LineStyle','-');
+    set(handles.respiration_plot,'LineStyle','-');
     %set(handles.respiration_2_plot,'LineStyle','-');
 end
 guidata(hObject, handles);
 
 % --- Executes when entered data in editable cell(s) in TargetHold.
 function TargetHold_CellEditCallback(hObject, eventdata, handles)
-if hObject.Data(2)>hObject.Data(1)
-    hObject.Data(2) = hObject.Data(1) - 10;
+if hObject.Data(1)>hObject.Data(2)
+    hObject.Data(1) = hObject.Data(2) - 10;
 end
-if hObject.Data(3)<hObject.Data(1)
-    hObject.Data(3) = hObject.Data(1) + 10;
+if hObject.Data(3)<hObject.Data(2)
+    hObject.Data(3) = hObject.Data(2) + 10;
 end
 guidata(hObject, handles);
 
@@ -824,13 +794,9 @@ if get(hObject,'Value')
     end
 else
     
-    if handles.TFtype
-        Update_TransferFunction_fixspeed(handles);
-    else
-        Update_TransferFunction_discrete(handles);
-    end
-    Send2Arduino(handles);
-    %Update_TransferFunction_discrete(handles);
+[handles] = UpdateTransferFunction(handles);
+guidata(hObject,handles);
+Send2Arduino(handles);
 end
 
 % --- Executes when entered data in editable cell(s) in MFC_table.
@@ -951,7 +917,6 @@ else
     hObject.Data = 250;
 end
 handles.mycam.Focus = hObject.Data;
-
 
 % --- Executes when entered data in editable cell(s) in exposure_value.
 function exposure_value_CellEditCallback(hObject, eventdata, handles)
@@ -1140,3 +1105,6 @@ function adaptive_holds_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in odor_priors.
 function odor_priors_Callback(hObject, eventdata, handles)
+
+% --- Executes on button press in TFtype.
+function TFtype_Callback(hObject, eventdata, handles)

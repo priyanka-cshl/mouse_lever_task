@@ -140,16 +140,17 @@ indices_to_plot = find( TotalTime>TotalTime(end)-xwin & TotalTime>=0 );
 set(h.lever_DAC_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,1));
 set(h.lever_raw_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,2));
 set(h.stimulus_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    -1*h.RE_scaling.Data(1)*(TotalData(indices_to_plot,3) - h.RE_scaling.Data(2)) );
+    h.RE_scaling.Data(1)*(TotalData(indices_to_plot,3) - h.RE_scaling.Data(2)) );
 
 h.motor_location.YData = MapRotaryEncoderToTFColorMap(h,mean(event.Data(:,3)));
 
 % respiration sensors
-set(h.respiration_1_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    -1*h.RS_scaling.Data(1)*TotalData(indices_to_plot,5) + h.RS_scaling.Data(2) );
-set(h.respiration_2_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    -1*h.RS_scaling.Data(1)*TotalData(indices_to_plot,6) + h.RS_scaling.Data(2) );
+set(h.respiration_plot,'XData',TotalTime(indices_to_plot),'YData',...
+    h.RS_scaling.Data(1)*TotalData(indices_to_plot,5) + h.RS_scaling.Data(2) );
+set(h.lickpiezo_plot,'XData',TotalTime(indices_to_plot),'YData',...
+    h.LickPiezo.Data(1)*TotalData(indices_to_plot,6) + h.RS_scaling.Data(2) );
 set(h.homesensor_plot,'XData',TotalTime(indices_to_plot),'YData', 5 + 0.5*TotalData(indices_to_plot,h.Channels.homesensor_channel));
+set(h.camerasync_plot,'XData',TotalTime(indices_to_plot),'YData', 5 + 0.5*TotalData(indices_to_plot,h.Channels.camerasync_channel));
 
 % trial_on
 [h] = PlotToPatch_Trial(h, TotalData(:,h.Channels.trial_channel), TotalTime, [0 5]);
@@ -176,7 +177,7 @@ if h.Channels.lick_channel<=size(TotalData,2)
     tick_x = [tick_timestamps'; tick_timestamps'; ...
         NaN(1,numel(tick_timestamps))]; % creates timestamp1 timestamp1 NaN timestamp2 timestamp2..
     tick_x = tick_x(:);
-    tick_y = repmat( [5.5; 6; NaN],...
+    tick_y = repmat( [6.5; 7; NaN],...
         numel(tick_timestamps),1); % creates y1 y2 NaN y1 timestamp2..
     set(h.lick_plot,'XData',tick_x,'YData',tick_y);
 end

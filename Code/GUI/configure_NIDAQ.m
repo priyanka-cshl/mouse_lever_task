@@ -4,15 +4,16 @@ function [NI_session, MFC_session, Channels, NIchannels]=configure_NIDAQ(handles
 switch char(handles.computername)
     case {'marbprec', 'PRIYANKA-HP'}
         DeviceName = 'Dev2';
-        Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','RespirationA','RespirationB'};
+        Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','Respiration','LickPiezo'};
         AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai12'};
-        Channels.Digital = {'trial_on', 'in_target_zone', 'in_reward_zone', 'rewards', 'licks', 'homesensor'};
-        DigitalChannelIDs = {'Port0/Line0:5'};
+        Channels.Digital = {'trial_on', 'in_target_zone', 'in_reward_zone', 'rewards', 'licks', 'homesensor', 'camerasync'};
+        DigitalChannelIDs = {'Port0/Line0:6'};
         % channel map for plotting 
         Channels.trial_channel = 7;
         Channels.reward_channel = 10;
         Channels.lick_channel = 11;
         Channels.homesensor_channel = 12;
+        Channels.camerasync_channel = 13;
 %         Channels.MFC = {'MFCAir','MFCOdor'};
 %         MFCSetPointChannelIDs = {'ai6','ai7'};
 %         MFCControlChannelIDs = {'ao0','ao1'};
@@ -22,14 +23,15 @@ switch char(handles.computername)
         
     case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
         DeviceName = 'Dev1';
-        Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','RespirationA','RespirationB'};
+        Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','Respiration','LickPiezo'};
         AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai12'};
-        Channels.Digital = {'trial_on', 'in_target_zone', 'in_reward_zone', 'rewards', 'licks', 'homesensor'};
-        DigitalChannelIDs = {'Port0/Line0:5'};
+        Channels.Digital = {'trial_on', 'in_target_zone', 'in_reward_zone', 'rewards', 'licks', 'homesensor', 'camerasync'};
+        DigitalChannelIDs = {'Port0/Line0:6'};
         Channels.trial_channel = 7;
         Channels.reward_channel = 10;
         Channels.lick_channel = 11;
         Channels.homesensor_channel = 12;
+        Channels.camerasync_channel = 13;
 %         Channels.MFC = {'MFCAir','MFCOdor'};
 %         MFCSetPointChannelIDs = {'ai6','ai7'};
 %         MFCControlChannelIDs = {'ao0','ao1'};

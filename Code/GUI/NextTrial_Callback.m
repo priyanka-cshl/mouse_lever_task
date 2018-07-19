@@ -67,7 +67,8 @@ if h.odor_priors.Value
     if odor_probability(1)
         h.current_trial_block.Data(4) = 3; % odor 3
     else
-        h.current_trial_block.Data(4) = 1 + (which_target>6); % 1 if upper 6 zones, 2 if lower six zones
+        h.current_trial_block.Data(4) = 1 + ...
+            (h.TargetDefinition.Data(2)>mean(h.target_level_array.Data)); % 1 if upper 6 zones, 2 if lower six zones
     end
 else
     % no biases - any TF can be any odor - pick randomly
@@ -80,6 +81,14 @@ if ~h.preloaded_sequence.Value
     if h.adaptive_holds.Value
         % get mean holds for this particular target zone
         h.current_trial_block.Data(5) = 25 + h.MeanHoldTimes.Data(h.which_target.Data);
+        
+        % constrain to lie within min and max hold times
+        if h.current_trial_block.Data(5)<h.TargetHold.Data(1)
+            h.current_trial_block.Data(5) = h.TargetHold.Data(1);
+        elseif h.current_trial_block.Data(5)>h.TargetHold.Data(3)
+            h.current_trial_block.Data(5) = h.TargetHold.Data(3);
+        end
+
     else
         x = exprnd(h.TargetHold.Data(2));
         while (x + h.TargetHold.Data(1)) > h.TargetHold.Data(3)
