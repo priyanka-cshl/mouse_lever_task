@@ -777,7 +777,7 @@ end
 
 % --- Executes on button press in calibrate_transfer_function.
 function calibrate_transfer_function_Callback(hObject, eventdata, handles)
-if get(hObject,'Value') 
+if get(hObject,'Value')
     prompt = {'Enter time at each location (ms):', 'Randomize locations (1 = yes/ 0 = no):'};
     dlg_title = 'Transfer function relay settings';
     num_lines = 1;
@@ -793,10 +793,9 @@ if get(hObject,'Value')
         Update_LocationSequence(handles);
     end
 else
-    
-[handles] = UpdateTransferFunction(handles);
-guidata(hObject,handles);
-Send2Arduino(handles);
+    [handles] = UpdateTransferFunction(handles);
+    guidata(hObject,handles);
+    Send2Arduino(handles);
 end
 
 % --- Executes when entered data in editable cell(s) in MFC_table.
