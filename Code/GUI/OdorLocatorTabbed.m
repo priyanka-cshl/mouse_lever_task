@@ -790,7 +790,8 @@ if get(hObject,'Value')
     if ~isempty(userans)
         handles.location_update_params = [str2num(char(userans(1))) str2num(char(userans(2)))];
         guidata(hObject, handles);
-        Update_LocationSequence(handles);
+        CalibrateTransferFunction(handles);
+        %Update_LocationSequence(handles);
     end
 else
     [handles] = UpdateTransferFunction(handles);

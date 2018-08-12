@@ -11,7 +11,7 @@ switch char(handles.computername)
         handles.DAQrates.Data = [500 20]';
         
         % sensors and scaling
-        handles.DAC_settings.Data = [2.55 0.08]';
+        handles.DAC_settings.Data = [1.5 1.65]';
         handles.RS_scaling.Data = [-1 5.5]';
         handles.watercoeffs = [0.009211 -0.0299]; % water per drop = coeef(1)*time +coeef(2)
         handles.fliphome = 0; 
