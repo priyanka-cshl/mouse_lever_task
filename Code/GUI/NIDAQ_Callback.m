@@ -36,11 +36,19 @@ if ~isempty(h.MFC)
 end
 
 %% populate TotalData with newly available data
-for i = 1:h.Channels.reward_channel-1
+for i = 1:h.NIchannels
     samples_new = event.Data(:,i);
     switch i
         case (h.Channels.trial_channel) % trial channel
             samples_new = samples_new*odorID;
+        case (h.Channels.reward_channel)
+            if TotalTime(end)>2 
+                samples_new = diff([last_data_value(i); samples_new])==1 ;
+            end
+        case (h.Channels.lick_channel)
+            if TotalTime(end)>2 
+                samples_new = diff([last_data_value(i); samples_new])==1 ;
+            end
         case (h.Channels.homesensor_channel) % homesensor channel
             if h.fliphome
                 samples_new = 1 - samples_new;
@@ -53,9 +61,9 @@ end
 if TotalTime(end)>2 
     
     %% REWARDS
-    % append new sampples and take diff to get events
-    TotalData(:,h.Channels.reward_channel) = [ TotalData(num_new_samples+1:end,h.Channels.reward_channel); ...
-        diff([last_data_value(h.Channels.reward_channel); event.Data(:,h.Channels.reward_channel)])==1 ];
+%     % append new sampples and take diff to get events
+%     TotalData(:,h.Channels.reward_channel) = [ TotalData(num_new_samples+1:end,h.Channels.reward_channel); ...
+%         diff([last_data_value(h.Channels.reward_channel); event.Data(:,h.Channels.reward_channel)])==1 ];
     
     % any rewards?
     if any(TotalData(end-num_new_samples+1:end,h.Channels.reward_channel))
@@ -115,10 +123,10 @@ if TotalTime(end)>2
     end
         
     %% LICKS
-    if h.NIchannels >= h.Channels.lick_channel
-        TotalData(:,h.Channels.lick_channel) = [ TotalData(num_new_samples+1:end,h.Channels.lick_channel); ...
-        diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1 ];
-    end
+%     if h.NIchannels >= h.Channels.lick_channel
+%         TotalData(:,h.Channels.lick_channel) = [ TotalData(num_new_samples+1:end,h.Channels.lick_channel); ...
+%         diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1 ];
+%     end
     
     %% In early training - give water when animal licks
     if ~isempty(find(diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1,1))

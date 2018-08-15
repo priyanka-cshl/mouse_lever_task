@@ -183,8 +183,8 @@ handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
 handles.in_reward_zone_plot.EdgeColor = 'none';
 handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.25); %rewards
 handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('r'),'Linewidth',1); %licks
+handles.camerasync_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1); %point-grey cam sync
 handles.homesensor_plot = plot(NaN, NaN,'k'); %homesensor
-handles.camerasync_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1); %point-grey cam sync
 handles.targetzone = fill(NaN,NaN,[1 1 0],'FaceAlpha',0.2);
 handles.targetzone.EdgeColor = 'none';
 handles.fake_target_plot = plot(NaN, NaN, 'color',[.7 .7 .7]);
@@ -301,7 +301,6 @@ if get(handles.startAcquisition,'value')
         
         handles.hObject = hObject;
         handles.traces = zeros(6000,handles.NIchannels); %???500*60*60*4
-        disp(handles.NIchannels)
         handles.timestamps = -ones(6000,1);
         handles.samplenum = 1;
         handles.targetlevel = zeros(6000,2);

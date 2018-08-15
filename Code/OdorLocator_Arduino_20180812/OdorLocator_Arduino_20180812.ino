@@ -356,8 +356,14 @@ void loop()
     digitalWrite(target_valves[0], (target_valve_state[0] || ((trialstate[0] > 0) && (trialstate[0] < 5)))); // || !close_loop_mode) ); // open odor valve
     digitalWrite(target_valves[1], (target_valve_state[1] || ((trialstate[0] > 0) && (trialstate[0] < 5)))); // || !close_loop_mode) ); // open air valve
   }
-
-  digitalWrite(trial_reporter_pin, (trialstate[0] == 4)); // active trial?
+  if (!close_loop_mode && !open_loop_mode)
+  {
+    digitalWrite(trial_reporter_pin, target_valve_state[0]); // active trial?
+  }
+  else
+  {
+    digitalWrite(trial_reporter_pin, (trialstate[0] == 4)); // active trial?
+  }
   digitalWrite(in_target_zone_reporter_pin, in_target_zone[1]); // in_target_zone?
   digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2) || (reward_state == 5)); // in_reward_zone?
   //----------------------------------------------------------------------------
