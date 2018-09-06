@@ -15,12 +15,13 @@ h.ProgressReport.Data(:,3) = round(100*(h.ProgressReport.Data(:,2)./h.ProgressRe
 h.ProgressReportPerturbed.Data(:,3) = round(100*(h.ProgressReportPerturbed.Data(:,2)./h.ProgressReportPerturbed.Data(:,1)),0,'decimals');
 
 %% update mean hold times for each target zone
-for i = 1:numel(h.all_targets)
-    f = find(h.hold_times.Data(:,1)==i);
+if h.which_target.Data
+    f = find(h.hold_times.Data(:,1)==h.which_target.Data);
     if ~isempty(f)
-        h.MeanHoldTimes.Data(i) = floor(median(h.hold_times.Data(f,3)));
+        h.MeanHoldTimes.Data(h.which_target.Data) = floor(median(h.hold_times.Data(f,3)));
     end
 end
+
 
 %% invert TF if needed
 h.current_trial_block.Data(1) = (rand(1)<h.TFLeftprobability.Data(1)); % 50% chance of inverting TF
@@ -58,6 +59,7 @@ if NoAntiBias
 end
 
 h.which_target.Data = find(h.all_targets == h.TargetDefinition.Data(2));
+h.thistarget.YData = h.which_target.Data;
 
 %% update odor
 if h.odor_priors.Value
@@ -73,7 +75,7 @@ if h.odor_priors.Value
 else
     % no biases - any TF can be any odor - pick randomly
     odor_list = randperm(length(h.Odor_list.Value)); % shuffle odor list
-    h.current_trial_block.Data(4) = h.Odor_list.Value(odor_list(1));
+    h.current_trial_block.Data(4) = h.Odor_list.Value(odor_list(1)) - 1;
 end
 
 %% update target hold time
@@ -128,7 +130,7 @@ if (h.which_perturbation.Value>1)
                 h.which_fake_target.Data = find(h.all_targets == h.fake_target_zone.Data(2));
                 
             case 3 % no odor
-                h.current_trial_block.Data(4) = 4;
+                h.current_trial_block.Data(4) = 0;
                 
             case 4 % flip map
                 h.current_trial_block.Data(5) = 2000; % increase target hold time in this trial

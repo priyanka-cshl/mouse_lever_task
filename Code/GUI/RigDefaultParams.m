@@ -11,15 +11,17 @@ switch char(handles.computername)
         handles.DAQrates.Data = [500 20]';
         
         % sensors and scaling
-        handles.DAC_settings.Data = [1.75 2.10]';
+        handles.DAC_settings.Data = [1.85 2.3]';
         handles.RS_scaling.Data = [-1 5.5]';
-        handles.watercoeffs = [0.009211 -0.0299]; % water per drop = coeef(1)*time +coeef(2)
+        handles.watercoeffs = [0.00134 0.0515 0.099]; % water per drop
         handles.fliphome = 0; 
         
         % default params
-        handles.TrialSettings.Data = [4.8 0.2 200 100 3500 5000]'; % trial highlim, trial lowlim, ~ , trialmin, trialmax, ITI
-        handles.RewardControls.Data = [25 5 50 100 100]'; % reward: time-I, time-II, IRI, hold-II, trial-off-lag
-        handles.Odor_list.Value = [1 2 3]'; % active odors
+        handles.TrialSettings.Data = [4.8 0.2 200 100 5000 5000]'; % trial highlim, trial lowlim, ~ , trialmin, trialmax, ITI
+        handles.RewardControls.Data = [35 5 50 100 100]'; % reward: time-I, time-II, IRI, hold-II, trial-off-lag
+        handles.MultiRewards.Value = 1;
+        handles.adaptive_holds.Value = 1;
+        handles.Odor_list.Value = 1 + [1 2 3]'; % active odors
         handles.which_perturbation.Value = 1; % no perturbations
         handles.openloop = 0; % Run in close-loop mode
         

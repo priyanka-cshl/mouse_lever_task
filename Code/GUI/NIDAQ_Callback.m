@@ -28,7 +28,11 @@ TargetLevel = [TargetLevel(num_new_samples+1:end,:); h.TargetDefinition.Data(3)+
 % variables used later for plotting etc
 which_target = h.which_target.Data;
 which_fake_target = h.which_fake_target.Data;
-odorID = h.current_trial_block.Data(4);
+if h.current_trial_block.Data(4)
+    odorID = h.current_trial_block.Data(4);
+else
+    odorID = 4;
+end
 
 %% update MFC setpoints
 if ~isempty(h.MFC)
@@ -75,7 +79,7 @@ if TotalTime(end)>2
             IsRewardedTrial = 1;
             % Update reward table (#s and uL)
             h.Reward_Report.Data(2) = h.Reward_Report.Data(2) + 1;
-            h.Reward_Report.Data(1) = floor(h.Reward_Report.Data(1) + 10*(h.RewardControls.Data(1)*h.watercoeffs(1) + h.watercoeffs(2)));
+            h.Reward_Report.Data(1) = floor(h.Reward_Report.Data(1) + WaterPerDrop(h));
             % Update # correct trials in performance plots
             if ~h.current_trial_block.Data(3) % not a perturbed trial
                 h.ProgressReport.Data(which_target,2) = h.ProgressReport.Data(which_target,2) + 1;
@@ -91,7 +95,7 @@ if TotalTime(end)>2
             
             % Update reward table (#reward-IIs and uL)
             h.Reward_Report.Data(4) = h.Reward_Report.Data(4) + 1;
-            h.Reward_Report.Data(1) = floor(h.Reward_Report.Data(1) + 10*(h.RewardControls.Data(2)*h.watercoeffs(1) + h.watercoeffs(2)));
+            h.Reward_Report.Data(1) = floor(h.Reward_Report.Data(1) + WaterPerDrop(h));
             
         end
     end

@@ -23,21 +23,30 @@ trial_just_ended = 0;
 TotalTime = [ TotalTime(num_new_samples+1:end); event.TimeStamps ];
 
 % multiply trial_channel by odor value
-odorID = h.current_trial_block.Data(6);
-
-%% populate TotalData with newly available data
-for i = 1:h.Channels.reward_channel-1
-    samples_new = event.Data(:,i);
-    if i == h.Channels.trial_channel
-        samples_new = samples_new*odorID;
-    end
-    TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];
+if h.current_trial_block.Data(6)
+    odorID = h.current_trial_block.Data(6);
+else
+    odorID = 4;
 end
 
-for i = h.Channels.homesensor_channel
+%% populate TotalData with newly available data
+for i = 1:h.NIchannels
     samples_new = event.Data(:,i);
-    if h.fliphome
-        samples_new = 1 - samples_new;
+    switch i
+        case (h.Channels.trial_channel) % trial channel
+            samples_new = samples_new*odorID;
+        case (h.Channels.reward_channel)
+            if TotalTime(end)>2 
+                samples_new = diff([last_data_value(i); samples_new])==1 ;
+            end
+        case (h.Channels.lick_channel)
+            if TotalTime(end)>2 
+                samples_new = diff([last_data_value(i); samples_new])==1 ;
+            end
+        case (h.Channels.homesensor_channel) % homesensor channel
+            if h.fliphome
+                samples_new = 1 - samples_new;
+            end
     end
     TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];
 end
@@ -47,16 +56,9 @@ if TotalTime(end)>2
     % register if the trial was turned ON or OFF
     if any(diff(TotalData(end-num_new_samples:end,h.Channels.trial_channel)) < 0)
         trial_just_ended = 1;
-    end
-    
-    % reward channel
-    TotalData(:,h.Channels.reward_channel) = [ TotalData(num_new_samples+1:end,h.Channels.reward_channel); ...
-        diff([last_data_value(h.Channels.reward_channel); event.Data(:,h.Channels.reward_channel)])==1 ];
-    
-    % lick channel
-    if h.NIchannels >= h.Channels.lick_channel
-        TotalData(:,h.Channels.lick_channel) = [ TotalData(num_new_samples+1:end,h.Channels.lick_channel); ...
-        diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1 ];
+    elseif any(diff(TotalData(end-num_new_samples:end,h.Channels.trial_channel)) > 0)
+        % increment 'trial number'
+        h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1; 
     end
 
 else % for calls to function earlier than 2 seconds from session start
@@ -65,26 +67,29 @@ end
     
 %% Update plots
 xwin = h.Xwin.Data;
-YTick_Locations = linspace(h.Plot_YLim.Data(1),h.Plot_YLim.Data(2),9)';
+%YTick_Locations = linspace(h.Plot_YLim.Data(1),h.Plot_YLim.Data(2),9)';
 indices_to_plot = find( TotalTime>TotalTime(end)-xwin & TotalTime>=0 );
 
 % lever positions, motor locations 
 set(h.lever_DAC_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,1));
 %set(h.lever_raw_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,2));
 set(h.stimulus_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    -1*h.RE_scaling.Data(1)*(TotalData(indices_to_plot,3) - h.RE_scaling.Data(2)) );
+    h.RE_scaling.Data(1)*(TotalData(indices_to_plot,3) - h.RE_scaling.Data(2)) );
 
 h.motor_location.YData = MapRotaryEncoderToTFColorMapOpenLoop(h,mean(event.Data(:,3)));
 
 % respiration sensors
-set(h.respiration_1_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    -1*h.RS_scaling.Data(1)*TotalData(indices_to_plot,5) + h.RS_scaling.Data(2) );
-set(h.respiration_2_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    -1*h.RS_scaling.Data(1)*TotalData(indices_to_plot,6) + h.RS_scaling.Data(2) );
+set(h.respiration_plot,'XData',TotalTime(indices_to_plot),'YData',...
+    h.RS_scaling.Data(1)*TotalData(indices_to_plot,5) + h.RS_scaling.Data(2) );
+set(h.lickpiezo_plot,'XData',TotalTime(indices_to_plot),'YData',...
+    h.LickPiezo.Data(1)*TotalData(indices_to_plot,6) + h.RS_scaling.Data(2) );
 set(h.homesensor_plot,'XData',TotalTime(indices_to_plot),'YData', 5 + 0.5*TotalData(indices_to_plot,h.Channels.homesensor_channel));
 
 % trial_on
 [h] = PlotToPatch_Trial(h, TotalData(:,h.Channels.trial_channel), TotalTime, [0 5]);
+
+% odor valve ON
+[h.in_reward_zone_plot] = PlotToPatch(h.in_reward_zone_plot, TotalData(:,h.Channels.trial_channel+2), TotalTime, [-1 -0.2]);
 
 % licks
 if h.Channels.lick_channel<=size(TotalData,2)
@@ -106,7 +111,12 @@ if get(h.startAcquisition,'value') == 0
 end
 
 if trial_just_ended
-    NewOpenLoopTrial_Callback(h);
+    if h.current_trial_block.Data(2)<=h.current_trial_block.Data(1)
+        NewOpenLoopTrial_Callback(h);
+    else
+        set(h.startAcquisition,'value',0);
+        OpenLoopOdorLocator('startAcquisition_Callback',h.hObject,[],h);
+    end
 end
 
 %% write data to disk

@@ -22,8 +22,9 @@ int in_target_zone_reporter_pin = 43;
 int in_reward_zone_reporter_pin = 45;
 int reward_reporter_pin = 47;
 int reward_valve_pin = 8;
-int target_valves[] = {9, 10};
+int air_valve = 9;
 int odor_valves[] = {37, 31, 33, 35};
+int odor_valves_3way[] = {29, 23, 25, 27};
 
 //communication related
 int dac_spi_pin = 22;
@@ -49,8 +50,9 @@ int training_stage = 2;
 
 // MFC related and valves related
 int which_odor = 0;
-bool odor_ON = true;
-bool target_valve_state[2] = {false, false};
+bool air_valve_state = false;
+bool odor_valve_state = false;
+unsigned short odor_vial_states[3] = {0}; // ArCOM aray needs unsigned shorts, trial timing, odor and location
 
 //variables : motor and transfer function related
 bool motor_override = false;
@@ -92,12 +94,11 @@ long trial_timestamp = micros();
 long trial_trigger_level[] = {52000, 13000}; // trigger On, trigger Off
 int trial_trigger_timing[] = {10, 600, 3000}; // trigger hold, trigger smooth, trial min, trial max
 int long_iti = 0;
-int normal_iti = 0;
+int normal_iti = 200;
 
 // open_loop_related - 13.02.18
 int open_loop_mode = 0; // deliver odor stimuli at different locations
 int open_loop_trial_timing[] = {500, 500, 500, 500, 500}; //motor_settle, pre-odor, odor, post-odor, iti in ms
-int open_loop_odor = 0;
 int open_loop_location = 0;
 unsigned short open_loop_param_array[6] = {0}; // ArCOM aray needs unsigned shorts, trial timing, odor and location
 
@@ -112,7 +113,7 @@ unsigned int num_of_params = 35;
 unsigned short param_array[35] = {0}; // ArCOM aray needs unsigned shorts
 
 // variables - camera sync
-int camera_pin = 29;
+int camera_pin = 49;
 bool camera = 0;
 int camera_on = 0;
 
@@ -125,16 +126,15 @@ void setup()
 {
   SerialUSB.begin(115200);
 
-  for (i = 0; i < 2; i++)
-  {
-    pinMode(target_valves[i], OUTPUT);
-    digitalWrite(target_valves[i], LOW);
-  }
+  pinMode(air_valve, OUTPUT);
+  digitalWrite(air_valve, LOW);
 
   for (i = 0; i < 4; i++)
   {
     pinMode(odor_valves[i], OUTPUT);
     digitalWrite(odor_valves[i], LOW);
+    pinMode(odor_valves_3way[i], OUTPUT);
+    digitalWrite(odor_valves_3way[i], LOW);
   }
 
   pinMode(reward_valve_pin, OUTPUT);
@@ -232,18 +232,16 @@ void loop()
   else if (open_loop_mode) // 13.02.18
   {
     lever_position = 0;
-    motor_location = map(open_loop_location, 0, 300, 0, 65534); // max location is 256 - 8 bit
+    motor_location = map(open_loop_location, 0, 255, 0, 65534); // max location is 256 - 8 bit
     SPIWriter(dac_spi_pin, motor_location);
   }
   else
   {
-    // write motor command position to DAC
-    SPIWriter(dac_spi_pin, map(motor_location, 0, 255, 0, 65534));
-    //SPIWriter(dac_spi_pin, 300 * (motor_location));
     //----------------------------------------------------------------------------
     // 1,2) convert the current entry in TF array to lever position and send to DAC
     //----------------------------------------------------------------------------
     motor_location = transfer_function[transfer_function_pointer];
+    SPIWriter(dac_spi_pin, map(motor_location, 0, 255, 0, 65534));
     stimulus_state[1] = motor_location;
   }
 
@@ -351,21 +349,23 @@ void loop()
   //----------------------------------------------------------------------------
   // 5) manage reporter pins, valves etc based on time elapsed since last event
   //----------------------------------------------------------------------------
-  if (!cleaningON)
-  {
-    digitalWrite(target_valves[0], (target_valve_state[0] || ((trialstate[0] > 0) && (trialstate[0] < 5)))); // || !close_loop_mode) ); // open odor valve
-    digitalWrite(target_valves[1], (target_valve_state[1] || ((trialstate[0] > 0) && (trialstate[0] < 5)))); // || !close_loop_mode) ); // open air valve
-  }
-  if (!close_loop_mode && !open_loop_mode)
-  {
-    digitalWrite(trial_reporter_pin, target_valve_state[0]); // active trial?
-  }
-  else
+  if (close_loop_mode)
   {
     digitalWrite(trial_reporter_pin, (trialstate[0] == 4)); // active trial?
+    digitalWrite(in_target_zone_reporter_pin, in_target_zone[1]); // in_target_zone?
+    digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2) || (reward_state == 5)); // in_reward_zone?
   }
-  digitalWrite(in_target_zone_reporter_pin, in_target_zone[1]); // in_target_zone?
-  digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2) || (reward_state == 5)); // in_reward_zone?
+  else if (open_loop_mode)
+  {
+    send_odor_to_manifold();
+    digitalWrite(trial_reporter_pin, ((trialstate[0] > 0) && (trialstate[0] < 5))); // active trial?
+    //digitalWrite(in_target_zone_reporter_pin, in_target_zone[1]); // in_target_zone?
+    digitalWrite(in_reward_zone_reporter_pin, odor_valve_state); // is Odor valve ON?
+  }
+  else if (!cleaningON)
+  {
+    send_odor_to_manifold();
+  }
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
@@ -411,59 +411,56 @@ void loop()
     reward_state = (int)(trialstate[1] == 4); // trial was just activated, rewards can be triggered now
     trial_timestamp = micros();
 
-    // manage odor valves
     if (timer_override)
     {
-      if ( (trialstate[1] == 0) && !odor_ON)
+      switch (trialstate[1])
       {
-        for (i = 1; i < 4; i++)
-        {
-          digitalWrite(odor_valves[i], false);
-        }
-        digitalWrite(odor_valves[0], true);
-      }
-      if ( (trialstate[1] == 1) && !odor_ON)
-      {
-        for (i = 0; i < 4; i++)
-        {
-          digitalWrite(odor_valves[i], (i == which_odor));
-          odor_ON = true;
-        }
-      }
-      else if (trialstate[1] == 2)
-      {
-        // reset long ITI
-        if (decouple_reward_and_stimulus)
-        {
-          trialstates.UpdateITI(normal_iti); // will be changed to zero if animal receives a reward in the upcoming trial
-        }
-        else
-        {
-          trialstates.UpdateITI(long_iti); // will be changed to zero if animal receives a reward in the upcoming trial
-        }
-        //trialstates.UpdateITI(long_iti);
-      }
-      else if (trialstate[1] == 4) // trial has just started
-      {
-        time_in_target_zone = 0; // reset timespent value
-        last_target_stay = 0;
-      }
-      else if ((trialstate[1] == 5) && odor_ON)
-      {
-        for (i = 1; i < 4; i++)
-        {
-          digitalWrite(odor_valves[i], false);
-          odor_ON = false;
-        }
-        digitalWrite(odor_valves[0], true);
-        flip_lever = false;
-        use_offset_perturbation = 0;
+        case 0:
+          odor_valve_state = false;
+          air_valve_state = false;
+          send_odor_to_manifold();
+          break;
+        case 1:
+          break;
+        case 2:
+          // reset long ITI
+          if (decouple_reward_and_stimulus)
+          {
+            trialstates.UpdateITI(normal_iti); // will be changed to zero if animal receives a reward in the upcoming trial
+          }
+          else
+          {
+            trialstates.UpdateITI(long_iti); // will be changed to zero if animal receives a reward in the upcoming trial
+          }
+          //turn on odor/air flow
+          odor_valve_state = true;
+          air_valve_state = true;
+          send_odor_to_manifold();
+          break;
+        case 4:
+          time_in_target_zone = 0; // reset timespent value
+          last_target_stay = 0;
+          break;
+        case 5:
+          flip_lever = false;
+          use_offset_perturbation = 0;
+          // turn on air purge
+          which_odor = 0;
+          send_odor_to_manifold();
+          break;
       }
     }
-
     trialstate[0] = trialstate[1];
   }
 
+  // extra step needed to turn off purging in case of long ITI
+  if (trialstate[1]==5 && trialstate[0]==5 && odor_valve_state && close_loop_mode && (micros() - trial_timestamp) > 1000*normal_iti)
+  {
+    odor_valve_state = false;
+    air_valve_state = false;
+    send_odor_to_manifold();
+  }
+  
   if ((trialstate[1] != trialstate[0]) && open_loop_mode) // trial state changes
   {
     trial_timestamp = micros();
@@ -473,28 +470,24 @@ void loop()
       {
         case 0: // move motor to desired location and give it time to settle
           stimulus_state[1] = open_loop_location;
+          odor_valve_state = false; // keep odor valve closed (blank vial is Onand going to exhaust)
+          air_valve_state = false; 
           break;
         case 1: // pre-odor, deliver clean air, turn on air flow
-          digitalWrite(odor_valves[0], true);
-          for (i = 1; i < 4; i++)
-          {
-            digitalWrite(odor_valves[i], false);
-          }
+          odor_valve_state = false; // keep odor valve closed
+          air_valve_state = false; 
           break;
         case 4: // odor, switch odor vial to odor
-          for (i = 0; i < 4; i++)
-          {
-            digitalWrite(odor_valves[i], (i == open_loop_odor));
-          }
+          odor_valve_state = true; // turn odor valve ON
+          air_valve_state = true; 
           break;
         case 3: // post-odor, switch to air vial
-          digitalWrite(odor_valves[0], true);
-          for (i = 1; i < 4; i++)
-          {
-            digitalWrite(odor_valves[i], false);
-          }
+          odor_valve_state = false; // keep odor valve closed (blank vial is Onand going to exhaust)
+          air_valve_state = false; 
           break;
         case 5: // iti - no flow, clean air to exhaust
+          odor_valve_state = false; // keep odor valve closed (blank vial is Onand going to exhaust)
+          air_valve_state = false; 
           break;
       }
     }
@@ -520,78 +513,71 @@ void loop()
             break;
           case 1: // Acquisition start handshake
             myUSB.writeUint16(6);
+            close_loop_mode = 1;
+            open_loop_mode = 0; 
             // fill stimulus position array
             stimulus_state[0] = 20;
             stimulus_state[1] = 20;
-            digitalWrite(odor_valves[0], HIGH);
-            odor_ON = false;
+            odor_valve_state = false;
+            air_valve_state = false;
+            send_odor_to_manifold();
             timer_override = true;
             camera_on = 0;
             camera = 0;
-            open_loop_mode = 0; //13.02.18
             break;
           case 2: // Acquisition stop handshake
             myUSB.writeUint16(7);
+            close_loop_mode = 0;
+            open_loop_mode = 0; 
             timer_override = false;
-            // turn off all odor valves as caution
-            for (i = 0; i < 4; i++)
-            {
-              digitalWrite(odor_valves[i], LOW);
-            }
+            odor_valve_state = false;
+            air_valve_state = false;
+            send_odor_to_manifold();
             camera_on = 1;
             break;
           case 3: // Cleaning Routine start
             myUSB.writeUint16(3);
+            close_loop_mode = 0;
+            open_loop_mode = 0; 
+            cleaningON = true;
             odorON = false;
             timer_override = false;
             camera_on = 1;
-            cleaningON = true;
             Timer5.start(1000 * 1000);
             break;
           case 4: // Cleaning Routine stop
             myUSB.writeUint16(4);
-            timer_override = false;
-            // turn off all odor valves as caution
-            for (i = 0; i < 4; i++)
-            {
-              digitalWrite(odor_valves[i], LOW);
-            }
-            camera_on = 1;
+            close_loop_mode = 0;
+            open_loop_mode = 0; 
             cleaningON = false;
+            timer_override = false;
+            camera_on = 1;
             Timer5.stop();
             break;
           case 5: // open loop start
             myUSB.writeUint16(8);
+            open_loop_mode = 1;
+            close_loop_mode = 0;
             // fill stimulus position array
             stimulus_state[0] = 20;
             stimulus_state[1] = 20;
-            open_loop_mode = 1;
-            close_loop_mode = 0;
-            // set odor valves low
-            digitalWrite(odor_valves[0], HIGH);
-            digitalWrite(odor_valves[1], LOW);
-            digitalWrite(odor_valves[2], LOW);
-            digitalWrite(odor_valves[3], LOW);
+            odor_valve_state = false;
+            air_valve_state = false;
+            send_odor_to_manifold();
             timer_override = true;
             camera_on = 1;
             break;
           case 6: // open loop stop
             myUSB.writeUint16(9);
-            // turn off all odor valves as caution
-            for (i = 0; i < 4; i++)
-            {
-              digitalWrite(odor_valves[i], LOW);
-            }
-            target_valve_state[0] = false;
-            target_valve_state[1] = false;
-            digitalWrite(target_valves[0], LOW);
-            digitalWrite(target_valves[1], LOW);
+            open_loop_mode = 0;
+            close_loop_mode = 0;
+            odor_valve_state = false;
+            air_valve_state = false;
+            send_odor_to_manifold();
             trialstate[0] = 0;
             trialstate[1] = 0;
             timer_override = false;
             camera_on = 1;
-            open_loop_mode = 0;
-            close_loop_mode = 1;
             break;
         }
         break;
@@ -634,37 +620,24 @@ void loop()
         transfer_function_pointer = 0;
         break;
       case 40: // toggle MFCs or odor valves
-        switch (FSMheader - 40)
-        {
-          case 4: // target valves
-            target_valve_state[0] = false;
-            break;
-          case 5: // target valves
-            target_valve_state[0] = true;
-            break;
-          case 6: // target valves
-            target_valve_state[1] = false;
-            break;
-          case 7: // target valves
-            target_valve_state[1] = true;
-            break;
-        }
         break;
       case 50: // open odor vials
-        if ((FSMheader - 50) > 0)
+        if (FSMheader > 55)
         {
-          which_odor = (FSMheader - 51);
-          for (i = 0; i < 4; i++)
-          {
-            digitalWrite(odor_valves[i], (i == which_odor));
-          }
+          air_valve_state = bool(FSMheader - 56);
+          send_odor_to_manifold();
+        }
+        else if (FSMheader == 55)
+        {
+          myUSB.readUint16Array(odor_vial_states, 4);
+          myUSB.writeUint16Array(odor_vial_states, 4);
+          update_odor_vials();
         }
         else
         {
-          for (i = 0; i < 4; i++)
-          {
-            digitalWrite(odor_valves[i], false);
-          }
+          odor_valve_state = FSMheader>50;
+          which_odor = odor_valve_state * (FSMheader - 51);
+          send_odor_to_manifold();
         }
         break;
       case 60: // motor related
@@ -804,8 +777,9 @@ void UpdateAllParams()
 void UpdateOpenLoopParams() // 23.01.2018
 {
   myUSB.writeUint16(98);
+  trialstate[0] = 5;
   // parse param array to variable names
-  open_loop_odor = open_loop_param_array[0]; // odor vial number
+  which_odor = open_loop_param_array[0]; // odor vial number
   open_loop_location = open_loop_param_array[1]; // desired location
   for (i = 0; i < 5; i++)
   {
@@ -836,7 +810,7 @@ void MoveMotor()
 
 void RewardNow()
 {
-  if ( ((reward_state == 3) || (reward_state == 6)) && timer_override )
+  if ( ((reward_state == 3) || (reward_state == 6)) )//&& timer_override )
   {
     digitalWrite(reward_valve_pin, HIGH);
     digitalWrite(reward_reporter_pin, HIGH);
@@ -861,18 +835,36 @@ void CleaningRoutine()
 {
   // odorON = true,false; whichOdor = 0,1,2,3;
   odorON = !odorON; // toggle the state of the final valves
-  digitalWrite(target_valves[0], odorON );
-  digitalWrite(target_valves[1], odorON );
-  //digitalWrite(camera_pin, odorON);
+  air_valve_state = odorON;
+  odor_valve_state = odorON;
   if (odorON)
   {
     // update the odor vial index
     whichOdor = (whichOdor + 1) % 4;
-    // update valve state
-    for (i = 0; i < 4; i++)
-    {
-      digitalWrite(odor_valves[i], (i == whichOdor));
-    }
+    which_odor = whichOdor;
   }
+}
+
+void open_odor_vial (int myvial, bool myvialstate)
+{
+  digitalWrite(odor_valves[myvial], myvialstate);
+}
+
+void update_odor_vials ()
+{
+  myUSB.writeUint16(51);
+  for (i = 0; i < 4; i++)
+  {
+    digitalWrite(odor_valves[i], odor_vial_states[i]);
+  }
+}
+
+void send_odor_to_manifold ()
+{
+  for (i = 0; i < 4; i++)
+  {
+    digitalWrite(odor_valves_3way[i], (odor_valve_state) && (i == which_odor));
+  }
+  digitalWrite(air_valve, air_valve_state); // open air valve
 }
 

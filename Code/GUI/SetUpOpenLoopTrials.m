@@ -1,7 +1,11 @@
 function [h] = SetUpOpenLoopTrials(h)
 
 % motor locations to use
-all_locations = [-h.SessionSettings.Data(2):h.SessionSettings.Data(3):h.SessionSettings.Data(2)];
+if h.SessionSettings.Data(3)
+    all_locations = -h.SessionSettings.Data(2):h.SessionSettings.Data(3):h.SessionSettings.Data(2);
+else
+    all_locations = h.SessionSettings.Data(2); % only one location;
+end
 all_odors = h.Odor_list.Value;
 num_repeats = h.SessionSettings.Data(1);
 

@@ -23,7 +23,7 @@ function varargout = OpenLoopOdorLocator(varargin)
 
 % Edit the above text to modify the response to help OpenLoopOdorLocator
 
-% Last Modified by GUIDE v2.5 12-Feb-2018 21:30:35
+% Last Modified by GUIDE v2.5 15-Aug-2018 13:36:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -50,14 +50,10 @@ function OpenLoopOdorLocator_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 handles.mfilename = mfilename;
 handles.startAcquisition.Enable = 'off';
-handles.openloop = 1;
 
 % rig specific settings
 handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
 [handles] = OpenLoopDefaults(handles);
-
-% defaults
-handles.DAQrates.Data = [500 20]';
 
 % clear indicators
 handles.current_trial_block.Data(1:7,1) = zeros(7,1);
@@ -80,12 +76,20 @@ if ~exist(fullfile(foldername_server,animal_name),'dir')
     disp('making remote data directory');
 end
 
-% set up NI acquisition and reset Arduino
+%% set up NI acquisition and reset Arduino
 handles.sampling_rate_array = handles.DAQrates.Data;
 [handles.NI,handles.MFC,handles.Channels,handles.NIchannels] = configure_NIDAQ(handles);
 handles.Arduino = configure_ArduinoMain(handles);
 
-% initiate plots
+%% Files - for data logging
+handles.was_last_file_saved = 1;
+handles.traces = zeros(5,5);
+handles.timestamps = ones(5,1)*-1;
+handles.samplenum = 1;
+handles.targetLevel = zeros(2,2);
+handles.update_call = 0;
+
+%% initiate plots
 axes(handles.axes1); % main plot
 % three different trial plots - one for each odor
 handles.trial_on_1 = fill(NaN,NaN,[.8 .8 .8]);
@@ -95,13 +99,17 @@ handles.trial_on_2 = fill(NaN,NaN,[0.8941    0.9412    0.9020]);
 handles.trial_on_2.EdgeColor = 'none';
 handles.trial_on_3 = fill(NaN,NaN,[0.8706    0.9216    0.9804]);
 handles.trial_on_3.EdgeColor = 'none';
+handles.trial_on_4 = fill(NaN,NaN,[0.93    0.84    0.84]);
+handles.trial_on_4.EdgeColor = 'none';
 
 handles.lever_DAC_plot = plot(NaN, NaN,'k','linewidth',1); %lever rescaled
 handles.stimulus_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor location (rotary encoder)
-handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1); %licks
+handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
+handles.in_reward_zone_plot.EdgeColor = 'none';
+handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('r'),'Linewidth',1); %licks
 handles.homesensor_plot = plot(NaN, NaN,'k'); %homesensor
-handles.respiration_1_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % respiration sensor 1
-handles.respiration_2_plot = plot(NaN, NaN, 'color',Plot_Colors('p')); % respiration sensor 2
+handles.respiration_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % respiration sensor
+handles.lickpiezo_plot = plot(NaN, NaN, 'color',Plot_Colors('p')); % lick piezo
 
 set(handles.axes1,'YLim',handles.Plot_YLim.Data);
 
@@ -123,17 +131,6 @@ set(handles.axes4, 'Color', 'none');
 handles.camera_available = 0;
 if ~isempty(webcamlist)    
     switch char(handles.computername)
-        case {'marbprec'}
-            handles.mycam = webcam(1); %{'Logitech HD Pro Webcam C920','HD Pro Webcam C920'}
-            handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
-            handles.camera_available = 1;
-            handles.focus_mode.Value = 2;
-            handles.mycam.ExposureMode = 'auto';
-            handles.exposure_mode.Value = 1;                                                                      
-            handles.mycam.Focus = 250;
-            handles.exposure_value.Data = handles.mycam.Exposure;
-            handles.mycam.Zoom = 100;
-            handles.mycam = webcam(1);
        case {'PRIYANKA-HP'}
             handles.mycam = webcam(1);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
@@ -151,13 +148,6 @@ if handles.camera_available
 end
 set(handles.cameraAxes,'XTick',[],'XTickLabel',' ','XTickMode','manual','XTickLabelMode','manual');
 set(handles.cameraAxes,'YTick',[],'YTickLabel',' ','YTickMode','manual','YTickLabelMode','manual');
-
-% for data logging
-handles.was_last_file_saved = 1;
-handles.traces = zeros(5,5);
-handles.timestamps = ones(5,1)*-1;
-handles.samplenum = 1;
-handles.update_call = 0;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -232,16 +222,32 @@ if get(handles.startAcquisition,'value')
 
         % clear indicators
         handles.current_trial_block.Data([2 4 5 6 7],1) = 0;
+        handles.current_trial_block.Data(2,1) = 1;
         handles.update_call = 1;
         handles.timestamp.Data = 0;
         
         % clear plots
         handles.trial_on.Vertices = [];
         handles.trial_on.Faces = [];
+        handles.in_reward_zone_plot.Vertices = [];
+        handles.in_reward_zone_plot.Faces = [];
         set(handles.stimulus_plot,'XData',NaN,'YData',NaN);
-        set(handles.respiration_1_plot,'XData',NaN,'YData',NaN);
-        set(handles.respiration_2_plot,'XData',NaN,'YData',NaN);
+        set(handles.respiration_plot,'XData',NaN,'YData',NaN);
+        set(handles.lickpiezo_plot,'XData',NaN,'YData',NaN);
         set(handles.lick_plot,'XData',NaN,'YData',NaN);
+        
+        % open odor vials
+        handles.odor_vial.Value = 1;
+        odor_vial_Callback(hObject, eventdata, handles);
+        
+        tstart = tic;
+        
+        % update motor stepsize 
+        % different for fixgain (stepsize = 2) vs. variable gain (stepsize = 1)
+        handles.CleaningRoutine.Value = 0;
+        handles.CleaningRoutine.Enable = 'off';
+        handles.TFtype.Enable = 'off';
+        handles.Arduino.write(73 + handles.TFtype.Value,'uint16');
         
         % Calibrate Rotary encoder
         handles = CalibrateRotaryEncoder(handles);
@@ -251,6 +257,10 @@ if get(handles.startAcquisition,'value')
         % enable the motors
         set(handles.motor_status,'String','OFF')
         motor_toggle_Callback(hObject, eventdata, handles);
+        
+        while toc(tstart) < handles.odor_build_up.Data
+            %disp(toc(tstart));
+        end
         
         % start the Arduino timer
         handles.Arduino.write(15, 'uint16'); 
@@ -305,6 +315,10 @@ else
    % disable the motors
    set(handles.motor_status,'String','ON')
    motor_toggle_Callback(hObject, eventdata, handles);
+   
+   % close odor vials
+   handles.odor_vial.Value = 0;
+   odor_vial_Callback(hObject, eventdata, handles);
    
    % stop the Arduino timer
    handles.Arduino.write(16, 'uint16');
@@ -390,6 +404,8 @@ if usrans == 1
     session_data.timestamps = a(1,:)';
     session_data.trace = a(2:handles.NIchannels+1,:)';
     session_data.trace_legend = Connections_list();
+    session_data.odor_buildup = handles.odor_build_up.Data;
+    
 %     session_data.params = b';
 %     session_data.TF = c';
 %     session_data.ForNextSession = [handles.DAC_settings.Data' handles.TriggerHold.Data' handles.RewardControls.Data(3) handles.TFLeftprobability.Data(1) handles.summedholdfactor.Data];
@@ -500,66 +516,93 @@ if ~isempty(userans)
     handles.Arduino.write(stepsize, 'uint16');
 end
 
-% --- Executes on button press in valve_odor_A.
-function valve_odor_A_Callback(hObject, eventdata, handles)
-% hObject    handle to valve_odor_A (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.Arduino.write(44 + handles.valve_odor_A.Value, 'uint16'); 
-if handles.valve_odor_A.Value
-    set(handles.valve_odor_A,'String','odor ON')
-    set(handles.valve_odor_A,'BackgroundColor',[0.5 0.94 0.94]);
+% --- Executes on button press in air_to_manifold.
+function air_to_manifold_Callback(hObject, eventdata, handles)
+handles.Arduino.write(56 + handles.air_to_manifold.Value, 'uint16'); 
+if handles.air_to_manifold.Value
+    set(handles.air_to_manifold,'String','Air ON')
+    set(handles.air_to_manifold,'BackgroundColor',[0.5 0.94 0.94]);
 else
-    set(handles.valve_odor_A,'String','odor OFF')
-    set(handles.valve_odor_A,'BackgroundColor',[0.94 0.94 0.94]);
+    set(handles.air_to_manifold,'String','Air OFF')
+    set(handles.air_to_manifold,'BackgroundColor',[0.94 0.94 0.94]);
 end
 
-% --- Executes on button press in valve_odor_B.
-function valve_odor_B_Callback(hObject, eventdata, handles)
-% hObject    handle to valve_odor_B (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.Arduino.write(46 + handles.valve_odor_B.Value, 'uint16'); 
-if handles.valve_odor_B.Value
-    set(handles.valve_odor_B,'String','Air ON')
-    set(handles.valve_odor_B,'BackgroundColor',[0.5 0.94 0.94]);
+% --- Executes on button press in Vial3.
+function Vial2Manifold_Callback(hObject, eventdata, handles)
+if strcmp(eventdata.Source.Tag,'odor_to_manifold')
+    MyVial = find([handles.Vial0.Value handles.Vial1.Value handles.Vial2.Value handles.Vial3.Value]);
 else
-    set(handles.valve_odor_B,'String','Air OFF')
-    set(handles.valve_odor_B,'BackgroundColor',[0.94 0.94 0.94]);
+    MyVial = 1 + str2num(eventdata.Source.Tag(end));
+end
+MyVial = handles.odor_to_manifold.Value * MyVial;
+handles.Arduino.write(50 + MyVial, 'uint16'); 
+if handles.odor_to_manifold.Value
+    set(handles.odor_to_manifold,'String','odor ON')
+    set(handles.odor_to_manifold,'BackgroundColor',[0.5 0.94 0.94]);
+else
+    set(handles.odor_to_manifold,'String','odor OFF')
+    set(handles.odor_to_manifold,'BackgroundColor',[0.94 0.94 0.94]);
 end
 
 % --- Executes on button press in odor_vial.
 function odor_vial_Callback(hObject, eventdata, handles)
-% hObject    handle to odor_vial (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-if handles.odor_vial.Value && length(handles.Odor_list.Value)==1
-    MyVial = handles.Odor_list.Value;
-    set(handles.odor_vial,'String',['Vial',num2str(MyVial),' ON'])
+UpdateOdorVials(handles);
+if handles.odor_vial.Value && ~isempty(handles.Odor_list.Value)
+    set(handles.odor_vial,'String','Vials ON');
     set(handles.odor_vial,'BackgroundColor',[0.5 0.94 0.94]);
-    handles.Arduino.write(51 + MyVial, 'uint16'); 
 else
-    set(handles.odor_vial,'String','Vial OFF')
+    set(handles.odor_vial,'String','Vials OFF');
     set(handles.odor_vial,'BackgroundColor',[0.94 0.94 0.94]);
-    handles.Arduino.write(50, 'uint16');
 end
-% Hint: get(hObject,'Value') returns toggle state of odor_vial
 
-% --- Executes on button press in BlankVial.
-function BlankVial_Callback(hObject, eventdata, handles)
-% hObject    handle to BlankVial (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-if handles.BlankVial.Value && ~handles.odor_vial.Value
-    set(handles.BlankVial,'String','Blank ON')
-    set(handles.BlankVial,'BackgroundColor',[0.5 0.94 0.94]);
-    handles.Arduino.write(51, 'uint16'); 
+% --- Executes on button press in CleaningRoutine.
+function CleaningRoutine_Callback(hObject, eventdata, handles)
+if handles.CleaningRoutine.Value    
+    % turn on all the odor vials, and shut off airflow to manifold
+    handles.Odor_list.Value = [1 2 3 4];
+    handles.odor_vial.Value = 1;
+    handles.odor_to_manifold.Value = 0;
+    handles.air_to_manifold.Value = 0;
+    guidata(hObject,handles);
+    Vial2Manifold_Callback(hObject, eventdata, handles);
+    odor_vial_Callback(hObject, eventdata, handles);
+    
+    handles.Arduino.write(13, 'uint16');
+    tic
+    while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
+    end
+    if(handles.Arduino.Port.BytesAvailable == 0)
+        error('arduino: failed to start cleaning')
+    elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==3
+        disp('arduino: Cleaning Routine Started');
+    end
+    
+    set(handles.CleaningRoutine,'String','Cleaning...')
+    set(handles.CleaningRoutine,'BackgroundColor',[0.5 0.94 0.94]);
+    
 else
-    set(handles.BlankVial,'String','Blank OFF')
-    set(handles.BlankVial,'BackgroundColor',[0.94 0.94 0.94]);
-    handles.Arduino.write(50, 'uint16');
+    handles.Arduino.write(14, 'uint16');
+    tic
+    while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
+    end
+    if(handles.Arduino.Port.BytesAvailable == 0)
+        error('arduino: failed to stop cleaning')
+    elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==4
+        disp('arduino: Cleaning Routine Stopped');
+    end
+    
+    % turn on all the odor vials, and shut off airflow to manifold
+    handles.Odor_list.Value = [2 3 4];
+    handles.odor_vial.Value = 0;
+    handles.odor_to_manifold.Value = 0;
+    handles.air_to_manifold.Value = 0;
+    guidata(hObject,handles);
+    Vial2Manifold_Callback(hObject, eventdata, handles);
+    odor_vial_Callback(hObject, eventdata, handles);
+    
+    set(handles.CleaningRoutine,'String','Cleaning OFF')
+    set(handles.CleaningRoutine,'BackgroundColor',[0.94 0.94 0.94]);
 end
-% Hint: get(hObject,'Value') returns toggle state of BlankVial
 
 % --- Executes on button press in startStopCamera.
 function startStopCamera_Callback(hObject, eventdata, handles)
@@ -609,7 +652,20 @@ function SessionSettings_CellEditCallback(hObject, eventdata, handles)
 %	NewData: EditData or its converted form set on the Data property. Empty if Data was not changed
 %	Error: error string when failed to convert EditData to appropriate value for Data
 % handles    structure with handles and user data (see GUIDATA)
-all_locations = -handles.SessionSettings.Data(2):handles.SessionSettings.Data(3):handles.SessionSettings.Data(2);
+if handles.SessionSettings.Data(3)
+    all_locations = -handles.SessionSettings.Data(2):handles.SessionSettings.Data(3):handles.SessionSettings.Data(2);
+else
+    all_locations = handles.SessionSettings.Data(2); % only one location;
+end
 handles.TF_plot.CData = flipud(all_locations')/handles.MotorLocations;
 set(handles.axes9,'YLim',[0 length(handles.TF_plot.CData)]);
 handles.all_locations.String = num2str(all_locations');
+
+
+% --- Executes on button press in TFtype.
+function TFtype_Callback(hObject, eventdata, handles)
+% hObject    handle to TFtype (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of TFtype
