@@ -9,15 +9,28 @@ if ~isempty(Allfiles)
     X = load(fullfile(foldername_local,animal_name,Allfiles(end).name));
     if isfield(X.session_data, 'ForNextSession')
         if any(strcmp(X.session_data.ForNextSession_Legends,'DAQGain'))
-            handles.DAC_settings.Data = X.session_data.ForNextSession(1:2)';
+            %handles.DAC_settings.Data = X.session_data.ForNextSession(1:2)';
         end
         if any(strcmp(X.session_data.ForNextSession_Legends,'TriggerHoldMin'))
             handles.TriggerHold.Data = X.session_data.ForNextSession(3:5)';
         end
         if any(strcmp(X.session_data.ForNextSession_Legends,'TargetHoldMean'))
-            handles.TargetHold.Data(2) = ...
-            round(X.session_data.ForNextSession(find(strcmp(X.session_data.ForNextSession_Legends,'TargetHoldMean'))));
-            handles.TargetHold.Data(1) = handles.TargetHold.Data(2) - 25;
+            last_session_median = round(X.session_data.ForNextSession(find(strcmp(X.session_data.ForNextSession_Legends,'TargetHoldMean'))));
+            if last_session_median < 25
+                handles.TargetHold.Data(2) = 25;
+                handles.TargetHold.Data(1) = 0;
+            elseif last_session_median >= 300
+                %handles.TargetHold.Data(2) = 300;
+                handles.TargetHold.Data(2) = last_session_median;
+                handles.TargetHold.Data(1) = max([250 last_session_median-50]);
+                handles.AntiBias.Value = 1;
+                %handles.TargetHold.Data(3) = 400;
+                %handles.adaptive_holds.Value = 0;
+            else
+                handles.TargetHold.Data(2) = last_session_median;
+                handles.TargetHold.Data(1) = handles.TargetHold.Data(2) - 25;
+            end
+            
         end
         if any(strcmp(X.session_data.ForNextSession_Legends,'RewardHold-I'))
             handles.RewardControls.Data(1) = X.session_data.ForNextSession(end-2);

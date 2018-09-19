@@ -3,7 +3,7 @@ function SaveFiles(animal)
 % filename for writing data
 animal_name = char(animal);
 foldername_local = char('C:\Data\Behavior');
-foldername_server = char('\\sonas-hs\Albeanu-Norepl\pgupta\Behavior');
+foldername_server = char('\\grid-hs\albeanu_nlsas_norepl_data\pgupta\Behavior');
     
 % read session data
 f = fopen('C:\temp_data_files\log.bin');

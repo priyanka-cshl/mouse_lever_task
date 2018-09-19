@@ -11,17 +11,18 @@ switch char(handles.computername)
         handles.DAQrates.Data = [500 20]';
         
         % sensors and scaling
-        handles.DAC_settings.Data = [1.85 2.3]';
+        handles.DAC_settings.Data = [2.0 2.5]';
         handles.RS_scaling.Data = [-1 5.5]';
+        handles.LickPiezo.Data = [0.2 6]';
         handles.watercoeffs = [0.00134 0.0515 0.099]; % water per drop
         handles.fliphome = 0; 
         
         % default params
-        handles.TrialSettings.Data = [4.8 0.2 200 100 5000 5000]'; % trial highlim, trial lowlim, ~ , trialmin, trialmax, ITI
+        handles.TrialSettings.Data = [4.8 0.2 200 100 5000 500]'; % trial highlim, trial lowlim, ~ , trialmin, trialmax, ITI
         handles.RewardControls.Data = [35 5 50 100 100]'; % reward: time-I, time-II, IRI, hold-II, trial-off-lag
         handles.MultiRewards.Value = 1;
         handles.adaptive_holds.Value = 1;
-        handles.Odor_list.Value = 1 + [1 2 3]'; % active odors
+        handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
         handles.which_perturbation.Value = 1; % no perturbations
         handles.openloop = 0; % Run in close-loop mode
         
@@ -33,6 +34,7 @@ switch char(handles.computername)
         handles.target_level_array.Data = handles.all_targets(find(handles.TargetsActive.Data));
         handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
         handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
+        handles.PseudoRandomZones.Value = 1;
         
         % Transfer function
         handles.calibrate_transfer_function.Enable = 'off'; % disable transfer function calibrator
@@ -46,6 +48,7 @@ switch char(handles.computername)
         handles.MotorLocationsFixSpeed = 100; % for fix speed
         handles.ManifoldOutlets = 24; % 32 in total - out of which only 24 are used
         handles.motor_params = 4; % motor step size
+        handles.PerturbationSettings.Data(3) = 30;
         
         % currently unused settings
         handles.MFC_table.Data = [1.6 0.64]'; %[1.6 0.4]';

@@ -32,7 +32,7 @@ h.target_level_array.Data = h.target_level_array.Data(randperm(length(h.target_l
 
 % check if antibias needs to be implemented and if previous trial was a failure
 NoAntiBias = 1;
-if (h.AntiBias.Value && ~IsRewardedTrial)
+if (h.AntiBias.Value && ~IsRewardedTrial && ~h.current_trial_block.Data(3))
     find(h.all_targets == h.TargetDefinition.Data(2));
     % find next closest targets
     similar_targets = h.target_level_array.Data(find(abs(h.target_level_array.Data - h.TargetDefinition.Data(2))<=0.25));
