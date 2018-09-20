@@ -115,7 +115,7 @@ if TotalTime(end)>2
         % increment 'trial number'
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1; 
         
-        % increment trials done in the progress reporst
+        % increment trials done in the progress report
         if ~h.current_trial_block.Data(3) % not a perturbed trial
             h.ProgressReport.Data(which_target,1) = h.ProgressReport.Data(which_target,1) + 1;
             h.ProgressReport.Data(end,1) = h.ProgressReport.Data(end,1) + 1;

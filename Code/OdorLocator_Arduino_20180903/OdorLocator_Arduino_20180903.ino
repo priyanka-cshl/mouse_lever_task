@@ -62,7 +62,8 @@ unsigned int num_of_locations = 100;
 unsigned short transfer_function[99] = {0}; // ArCOM aray needs unsigned shorts
 int motor_location = 1;
 int offset_location = 1;
-int perturbation_offset_location = 1;
+int perturbation_offset = 0;
+int perturbation_offset_location = 0;
 int transfer_function_pointer = 0; // for transfer function calibration
 unsigned int my_location = 101;
 unsigned int left_first = 1;
@@ -86,7 +87,7 @@ bool flip_lever = false;
 bool flip_lever_trial = false;
 int use_offset_perturbation = 0;
 int offset_perturbation_trial = 0;
-//bool use_offset_perturbation = false;
+int offset_perturbation_trial_typeII = 0;
 
 //variables : trial related
 int trialstate[] = {0, 0}; // old, new
@@ -223,9 +224,20 @@ void loop()
       motor_location = constrain((offset_location - (motor_location - offset_location)), 0, num_of_locations - 1);
     }
     stimulus_state[1] = transfer_function[motor_location];
-    if (use_offset_perturbation)
+    if (use_offset_perturbation == 1)
+    { 
+      if (reward_state == 1)
+      {
+        stimulus_state[1] = perturbation_offset_location;
+      }
+      if (reward_state == 2)
+      {
+        use_offset_perturbation = 2;
+      }
+    }
+    if (use_offset_perturbation == 2)
     {
-      stimulus_state[1] = stimulus_state[1] + perturbation_offset_location;
+      stimulus_state[1] = stimulus_state[1] + perturbation_offset;
       stimulus_state[1] = constrain(stimulus_state[1], 0, 240);
     }
   }
@@ -246,16 +258,14 @@ void loop()
   }
 
   // in reward zone or not : if in, odor location ranges between 17 and 48
-  for (i = 0; i < 2; i++)
+  in_target_zone[0] = (stimulus_state[1] == constrain(stimulus_state[1], rewarded_locations[0], rewarded_locations[1]));
+  if (decouple_reward_and_stimulus)
   {
-    if (decouple_reward_and_stimulus)
-    {
-      in_target_zone[i] = (lever_position == constrain(lever_position, fake_target_params[2], fake_target_params[0]));
-    }
-    else
-    {
-      in_target_zone[i] = (stimulus_state[1] == constrain(stimulus_state[1], rewarded_locations[0], rewarded_locations[1]));
-    }
+    in_target_zone[1] = (lever_position == constrain(lever_position, fake_target_params[2], fake_target_params[0]));
+  }
+  else
+  {
+    in_target_zone[1] = (stimulus_state[1] == constrain(stimulus_state[1], rewarded_locations[0], rewarded_locations[1]));
   }
   //----------------------------------------------------------------------------
 
@@ -314,13 +324,20 @@ void loop()
   //----------------------------------------------------------------------------
   if (reward_state == 2)
   {
-    if ((perturbation_offset_location != 0) && (!use_offset_perturbation))
+    if ((perturbation_offset != 0) && (!use_offset_perturbation))
     {
       if ((micros() - reward_zone_timestamp) > 500 * reward_params[0])
       {
         reward_state = 1; // reset reward state
         time_in_target_zone = 0; // reset timespent value
-        use_offset_perturbation = 1;
+        if (offset_perturbation_trial_typeII)
+        {
+          use_offset_perturbation = 1; // if location offset trial - this will mark the start of perturbation
+        }
+        else
+        {
+          use_offset_perturbation = 2;
+        }
       }
     }
     if ((micros() - reward_zone_timestamp) > 1000 * reward_params[0])
@@ -352,20 +369,23 @@ void loop()
   if (close_loop_mode)
   {
     digitalWrite(trial_reporter_pin, (trialstate[0] == 4)); // active trial?
-    digitalWrite(in_target_zone_reporter_pin, in_target_zone[1]); // in_target_zone?
-    digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2) || (reward_state == 5)); // in_reward_zone?
+    digitalWrite(in_target_zone_reporter_pin, in_target_zone[0]); // in_target_zone?
+    if (perturbation_offset != 0)
+    {
+      digitalWrite(in_reward_zone_reporter_pin, (use_offset_perturbation == 1) || (use_offset_perturbation == 2)); // in_reward_zone?
+    }
+    else
+    {
+      digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2) || (reward_state == 5)); // in_reward_zone?
+    }
   }
   else if (open_loop_mode)
   {
     send_odor_to_manifold();
     digitalWrite(trial_reporter_pin, ((trialstate[0] > 0) && (trialstate[0] < 5))); // active trial?
-    //digitalWrite(in_target_zone_reporter_pin, in_target_zone[1]); // in_target_zone?
     digitalWrite(in_reward_zone_reporter_pin, odor_valve_state); // is Odor valve ON?
   }
-//  else if (!cleaningON)
-//  {
-//    digitalWrite(trial_reporter_pin, odor_valve_state); // active trial?
-//  }
+
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
@@ -760,13 +780,19 @@ void UpdateAllParams()
   long_iti = param_array[23];
   flip_lever_trial = (param_array[24]==4);  
   offset_perturbation_trial = (param_array[24]==5);
+  offset_perturbation_trial_typeII = (param_array[24]==6);
   if (offset_perturbation_trial)
   {
-    perturbation_offset_location = param_array[25] - param_array[21];
+    perturbation_offset = param_array[25] - param_array[21];
   }
+  else if (offset_perturbation_trial_typeII)
+  {
+    perturbation_offset = param_array[25] - param_array[21]; 
+    perturbation_offset_location = param_array[25];
+  }  
   else
   {
-    perturbation_offset_location = 0;
+    perturbation_offset = 0;
   }
 
   for (i = 0; i < 3; i++)
