@@ -23,7 +23,7 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
-% Last Modified by GUIDE v2.5 13-Jul-2018 15:48:56
+% Last Modified by GUIDE v2.5 22-Aug-2018 17:01:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -122,7 +122,7 @@ handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
 handles.TargetDefinition.Data(2) = handles.target_level_array.Data(2);
 
 % load settings
-%handles = LastSessionSettings(handles);
+handles = LastSessionSettings(handles);
 
 % get weight data if available
 filename = [foldername_local, filesep, animal_name, '_WeightLog.mat'];
@@ -183,8 +183,8 @@ handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
 handles.in_reward_zone_plot.EdgeColor = 'none';
 handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.25); %rewards
 handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('r'),'Linewidth',1); %licks
+handles.camerasync_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1); %point-grey cam sync
 handles.homesensor_plot = plot(NaN, NaN,'k'); %homesensor
-handles.camerasync_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1); %point-grey cam sync
 handles.targetzone = fill(NaN,NaN,[1 1 0],'FaceAlpha',0.2);
 handles.targetzone.EdgeColor = 'none';
 handles.fake_target_plot = plot(NaN, NaN, 'color',[.7 .7 .7]);
@@ -207,6 +207,12 @@ handles.motor_location = plot([1],[2],'r<','MarkerFaceColor','k','MarkerEdgeColo
 axis off tight
 set(handles.axes4,'YLim',[0 100]);
 set(handles.axes4, 'Color', 'none');
+
+axes(handles.axes10); % which target plot
+handles.thistarget = plot([1],[2],'r>','MarkerFaceColor','k','MarkerEdgeColor','k');
+axis off tight
+set(handles.axes10,'YLim',[0.5 12.5],'YDir','reverse');
+set(handles.axes10, 'Color', 'none');
 
 %% webcam
 handles.camera_available = 0;
@@ -301,7 +307,6 @@ if get(handles.startAcquisition,'value')
         
         handles.hObject = hObject;
         handles.traces = zeros(6000,handles.NIchannels); %???500*60*60*4
-        disp(handles.NIchannels)
         handles.timestamps = -ones(6000,1);
         handles.samplenum = 1;
         handles.targetlevel = zeros(6000,2);
@@ -360,6 +365,10 @@ if get(handles.startAcquisition,'value')
             handles.Zero_MFC.String = 'MFCs OFF';
             Zero_MFC_Callback(hObject, eventdata, handles);
         end
+        
+        % open odor vials
+        handles.odor_vial.Value = 1;
+        odor_vial_Callback(hObject, eventdata, handles);
         
         % disable/enable controls
         handles.calibrate_transfer_function.Enable = 'on';
@@ -445,6 +454,9 @@ else
        handles.Zero_MFC.Value = 0;
        Zero_MFC_Callback(hObject, eventdata, handles);
    end
+   % close odor vials
+   handles.odor_vial.Value = 0;
+   odor_vial_Callback(hObject, eventdata, handles);
    
    % stop the Arduino timer
    handles.Arduino.write(12, 'uint16'); %fwrite(handles.Arduino, char(12));
@@ -543,18 +555,21 @@ if usrans == 1
     session_data.trace_legend = Connections_list();
     session_data.params = b';
     session_data.TF = c';
-    session_data.ForNextSession = [handles.DAC_settings.Data' handles.TriggerHold.Data' handles.RewardControls.Data(4) handles.TFLeftprobability.Data(1) handles.summedholdfactor.Data];
-    session_data.ForNextSession_Legends = {'DAQGain', 'DAQDC', 'TriggerHoldMin', 'TriggerHoldMean', 'TriggerHoldMax', 'RewardHold-II', 'LeftvsRightTFs', 'SummedHoldFactor' };
+    session_data.ForNextSession = [handles.DAC_settings.Data' handles.TriggerHold.Data' ...
+        median(handles.MeanHoldTimes.Data)...
+        handles.RewardControls.Data(1) handles.TFLeftprobability.Data(1) handles.summedholdfactor.Data];
+    session_data.ForNextSession_Legends = {'DAQGain', 'DAQDC', 'TriggerHoldMin', 'TriggerHoldMean', 'TriggerHoldMax', ...
+        'TargetHoldMean', 'RewardHold-I', 'LeftvsRightTFs', 'SummedHoldFactor' };
     
     save(filename,'session_data*');
     save(server_file_name,'session_data*');
     clear a b c session_data
     display(['saved to ' filename])
     display(['saved to ' server_file_name])
-%     set(gcf,'PaperPositionMode','auto')
-%     print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
-%         '-dpng','-r0');
-%     display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
+    set(gcf,'PaperPositionMode','auto')
+    print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name],'-dpng','-r0');
+    display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
+    disp(['median hold = ',num2str(median(handles.MeanHoldTimes.Data)),' ms']);
     guidata(hObject, handles);
 end
 
@@ -577,8 +592,7 @@ else
     %handles.Reward_Report.Data(1,3) = handles.Reward_Report.Data(1,3) + 1;
     handles.Reward_Report.Data(3) = handles.Reward_Report.Data(3) + 1;
 end
-handles.Reward_Report.Data(1) = floor(handles.Reward_Report.Data(1) + ...
-    10*(handles.RewardControls.Data(1)*handles.watercoeffs(1) + handles.watercoeffs(2)));
+handles.Reward_Report.Data(1) = floor(handles.Reward_Report.Data(1) + WaterPerDrop(handles));
 handles.lastrewardtime = handles.timestamp.Data;
 guidata(hObject, handles);
 
@@ -777,7 +791,7 @@ end
 
 % --- Executes on button press in calibrate_transfer_function.
 function calibrate_transfer_function_Callback(hObject, eventdata, handles)
-if get(hObject,'Value') 
+if get(hObject,'Value')
     prompt = {'Enter time at each location (ms):', 'Randomize locations (1 = yes/ 0 = no):'};
     dlg_title = 'Transfer function relay settings';
     num_lines = 1;
@@ -790,13 +804,13 @@ if get(hObject,'Value')
     if ~isempty(userans)
         handles.location_update_params = [str2num(char(userans(1))) str2num(char(userans(2)))];
         guidata(hObject, handles);
-        Update_LocationSequence(handles);
+        CalibrateTransferFunction(handles);
+        %Update_LocationSequence(handles);
     end
 else
-    
-[handles] = UpdateTransferFunction(handles);
-guidata(hObject,handles);
-Send2Arduino(handles);
+    [handles] = UpdateTransferFunction(handles);
+    guidata(hObject,handles);
+    Send2Arduino(handles);
 end
 
 % --- Executes when entered data in editable cell(s) in MFC_table.
@@ -820,53 +834,93 @@ if ~isempty(handles.MFC)
     end
 end
 
-% --- Executes on button press in valve_odor_A.
-function valve_odor_A_Callback(hObject, eventdata, handles)
-handles.Arduino.write(44 + handles.valve_odor_A.Value, 'uint16'); 
-if handles.valve_odor_A.Value
-    set(handles.valve_odor_A,'String','odor ON')
-    set(handles.valve_odor_A,'BackgroundColor',[0.5 0.94 0.94]);
+% --- Executes on button press in air_to_manifold.
+function air_to_manifold_Callback(hObject, eventdata, handles)
+handles.Arduino.write(56 + handles.air_to_manifold.Value, 'uint16'); 
+if handles.air_to_manifold.Value
+    set(handles.air_to_manifold,'String','Air ON')
+    set(handles.air_to_manifold,'BackgroundColor',[0.5 0.94 0.94]);
 else
-    set(handles.valve_odor_A,'String','odor OFF')
-    set(handles.valve_odor_A,'BackgroundColor',[0.94 0.94 0.94]);
+    set(handles.air_to_manifold,'String','Air OFF')
+    set(handles.air_to_manifold,'BackgroundColor',[0.94 0.94 0.94]);
 end
 
-% --- Executes on button press in valve_odor_B.
-function valve_odor_B_Callback(hObject, eventdata, handles)
-handles.Arduino.write(46 + handles.valve_odor_B.Value, 'uint16'); 
-if handles.valve_odor_B.Value
-    set(handles.valve_odor_B,'String','Air ON')
-    set(handles.valve_odor_B,'BackgroundColor',[0.5 0.94 0.94]);
+% --- Executes on button press in Vial3.
+function Vial2Manifold_Callback(hObject, eventdata, handles)
+if strcmp(eventdata.Source.Tag,'odor_to_manifold')
+    MyVial = find([handles.Vial0.Value handles.Vial1.Value handles.Vial2.Value handles.Vial3.Value]);
 else
-    set(handles.valve_odor_B,'String','Air OFF')
-    set(handles.valve_odor_B,'BackgroundColor',[0.94 0.94 0.94]);
+    MyVial = 1 + str2num(eventdata.Source.Tag(end));
+end
+MyVial = handles.odor_to_manifold.Value * MyVial;
+handles.Arduino.write(50 + MyVial, 'uint16'); 
+if handles.odor_to_manifold.Value
+    set(handles.odor_to_manifold,'String','odor ON')
+    set(handles.odor_to_manifold,'BackgroundColor',[0.5 0.94 0.94]);
+else
+    set(handles.odor_to_manifold,'String','odor OFF')
+    set(handles.odor_to_manifold,'BackgroundColor',[0.94 0.94 0.94]);
 end
 
 % --- Executes on button press in odor_vial.
 function odor_vial_Callback(hObject, eventdata, handles)
-if handles.odor_vial.Value && length(handles.Odor_list.Value)==1
-    MyVial = handles.Odor_list.Value;
-    set(handles.odor_vial,'String',['Vial',num2str(MyVial),' ON'])
+UpdateOdorVials(handles);
+if handles.odor_vial.Value && ~isempty(handles.Odor_list.Value)
+    set(handles.odor_vial,'String','Vials ON');
     set(handles.odor_vial,'BackgroundColor',[0.5 0.94 0.94]);
-    handles.Arduino.write(51 + MyVial, 'uint16'); 
 else
-    set(handles.odor_vial,'String','Vial OFF')
+    set(handles.odor_vial,'String','Vials OFF');
     set(handles.odor_vial,'BackgroundColor',[0.94 0.94 0.94]);
-    handles.Arduino.write(50, 'uint16');
 end
 
-% --- Executes on button press in BlankVial.
-function BlankVial_Callback(hObject, eventdata, handles)
-if handles.BlankVial.Value && ~handles.odor_vial.Value
-    set(handles.BlankVial,'String','Blank ON')
-    set(handles.BlankVial,'BackgroundColor',[0.5 0.94 0.94]);
-    handles.Arduino.write(51, 'uint16'); 
+% --- Executes on button press in CleaningRoutine.
+function CleaningRoutine_Callback(hObject, eventdata, handles)
+if handles.CleaningRoutine.Value    
+    % turn on all the odor vials, and shut off airflow to manifold
+    handles.Odor_list.Value = [1 2 3 4];
+    handles.odor_vial.Value = 1;
+    handles.odor_to_manifold.Value = 0;
+    handles.air_to_manifold.Value = 0;
+    guidata(hObject,handles);
+    Vial2Manifold_Callback(hObject, eventdata, handles);
+    odor_vial_Callback(hObject, eventdata, handles);
+    
+    handles.Arduino.write(13, 'uint16');
+    tic
+    while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
+    end
+    if(handles.Arduino.Port.BytesAvailable == 0)
+        error('arduino: failed to start cleaning')
+    elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==3
+        disp('arduino: Cleaning Routine Started');
+    end
+    
+    set(handles.CleaningRoutine,'String','Cleaning...')
+    set(handles.CleaningRoutine,'BackgroundColor',[0.5 0.94 0.94]);
+    
 else
-    set(handles.BlankVial,'String','Blank OFF')
-    set(handles.BlankVial,'BackgroundColor',[0.94 0.94 0.94]);
-    handles.Arduino.write(50, 'uint16');
+    handles.Arduino.write(14, 'uint16');
+    tic
+    while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
+    end
+    if(handles.Arduino.Port.BytesAvailable == 0)
+        error('arduino: failed to stop cleaning')
+    elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==4
+        disp('arduino: Cleaning Routine Stopped');
+    end
+    
+    % turn on all the odor vials, and shut off airflow to manifold
+    handles.Odor_list.Value = [2 3 4];
+    handles.odor_vial.Value = 0;
+    handles.odor_to_manifold.Value = 0;
+    handles.air_to_manifold.Value = 0;
+    guidata(hObject,handles);
+    Vial2Manifold_Callback(hObject, eventdata, handles);
+    odor_vial_Callback(hObject, eventdata, handles);
+    
+    set(handles.CleaningRoutine,'String','Cleaning OFF')
+    set(handles.CleaningRoutine,'BackgroundColor',[0.94 0.94 0.94]);
 end
-% Hint: get(hObject,'Value') returns toggle state of BlankVial
 
 % --- Executes on button press in startStopCamera.
 function startStopCamera_Callback(hObject, eventdata, handles)
@@ -935,7 +989,7 @@ function close_gui_Callback(hObject, eventdata, handles)
 if ~isempty(handles.MFC)
     outputSingleScan(handles.MFC,0*handles.MFC_table.Data');
 end
-handles.Arduino.write(44, 'uint16');
+handles.Arduino.write(56, 'uint16'); % turn air valve off
 delete(handles.figure1);
 handles.Arduino.write(12, 'uint16');
 tic
@@ -1035,49 +1089,6 @@ end
 
 % --- Executes during object deletion, before destroying properties.
 function figure1_DeleteFcn(hObject, eventdata, handles)
-
-% --- Executes on button press in CleaningRoutine.
-function CleaningRoutine_Callback(hObject, eventdata, handles)
-if handles.CleaningRoutine.Value
-    handles.Arduino.write(13, 'uint16');
-    tic
-    while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
-    end
-    if(handles.Arduino.Port.BytesAvailable == 0)
-        error('arduino: failed to start cleaning')
-    elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==3
-        disp('arduino: Cleaning Routine Started');
-    end
-    
-    if ~isempty(handles.MFC)
-        % turn ON MFCs
-        handles.Zero_MFC.Value = 1;
-        handles.Zero_MFC.String = 'MFCs OFF';
-        Zero_MFC_Callback(hObject, eventdata, handles);
-    end
-        
-    set(handles.CleaningRoutine,'String','Cleaning...')
-    set(handles.CleaningRoutine,'BackgroundColor',[0.5 0.94 0.94]);
-    
-else
-    if ~isempty(handles.MFC)
-        % turn OFF MFCs
-        handles.Zero_MFC.Value = 0;
-        Zero_MFC_Callback(hObject, eventdata, handles);
-    end
-    handles.Arduino.write(14, 'uint16');
-    tic
-    while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
-    end
-    if(handles.Arduino.Port.BytesAvailable == 0)
-        error('arduino: failed to stop cleaning')
-    elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==4
-        disp('arduino: Cleaning Routine Stopped');
-    end
-
-    set(handles.CleaningRoutine,'String','Cleaning OFF')
-    set(handles.CleaningRoutine,'BackgroundColor',[0.94 0.94 0.94]);
-end
 
 % --- Executes when entered data in editable cell(s) in TargetsActive.
 function TargetsActive_CellEditCallback(hObject, eventdata, handles)

@@ -182,10 +182,14 @@ void loop ()
       {
         step_wait = round(8000 / delta_steps);
       }
-      else
+      else if ( delta_steps <= 80 ) 
       {
         step_wait = 100;
         //step_wait = round(6000 / delta_steps);
+      }
+      else
+      {
+        step_wait = 200;
       }
     }
     else

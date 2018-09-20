@@ -28,7 +28,11 @@ TargetLevel = [TargetLevel(num_new_samples+1:end,:); h.TargetDefinition.Data(3)+
 % variables used later for plotting etc
 which_target = h.which_target.Data;
 which_fake_target = h.which_fake_target.Data;
-odorID = h.current_trial_block.Data(4);
+if h.current_trial_block.Data(4)
+    odorID = h.current_trial_block.Data(4);
+else
+    odorID = 4;
+end
 
 %% update MFC setpoints
 if ~isempty(h.MFC)
@@ -36,11 +40,19 @@ if ~isempty(h.MFC)
 end
 
 %% populate TotalData with newly available data
-for i = 1:h.Channels.reward_channel-1
+for i = 1:h.NIchannels
     samples_new = event.Data(:,i);
     switch i
         case (h.Channels.trial_channel) % trial channel
             samples_new = samples_new*odorID;
+        case (h.Channels.reward_channel)
+            if TotalTime(end)>2 
+                samples_new = diff([last_data_value(i); samples_new])==1 ;
+            end
+        case (h.Channels.lick_channel)
+            if TotalTime(end)>2 
+                samples_new = diff([last_data_value(i); samples_new])==1 ;
+            end
         case (h.Channels.homesensor_channel) % homesensor channel
             if h.fliphome
                 samples_new = 1 - samples_new;
@@ -53,9 +65,9 @@ end
 if TotalTime(end)>2 
     
     %% REWARDS
-    % append new sampples and take diff to get events
-    TotalData(:,h.Channels.reward_channel) = [ TotalData(num_new_samples+1:end,h.Channels.reward_channel); ...
-        diff([last_data_value(h.Channels.reward_channel); event.Data(:,h.Channels.reward_channel)])==1 ];
+%     % append new sampples and take diff to get events
+%     TotalData(:,h.Channels.reward_channel) = [ TotalData(num_new_samples+1:end,h.Channels.reward_channel); ...
+%         diff([last_data_value(h.Channels.reward_channel); event.Data(:,h.Channels.reward_channel)])==1 ];
     
     % any rewards?
     if any(TotalData(end-num_new_samples+1:end,h.Channels.reward_channel))
@@ -67,7 +79,7 @@ if TotalTime(end)>2
             IsRewardedTrial = 1;
             % Update reward table (#s and uL)
             h.Reward_Report.Data(2) = h.Reward_Report.Data(2) + 1;
-            h.Reward_Report.Data(1) = floor(h.Reward_Report.Data(1) + 10*(h.RewardControls.Data(1)*h.watercoeffs(1) + h.watercoeffs(2)));
+            h.Reward_Report.Data(1) = floor(h.Reward_Report.Data(1) + WaterPerDrop(h));
             % Update # correct trials in performance plots
             if ~h.current_trial_block.Data(3) % not a perturbed trial
                 h.ProgressReport.Data(which_target,2) = h.ProgressReport.Data(which_target,2) + 1;
@@ -83,7 +95,7 @@ if TotalTime(end)>2
             
             % Update reward table (#reward-IIs and uL)
             h.Reward_Report.Data(4) = h.Reward_Report.Data(4) + 1;
-            h.Reward_Report.Data(1) = floor(h.Reward_Report.Data(1) + 10*(h.RewardControls.Data(2)*h.watercoeffs(1) + h.watercoeffs(2)));
+            h.Reward_Report.Data(1) = floor(h.Reward_Report.Data(1) + WaterPerDrop(h));
             
         end
     end
@@ -115,10 +127,10 @@ if TotalTime(end)>2
     end
         
     %% LICKS
-    if h.NIchannels >= h.Channels.lick_channel
-        TotalData(:,h.Channels.lick_channel) = [ TotalData(num_new_samples+1:end,h.Channels.lick_channel); ...
-        diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1 ];
-    end
+%     if h.NIchannels >= h.Channels.lick_channel
+%         TotalData(:,h.Channels.lick_channel) = [ TotalData(num_new_samples+1:end,h.Channels.lick_channel); ...
+%         diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1 ];
+%     end
     
     %% In early training - give water when animal licks
     if ~isempty(find(diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1,1))
