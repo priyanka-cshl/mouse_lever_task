@@ -1,16 +1,10 @@
-% test script to extract behavior data and replot session
-function [MyData, params, TargetZones, FakeTargetZones] = ExtractSessionData(FileName, PIDflag)
-    if nargin<2
-        PIDflag = 0;
-    end
+function [MyData, params, TargetZones, FakeTargetZones] = ExtractSessionData2018(FileName)
+% extracts 
     
-    % load the file
-    Temp = load(FileName,'session_data');
-    if PIDflag
-        MyData = Temp.session_data.trace(:,[6 3 7:11]);
-    else
-        MyData = Temp.session_data.trace(:,[1 3 7:11]);
-    end
+% load the file
+Temp = load(FileName,'session_data');
+MyData = Temp.session_data.trace(:,[1 3 6 7:11]); % [lever motor stimulus
+
         
     % add three columns in the beginning - 1 for timestamp and 2 for target zone levels
     % add two columns in the end - for fake target zone levels
@@ -68,12 +62,9 @@ function [MyData, params, TargetZones, FakeTargetZones] = ExtractSessionData(Fil
     end
 
     if size(Temp.session_data.trace,2)>11
-        % home sensor
         MyData(:,end+1) = Temp.session_data.trace(:,12);
-        % respiration
-        MyData(:,end+1) = Temp.session_data.trace(:,5);
     end
-        
+    
     % convert trial_ON column to odor IDs
     % column number = 6 in MyData
     for odor = 1:4
@@ -92,7 +83,6 @@ function [MyData, params, TargetZones, FakeTargetZones] = ExtractSessionData(Fil
         foo(find(foo==0),:) = [];
         FakeTargetZones = [FakeTargetZones; repmat(foo, 1, 3)];
     end
-    
     % Sanity check
     foo = FakeTargetZones;
     foo(:,2) = foo(:,2) - foo(:,1);

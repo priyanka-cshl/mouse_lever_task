@@ -1,5 +1,5 @@
 % organize the session data into a cell array of trials
-function [Lever, Motor, TrialInfo, TargetZones] = ChunkUpTrials(MyData, TargetZones,  FakeTargetZones)
+function [Lever, Motor, TrialInfo, TargetZones, Respiration] = ChunkUpTrials(MyData, TargetZones,  FakeTargetZones)
     % column ID for trial column
     TrialCol = find(cellfun(@isempty,regexp(WhatsMyData','Trial'))==0);
     TrialColumn = MyData(:,TrialCol);
@@ -23,6 +23,7 @@ function [Lever, Motor, TrialInfo, TargetZones] = ChunkUpTrials(MyData, TargetZo
         EncoderCol = find(cellfun(@isempty,regexp(WhatsMyData','RotaryEncoder'))==0);
         MotorCol = find(cellfun(@isempty,regexp(WhatsMyData','MotorPosition'))==0);
         HomeCol = find(cellfun(@isempty,regexp(WhatsMyData','HomeSensor'))==0);
+        RespCol = find(cellfun(@isempty,regexp(WhatsMyData','Respiration'))==0);
     end
     
     for t = 1:length(TrialOn)
@@ -30,6 +31,7 @@ function [Lever, Motor, TrialInfo, TargetZones] = ChunkUpTrials(MyData, TargetZo
         %% populate two cell arays - TrialInfo and Lever and Motor
         Lever(t) = { MyData(TrialOn(t):TrialOff(t), LeverCol) };
         Motor(t) = { MyData(TrialOn(t):TrialOff(t), MotorCol) };
+        Respiration(t) = { MyData(TrialOn(t):TrialOff(t), RespCol) };
         
         TrialInfo.Timestamps(t,:) = MyData([TrialOn(t) TrialOff(t)],1);
         TrialInfo.TimeIndices(t,:) = [TrialOn(t) TrialOff(t)];
@@ -67,12 +69,13 @@ function [Lever, Motor, TrialInfo, TargetZones] = ChunkUpTrials(MyData, TargetZo
     f = find(TargetZones(:,1)==3); % buggy zone definition
     
     todelete = [];
-    for i = 1:numel(f);
+    for i = 1:numel(f)
         todelete = [todelete; find(TrialInfo.TargetZoneType==f(i))];
     end
         
     Lever(:,todelete) = [];
     Motor(:,todelete) = [];
+    Respiration(:,todelete) = [];
     
     TrialInfo.Odor(todelete,:) = [];
     TrialInfo.TargetZoneType(todelete,:) = [];
