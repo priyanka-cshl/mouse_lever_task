@@ -43,6 +43,7 @@ int fake_lever = 0;
 
 //variables : stimulus related
 int stimulus_state[] = {0, 0}; // old, new
+int actual_stimulus_state = 0;
 long stimulus_state_timestamp = micros();
 bool in_target_zone[2] = {false, false};
 bool timer_override = false; // to disable timer start after serial communication
@@ -68,6 +69,7 @@ int transfer_function_pointer = 0; // for transfer function calibration
 unsigned int my_location = 101;
 unsigned int left_first = 1;
 int rewarded_locations[2] = {101, 101};
+int neutral_locations[2] = {101, 101};
 
 //variables : reward related
 int reward_state = 0;
@@ -88,6 +90,7 @@ bool flip_lever_trial = false;
 int use_offset_perturbation = 0;
 int offset_perturbation_trial = 0;
 int offset_perturbation_trial_typeII = 0;
+bool out_of_target_zone = false;
 
 //variables : trial related
 int trialstate[] = {0, 0}; // old, new
@@ -224,19 +227,13 @@ void loop()
       motor_location = constrain((offset_location - (motor_location - offset_location)), 0, num_of_locations - 1);
     }
     stimulus_state[1] = transfer_function[motor_location];
-    if (use_offset_perturbation == 1)
-    { 
-      if (reward_state == 1)
-      {
-        stimulus_state[1] = perturbation_offset_location;
-      }
-      if (reward_state == 2)
+    if (use_offset_perturbation)
+    {
+      out_of_target_zone = !(stimulus_state[1] == constrain(stimulus_state[1], neutral_locations[0], neutral_locations[1]));
+      if (out_of_target_zone && (use_offset_perturbation == 1))
       {
         use_offset_perturbation = 2;
       }
-    }
-    if (use_offset_perturbation == 2)
-    {
       stimulus_state[1] = stimulus_state[1] + perturbation_offset;
       stimulus_state[1] = constrain(stimulus_state[1], 0, 240);
     }
@@ -267,6 +264,7 @@ void loop()
   {
     in_target_zone[1] = (stimulus_state[1] == constrain(stimulus_state[1], rewarded_locations[0], rewarded_locations[1]));
   }
+  
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
@@ -372,7 +370,14 @@ void loop()
     digitalWrite(in_target_zone_reporter_pin, in_target_zone[0]); // in_target_zone?
     if (perturbation_offset != 0)
     {
-      digitalWrite(in_reward_zone_reporter_pin, (use_offset_perturbation == 1) || (use_offset_perturbation == 2)); // in_reward_zone?
+      if (offset_perturbation_trial_typeII)
+      {
+        digitalWrite(in_reward_zone_reporter_pin, use_offset_perturbation == 1);
+      }
+      else
+      {
+        digitalWrite(in_reward_zone_reporter_pin, use_offset_perturbation == 2); // in_reward_zone?
+      }
     }
     else
     {
@@ -436,7 +441,8 @@ void loop()
         switch (trialstate[1])
       {
         case 0:
-          odor_valve_state = false;
+          which_odor = 0;
+          send_odor_to_manifold();
           air_valve_state = false;
           send_odor_to_manifold();
           break;
@@ -453,6 +459,7 @@ void loop()
             trialstates.UpdateITI(long_iti); // will be changed to zero if animal receives a reward in the upcoming trial
           }
           //turn on odor/air flow
+          which_odor = param_array[0]; // odor vial number
           odor_valve_state = true;
           air_valve_state = true;
           send_odor_to_manifold();
@@ -477,7 +484,7 @@ void loop()
   // extra step needed to turn off purging in case of long ITI
   if (trialstate[1]==5 && trialstate[0]==5 && odor_valve_state && close_loop_mode && (micros() - trial_timestamp) > 1000*normal_iti)
   {
-    odor_valve_state = false;
+    //odor_valve_state = true;
     air_valve_state = false;
     send_odor_to_manifold();
   }
@@ -755,7 +762,7 @@ void UpdateAllParams()
 {
   myUSB.writeUint16(89);
   // parse param array to variable names
-  which_odor = param_array[0]; // odor vial number
+  //which_odor = param_array[0]; // odor vial number
   camera_on = param_array[1];
   lever_rescale_params[0] = param_array[2]; // gain, offset
   lever_rescale_params[1] = param_array[3];
@@ -789,6 +796,8 @@ void UpdateAllParams()
   {
     perturbation_offset = param_array[25] - param_array[21]; 
     perturbation_offset_location = param_array[25];
+    neutral_locations[0] = rewarded_locations[0] - param_array[20]; 
+    neutral_locations[1] = rewarded_locations[1] + param_array[20]; 
   }  
   else
   {
@@ -828,7 +837,14 @@ void MoveMotor()
   //digitalWrite(camera_pin, camera_on);
   if (!motor_override)// && (trialstate[1] == 4))
   {
-    I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
+    if (use_offset_perturbation == 1)
+    {
+      I2Cwriter(motor1_i2c_address, 10 + perturbation_offset_location);
+    }
+    else
+    {
+      I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
+    }
   }
 
   if (!close_loop_mode)

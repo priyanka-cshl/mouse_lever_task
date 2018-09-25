@@ -6,6 +6,7 @@ switch char(handles.computername)
         % files and paths
         handles.file_names.Data(2) = {'C:\Data\Behavior'};
         handles.file_names.Data(3) = {'\\grid-hs\albeanu_nlsas_norepl_data\pgupta\Behavior'};
+        handles.useserver = 1;
         
         % Rates
         handles.DAQrates.Data = [500 20]';

@@ -86,7 +86,11 @@ if TotalTime(end)>2
                 h.ProgressReport.Data(end,2) = h.ProgressReport.Data(end,2) + 1;
                 h.hold_times.Data(h.current_trial_block.Data(2)-1,2) = 1;
             else
-                h.ProgressReportPerturbed.Data(which_fake_target,2) = h.ProgressReportPerturbed.Data(which_fake_target,2) + 1;
+                if which_fake_target
+                    h.ProgressReportPerturbed.Data(which_fake_target,2) = h.ProgressReportPerturbed.Data(which_fake_target,2) + 1;
+                elseif odorID == 4
+                    h.ProgressReportPerturbed.Data(which_target,2) = h.ProgressReportPerturbed.Data(which_target,2) + 1;
+                end
                 h.ProgressReportPerturbed.Data(end,2) = h.ProgressReportPerturbed.Data(end,2) + 1;
             end
         
@@ -120,8 +124,13 @@ if TotalTime(end)>2
             h.ProgressReport.Data(which_target,1) = h.ProgressReport.Data(which_target,1) + 1;
             h.ProgressReport.Data(end,1) = h.ProgressReport.Data(end,1) + 1;
         else
-            h.ProgressReportPerturbed.Data(which_fake_target,1) = h.ProgressReportPerturbed.Data(which_fake_target,1) + 1;
+            if which_fake_target
+                h.ProgressReportPerturbed.Data(which_fake_target,1) = h.ProgressReportPerturbed.Data(which_fake_target,1) + 1;
+            elseif odorID == 4
+                h.ProgressReportPerturbed.Data(which_target,1) = h.ProgressReportPerturbed.Data(which_target,1) + 1;
+            end
             h.ProgressReportPerturbed.Data(end,1) = h.ProgressReportPerturbed.Data(end,1) + 1;
+            
         end
         
     end

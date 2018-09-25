@@ -92,6 +92,7 @@ handles.startAcquisition.Enable = 'off';
 
 % rig specific settings
 handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
+handles.useserver = 1;
 [handles] = RigDefaultParams(handles);
 
 % load mouse specific settings
@@ -107,9 +108,11 @@ if ~exist(fullfile(foldername_local,animal_name),'dir')
     handles.TriggerHold.Data = [5 10 15]';
     handles.TrialSettings.Data(end) = 200;
 end
-if ~exist(fullfile(foldername_server,animal_name),'dir')
-    mkdir(fullfile(foldername_server,animal_name));
-    disp('making remote data directory');
+if handles.useserver
+    if ~exist(fullfile(foldername_server,animal_name),'dir')
+    	mkdir(fullfile(foldername_server,animal_name));
+        disp('making remote data directory');
+    end
 end
 
 % mouse specific settings
@@ -544,8 +547,10 @@ if usrans == 1
     [~,file_final_name]=fileparts(filename);
     handles.file_final_name=file_final_name;
     server_file_name=[foldername_server,filesep,animal_name,filesep,file_final_name];
-    if ~exist(fileparts(server_file_name))
-        mkdir(fileparts(server_file_name));
+    if handles.useserver
+        if ~exist(fileparts(server_file_name))
+            mkdir(fileparts(server_file_name));
+        end
     end
     % read session settings
     load('C:\temp_data_files\session_settings.mat'); % loads variable settings
@@ -562,10 +567,12 @@ if usrans == 1
         'TargetHoldMean', 'RewardHold-I', 'LeftvsRightTFs', 'SummedHoldFactor' };
     
     save(filename,'session_data*');
-    save(server_file_name,'session_data*');
-    clear a b c session_data
     display(['saved to ' filename])
-    display(['saved to ' server_file_name])
+    if handles.useserver
+    	save(server_file_name,'session_data*');
+        display(['saved to ' server_file_name])
+    end
+    clear a b c session_data
     set(gcf,'PaperPositionMode','auto')
     print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name],'-dpng','-r0');
     display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
@@ -1033,7 +1040,9 @@ while ~FileExistChecker
             weight(1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(1))};
             weight(2,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(2))};
             save(filename,'weight*');
-            save(server_file_name,'weight*');
+            if handles.useserver
+                save(server_file_name,'weight*');
+            end
             MadeNewFile = 1;
             w_o = str2num(char(userans(1)));
             w_c = str2num(char(userans(2)));
@@ -1057,7 +1066,9 @@ if ~MadeNewFile
         if ~isempty(userans)
             weight(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans)};
             save(filename,'weight*');
-            save(server_file_name,'weight*');
+            if handles.useserver
+                save(server_file_name,'weight*');
+            end
             w_o = str2num(char(weight(1,3)));
             w_c = str2num(char(userans));
             w_p = round(100*w_c/w_o,0,'decimals');
@@ -1078,7 +1089,9 @@ if ~MadeNewFile
         if ~isempty(userans)
             weight(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans)};
             save(filename,'weight*');
-            save(server_file_name,'weight*');
+            if handles.useserver
+                save(server_file_name,'weight*');
+            end
             w_o = str2num(char(weight(1,3)));
             w_c = str2num(char(userans));
             w_p = round(100*w_c/w_o,0,'decimals');

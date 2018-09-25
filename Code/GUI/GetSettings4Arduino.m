@@ -50,6 +50,8 @@ if h.current_trial_block.Data(3) == 1
             param(26) = 1;
         case 5
             param(26) = h.PerturbationSettings.Data(3) + h.MotorLocationArduinoMax + 1;
+        case 6
+            param(26) = h.PerturbationSettings.Data(3) + h.MotorLocationArduinoMax + 1;
         otherwise
     end
 else

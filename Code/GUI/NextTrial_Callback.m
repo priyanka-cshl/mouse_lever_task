@@ -108,12 +108,14 @@ end
 h.current_trial_block.Data(6) = round(h.TriggerHold.Data(1)+x,0);
 
 %% feedback perturbation settings
-if (h.which_perturbation.Value>1)
-    % shuffle perturbed trial vector if needed
-    if ~mod(h.current_trial_block.Data(2),numel(TrialsToPerturb))
-        TrialsToPerturb = TrialsToPerturb([randperm(floor(numel(TrialsToPerturb)/2)) ...
+
+% shuffle pertubation vector if needed
+if (h.which_perturbation.Value>1) && ~mod(h.current_trial_block.Data(2),numel(TrialsToPerturb))
+    TrialsToPerturb = TrialsToPerturb([randperm(floor(numel(TrialsToPerturb)/2)) ...
             floor(numel(TrialsToPerturb)/2)+(1:floor(numel(TrialsToPerturb)/2))]);
-    end
+end
+
+if (h.which_perturbation.Value>1)
     % bsed on the user set probability: check if the trial is to be perturbed or not
     h.current_trial_block.Data(3) = TrialsToPerturb(mod(h.current_trial_block.Data(2),numel(TrialsToPerturb)) + 1);
     
@@ -136,6 +138,17 @@ if (h.which_perturbation.Value>1)
                 h.current_trial_block.Data(5) = 2000; % increase target hold time in this trial
                 
             case 5 % location offset
+                % only applies to particular target zones
+                % so force current zone to TZ of choice
+                h.TargetDefinition.Data(2) = h.PerturbationSettings.Data(4);
+                % randomly choose if its an upward or a downward shift
+                if rand(1)<0.5
+                    h.PerturbationSettings.Data(3) = -abs(h.PerturbationSettings.Data(3));
+                else
+                    h.PerturbationSettings.Data(3) = abs(h.PerturbationSettings.Data(3));
+                end
+                
+            case 6 % location offset II
                 % only applies to particular target zones
                 % so force current zone to TZ of choice
                 h.TargetDefinition.Data(2) = h.PerturbationSettings.Data(4);
