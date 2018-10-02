@@ -233,6 +233,7 @@ void loop()
       if (out_of_target_zone && (use_offset_perturbation == 1))
       {
         use_offset_perturbation = 2;
+        trial_timestamp = micros() - (1000*trial_trigger_timing[1]); // reset trial timestamp to give extra time for the trial
       }
       stimulus_state[1] = stimulus_state[1] + perturbation_offset;
       stimulus_state[1] = constrain(stimulus_state[1], 0, 240);
@@ -324,7 +325,7 @@ void loop()
   {
     if ((perturbation_offset != 0) && (!use_offset_perturbation))
     {
-      if ((micros() - reward_zone_timestamp) > 500 * reward_params[0])
+      if ((micros() - reward_zone_timestamp) > 900 * reward_params[0])
       {
         reward_state = 1; // reset reward state
         time_in_target_zone = 0; // reset timespent value
@@ -335,6 +336,7 @@ void loop()
         else
         {
           use_offset_perturbation = 2;
+          trial_timestamp = micros() - (1000*trial_trigger_timing[1]); // reset trial timestamp to give extra time for the trial
         }
       }
     }
@@ -796,8 +798,8 @@ void UpdateAllParams()
   {
     perturbation_offset = param_array[25] - param_array[21]; 
     perturbation_offset_location = param_array[25];
-    neutral_locations[0] = rewarded_locations[0] - param_array[20]; 
-    neutral_locations[1] = rewarded_locations[1] + param_array[20]; 
+    neutral_locations[0] = rewarded_locations[0] - (2*param_array[20]); 
+    neutral_locations[1] = rewarded_locations[1] + (2*param_array[20]); 
   }  
   else
   {

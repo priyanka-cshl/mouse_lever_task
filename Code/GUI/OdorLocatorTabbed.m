@@ -186,7 +186,8 @@ handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
 handles.in_reward_zone_plot.EdgeColor = 'none';
 handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.25); %rewards
 handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('r'),'Linewidth',1); %licks
-handles.camerasync_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1); %point-grey cam sync
+handles.camerasync_plot = plot(NaN, NaN, 'color',Plot_Colors('pl'),'Linewidth',1); %point-grey cam sync
+handles.camerasync2_plot = plot(NaN, NaN, 'color',Plot_Colors('pd'),'Linewidth',1); %point-grey cam sync
 handles.homesensor_plot = plot(NaN, NaN,'k'); %homesensor
 handles.targetzone = fill(NaN,NaN,[1 1 0],'FaceAlpha',0.2);
 handles.targetzone.EdgeColor = 'none';
@@ -258,6 +259,18 @@ ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Send
 if ~isempty(handles.MFC)
     Zero_MFC_Callback(hObject, eventdata, handles);
 end
+
+% set up odors
+handles.Odor_list.Value = 1; % only blank vial
+handles.odor_vial.Value = 1;
+odor_vial_Callback(hObject, eventdata, handles);
+handles.odor_to_manifold.Value = 1;
+handles.air_to_manifold.Value = 0;
+handles.Vial0.Value = 1;
+handles.Vial1.Value = 0;
+handles.Vial2.Value = 0;
+handles.Vial3.Value = 0;
+Vial2Manifold_Callback(hObject, eventdata, handles);
 
 % disable motor override
 handles.motor_override.Value = 0;
@@ -370,8 +383,16 @@ if get(handles.startAcquisition,'value')
         end
         
         % open odor vials
+        handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
         handles.odor_vial.Value = 1;
         odor_vial_Callback(hObject, eventdata, handles);
+        handles.odor_to_manifold.Value = 1;
+        handles.air_to_manifold.Value = 0;
+        handles.Vial0.Value = 1;
+        handles.Vial1.Value = 0;
+        handles.Vial2.Value = 0;
+        handles.Vial3.Value = 0;
+        Vial2Manifold_Callback(hObject, eventdata, handles);
         
         % disable/enable controls
         handles.calibrate_transfer_function.Enable = 'on';
@@ -457,9 +478,6 @@ else
        handles.Zero_MFC.Value = 0;
        Zero_MFC_Callback(hObject, eventdata, handles);
    end
-   % close odor vials
-   handles.odor_vial.Value = 0;
-   odor_vial_Callback(hObject, eventdata, handles);
    
    % stop the Arduino timer
    handles.Arduino.write(12, 'uint16'); %fwrite(handles.Arduino, char(12));
@@ -471,6 +489,18 @@ else
    elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==7
        disp('arduino: Motor Timer Stopped');
    end
+   
+   % close odor vials
+   handles.Odor_list.Value = 1;
+   handles.odor_vial.Value = 1;
+   odor_vial_Callback(hObject, eventdata, handles);
+   handles.odor_to_manifold.Value = 1;
+   handles.air_to_manifold.Value = 0;
+   handles.Vial0.Value = 1;
+   handles.Vial1.Value = 0;
+   handles.Vial2.Value = 0;
+   handles.Vial3.Value = 0;
+   Vial2Manifold_Callback(hObject, [], handles);
    
    % stop TF calibration if running
    if handles. calibrate_transfer_function.Value
@@ -854,10 +884,14 @@ end
 
 % --- Executes on button press in Vial3.
 function Vial2Manifold_Callback(hObject, eventdata, handles)
-if strcmp(eventdata.Source.Tag,'odor_to_manifold')
-    MyVial = find([handles.Vial0.Value handles.Vial1.Value handles.Vial2.Value handles.Vial3.Value]);
+if ~isempty(eventdata)
+    if strcmp(eventdata.Source.Tag,'odor_to_manifold')
+        MyVial = find([handles.Vial0.Value handles.Vial1.Value handles.Vial2.Value handles.Vial3.Value]);
+    else
+        MyVial = 1 + str2num(eventdata.Source.Tag(end));
+    end
 else
-    MyVial = 1 + str2num(eventdata.Source.Tag(end));
+    MyVial = 1;
 end
 MyVial = handles.odor_to_manifold.Value * MyVial;
 handles.Arduino.write(50 + MyVial, 'uint16'); 

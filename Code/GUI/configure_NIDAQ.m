@@ -6,8 +6,8 @@ switch char(handles.computername)
         DeviceName = 'Dev2';
         Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','Respiration','LickPiezo'};
         AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai12'};
-        Channels.Digital = {'trial_on', 'in_target_zone', 'in_reward_zone', 'rewards', 'licks', 'homesensor', 'camerasync'};
-        DigitalChannelIDs = {'Port0/Line0:6'};
+        Channels.Digital = {'trial_on', 'in_target_zone', 'in_reward_zone', 'rewards', 'licks', 'homesensor', 'camerasync1', 'camerasync2'};
+        DigitalChannelIDs = {'Port0/Line0:7'};
         % channel map for plotting 
         Channels.trial_channel = 7;
         Channels.reward_channel = 10;

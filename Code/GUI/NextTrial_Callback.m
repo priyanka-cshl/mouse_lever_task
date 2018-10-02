@@ -147,6 +147,15 @@ if (h.which_perturbation.Value>1)
                 else
                     h.PerturbationSettings.Data(3) = abs(h.PerturbationSettings.Data(3));
                 end
+                if abs(h.ProgressReportPerturbed.Data(4,1) - h.ProgressReportPerturbed.Data(6,1))>=2
+                    if (h.ProgressReportPerturbed.Data(4,1) - h.ProgressReportPerturbed.Data(6,1)) > 0
+                        % more +ve offsets done
+                        h.PerturbationSettings.Data(3) = -abs(h.PerturbationSettings.Data(3));
+                    else
+                        h.PerturbationSettings.Data(3) = abs(h.PerturbationSettings.Data(3));
+                    end
+                end
+                h.current_trial_block.Data(4) = 3; % odor 3
                 
             case 6 % location offset II
                 % only applies to particular target zones
@@ -158,6 +167,17 @@ if (h.which_perturbation.Value>1)
                 else
                     h.PerturbationSettings.Data(3) = abs(h.PerturbationSettings.Data(3));
                 end
+                % sanity check to make sure there are not too many trials
+                % of same type
+                if abs(h.ProgressReportPerturbed.Data(4,1) - h.ProgressReportPerturbed.Data(6,1))>=2
+                    if (h.ProgressReportPerturbed.Data(4,1) - h.ProgressReportPerturbed.Data(6,1)) > 0
+                        % more +ve offsets done
+                        h.PerturbationSettings.Data(3) = -abs(h.PerturbationSettings.Data(3));
+                    else
+                        h.PerturbationSettings.Data(3) = abs(h.PerturbationSettings.Data(3));
+                    end
+                end
+                h.current_trial_block.Data(4) = 3; % odor 3
         end
     else
         h.fake_target_zone.ForegroundColor = [0.65 0.65 0.65];

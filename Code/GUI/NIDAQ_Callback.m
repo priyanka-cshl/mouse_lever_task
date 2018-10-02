@@ -90,6 +90,10 @@ if TotalTime(end)>2
                     h.ProgressReportPerturbed.Data(which_fake_target,2) = h.ProgressReportPerturbed.Data(which_fake_target,2) + 1;
                 elseif odorID == 4
                     h.ProgressReportPerturbed.Data(which_target,2) = h.ProgressReportPerturbed.Data(which_target,2) + 1;
+                elseif h.PerturbationSettings.Data(3)>0
+                    h.ProgressReportPerturbed.Data(4,2) = h.ProgressReportPerturbed.Data(4,2) + 1;
+                elseif h.PerturbationSettings.Data(3)<0
+                    h.ProgressReportPerturbed.Data(6,2) = h.ProgressReportPerturbed.Data(6,2) + 1;
                 end
                 h.ProgressReportPerturbed.Data(end,2) = h.ProgressReportPerturbed.Data(end,2) + 1;
             end
@@ -128,6 +132,10 @@ if TotalTime(end)>2
                 h.ProgressReportPerturbed.Data(which_fake_target,1) = h.ProgressReportPerturbed.Data(which_fake_target,1) + 1;
             elseif odorID == 4
                 h.ProgressReportPerturbed.Data(which_target,1) = h.ProgressReportPerturbed.Data(which_target,1) + 1;
+            elseif h.PerturbationSettings.Data(3)>0
+                h.ProgressReportPerturbed.Data(4,1) = h.ProgressReportPerturbed.Data(4,1) + 1;
+            elseif h.PerturbationSettings.Data(3)<0
+                h.ProgressReportPerturbed.Data(6,1) = h.ProgressReportPerturbed.Data(6,1) + 1;
             end
             h.ProgressReportPerturbed.Data(end,1) = h.ProgressReportPerturbed.Data(end,1) + 1;
             
@@ -171,7 +179,8 @@ set(h.respiration_plot,'XData',TotalTime(indices_to_plot),'YData',...
 set(h.lickpiezo_plot,'XData',TotalTime(indices_to_plot),'YData',...
     h.LickPiezo.Data(1)*TotalData(indices_to_plot,6) + h.RS_scaling.Data(2) );
 set(h.homesensor_plot,'XData',TotalTime(indices_to_plot),'YData', 5 + 0.5*TotalData(indices_to_plot,h.Channels.homesensor_channel));
-set(h.camerasync_plot,'XData',TotalTime(indices_to_plot),'YData', 5 + 0.5*TotalData(indices_to_plot,h.Channels.camerasync_channel));
+set(h.camerasync_plot,'XData',TotalTime(indices_to_plot),'YData', 6.5 + 0.5*TotalData(indices_to_plot,h.Channels.camerasync_channel));
+set(h.camerasync2_plot,'XData',TotalTime(indices_to_plot),'YData', 7.2 + 0.5*TotalData(indices_to_plot,h.Channels.camerasync_channel+1));
 
 % trial_on
 [h] = PlotToPatch_Trial(h, TotalData(:,h.Channels.trial_channel), TotalTime, [0 5]);
@@ -228,7 +237,7 @@ end
 
 %% write data to disk
 data = [TotalTime(end-num_new_samples+1:end) TotalData(end-num_new_samples+1:end,:)]';
-data(h.Channels.trial_channel+1,:) = h.current_trial_block.Data(4)*data(h.Channels.trial_channel+1,:);
+data(h.Channels.trial_channel+1,:) = odorID*data(h.Channels.trial_channel+1,:);
 % rescale stimulus position plot (save it in distractor location column)
 data(5,:) = MapRotaryEncoderToTFColorMap(h,data(4,:),1);
 fwrite(fid1,data,'double');
