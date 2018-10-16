@@ -615,6 +615,16 @@ void loop()
             timer_override = false;
             camera_on = 1;
             break;
+          case 7: // pause
+            myUSB.writeUint16(7);
+            timer_override = false;
+            motor_override = true;
+            break;
+          case 8: //unpause
+            myUSB.writeUint16(8);
+            timer_override = true;
+            motor_override = false;
+            break;
         }
         break;
       case 20: // update variables

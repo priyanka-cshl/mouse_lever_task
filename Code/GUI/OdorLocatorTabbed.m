@@ -23,7 +23,7 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
-% Last Modified by GUIDE v2.5 22-Aug-2018 17:01:08
+% Last Modified by GUIDE v2.5 13-Oct-2018 14:29:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -65,13 +65,16 @@ set(handles.A2,'position',get(handles.A1,'position'));
 handles.tgroupB = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
     'Position',[0.144 0 0.434 0.4500]);
 handles.tabB1 = uitab('Parent', handles.tgroupB, 'Title', 'Session controls');
-handles.tabB2 = uitab('Parent', handles.tgroupB, 'Title', 'Additional controls');
+handles.tabB2 = uitab('Parent', handles.tgroupB, 'Title', 'Extra');
+handles.tabB3 = uitab('Parent', handles.tgroupB, 'Title', 'Plots');
 %Place panels into each tab
 set(handles.B1,'Parent',handles.tabB1)
 set(handles.B2,'Parent',handles.tabB2)
+set(handles.B3,'Parent',handles.tabB3)
 %Reposition each panel to same location as panel 1
 handles.B1.Position = [1    0.1   84.6000   24.0000];
 set(handles.B2,'position',get(handles.B1,'position'));
+set(handles.B3,'position',get(handles.B2,'position'));
 
 %Create tab groupC - Session controls, Extra controls
 handles.tgroupC = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
@@ -249,9 +252,11 @@ set(handles.cameraAxes,'XTick',[],'XTickLabel',' ','XTickMode','manual','XTickLa
 set(handles.cameraAxes,'YTick',[],'YTickLabel',' ','YTickMode','manual','YTickLabelMode','manual');
 
 %% Others
-handles.lever_raw_on.Value = 1; % hide extra traces
 guidata(hObject, handles); % Update handles structure
 lever_raw_on_Callback(hObject,eventdata,handles);
+respiration_on_Callback(hObject,eventdata,handles);
+lick_piezo_on_Callback(hObject,eventdata,handles);
+camera_sync_on_Callback(hObject,eventdata,handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
 ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Send2Arduino
 
@@ -522,6 +527,35 @@ handles.samplenum = samplenum;
 handles.targetlevel = TargetLevel;
 guidata(hObject,handles);
 
+% --- Executes on button press in PauseSession.
+function PauseSession_Callback(hObject, eventdata, handles)
+if get(handles.PauseSession,'value')
+    handles.Arduino.write(17, 'uint16');
+    tic
+    while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
+    end
+    if(handles.Arduino.Port.BytesAvailable == 0)
+        error('arduino: Pause attempt failed')
+    elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==7
+        disp('arduino: Session Paused');
+        set(handles.PauseSession,'String','Paused');
+        set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
+    end
+else
+    handles.Arduino.write(18, 'uint16');
+    tic
+    while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
+    end
+    if(handles.Arduino.Port.BytesAvailable == 0)
+        error('arduino: UnPause attempt failed')
+    elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==8
+        disp('arduino: Session Resumed');
+        set(handles.PauseSession,'String','Pause');
+        set(hObject,'BackgroundColor',[0.94 0.94 0.94]);
+    end
+end
+guidata(hObject,handles);
+
 % --- Executes when entered data in editable cell(s) in Plot_YLim.
 function Plot_YLim_CellEditCallback(hObject, eventdata, handles) %#ok<*DEFNU>
 set(handles.axes1,'YLim',hObject.Data);
@@ -734,15 +768,53 @@ function lever_raw_on_Callback(hObject, eventdata, handles)
 if get(handles.lever_raw_on,'Value')
     set(handles.lever_raw_on,'BackgroundColor',[0.5 0.94 0.94]);
     set(handles.lever_raw_plot,'LineStyle','none');
-    set(handles.respiration_plot,'LineStyle','none');
+    %set(handles.respiration_plot,'LineStyle','none');
     %set(handles.respiration_2_plot,'LineStyle','none');
 else
     set(handles.lever_raw_on,'BackgroundColor',[0.94 0.94 0.94]);
     set(handles.lever_raw_plot,'LineStyle','-');
-    set(handles.respiration_plot,'LineStyle','-');
+    %set(handles.respiration_plot,'LineStyle','-');
     %set(handles.respiration_2_plot,'LineStyle','-');
 end
 guidata(hObject, handles);
+
+% --- Executes on button press in respiration_on.
+function respiration_on_Callback(hObject, eventdata, handles)
+if get(handles.respiration_on,'Value')
+    set(handles.respiration_on,'BackgroundColor',[0.5 0.94 0.94]);
+    set(handles.respiration_plot,'LineStyle','none');
+else
+    set(handles.respiration_on,'BackgroundColor',[0.94 0.94 0.94]);
+    set(handles.respiration_plot,'LineStyle','-');
+end
+guidata(hObject, handles);
+
+
+% --- Executes on button press in lick_piezo_on.
+function lick_piezo_on_Callback(hObject, eventdata, handles)
+if get(handles.lick_piezo_on,'Value')
+    set(handles.lick_piezo_on,'BackgroundColor',[0.5 0.94 0.94]);
+    set(handles.lickpiezo_plot,'LineStyle','none');
+else
+    set(handles.lick_piezo_on,'BackgroundColor',[0.94 0.94 0.94]);
+    set(handles.lickpiezo_plot,'LineStyle','-');
+end
+guidata(hObject, handles);
+
+
+% --- Executes on button press in camera_sync_on.
+function camera_sync_on_Callback(hObject, eventdata, handles)
+if get(handles.camera_sync_on,'Value')
+    set(handles.camera_sync_on,'BackgroundColor',[0.5 0.94 0.94]);
+    set(handles.camerasync_plot,'LineStyle','none');
+    set(handles.camerasync2_plot,'LineStyle','none');
+else
+    set(handles.camera_sync_on,'BackgroundColor',[0.94 0.94 0.94]);
+    set(handles.camerasync_plot,'LineStyle','-');
+    set(handles.camerasync2_plot,'LineStyle','none');
+end
+guidata(hObject, handles);
+
 
 % --- Executes when entered data in editable cell(s) in TargetHold.
 function TargetHold_CellEditCallback(hObject, eventdata, handles)
@@ -1166,3 +1238,5 @@ function odor_priors_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in TFtype.
 function TFtype_Callback(hObject, eventdata, handles)
+
+

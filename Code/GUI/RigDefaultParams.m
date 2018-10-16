@@ -13,8 +13,14 @@ switch char(handles.computername)
         
         % sensors and scaling
         handles.DAC_settings.Data = [2.0 2.5]';
-        handles.RS_scaling.Data = [-1 5.5]';
+        handles.RS_scaling.Data = [0.5 6.5]';
+        handles.RE_scaling.Data = [1 0]';
         handles.LickPiezo.Data = [0.2 6]';
+        %handles.LickTicks.Data = [0.1 6]';
+        handles.lever_raw_on.Value = 1; % hide extra traces
+        handles.respiration_on.Value = 0;
+        handles.lick_piezo_on.Value = 1; 
+        handles.camera_sync_on.Value = 1;
         handles.watercoeffs = [0.00134 0.0515 0.099]; % water per drop
         handles.fliphome = 0; 
         

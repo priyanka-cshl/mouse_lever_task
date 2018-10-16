@@ -46,28 +46,31 @@ for i = 1:h.NIchannels
         case (h.Channels.trial_channel) % trial channel
             samples_new = samples_new*odorID;
         case (h.Channels.reward_channel)
-            if TotalTime(end)>2 
+            if TotalTime(end)>2
                 samples_new = diff([last_data_value(i); samples_new])==1 ;
             end
         case (h.Channels.lick_channel)
-            if TotalTime(end)>2 
+            if TotalTime(end)>2
                 samples_new = diff([last_data_value(i); samples_new])==1 ;
             end
         case (h.Channels.homesensor_channel) % homesensor channel
             if h.fliphome
                 samples_new = 1 - samples_new;
             end
+        case {h.Channels.camerasync_channel,h.Channels.camerasync_channel + 1}
+            samples_new = h.trigger_ext_camera.Value * samples_new;
     end
+    
     TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];
 end
 
 %% detect significant events - trial transitions and rewards
-if TotalTime(end)>2 
+if TotalTime(end)>2
     
     %% REWARDS
-%     % append new sampples and take diff to get events
-%     TotalData(:,h.Channels.reward_channel) = [ TotalData(num_new_samples+1:end,h.Channels.reward_channel); ...
-%         diff([last_data_value(h.Channels.reward_channel); event.Data(:,h.Channels.reward_channel)])==1 ];
+    %     % append new sampples and take diff to get events
+    %     TotalData(:,h.Channels.reward_channel) = [ TotalData(num_new_samples+1:end,h.Channels.reward_channel); ...
+    %         diff([last_data_value(h.Channels.reward_channel); event.Data(:,h.Channels.reward_channel)])==1 ];
     
     % any rewards?
     if any(TotalData(end-num_new_samples+1:end,h.Channels.reward_channel))
@@ -97,8 +100,8 @@ if TotalTime(end)>2
                 end
                 h.ProgressReportPerturbed.Data(end,2) = h.ProgressReportPerturbed.Data(end,2) + 1;
             end
-        
-        % secondary rewards within a trial (IsRewarded is already true)
+            
+            % secondary rewards within a trial (IsRewarded is already true)
         else
             
             % Update reward table (#reward-IIs and uL)
@@ -113,15 +116,15 @@ if TotalTime(end)>2
     if any(diff(TotalData(end-num_new_samples:end,h.Channels.trial_channel)) < 0)
         
         trial_just_ended = 1;
-    
-    % trial OFF
+        
+        % trial OFF
     elseif any(diff(TotalData(end-num_new_samples:end,h.Channels.trial_channel)) > 0)
         
         % pull down rewarded flag
         IsRewardedTrial = 0;
         
         % increment 'trial number'
-        h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1; 
+        h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1;
         
         % increment trials done in the progress report
         if ~h.current_trial_block.Data(3) % not a perturbed trial
@@ -142,30 +145,30 @@ if TotalTime(end)>2
         end
         
     end
-        
+    
     %% LICKS
-%     if h.NIchannels >= h.Channels.lick_channel
-%         TotalData(:,h.Channels.lick_channel) = [ TotalData(num_new_samples+1:end,h.Channels.lick_channel); ...
-%         diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1 ];
-%     end
+    %     if h.NIchannels >= h.Channels.lick_channel
+    %         TotalData(:,h.Channels.lick_channel) = [ TotalData(num_new_samples+1:end,h.Channels.lick_channel); ...
+    %         diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1 ];
+    %     end
     
     %% In early training - give water when animal licks
     if ~isempty(find(diff([last_data_value(h.Channels.lick_channel); event.Data(:,h.Channels.lick_channel)])==1,1))
         if h.which_stage.Value==1
-                callreward = 1;
+            callreward = 1;
         end
     end
-
+    
 else % for calls to function earlier than 2 seconds from session start
     TotalData(samplenum:lastsample,5:h.NIchannels) = 0;
 end
-    
+
 %% Update plots
 xwin = h.Xwin.Data;
 %YTick_Locations = linspace(h.Plot_YLim.Data(1),h.Plot_YLim.Data(2),9)';
 indices_to_plot = find( TotalTime>TotalTime(end)-xwin & TotalTime>=0 );
 
-% lever positions, motor locations 
+% lever positions, motor locations
 set(h.lever_DAC_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,1));
 set(h.lever_raw_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,2));
 set(h.stimulus_plot,'XData',TotalTime(indices_to_plot),'YData',...
@@ -177,7 +180,7 @@ h.motor_location.YData = MapRotaryEncoderToTFColorMap(h,mean(event.Data(:,3)));
 set(h.respiration_plot,'XData',TotalTime(indices_to_plot),'YData',...
     h.RS_scaling.Data(1)*TotalData(indices_to_plot,5) + h.RS_scaling.Data(2) );
 set(h.lickpiezo_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    h.LickPiezo.Data(1)*TotalData(indices_to_plot,6) + h.RS_scaling.Data(2) );
+    h.LickPiezo.Data(1)*TotalData(indices_to_plot,6) + h.LickPiezo.Data(2) );
 set(h.homesensor_plot,'XData',TotalTime(indices_to_plot),'YData', 5 + 0.5*TotalData(indices_to_plot,h.Channels.homesensor_channel));
 set(h.camerasync_plot,'XData',TotalTime(indices_to_plot),'YData', 6.5 + 0.5*TotalData(indices_to_plot,h.Channels.camerasync_channel));
 set(h.camerasync2_plot,'XData',TotalTime(indices_to_plot),'YData', 7.2 + 0.5*TotalData(indices_to_plot,h.Channels.camerasync_channel+1));
