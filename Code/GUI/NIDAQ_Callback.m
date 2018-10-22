@@ -57,8 +57,8 @@ for i = 1:h.NIchannels
             if h.fliphome
                 samples_new = 1 - samples_new;
             end
-        case {h.Channels.camerasync_channel,h.Channels.camerasync_channel + 1}
-            samples_new = h.trigger_ext_camera.Value * samples_new;
+%         case {h.Channels.camerasync_channel,h.Channels.camerasync_channel + 1}
+%             samples_new = h.trigger_ext_camera.Value * samples_new;
     end
     
     TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];

@@ -340,6 +340,7 @@ void loop()
         }
       }
     }
+    
     if ((micros() - reward_zone_timestamp) > 1000 * reward_params[0])
     {
       last_target_stay = (micros() - reward_zone_timestamp)/1000;
@@ -348,14 +349,21 @@ void loop()
       trialstates.UpdateITI(normal_iti); // don't impose any ITI
       Timer4.start(1000 * reward_params[1]); // call reward timer
     }
-    else if ((time_in_target_zone + (micros() - reward_zone_timestamp)) > 1000 * reward_params[2])
+    else if ((time_in_target_zone + (micros() - reward_zone_timestamp)) > 1000 * reward_params[2]) 
     {
-      reward_state = 3; // flag reward valve opening
-      //time_in_target_zone = 0; // reset timespent value
-      trialstates.UpdateITI(normal_iti); // don't impose any ITI
-      Timer4.start(1000 * reward_params[1]); // call reward timer
+    // summed reward criterion - only applies if its not an offset perturbation trial or 
+    // if the perturbation has laready been triggered
+      if ( (perturbation_offset == 0) || (use_offset_perturbation > 0) )
+      {
+        reward_state = 3; // flag reward valve opening
+        //time_in_target_zone = 0; // reset timespent value
+        trialstates.UpdateITI(normal_iti); // don't impose any ITI
+        Timer4.start(1000 * reward_params[1]); // call reward timer
+      }
     }
+    
   }
+  
   if (reward_state == 5 && ((micros() - reward_zone_timestamp) > 1000 * multi_reward_params[0]))
   {
     reward_state = 6; // flag reward valve opening

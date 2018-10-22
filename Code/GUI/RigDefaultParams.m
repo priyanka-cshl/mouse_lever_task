@@ -56,6 +56,7 @@ switch char(handles.computername)
         handles.ManifoldOutlets = 24; % 32 in total - out of which only 24 are used
         handles.motor_params = 4; % motor step size
         handles.PerturbationSettings.Data(3) = 30;
+        handles.myoffset.Data(1) = 30;
         
         % currently unused settings
         handles.MFC_table.Data = [1.6 0.64]'; %[1.6 0.4]';

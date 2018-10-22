@@ -137,47 +137,34 @@ if (h.which_perturbation.Value>1)
             case 4 % flip map
                 h.current_trial_block.Data(5) = 2000; % increase target hold time in this trial
                 
-            case 5 % location offset
-                % only applies to particular target zones
-                % so force current zone to TZ of choice
+            case {5, 6, 7} % location offset I and II
+                % only applies to particular target zones and odors
+                % so force current zone to TZ of choice and odor
                 h.TargetDefinition.Data(2) = h.PerturbationSettings.Data(4);
-                % randomly choose if its an upward or a downward shift
-                if rand(1)<0.5
-                    h.PerturbationSettings.Data(3) = -abs(h.PerturbationSettings.Data(3));
-                else
-                    h.PerturbationSettings.Data(3) = abs(h.PerturbationSettings.Data(3));
-                end
-                if abs(h.ProgressReportPerturbed.Data(4,1) - h.ProgressReportPerturbed.Data(6,1))>=2
-                    if (h.ProgressReportPerturbed.Data(4,1) - h.ProgressReportPerturbed.Data(6,1)) > 0
-                        % more +ve offsets done
-                        h.PerturbationSettings.Data(3) = -abs(h.PerturbationSettings.Data(3));
-                    else
-                        h.PerturbationSettings.Data(3) = abs(h.PerturbationSettings.Data(3));
-                    end
-                end
                 h.current_trial_block.Data(4) = 3; % odor 3
-                
-            case 6 % location offset II
-                % only applies to particular target zones
-                % so force current zone to TZ of choice
-                h.TargetDefinition.Data(2) = h.PerturbationSettings.Data(4);
                 % randomly choose if its an upward or a downward shift
+                myoffset = h.myoffset.Data(1);
                 if rand(1)<0.5
-                    h.PerturbationSettings.Data(3) = -abs(h.PerturbationSettings.Data(3));
+                    h.PerturbationSettings.Data(3) = -abs(myoffset);
                 else
-                    h.PerturbationSettings.Data(3) = abs(h.PerturbationSettings.Data(3));
+                    h.PerturbationSettings.Data(3) = abs(myoffset);
                 end
                 % sanity check to make sure there are not too many trials
                 % of same type
                 if abs(h.ProgressReportPerturbed.Data(4,1) - h.ProgressReportPerturbed.Data(6,1))>=2
                     if (h.ProgressReportPerturbed.Data(4,1) - h.ProgressReportPerturbed.Data(6,1)) > 0
                         % more +ve offsets done
-                        h.PerturbationSettings.Data(3) = -abs(h.PerturbationSettings.Data(3));
+                        h.PerturbationSettings.Data(3) = -abs(myoffset);
                     else
-                        h.PerturbationSettings.Data(3) = abs(h.PerturbationSettings.Data(3));
+                        h.PerturbationSettings.Data(3) = abs(myoffset);
                     end
                 end
-                h.current_trial_block.Data(4) = 3; % odor 3
+                
+                % only for offset III
+                if rand(1)<0.5 && h.which_perturbation.Value == 7
+                    h.PerturbationSettings.Data(3) = h.PerturbationSettings.Data(3) + round(h.PerturbationSettings.Data(3)/2);
+                end
+                
         end
     else
         h.fake_target_zone.ForegroundColor = [0.65 0.65 0.65];
