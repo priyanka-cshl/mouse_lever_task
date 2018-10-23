@@ -48,6 +48,7 @@ switch char(handles.computername)
         handles.locations_per_zone.Data = [20 0 60]'; % TF - locations per zone
         handles.TFtype.Value = 1; % 1 = fix speed, 0 = fixed start
         handles.TFtype.Enable = 'on';
+        handles.TFgain.Data = 1;
         
         % manifold and motor
         handles.MotorLocations = 115; % currently used for variable gain

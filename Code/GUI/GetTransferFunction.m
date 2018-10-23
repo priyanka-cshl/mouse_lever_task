@@ -7,6 +7,7 @@ lever_max = h.TrialSettings.Data(1); %triggerUpLim
 lever_min = h.TrialSettings.Data(2); %triggerLowLim
 target = h.TargetDefinition.Data(2);
 zone_width = h.ZoneLimitSettings.Data(1);
+gain = h.TFgain.Data;
 
 switch h.TFtype.Value
     case 0 % variable gain
@@ -36,12 +37,15 @@ switch h.TFtype.Value
         
         % calculate stepsize - lever displacement corresponding to one location
         stepsize = (lever_max - h.minimumtarget)/(total_motor_locations + 0.5);
+        stepsize = stepsize*gain;
+        
         start_location = numel(target:stepsize:lever_max);
         end_location = -numel(target:-stepsize:lever_min);
         TF = linspace(end_location,start_location,TF_bins);
         
         % compute number of locations to be allocated to the target zone
         h.locations_per_zone.Data(1) = round(zone_width/stepsize);
+            
         
 end
 

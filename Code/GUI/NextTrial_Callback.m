@@ -14,6 +14,9 @@ disp(['---------- New Trial (#', num2str(h.current_trial_block.Data(2)),') -----
 h.ProgressReport.Data(:,3) = round(100*(h.ProgressReport.Data(:,2)./h.ProgressReport.Data(:,1)),0,'decimals');
 h.ProgressReportPerturbed.Data(:,3) = round(100*(h.ProgressReportPerturbed.Data(:,2)./h.ProgressReportPerturbed.Data(:,1)),0,'decimals');
 
+% reset TF gain
+h.TFgain.Data = 1;
+
 %% update mean hold times for each target zone
 if h.which_target.Data
     f = find(h.hold_times.Data(:,1)==h.which_target.Data);
@@ -163,6 +166,33 @@ if (h.which_perturbation.Value>1)
                 % only for offset III
                 if rand(1)<0.5 && h.which_perturbation.Value == 7
                     h.PerturbationSettings.Data(3) = h.PerturbationSettings.Data(3) + round(h.PerturbationSettings.Data(3)/2);
+                end
+                
+            case 8 % gain change
+                % only applies to particular target zones and odors
+                % so force current zone to TZ of choice and odor
+                h.current_trial_block.Data(4) = 3; % odor 3
+                if rand(1)<0.5
+                    h.TFgain.Data = 0.37;
+                    h.TargetDefinition.Data(2) = 3.5;
+                    h.PerturbationSettings.Data(3) = -1;
+                else
+                    h.TFgain.Data = 2.5;
+                    h.TargetDefinition.Data(2) = 1.5;
+                    h.PerturbationSettings.Data(3) = 1;
+                end
+                % sanity check to make sure there are not too many trials
+                % of same type
+                if abs(h.ProgressReportPerturbed.Data(4,1) - h.ProgressReportPerturbed.Data(6,1))>=2
+                    if (h.ProgressReportPerturbed.Data(4,1) - h.ProgressReportPerturbed.Data(6,1)) > 0
+                        h.TFgain.Data = 2.5;
+                        h.TargetDefinition.Data(2) = 1.5;
+                        h.PerturbationSettings.Data(3) = 1;
+                    else
+                        h.TFgain.Data = 0.37;
+                        h.TargetDefinition.Data(2) = 3.5;
+                        h.PerturbationSettings.Data(3) = -1;
+                    end
                 end
                 
         end

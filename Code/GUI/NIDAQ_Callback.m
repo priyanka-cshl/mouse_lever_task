@@ -89,15 +89,20 @@ if TotalTime(end)>2
                 h.ProgressReport.Data(end,2) = h.ProgressReport.Data(end,2) + 1;
                 h.hold_times.Data(h.current_trial_block.Data(2)-1,2) = 1;
             else
-                if which_fake_target
-                    h.ProgressReportPerturbed.Data(which_fake_target,2) = h.ProgressReportPerturbed.Data(which_fake_target,2) + 1;
-                elseif odorID == 4
-                    h.ProgressReportPerturbed.Data(which_target,2) = h.ProgressReportPerturbed.Data(which_target,2) + 1;
-                elseif h.PerturbationSettings.Data(3)>0
-                    h.ProgressReportPerturbed.Data(4,2) = h.ProgressReportPerturbed.Data(4,2) + 1;
-                elseif h.PerturbationSettings.Data(3)<0
-                    h.ProgressReportPerturbed.Data(6,2) = h.ProgressReportPerturbed.Data(6,2) + 1;
+                switch h.which_perturbation.Value
+                    case 2
+                        foo = which_fake_target;
+                    case 3
+                        foo = which_target;
+                    case {5,6,7}
+                        foo = 5 - (h.PerturbationSettings.Data(3)/abs(h.PerturbationSettings.Data(3)));
+%                         if abs(h.PerturbationSettings.Data(3))>40
+%                             foo = foo - (h.PerturbationSettings.Data(3)>abs(h.PerturbationSettings.Data(3)));
+%                         end
+                    case 8
+                        foo = 5 + h.PerturbationSettings.Data(3);
                 end
+                h.ProgressReportPerturbed.Data(foo,2) = h.ProgressReportPerturbed.Data(foo,2) + 1;
                 h.ProgressReportPerturbed.Data(end,2) = h.ProgressReportPerturbed.Data(end,2) + 1;
             end
             
@@ -131,15 +136,20 @@ if TotalTime(end)>2
             h.ProgressReport.Data(which_target,1) = h.ProgressReport.Data(which_target,1) + 1;
             h.ProgressReport.Data(end,1) = h.ProgressReport.Data(end,1) + 1;
         else
-            if which_fake_target
-                h.ProgressReportPerturbed.Data(which_fake_target,1) = h.ProgressReportPerturbed.Data(which_fake_target,1) + 1;
-            elseif odorID == 4
-                h.ProgressReportPerturbed.Data(which_target,1) = h.ProgressReportPerturbed.Data(which_target,1) + 1;
-            elseif h.PerturbationSettings.Data(3)>0
-                h.ProgressReportPerturbed.Data(4,1) = h.ProgressReportPerturbed.Data(4,1) + 1;
-            elseif h.PerturbationSettings.Data(3)<0
-                h.ProgressReportPerturbed.Data(6,1) = h.ProgressReportPerturbed.Data(6,1) + 1;
+            switch h.which_perturbation.Value
+                case 2
+                    foo = which_fake_target;
+                case 3
+                    foo = which_target;
+                case {5,6,7}
+                    foo = 5 - (h.PerturbationSettings.Data(3)/abs(h.PerturbationSettings.Data(3)));
+%                     if abs(h.PerturbationSettings.Data(3))>40
+%                         foo = foo - 2*(h.PerturbationSettings.Data(3)>abs(h.PerturbationSettings.Data(3)));
+%                     end
+                case 8
+                    foo = 5 + h.PerturbationSettings.Data(3);
             end
+            h.ProgressReportPerturbed.Data(foo,1) = h.ProgressReportPerturbed.Data(foo,1) + 1;
             h.ProgressReportPerturbed.Data(end,1) = h.ProgressReportPerturbed.Data(end,1) + 1;
             
         end
