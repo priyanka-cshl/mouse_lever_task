@@ -393,6 +393,10 @@ void loop()
         digitalWrite(in_reward_zone_reporter_pin, use_offset_perturbation == 2); // in_reward_zone?
       }
     }
+    else if (feedback_halt_trial)
+    {
+      digitalWrite(in_reward_zone_reporter_pin, feedback_halt); // in_reward_zone?
+    }
     else
     {
       digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2) || (reward_state == 5)); // in_reward_zone?
