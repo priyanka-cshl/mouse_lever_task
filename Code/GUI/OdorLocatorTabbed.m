@@ -811,7 +811,7 @@ if get(handles.camera_sync_on,'Value')
 else
     set(handles.camera_sync_on,'BackgroundColor',[0.94 0.94 0.94]);
     set(handles.camerasync_plot,'LineStyle','-');
-    set(handles.camerasync2_plot,'LineStyle','none');
+    set(handles.camerasync2_plot,'LineStyle','-');
 end
 guidata(hObject, handles);
 

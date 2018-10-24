@@ -169,9 +169,6 @@ if (h.which_perturbation.Value>1)
                 end
                 
             case 8 % gain change
-                % only applies to particular target zones and odors
-                % so force current zone to TZ of choice and odor
-                h.current_trial_block.Data(4) = 3; % odor 3
                 if rand(1)<0.5
                     h.TFgain.Data = 0.37;
                     h.TargetDefinition.Data(2) = 3.5;
@@ -194,6 +191,10 @@ if (h.which_perturbation.Value>1)
                         h.PerturbationSettings.Data(3) = -1;
                     end
                 end
+                % assign odor thats opposite of what would normally be
+                % assigned by target definiition
+                h.current_trial_block.Data(4) = 1 + ...
+                    (h.TargetDefinition.Data(2)<mean(h.target_level_array.Data)); % 2 if lower 6 zones, 1 if upper six zones
                 
         end
     else
