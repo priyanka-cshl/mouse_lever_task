@@ -195,7 +195,9 @@ if (h.which_perturbation.Value>1)
                 % assigned by target definiition
                 h.current_trial_block.Data(4) = 1 + ...
                     (h.TargetDefinition.Data(2)<mean(h.target_level_array.Data)); % 2 if lower 6 zones, 1 if upper six zones
-                
+           
+            case 9
+                h.current_trial_block.Data(4) = 3;
         end
     else
         h.fake_target_zone.ForegroundColor = [0.65 0.65 0.65];

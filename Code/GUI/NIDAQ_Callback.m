@@ -101,6 +101,10 @@ if TotalTime(end)>2
 %                         end
                     case 8
                         foo = 5 + h.PerturbationSettings.Data(3);
+                    case 9
+                        foo = which_target;
+                    otherwise
+                        foo = which_target;
                 end
                 h.ProgressReportPerturbed.Data(foo,2) = h.ProgressReportPerturbed.Data(foo,2) + 1;
                 h.ProgressReportPerturbed.Data(end,2) = h.ProgressReportPerturbed.Data(end,2) + 1;
@@ -148,6 +152,10 @@ if TotalTime(end)>2
 %                     end
                 case 8
                     foo = 5 + h.PerturbationSettings.Data(3);
+                case 9
+                    foo = which_target;
+                otherwise
+                    foo = which_target;
             end
             h.ProgressReportPerturbed.Data(foo,1) = h.ProgressReportPerturbed.Data(foo,1) + 1;
             h.ProgressReportPerturbed.Data(end,1) = h.ProgressReportPerturbed.Data(end,1) + 1;

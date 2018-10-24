@@ -61,6 +61,7 @@ const int min_time_since_last_motor_call_default = 10; // in ms
 int min_time_since_last_motor_call = 10; // in ms - timer period
 unsigned int num_of_locations = 100;
 unsigned short transfer_function[99] = {0}; // ArCOM aray needs unsigned shorts
+unsigned short transfer_function_temp[99] = {0}; // ArCOM aray needs unsigned shorts
 int motor_location = 1;
 int offset_location = 1;
 int perturbation_offset = 0;
@@ -91,6 +92,9 @@ int use_offset_perturbation = 0;
 int offset_perturbation_trial = 0;
 int offset_perturbation_trial_typeII = 0;
 bool out_of_target_zone = false;
+int feedback_halt = 0;
+bool feedback_halt_trial = false;
+int feedback_halt_duration = 500;
 
 //variables : trial related
 int trialstate[] = {0, 0}; // old, new
@@ -448,7 +452,7 @@ void loop()
 
     if (timer_override)
     {
-        switch (trialstate[1])
+      switch (trialstate[1])
       {
         case 0:
           which_odor = 0;
@@ -473,14 +477,20 @@ void loop()
           odor_valve_state = true;
           air_valve_state = true;
           send_odor_to_manifold();
+          UpdateTF();
           break;
         case 4:
           time_in_target_zone = 0; // reset timespent value
           last_target_stay = 0;
+          if (feedback_halt_duration > 0)
+          {
+            feedback_halt = 1;
+          }
           break;
         case 5:
           flip_lever = false;
           use_offset_perturbation = 0;
+          feedback_halt = 0;
           // turn on air purge
           which_odor = 0;
           send_odor_to_manifold();
@@ -497,6 +507,11 @@ void loop()
     //odor_valve_state = true;
     air_valve_state = false;
     send_odor_to_manifold();
+  }
+
+  if ((feedback_halt == 1) && (micros() - trial_timestamp) > 1000*feedback_halt_duration)
+  {
+    feedback_halt = 0;
   }
   
   if ((trialstate[1] != trialstate[0]) && open_loop_mode) // trial state changes
@@ -668,8 +683,10 @@ void loop()
             close_loop_mode = 0;
             break;
         }
-        myUSB.readUint16Array(transfer_function, num_of_locations);
-        myUSB.writeUint16Array(transfer_function, num_of_locations);
+        myUSB.readUint16Array(transfer_function_temp, num_of_locations);
+        myUSB.writeUint16Array(transfer_function_temp, num_of_locations);
+        //myUSB.readUint16Array(transfer_function, num_of_locations);
+        //myUSB.writeUint16Array(transfer_function, num_of_locations);
         myUSB.writeUint16(83);
         transfer_function_pointer = 0;
         break;
@@ -808,6 +825,7 @@ void UpdateAllParams()
   flip_lever_trial = (param_array[24]==4);  
   offset_perturbation_trial = (param_array[24]==5);
   offset_perturbation_trial_typeII = (param_array[24]==6);
+  feedback_halt_trial = (param_array[24]==9);
   if (offset_perturbation_trial)
   {
     perturbation_offset = param_array[25] - param_array[21];
@@ -824,6 +842,15 @@ void UpdateAllParams()
     perturbation_offset = 0;
   }
 
+  if (feedback_halt_trial)
+  {
+    feedback_halt_duration = param_array[25];
+  }
+  else
+  {
+    feedback_halt_duration = 0;
+  }
+  
   for (i = 0; i < 3; i++)
   {
     fake_target_params[i] = param_array[26 + i]; // high lim, target, low lim
@@ -861,6 +888,10 @@ void MoveMotor()
     {
       I2Cwriter(motor1_i2c_address, 10 + perturbation_offset_location);
     }
+    else if (feedback_halt == 1)
+    {
+      
+    }
     else
     {
       I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
@@ -897,6 +928,14 @@ void RewardNow()
     Timer4.stop();
     digitalWrite(reward_valve_pin, LOW);
     digitalWrite(reward_reporter_pin, LOW);
+  }
+}
+
+void UpdateTF()
+{
+  for (i = 0; i < num_of_locations; i++)
+  {
+    transfer_function[i] = transfer_function_temp[i];
   }
 }
 
