@@ -8,12 +8,15 @@ MyFig = figure('Name','Session','NumberTitle','off');
 handles.trial_on_1 = fill(NaN,NaN,[.8 .8 .8]);
 hold on;
 handles.trial_on_1.EdgeColor = 'none';
-%handles.trial_on_2 = fill(NaN,NaN,[0.8941    0.9412    0.9020]);
-handles.trial_on_2 = fill(NaN,NaN,[.8 .8 .8]);
+handles.trial_on_2 = fill(NaN,NaN,[0.8941    0.9412    0.9020]);
+%handles.trial_on_2 = fill(NaN,NaN,[.8 .8 .8]);
 handles.trial_on_2.EdgeColor = 'none';
-%handles.trial_on_3 = fill(NaN,NaN,[0.8706    0.9216    0.9804]);
-handles.trial_on_3 = fill(NaN,NaN,[.8 .8 .8]);
+handles.trial_on_3 = fill(NaN,NaN,[0.8706    0.9216    0.9804]);
+%handles.trial_on_3 = fill(NaN,NaN,[.8 .8 .8]);
 handles.trial_on_3.EdgeColor = 'none';
+handles.trial_on_4 = fill(NaN,NaN,[0.93    0.84    0.84]);
+handles.trial_on_4.EdgeColor = 'none';
+
 
 handles.in_target_zone_plot = fill(NaN,NaN,Plot_Colors('r'));
 handles.in_target_zone_plot.EdgeColor = 'none';

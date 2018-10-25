@@ -40,6 +40,11 @@ end
 myfakezone = cell2mat(cellfun(@(x) max([x; 0]), TrialInfo.FakeZone, 'UniformOutput', false))';
 %myfakezone = cell2mat(cellfun(@(x) min([1/x; 0]), TrialInfo.FakeZone, 'UniformOutput', false))';
 
+if any(TrialInfo.Odor==4)
+    myfakezone = 0*TrialInfo.Odor;
+    myfakezone(find(TrialInfo.Odor==4),1) = 200; % no odor perturbation    
+end
+
 % go zone-by-zone and group trajectories (trialIDs) into All - unperturbed,
 % rewarded - unpertubed, failures - unperturbed, and perturbed
 for Z = 1:numel(ZonesToUse)
@@ -118,7 +123,13 @@ if DoPlot
             
             if trialtype == 3
                 if ~isempty (cell2mat(Trajectories.(char(trialtag))(Z)))
-                    if myfakezone(cell2mat(Trajectories.TrialIDs.Perturbed(Z))) == 100
+                    if myfakezone(cell2mat(Trajectories.TrialIDs.Perturbed(Z))) == 200
+                        % No odor trials
+                        % plot the mean and error bars
+                        MyTrace = cell2mat(Trajectories.MeanTrace.(char(trialtag))(Z));
+                        MyShadedErrorBar(1:size(MyTrace,2),MyTrace(1,:),MyTrace(4,:),'k',[],0.5);
+                        
+                    elseif myfakezone(cell2mat(Trajectories.TrialIDs.Perturbed(Z))) == 100
                         all_perturbed_traces = cell2mat(Trajectories.(char(trialtag))(Z));
                         [realigned_perturbed_traces, all_perturbed_traces] = ...
                             ReAlignMapFlipPerturbations(all_perturbed_traces,TargetZones(ZonesToUse(Z),1:3));

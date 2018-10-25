@@ -82,6 +82,36 @@ function [MyData, params, TargetZones, FakeTargetZones] = ExtractSessionData(Fil
     end
     
     params = Temp.session_data.params;
+    
+    if any(params(:,2)==0) && ~any(MyData(:,6)>=4^2)
+        % extra hack to figure out when the odor was on if odor ID = 0
+        NoOdorTrials(:,1) = params(find(params(:,2)==0),1);
+        NoOdorTrials(:,2) = params(find(params(:,2)==0)+1,1);
+        NoOdorTrials(:,3) = find(params(:,2)==0);
+    
+        if size(NoOdorTrials,1)>0
+            for t = 1:size(NoOdorTrials,1)
+                indices = find((MyData(:,1)>NoOdorTrials(t,1)) & (MyData(:,1)<NoOdorTrials(t,2)));
+                trialthreshold = params(NoOdorTrials(t,3),11);
+                trialhold = params(NoOdorTrials(t,3),13);
+                thistriallever = MyData(indices,4);
+                thistriallever(thistriallever<trialthreshold) = 0;
+                thistriallever(thistriallever>=trialthreshold) = 1;
+                triggerstart = find(diff(thistriallever)==1);
+                triggerstop = find(diff(thistriallever)==-1);
+                m = 1;
+                while m<=min([numel(triggerstart),numel(triggerstop)])
+                    if (triggerstop(m)-triggerstart(m)+1)>=trialhold
+                        indices(1:triggerstop(m)-1,:) = [];
+                        MyData(indices,6) = 4; % odor 4
+                        break;
+                    end
+                    m = m + 1;
+                end
+            end
+        end
+    end
+    
     TargetZones = unique(params(:,18:20),'rows');
     FakeTargetZones = unique(params(:,26:28),'rows');
     if any(find(params(:,29)))
