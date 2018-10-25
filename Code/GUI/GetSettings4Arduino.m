@@ -11,11 +11,11 @@ not_ints = [not_ints 4];
 legend(5) = {'RewardHold-I'}; param(5) = h.current_trial_block.Data(5);
 legend(6) = {'RewardHold-II'}; param(6) = h.MultiRewards.Value*h.RewardControls.Data(4);
 legend(7) = {'SummedHold'}; 
-if (h.which_perturbation.Value >= 4 && h.current_trial_block.Data(3) == 1)
-    param(7) = h.TrialSettings.Data(5); % hack - if perturbation trial - the summed hold is not valid
-else
-    param(7) = h.TargetHold.Data(3)*h.summedholdfactor.Data(1);
-end        
+% if (h.which_perturbation.Value >= 4 && h.current_trial_block.Data(3) == 1)
+%     param(7) = h.TrialSettings.Data(5); % hack - if perturbation trial - the summed hold is not valid
+% else
+param(7) = h.TargetHold.Data(3)*h.summedholdfactor.Data(1);
+% end        
 legend(8) = {'RewardDuration-I'}; param(8) = h.RewardControls.Data(1);
 legend(9) = {'RewardDuration-II'}; param(9) = h.MultiRewards.Value*h.RewardControls.Data(2);
 legend(10:11) = {'TriggerON' 'TriggerOFF'}; param(10:11) = h.TrialSettings.Data(1:2);
@@ -39,7 +39,11 @@ legend(24) = {'LongITI'}; param(24) = h.TrialSettings.Data(end);
 % Perturbations
 legend(25) = {'PerturbationType'};
 if h.which_perturbation.Value > 0 && h.current_trial_block.Data(3) == 1
-    param(25) = h.which_perturbation.Value;
+    if h.which_perturbation.Value == 7
+        param(25) = h.which_perturbation.Value - 1;
+    else
+        param(25) = h.which_perturbation.Value;
+    end
 else
     param(25) = 0;
 end
@@ -48,8 +52,12 @@ if h.current_trial_block.Data(3) == 1
     switch h.which_perturbation.Value
         case 4
             param(26) = 1;
-        case 5
+        case {5,6,7}
             param(26) = h.PerturbationSettings.Data(3) + h.MotorLocationArduinoMax + 1;
+        case 8
+            param(26) = ceil(h.TFgain.Data(1));
+        case 9
+            param(26) = h.feedback_halt.Data(1);
         otherwise
     end
 else

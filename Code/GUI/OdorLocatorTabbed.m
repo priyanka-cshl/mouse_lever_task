@@ -23,7 +23,7 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
-% Last Modified by GUIDE v2.5 22-Aug-2018 17:01:08
+% Last Modified by GUIDE v2.5 13-Oct-2018 14:29:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -65,13 +65,16 @@ set(handles.A2,'position',get(handles.A1,'position'));
 handles.tgroupB = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
     'Position',[0.144 0 0.434 0.4500]);
 handles.tabB1 = uitab('Parent', handles.tgroupB, 'Title', 'Session controls');
-handles.tabB2 = uitab('Parent', handles.tgroupB, 'Title', 'Additional controls');
+handles.tabB2 = uitab('Parent', handles.tgroupB, 'Title', 'Extra');
+handles.tabB3 = uitab('Parent', handles.tgroupB, 'Title', 'Plots');
 %Place panels into each tab
 set(handles.B1,'Parent',handles.tabB1)
 set(handles.B2,'Parent',handles.tabB2)
+set(handles.B3,'Parent',handles.tabB3)
 %Reposition each panel to same location as panel 1
 handles.B1.Position = [1    0.1   84.6000   24.0000];
 set(handles.B2,'position',get(handles.B1,'position'));
+set(handles.B3,'position',get(handles.B2,'position'));
 
 %Create tab groupC - Session controls, Extra controls
 handles.tgroupC = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
@@ -92,6 +95,7 @@ handles.startAcquisition.Enable = 'off';
 
 % rig specific settings
 handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
+handles.useserver = 1;
 [handles] = RigDefaultParams(handles);
 
 % load mouse specific settings
@@ -107,9 +111,11 @@ if ~exist(fullfile(foldername_local,animal_name),'dir')
     handles.TriggerHold.Data = [5 10 15]';
     handles.TrialSettings.Data(end) = 200;
 end
-if ~exist(fullfile(foldername_server,animal_name),'dir')
-    mkdir(fullfile(foldername_server,animal_name));
-    disp('making remote data directory');
+if handles.useserver
+    if ~exist(fullfile(foldername_server,animal_name),'dir')
+    	mkdir(fullfile(foldername_server,animal_name));
+        disp('making remote data directory');
+    end
 end
 
 % mouse specific settings
@@ -183,7 +189,8 @@ handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
 handles.in_reward_zone_plot.EdgeColor = 'none';
 handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.25); %rewards
 handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('r'),'Linewidth',1); %licks
-handles.camerasync_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1); %point-grey cam sync
+handles.camerasync_plot = plot(NaN, NaN, 'color',Plot_Colors('pl'),'Linewidth',1); %point-grey cam sync
+handles.camerasync2_plot = plot(NaN, NaN, 'color',Plot_Colors('pd'),'Linewidth',1); %point-grey cam sync
 handles.homesensor_plot = plot(NaN, NaN,'k'); %homesensor
 handles.targetzone = fill(NaN,NaN,[1 1 0],'FaceAlpha',0.2);
 handles.targetzone.EdgeColor = 'none';
@@ -245,9 +252,11 @@ set(handles.cameraAxes,'XTick',[],'XTickLabel',' ','XTickMode','manual','XTickLa
 set(handles.cameraAxes,'YTick',[],'YTickLabel',' ','YTickMode','manual','YTickLabelMode','manual');
 
 %% Others
-handles.lever_raw_on.Value = 1; % hide extra traces
 guidata(hObject, handles); % Update handles structure
 lever_raw_on_Callback(hObject,eventdata,handles);
+respiration_on_Callback(hObject,eventdata,handles);
+lick_piezo_on_Callback(hObject,eventdata,handles);
+camera_sync_on_Callback(hObject,eventdata,handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
 ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Send2Arduino
 
@@ -255,6 +264,18 @@ ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Send
 if ~isempty(handles.MFC)
     Zero_MFC_Callback(hObject, eventdata, handles);
 end
+
+% set up odors
+handles.Odor_list.Value = 1; % only blank vial
+handles.odor_vial.Value = 1;
+odor_vial_Callback(hObject, eventdata, handles);
+handles.odor_to_manifold.Value = 1;
+handles.air_to_manifold.Value = 0;
+handles.Vial0.Value = 1;
+handles.Vial1.Value = 0;
+handles.Vial2.Value = 0;
+handles.Vial3.Value = 0;
+Vial2Manifold_Callback(hObject, eventdata, handles);
 
 % disable motor override
 handles.motor_override.Value = 0;
@@ -367,8 +388,16 @@ if get(handles.startAcquisition,'value')
         end
         
         % open odor vials
+        handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
         handles.odor_vial.Value = 1;
         odor_vial_Callback(hObject, eventdata, handles);
+        handles.odor_to_manifold.Value = 1;
+        handles.air_to_manifold.Value = 0;
+        handles.Vial0.Value = 1;
+        handles.Vial1.Value = 0;
+        handles.Vial2.Value = 0;
+        handles.Vial3.Value = 0;
+        Vial2Manifold_Callback(hObject, eventdata, handles);
         
         % disable/enable controls
         handles.calibrate_transfer_function.Enable = 'on';
@@ -454,9 +483,6 @@ else
        handles.Zero_MFC.Value = 0;
        Zero_MFC_Callback(hObject, eventdata, handles);
    end
-   % close odor vials
-   handles.odor_vial.Value = 0;
-   odor_vial_Callback(hObject, eventdata, handles);
    
    % stop the Arduino timer
    handles.Arduino.write(12, 'uint16'); %fwrite(handles.Arduino, char(12));
@@ -468,6 +494,18 @@ else
    elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==7
        disp('arduino: Motor Timer Stopped');
    end
+   
+   % close odor vials
+   handles.Odor_list.Value = 1;
+   handles.odor_vial.Value = 1;
+   odor_vial_Callback(hObject, eventdata, handles);
+   handles.odor_to_manifold.Value = 1;
+   handles.air_to_manifold.Value = 0;
+   handles.Vial0.Value = 1;
+   handles.Vial1.Value = 0;
+   handles.Vial2.Value = 0;
+   handles.Vial3.Value = 0;
+   Vial2Manifold_Callback(hObject, [], handles);
    
    % stop TF calibration if running
    if handles. calibrate_transfer_function.Value
@@ -487,6 +525,35 @@ handles.traces = TotalData;
 handles.timestamps = TotalTime;
 handles.samplenum = samplenum;
 handles.targetlevel = TargetLevel;
+guidata(hObject,handles);
+
+% --- Executes on button press in PauseSession.
+function PauseSession_Callback(hObject, eventdata, handles)
+if get(handles.PauseSession,'value')
+    handles.Arduino.write(17, 'uint16');
+    tic
+    while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
+    end
+    if(handles.Arduino.Port.BytesAvailable == 0)
+        error('arduino: Pause attempt failed')
+    elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==7
+        disp('arduino: Session Paused');
+        set(handles.PauseSession,'String','Paused');
+        set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
+    end
+else
+    handles.Arduino.write(18, 'uint16');
+    tic
+    while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
+    end
+    if(handles.Arduino.Port.BytesAvailable == 0)
+        error('arduino: UnPause attempt failed')
+    elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==8
+        disp('arduino: Session Resumed');
+        set(handles.PauseSession,'String','Pause');
+        set(hObject,'BackgroundColor',[0.94 0.94 0.94]);
+    end
+end
 guidata(hObject,handles);
 
 % --- Executes when entered data in editable cell(s) in Plot_YLim.
@@ -544,8 +611,10 @@ if usrans == 1
     [~,file_final_name]=fileparts(filename);
     handles.file_final_name=file_final_name;
     server_file_name=[foldername_server,filesep,animal_name,filesep,file_final_name];
-    if ~exist(fileparts(server_file_name))
-        mkdir(fileparts(server_file_name));
+    if handles.useserver
+        if ~exist(fileparts(server_file_name))
+            mkdir(fileparts(server_file_name));
+        end
     end
     % read session settings
     load('C:\temp_data_files\session_settings.mat'); % loads variable settings
@@ -562,10 +631,12 @@ if usrans == 1
         'TargetHoldMean', 'RewardHold-I', 'LeftvsRightTFs', 'SummedHoldFactor' };
     
     save(filename,'session_data*');
-    save(server_file_name,'session_data*');
-    clear a b c session_data
     display(['saved to ' filename])
-    display(['saved to ' server_file_name])
+    if handles.useserver
+    	save(server_file_name,'session_data*');
+        display(['saved to ' server_file_name])
+    end
+    clear a b c session_data
     set(gcf,'PaperPositionMode','auto')
     print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name],'-dpng','-r0');
     display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
@@ -697,15 +768,53 @@ function lever_raw_on_Callback(hObject, eventdata, handles)
 if get(handles.lever_raw_on,'Value')
     set(handles.lever_raw_on,'BackgroundColor',[0.5 0.94 0.94]);
     set(handles.lever_raw_plot,'LineStyle','none');
-    set(handles.respiration_plot,'LineStyle','none');
+    %set(handles.respiration_plot,'LineStyle','none');
     %set(handles.respiration_2_plot,'LineStyle','none');
 else
     set(handles.lever_raw_on,'BackgroundColor',[0.94 0.94 0.94]);
     set(handles.lever_raw_plot,'LineStyle','-');
-    set(handles.respiration_plot,'LineStyle','-');
+    %set(handles.respiration_plot,'LineStyle','-');
     %set(handles.respiration_2_plot,'LineStyle','-');
 end
 guidata(hObject, handles);
+
+% --- Executes on button press in respiration_on.
+function respiration_on_Callback(hObject, eventdata, handles)
+if get(handles.respiration_on,'Value')
+    set(handles.respiration_on,'BackgroundColor',[0.5 0.94 0.94]);
+    set(handles.respiration_plot,'LineStyle','none');
+else
+    set(handles.respiration_on,'BackgroundColor',[0.94 0.94 0.94]);
+    set(handles.respiration_plot,'LineStyle','-');
+end
+guidata(hObject, handles);
+
+
+% --- Executes on button press in lick_piezo_on.
+function lick_piezo_on_Callback(hObject, eventdata, handles)
+if get(handles.lick_piezo_on,'Value')
+    set(handles.lick_piezo_on,'BackgroundColor',[0.5 0.94 0.94]);
+    set(handles.lickpiezo_plot,'LineStyle','none');
+else
+    set(handles.lick_piezo_on,'BackgroundColor',[0.94 0.94 0.94]);
+    set(handles.lickpiezo_plot,'LineStyle','-');
+end
+guidata(hObject, handles);
+
+
+% --- Executes on button press in camera_sync_on.
+function camera_sync_on_Callback(hObject, eventdata, handles)
+if get(handles.camera_sync_on,'Value')
+    set(handles.camera_sync_on,'BackgroundColor',[0.5 0.94 0.94]);
+    set(handles.camerasync_plot,'LineStyle','none');
+    set(handles.camerasync2_plot,'LineStyle','none');
+else
+    set(handles.camera_sync_on,'BackgroundColor',[0.94 0.94 0.94]);
+    set(handles.camerasync_plot,'LineStyle','-');
+    set(handles.camerasync2_plot,'LineStyle','-');
+end
+guidata(hObject, handles);
+
 
 % --- Executes when entered data in editable cell(s) in TargetHold.
 function TargetHold_CellEditCallback(hObject, eventdata, handles)
@@ -847,10 +956,14 @@ end
 
 % --- Executes on button press in Vial3.
 function Vial2Manifold_Callback(hObject, eventdata, handles)
-if strcmp(eventdata.Source.Tag,'odor_to_manifold')
-    MyVial = find([handles.Vial0.Value handles.Vial1.Value handles.Vial2.Value handles.Vial3.Value]);
+if ~isempty(eventdata)
+    if strcmp(eventdata.Source.Tag,'odor_to_manifold')
+        MyVial = find([handles.Vial0.Value handles.Vial1.Value handles.Vial2.Value handles.Vial3.Value]);
+    else
+        MyVial = 1 + str2num(eventdata.Source.Tag(end));
+    end
 else
-    MyVial = 1 + str2num(eventdata.Source.Tag(end));
+    MyVial = 1;
 end
 MyVial = handles.odor_to_manifold.Value * MyVial;
 handles.Arduino.write(50 + MyVial, 'uint16'); 
@@ -1033,7 +1146,9 @@ while ~FileExistChecker
             weight(1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(1))};
             weight(2,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(2))};
             save(filename,'weight*');
-            save(server_file_name,'weight*');
+            if handles.useserver
+                save(server_file_name,'weight*');
+            end
             MadeNewFile = 1;
             w_o = str2num(char(userans(1)));
             w_c = str2num(char(userans(2)));
@@ -1057,7 +1172,9 @@ if ~MadeNewFile
         if ~isempty(userans)
             weight(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans)};
             save(filename,'weight*');
-            save(server_file_name,'weight*');
+            if handles.useserver
+                save(server_file_name,'weight*');
+            end
             w_o = str2num(char(weight(1,3)));
             w_c = str2num(char(userans));
             w_p = round(100*w_c/w_o,0,'decimals');
@@ -1078,7 +1195,9 @@ if ~MadeNewFile
         if ~isempty(userans)
             weight(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans)};
             save(filename,'weight*');
-            save(server_file_name,'weight*');
+            if handles.useserver
+                save(server_file_name,'weight*');
+            end
             w_o = str2num(char(weight(1,3)));
             w_c = str2num(char(userans));
             w_p = round(100*w_c/w_o,0,'decimals');
@@ -1119,3 +1238,5 @@ function odor_priors_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in TFtype.
 function TFtype_Callback(hObject, eventdata, handles)
+
+

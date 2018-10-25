@@ -14,6 +14,9 @@ disp(['---------- New Trial (#', num2str(h.current_trial_block.Data(2)),') -----
 h.ProgressReport.Data(:,3) = round(100*(h.ProgressReport.Data(:,2)./h.ProgressReport.Data(:,1)),0,'decimals');
 h.ProgressReportPerturbed.Data(:,3) = round(100*(h.ProgressReportPerturbed.Data(:,2)./h.ProgressReportPerturbed.Data(:,1)),0,'decimals');
 
+% reset TF gain
+h.TFgain.Data = 1;
+
 %% update mean hold times for each target zone
 if h.which_target.Data
     f = find(h.hold_times.Data(:,1)==h.which_target.Data);
@@ -108,12 +111,14 @@ end
 h.current_trial_block.Data(6) = round(h.TriggerHold.Data(1)+x,0);
 
 %% feedback perturbation settings
-if (h.which_perturbation.Value>1)
-    % shuffle perturbed trial vector if needed
-    if ~mod(h.current_trial_block.Data(2),numel(TrialsToPerturb))
-        TrialsToPerturb = TrialsToPerturb([randperm(floor(numel(TrialsToPerturb)/2)) ...
+
+% shuffle pertubation vector if needed
+if (h.which_perturbation.Value>1) && ~mod(h.current_trial_block.Data(2),numel(TrialsToPerturb))
+    TrialsToPerturb = TrialsToPerturb([randperm(floor(numel(TrialsToPerturb)/2)) ...
             floor(numel(TrialsToPerturb)/2)+(1:floor(numel(TrialsToPerturb)/2))]);
-    end
+end
+
+if (h.which_perturbation.Value>1)
     % bsed on the user set probability: check if the trial is to be perturbed or not
     h.current_trial_block.Data(3) = TrialsToPerturb(mod(h.current_trial_block.Data(2),numel(TrialsToPerturb)) + 1);
     
@@ -135,16 +140,64 @@ if (h.which_perturbation.Value>1)
             case 4 % flip map
                 h.current_trial_block.Data(5) = 2000; % increase target hold time in this trial
                 
-            case 5 % location offset
-                % only applies to particular target zones
-                % so force current zone to TZ of choice
+            case {5, 6, 7} % location offset I and II
+                % only applies to particular target zones and odors
+                % so force current zone to TZ of choice and odor
                 h.TargetDefinition.Data(2) = h.PerturbationSettings.Data(4);
+                h.current_trial_block.Data(4) = 3; % odor 3
                 % randomly choose if its an upward or a downward shift
+                myoffset = h.myoffset.Data(1);
                 if rand(1)<0.5
-                    h.PerturbationSettings.Data(3) = -abs(h.PerturbationSettings.Data(3));
+                    h.PerturbationSettings.Data(3) = -abs(myoffset);
                 else
-                    h.PerturbationSettings.Data(3) = abs(h.PerturbationSettings.Data(3));
+                    h.PerturbationSettings.Data(3) = abs(myoffset);
                 end
+                % sanity check to make sure there are not too many trials
+                % of same type
+                if abs(h.ProgressReportPerturbed.Data(4,1) - h.ProgressReportPerturbed.Data(6,1))>=2
+                    if (h.ProgressReportPerturbed.Data(4,1) - h.ProgressReportPerturbed.Data(6,1)) > 0
+                        % more +ve offsets done
+                        h.PerturbationSettings.Data(3) = -abs(myoffset);
+                    else
+                        h.PerturbationSettings.Data(3) = abs(myoffset);
+                    end
+                end
+                
+                % only for offset III
+                if rand(1)<0.5 && h.which_perturbation.Value == 7
+                    h.PerturbationSettings.Data(3) = h.PerturbationSettings.Data(3) + round(h.PerturbationSettings.Data(3)/2);
+                end
+                
+            case 8 % gain change
+                if rand(1)<0.5
+                    h.TFgain.Data = 0.37;
+                    h.TargetDefinition.Data(2) = 3.5;
+                    h.PerturbationSettings.Data(3) = -1;
+                else
+                    h.TFgain.Data = 2.5;
+                    h.TargetDefinition.Data(2) = 1.5;
+                    h.PerturbationSettings.Data(3) = 1;
+                end
+                % sanity check to make sure there are not too many trials
+                % of same type
+                if abs(h.ProgressReportPerturbed.Data(4,1) - h.ProgressReportPerturbed.Data(6,1))>=2
+                    if (h.ProgressReportPerturbed.Data(4,1) - h.ProgressReportPerturbed.Data(6,1)) > 0
+                        h.TFgain.Data = 2.5;
+                        h.TargetDefinition.Data(2) = 1.5;
+                        h.PerturbationSettings.Data(3) = 1;
+                    else
+                        h.TFgain.Data = 0.37;
+                        h.TargetDefinition.Data(2) = 3.5;
+                        h.PerturbationSettings.Data(3) = -1;
+                    end
+                end
+                % assign odor thats opposite of what would normally be
+                % assigned by target definiition
+                h.current_trial_block.Data(4) = 1 + ...
+                    (h.TargetDefinition.Data(2)<mean(h.target_level_array.Data)); % 2 if lower 6 zones, 1 if upper six zones
+           
+            case 9
+                h.current_trial_block.Data(4) = 3;
         end
     else
         h.fake_target_zone.ForegroundColor = [0.65 0.65 0.65];

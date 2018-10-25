@@ -6,14 +6,21 @@ switch char(handles.computername)
         % files and paths
         handles.file_names.Data(2) = {'C:\Data\Behavior'};
         handles.file_names.Data(3) = {'\\grid-hs\albeanu_nlsas_norepl_data\pgupta\Behavior'};
+        handles.useserver = 1;
         
         % Rates
         handles.DAQrates.Data = [500 20]';
         
         % sensors and scaling
         handles.DAC_settings.Data = [2.0 2.5]';
-        handles.RS_scaling.Data = [-1 5.5]';
+        handles.RS_scaling.Data = [0.5 6.5]';
+        handles.RE_scaling.Data = [1 0]';
         handles.LickPiezo.Data = [0.2 6]';
+        %handles.LickTicks.Data = [0.1 6]';
+        handles.lever_raw_on.Value = 1; % hide extra traces
+        handles.respiration_on.Value = 0;
+        handles.lick_piezo_on.Value = 1; 
+        handles.camera_sync_on.Value = 1;
         handles.watercoeffs = [0.00134 0.0515 0.099]; % water per drop
         handles.fliphome = 0; 
         
@@ -41,6 +48,7 @@ switch char(handles.computername)
         handles.locations_per_zone.Data = [20 0 60]'; % TF - locations per zone
         handles.TFtype.Value = 1; % 1 = fix speed, 0 = fixed start
         handles.TFtype.Enable = 'on';
+        handles.TFgain.Data = 1;
         
         % manifold and motor
         handles.MotorLocations = 115; % currently used for variable gain
@@ -49,6 +57,7 @@ switch char(handles.computername)
         handles.ManifoldOutlets = 24; % 32 in total - out of which only 24 are used
         handles.motor_params = 4; % motor step size
         handles.PerturbationSettings.Data(3) = 30;
+        handles.myoffset.Data(1) = 30;
         
         % currently unused settings
         handles.MFC_table.Data = [1.6 0.64]'; %[1.6 0.4]';

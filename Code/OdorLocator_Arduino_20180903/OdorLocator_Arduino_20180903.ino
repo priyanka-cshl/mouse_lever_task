@@ -43,6 +43,7 @@ int fake_lever = 0;
 
 //variables : stimulus related
 int stimulus_state[] = {0, 0}; // old, new
+int actual_stimulus_state = 0;
 long stimulus_state_timestamp = micros();
 bool in_target_zone[2] = {false, false};
 bool timer_override = false; // to disable timer start after serial communication
@@ -60,6 +61,7 @@ const int min_time_since_last_motor_call_default = 10; // in ms
 int min_time_since_last_motor_call = 10; // in ms - timer period
 unsigned int num_of_locations = 100;
 unsigned short transfer_function[99] = {0}; // ArCOM aray needs unsigned shorts
+unsigned short transfer_function_temp[99] = {0}; // ArCOM aray needs unsigned shorts
 int motor_location = 1;
 int offset_location = 1;
 int perturbation_offset = 0;
@@ -68,6 +70,7 @@ int transfer_function_pointer = 0; // for transfer function calibration
 unsigned int my_location = 101;
 unsigned int left_first = 1;
 int rewarded_locations[2] = {101, 101};
+int neutral_locations[2] = {101, 101};
 
 //variables : reward related
 int reward_state = 0;
@@ -88,6 +91,10 @@ bool flip_lever_trial = false;
 int use_offset_perturbation = 0;
 int offset_perturbation_trial = 0;
 int offset_perturbation_trial_typeII = 0;
+bool out_of_target_zone = false;
+int feedback_halt = 0;
+bool feedback_halt_trial = false;
+int feedback_halt_duration = 500;
 
 //variables : trial related
 int trialstate[] = {0, 0}; // old, new
@@ -224,19 +231,14 @@ void loop()
       motor_location = constrain((offset_location - (motor_location - offset_location)), 0, num_of_locations - 1);
     }
     stimulus_state[1] = transfer_function[motor_location];
-    if (use_offset_perturbation == 1)
-    { 
-      if (reward_state == 1)
-      {
-        stimulus_state[1] = perturbation_offset_location;
-      }
-      if (reward_state == 2)
+    if (use_offset_perturbation)
+    {
+      out_of_target_zone = !(stimulus_state[1] == constrain(stimulus_state[1], neutral_locations[0], neutral_locations[1]));
+      if (out_of_target_zone && (use_offset_perturbation == 1))
       {
         use_offset_perturbation = 2;
+        trial_timestamp = micros() - (1000*trial_trigger_timing[1]); // reset trial timestamp to give extra time for the trial
       }
-    }
-    if (use_offset_perturbation == 2)
-    {
       stimulus_state[1] = stimulus_state[1] + perturbation_offset;
       stimulus_state[1] = constrain(stimulus_state[1], 0, 240);
     }
@@ -267,6 +269,7 @@ void loop()
   {
     in_target_zone[1] = (stimulus_state[1] == constrain(stimulus_state[1], rewarded_locations[0], rewarded_locations[1]));
   }
+  
   //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
@@ -326,7 +329,7 @@ void loop()
   {
     if ((perturbation_offset != 0) && (!use_offset_perturbation))
     {
-      if ((micros() - reward_zone_timestamp) > 500 * reward_params[0])
+      if ((micros() - reward_zone_timestamp) > 900 * reward_params[0])
       {
         reward_state = 1; // reset reward state
         time_in_target_zone = 0; // reset timespent value
@@ -337,9 +340,11 @@ void loop()
         else
         {
           use_offset_perturbation = 2;
+          trial_timestamp = micros() - (1000*trial_trigger_timing[1]); // reset trial timestamp to give extra time for the trial
         }
       }
     }
+    
     if ((micros() - reward_zone_timestamp) > 1000 * reward_params[0])
     {
       last_target_stay = (micros() - reward_zone_timestamp)/1000;
@@ -348,14 +353,21 @@ void loop()
       trialstates.UpdateITI(normal_iti); // don't impose any ITI
       Timer4.start(1000 * reward_params[1]); // call reward timer
     }
-    else if ((time_in_target_zone + (micros() - reward_zone_timestamp)) > 1000 * reward_params[2])
+    else if ((time_in_target_zone + (micros() - reward_zone_timestamp)) > 1000 * reward_params[2]) 
     {
-      reward_state = 3; // flag reward valve opening
-      //time_in_target_zone = 0; // reset timespent value
-      trialstates.UpdateITI(normal_iti); // don't impose any ITI
-      Timer4.start(1000 * reward_params[1]); // call reward timer
+    // summed reward criterion - only applies if its not an offset perturbation trial or 
+    // if the perturbation has laready been triggered
+      if ( (perturbation_offset == 0) || (use_offset_perturbation > 0) )
+      {
+        reward_state = 3; // flag reward valve opening
+        //time_in_target_zone = 0; // reset timespent value
+        trialstates.UpdateITI(normal_iti); // don't impose any ITI
+        Timer4.start(1000 * reward_params[1]); // call reward timer
+      }
     }
+    
   }
+  
   if (reward_state == 5 && ((micros() - reward_zone_timestamp) > 1000 * multi_reward_params[0]))
   {
     reward_state = 6; // flag reward valve opening
@@ -372,7 +384,18 @@ void loop()
     digitalWrite(in_target_zone_reporter_pin, in_target_zone[0]); // in_target_zone?
     if (perturbation_offset != 0)
     {
-      digitalWrite(in_reward_zone_reporter_pin, (use_offset_perturbation == 1) || (use_offset_perturbation == 2)); // in_reward_zone?
+      if (offset_perturbation_trial_typeII)
+      {
+        digitalWrite(in_reward_zone_reporter_pin, use_offset_perturbation == 1);
+      }
+      else
+      {
+        digitalWrite(in_reward_zone_reporter_pin, use_offset_perturbation == 2); // in_reward_zone?
+      }
+    }
+    else if (feedback_halt_trial)
+    {
+      digitalWrite(in_reward_zone_reporter_pin, feedback_halt); // in_reward_zone?
     }
     else
     {
@@ -433,10 +456,11 @@ void loop()
 
     if (timer_override)
     {
-        switch (trialstate[1])
+      switch (trialstate[1])
       {
         case 0:
-          odor_valve_state = false;
+          which_odor = 0;
+          send_odor_to_manifold();
           air_valve_state = false;
           send_odor_to_manifold();
           break;
@@ -453,17 +477,24 @@ void loop()
             trialstates.UpdateITI(long_iti); // will be changed to zero if animal receives a reward in the upcoming trial
           }
           //turn on odor/air flow
+          which_odor = param_array[0]; // odor vial number
           odor_valve_state = true;
           air_valve_state = true;
           send_odor_to_manifold();
+          UpdateTF();
           break;
         case 4:
           time_in_target_zone = 0; // reset timespent value
           last_target_stay = 0;
+          if (feedback_halt_duration > 0)
+          {
+            feedback_halt = 1;
+          }
           break;
         case 5:
           flip_lever = false;
           use_offset_perturbation = 0;
+          feedback_halt = 0;
           // turn on air purge
           which_odor = 0;
           send_odor_to_manifold();
@@ -477,9 +508,14 @@ void loop()
   // extra step needed to turn off purging in case of long ITI
   if (trialstate[1]==5 && trialstate[0]==5 && odor_valve_state && close_loop_mode && (micros() - trial_timestamp) > 1000*normal_iti)
   {
-    odor_valve_state = false;
+    //odor_valve_state = true;
     air_valve_state = false;
     send_odor_to_manifold();
+  }
+
+  if ((feedback_halt == 1) && (micros() - trial_timestamp) > 1000*feedback_halt_duration)
+  {
+    feedback_halt = 0;
   }
   
   if ((trialstate[1] != trialstate[0]) && open_loop_mode) // trial state changes
@@ -606,6 +642,16 @@ void loop()
             timer_override = false;
             camera_on = 1;
             break;
+          case 7: // pause
+            myUSB.writeUint16(7);
+            timer_override = false;
+            motor_override = true;
+            break;
+          case 8: //unpause
+            myUSB.writeUint16(8);
+            timer_override = true;
+            motor_override = false;
+            break;
         }
         break;
       case 20: // update variables
@@ -641,8 +687,10 @@ void loop()
             close_loop_mode = 0;
             break;
         }
-        myUSB.readUint16Array(transfer_function, num_of_locations);
-        myUSB.writeUint16Array(transfer_function, num_of_locations);
+        myUSB.readUint16Array(transfer_function_temp, num_of_locations);
+        myUSB.writeUint16Array(transfer_function_temp, num_of_locations);
+        //myUSB.readUint16Array(transfer_function, num_of_locations);
+        //myUSB.writeUint16Array(transfer_function, num_of_locations);
         myUSB.writeUint16(83);
         transfer_function_pointer = 0;
         break;
@@ -755,7 +803,7 @@ void UpdateAllParams()
 {
   myUSB.writeUint16(89);
   // parse param array to variable names
-  which_odor = param_array[0]; // odor vial number
+  //which_odor = param_array[0]; // odor vial number
   camera_on = param_array[1];
   lever_rescale_params[0] = param_array[2]; // gain, offset
   lever_rescale_params[1] = param_array[3];
@@ -781,6 +829,7 @@ void UpdateAllParams()
   flip_lever_trial = (param_array[24]==4);  
   offset_perturbation_trial = (param_array[24]==5);
   offset_perturbation_trial_typeII = (param_array[24]==6);
+  feedback_halt_trial = (param_array[24]==9);
   if (offset_perturbation_trial)
   {
     perturbation_offset = param_array[25] - param_array[21];
@@ -789,12 +838,23 @@ void UpdateAllParams()
   {
     perturbation_offset = param_array[25] - param_array[21]; 
     perturbation_offset_location = param_array[25];
+    neutral_locations[0] = rewarded_locations[0] - (2*param_array[20]); 
+    neutral_locations[1] = rewarded_locations[1] + (2*param_array[20]); 
   }  
   else
   {
     perturbation_offset = 0;
   }
 
+  if (feedback_halt_trial)
+  {
+    feedback_halt_duration = param_array[25];
+  }
+  else
+  {
+    feedback_halt_duration = 0;
+  }
+  
   for (i = 0; i < 3; i++)
   {
     fake_target_params[i] = param_array[26 + i]; // high lim, target, low lim
@@ -828,7 +888,18 @@ void MoveMotor()
   //digitalWrite(camera_pin, camera_on);
   if (!motor_override)// && (trialstate[1] == 4))
   {
-    I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
+    if (use_offset_perturbation == 1)
+    {
+      I2Cwriter(motor1_i2c_address, 10 + perturbation_offset_location);
+    }
+    else if (feedback_halt == 1)
+    {
+      
+    }
+    else
+    {
+      I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
+    }
   }
 
   if (!close_loop_mode)
@@ -861,6 +932,14 @@ void RewardNow()
     Timer4.stop();
     digitalWrite(reward_valve_pin, LOW);
     digitalWrite(reward_reporter_pin, LOW);
+  }
+}
+
+void UpdateTF()
+{
+  for (i = 0; i < num_of_locations; i++)
+  {
+    transfer_function[i] = transfer_function_temp[i];
   }
 }
 
