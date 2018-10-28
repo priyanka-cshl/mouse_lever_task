@@ -174,8 +174,10 @@ if (h.which_perturbation.Value>1)
                     h.TargetDefinition.Data(2) = 3.5;
                     h.PerturbationSettings.Data(3) = -1;
                 else
-                    h.TFgain.Data = 2.5;
-                    h.TargetDefinition.Data(2) = 1.5;
+                    %h.TFgain.Data = 2.5;
+                    %h.TargetDefinition.Data(2) = 1.5;
+                    h.TFgain.Data = 3;
+                    h.TargetDefinition.Data(2) = 1;
                     h.PerturbationSettings.Data(3) = 1;
                 end
                 % sanity check to make sure there are not too many trials

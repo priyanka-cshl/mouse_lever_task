@@ -113,6 +113,7 @@ unsigned short open_loop_param_array[6] = {0}; // ArCOM aray needs unsigned shor
 //variables : general
 int i = 0;
 int check = 0;
+bool session_just_started = false;
 
 //variables : serial communication
 long serial_clock = micros();
@@ -576,6 +577,7 @@ void loop()
             break;
           case 1: // Acquisition start handshake
             myUSB.writeUint16(6);
+            session_just_started = true;
             close_loop_mode = 1;
             open_loop_mode = 0; 
             // fill stimulus position array
@@ -680,6 +682,10 @@ void loop()
             num_of_locations = myUSB.readUint16(); // get number of params to be updated
             min_time_since_last_motor_call = min_time_since_last_motor_call_default;
             close_loop_mode = 1;
+            if (session_just_started)
+            {
+              UpdateTF();
+            }
             break;
           case 1: // open loop
             num_of_locations = myUSB.readUint16();
@@ -941,6 +947,7 @@ void UpdateTF()
   {
     transfer_function[i] = transfer_function_temp[i];
   }
+  session_just_started = false;
 }
 
 void CleaningRoutine()
