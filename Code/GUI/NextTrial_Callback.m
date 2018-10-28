@@ -197,7 +197,18 @@ if (h.which_perturbation.Value>1)
                     (h.TargetDefinition.Data(2)<mean(h.target_level_array.Data)); % 2 if lower 6 zones, 1 if upper six zones
            
             case 9
-                h.current_trial_block.Data(4) = 3;
+                % one of three target zones
+                % 3.5, 2.5, 1.5
+                h.TargetDefinition.Data(2) = 0.5 + randperm(3,1);
+                switch floor(h.TargetDefinition.Data(2))
+                    case 1
+                        h.current_trial_block.Data(4) = 1;
+                    case 2
+                        h.current_trial_block.Data(4) = 3;
+                    case 3
+                        h.current_trial_block.Data(4) = 2;
+                end
+                
         end
     else
         h.fake_target_zone.ForegroundColor = [0.65 0.65 0.65];
