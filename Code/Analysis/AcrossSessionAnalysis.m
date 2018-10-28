@@ -1,4 +1,4 @@
-DataPath = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior/N5/processed';
+DataPath = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior/N7/processed';
 cd (DataPath)
 AllSessions = dir(DataPath);
 sessioncount = 0;
@@ -27,8 +27,11 @@ if NoOdorTrials
 end
 
 % LocationOffsetTrials
-LocationOffsetTrials = 1;    
+LocationOffsetTrials = 0;
 feedbackoffset = 200;
+
+% GainPerturbation Trials
+GainPerturbationTrials = 1;
 
 if LearningCurve
     figure;
@@ -45,7 +48,7 @@ for i = 1:size(AllSessions,1)
         sessioncount = sessioncount + 1;
         
         % Trajectory Stats
-        % maxstay totalstay entrylatency attempts 
+        % maxstay totalstay entrylatency attempts
         % rewardlatency TargetZone Perturbation PerturbationOffsetStart
         
         
@@ -74,12 +77,12 @@ for i = 1:size(AllSessions,1)
             bar(sessioncount,numel(find(isnan(temp))),'facecolor','r','edgecolor','none');
         end
         
-        if FakeZoneControls  
-           if find(TrajectoryStats(:,7)==2)
-               idx = find(TrajectoryStats(:,7)==2);
-               load(AllSessions(i).name, 'ZoneStays');
-               ZoneWeights = NaN*ones(numel(DistanceAxis),numel(idx));
-               for j = 1:numel(idx)
+        if FakeZoneControls
+            if find(TrajectoryStats(:,7)==2)
+                idx = find(TrajectoryStats(:,7)==2);
+                load(AllSessions(i).name, 'ZoneStays');
+                ZoneWeights = NaN*ones(numel(DistanceAxis),numel(idx));
+                for j = 1:numel(idx)
                     whichfakezone = WhichZones(TrajectoryStats(idx(j),8),'low');
                     whichtargetzone = TrajectoryStats(idx(j),6);
                     temp = ZoneStays(idx(j),:);
@@ -88,16 +91,16 @@ for i = 1:size(AllSessions,1)
                         ZoneWeights(find(DistanceAxis==zonedistance),j) = temp(z)/sum(temp);
                     end
                     fakezonesuccess(j) = ~isnan(TrajectoryStats(idx(j),5));
-               end
-               MyDist = horzcat(MyDist, nanmean(ZoneWeights,2));
-               targetzonesuccess = numel(find((~isnan(TrajectoryStats(:,5)))&(TrajectoryStats(:,7)==0)));
-               targetzonesuccess = targetzonesuccess/numel(find(TrajectoryStats(:,7)==0));
-               SuccessRates = vertcat(SuccessRates, ...
-                            [ targetzonesuccess numel(find(fakezonesuccess))/numel(idx)]);
-               TrialCounts = vertcat(TrialCounts, [numel(find(TrajectoryStats(:,7)==0)) numel(idx)]);
-           end
+                end
+                MyDist = horzcat(MyDist, nanmean(ZoneWeights,2));
+                targetzonesuccess = numel(find((~isnan(TrajectoryStats(:,5)))&(TrajectoryStats(:,7)==0)));
+                targetzonesuccess = targetzonesuccess/numel(find(TrajectoryStats(:,7)==0));
+                SuccessRates = vertcat(SuccessRates, ...
+                    [ targetzonesuccess numel(find(fakezonesuccess))/numel(idx)]);
+                TrialCounts = vertcat(TrialCounts, [numel(find(TrajectoryStats(:,7)==0)) numel(idx)]);
+            end
         end
-
+        
         if NoOdorTrials && ~strcmp(AllSessions(i).name,'N8_20180930_r0_processed.mat')
             if find(TrajectoryStats(:,7)==3)
                 idx = find(TrajectoryStats(:,7)==3);
@@ -118,7 +121,7 @@ for i = 1:size(AllSessions,1)
                 targetzonesuccess = targetzonesuccess/numel(find(TrajectoryStats(:,7)==0));
                 
                 TrialCounts = vertcat(TrialCounts, [numel(find(TrajectoryStats(:,7)==0)) numel(idx)]);
-
+                
                 % bootstrapped success rate distribution
                 f = find(TrajectoryStats(:,7)==0);
                 [BootStrapDist] = BootStrappedSuccessRates(TrajectoryStats(f,5:6),TrajectoryStats(idx,6));
@@ -180,7 +183,107 @@ for i = 1:size(AllSessions,1)
                 
             end
         end
+        
+        if GainPerturbationTrials
+            if find(TrajectoryStats(:,7)==8)
+                
+                % find perturbation settings
+                idxUp = find((TrajectoryStats(:,7)==8)&(TrajectoryStats(:,8)>1));
+                odorUp = TrajectoryStats(idxUp(1),10);
+                idxDown = find((TrajectoryStats(:,7)==8)&(TrajectoryStats(:,8)<=1));
+                odorDown = TrajectoryStats(idxDown(1),10);
+                
+                idxUpControlsA = find((TrajectoryStats(:,6)==11)&(TrajectoryStats(:,10)==odorUp)&(TrajectoryStats(:,7)==0));
+                idxDownControlsA = find((TrajectoryStats(:,6)==2)&(TrajectoryStats(:,10)==odorDown)&(TrajectoryStats(:,7)==0));
+                idxUpControlsB = find((TrajectoryStats(:,6)==3)&(TrajectoryStats(:,10)==odorDown)&(TrajectoryStats(:,7)==0));
+                idxDownControlsB = find((TrajectoryStats(:,6)==11)&(TrajectoryStats(:,10)==odorUp)&(TrajectoryStats(:,7)==0));
+                
+                if (numel(idxUp)+numel(idxDown))>6
+                    figure('Name',AllSessions(i).name);
+                    AverageTraceUp = [];
+                    AverageTraceDown = [];
+                    
+                    load(AllSessions(i).name, 'Trajectories');
+                    MyLeverUp = Trajectories.Lever(idxUp,:);
+                    MyLeverDown = Trajectories.Lever(idxDown,:);
+                    lengthUp = 0;
+                    lengthDown = 0;
+                    
+                    subplot(2,3,1);
+                    for k = 1:numel(idxUp)
+                        mytrace = MyLeverUp(k,:);
+                        plot(1:length(mytrace),mytrace,'r'); hold on
+                        lengthUp = max(lengthUp,length(mytrace));
+                    end
+                    set(gca,'YLim',[0 5]);
+                    
+                    subplot(2,3,2); hold on
+                    plot(1:size(MyLeverUp,2),nanmedian(MyLeverUp,1),'r');
+                    
+                    subplot(2,3,3); hold on
+                    MyShadedErrorBar(1:size(MyLeverUp,2),nanmean(MyLeverUp,1),std(MyLeverUp,'omitnan')/sqrt(numel(idxUp)),'r',[],0.5);
+                    
+                    MyLeverUp = Trajectories.Lever(idxUpControlsA,:);
+                    subplot(2,3,2); 
+                    plot(1:size(MyLeverUp,2),nanmedian(MyLeverUp,1),'g');
+                    
+                    subplot(2,3,3); 
+                    MyShadedErrorBar(1:size(MyLeverUp,2),nanmean(MyLeverUp,1),std(MyLeverUp,'omitnan')/sqrt(numel(idxUpControlsA)),'g',[],0.5);
+                    
+                    MyLeverUp = Trajectories.Lever(idxUpControlsB,:);
+                    subplot(2,3,2); 
+                    plot(1:size(MyLeverUp,2),nanmedian(MyLeverUp,1),'k');
+                    set(gca,'YLim',[0 5]);
+                    
+                    subplot(2,3,3);
+                    MyShadedErrorBar(1:size(MyLeverUp,2),nanmean(MyLeverUp,1),std(MyLeverUp,'omitnan')/sqrt(numel(idxUpControlsB)),'k',[],0.5);
+                    set(gca,'YLim',[0 5]);
+                    
+                    subplot(2,3,4);
+                    for k = 1:numel(idxDown)
+                        mytrace = MyLeverDown(k,:);
+                        plot(1:length(mytrace),mytrace,'b'); hold on
+                        lengthDown = max(lengthDown,length(mytrace));
+                    end
+                    set(gca,'YLim',[0 5]);
+                    
+                    subplot(2,3,5); hold on
+                    plot(1:size(MyLeverDown,2),nanmedian(MyLeverDown,1),'b');
+                    
+                    subplot(2,3,6); hold on
+                    MyShadedErrorBar(1:size(MyLeverDown,2),nanmean(MyLeverDown,1),std(MyLeverDown,'omitnan')/sqrt(numel(idxDown)),'b',[],0.5);
+                    
+                    MyLeverDown = Trajectories.Lever(idxDownControlsA,:);
+                    subplot(2,3,5);
+                    plot(1:size(MyLeverDown,2),nanmedian(MyLeverDown,1),'g');
+                    
+                    subplot(2,3,6);
+                    MyShadedErrorBar(1:size(MyLeverDown,2),nanmean(MyLeverDown,1),std(MyLeverDown,'omitnan')/sqrt(numel(idxDownControlsA)),'g',[],0.5);
+                    
+                    MyLeverDown = Trajectories.Lever(idxDownControlsB,:);
+                    subplot(2,3,5);
+                    plot(1:size(MyLeverDown,2),nanmedian(MyLeverDown,1),'k');
+                    set(gca,'YLim',[0 5]);
+                    
+                    subplot(2,3,6);
+                    MyShadedErrorBar(1:size(MyLeverDown,2),nanmean(MyLeverDown,1),std(MyLeverDown,'omitnan')/sqrt(numel(idxDownControlsB)),'k',[],0.5);
+                    set(gca,'YLim',[0 5]);
+                                        
+
+                    %plot(1:size(AverageTraceDown,2),nanmedian(AverageTraceDown,1),'r');
+                    %set(gca,'XLim',[-feedbackoffset max(lengthUp, lengthDown)],'YLim',[0 5]);
+                    
+                    
+%                     hold on
+%                     line([0 0],[0 5],'color','k','LineStyle',':','Linewidth',1)
+%                     line([-feedbackoffset size(AverageTraceDown,2)-feedbackoffset],[2.5 2.5],'color','k','LineStyle','--','Linewidth',1)
+%                     set(gca,'XLim',[-feedbackoffset max(lengthUp, lengthDown)],'YLim',[0 5]);
+                end
+                
+            end
+        end
     end
+    
 end
 
 if FakeZoneControls
@@ -200,7 +303,7 @@ if FakeZoneControls
         
         pgon = polyshape(i+ 0.8*x,y);
         h = plot(pgon,'FaceColor',[0.6 0.6 0.6],'EdgeColor','none');
-    end    
+    end
     
     subplot(2,1,1);
     set(gca,'XLim',[0 i+1], 'XTick',[1:1:i],'TickDir','out','YTick',[0 0.5 1]);
@@ -229,7 +332,7 @@ if NoOdorTrials
         pgon = polyshape(i -0.25 + 0.8*x,y);
         h = plot(pgon,'FaceColor',[0.6 0.6 0.6],'EdgeColor','none');
         
-    end    
+    end
     
     subplot(2,1,1);
     set(gca,'XLim',[0 i+1], 'XTick',[1:1:i],'TickDir','out','YLim',[-0.1 1.1], 'YTick',[0 0.5 1]);

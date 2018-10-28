@@ -8,24 +8,7 @@ global timewindow;
 global MyFileName;
 timewindow = 100; % sampling rate of 500 Hz, 50 points = 100ms
 
-% read computer name
-[~,computername] = system('hostname');
-computername = deblank(computername);
-
-switch computername
-    case 'priyanka-gupta.cshl.edu'
-        DataRoot = '/Volumes/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
-    case {'priyanka-gupta.home', 'priyanka-gupta.local'}
-        if exist('/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior','dir')
-            DataRoot = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior'; % local copy
-        else
-            DataRoot = '/Volumes/Albeanu-Norepl/pgupta/Behavior';
-        end
-    case 'Priyanka-PC'
-        DataRoot = 'C:\Data\Behavior'; % location on rig computer
-    otherwise
-        DataRoot = '//sonas-hs.cshl.edu/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
-end
+[DataRoot] = WhichComputer();
 
 if ~isempty(strfind(MouseName,'.mat'))
     foo = strsplit(MouseName,'_');
@@ -53,19 +36,19 @@ for i = 1:size(FileNames,2)
     MyFileName = FileNames{i};
     disp(MyFileName);
     
-%     
-%     if exist(fullfile(FilePaths,'processed',strrep(MyFileName,'.mat','_processed.mat')))
-%         load(fullfile(FilePaths,'processed',strrep(MyFileName,'.mat','_processed.mat')),...
-%             'sessionstart','sessionstop');
-%     else
-%         sessionstart = 0;
-%         sessionstop = 0;
-        %if ReplotSession
+    
+    if exist(fullfile(FilePaths,'processed',strrep(MyFileName,'.mat','_processed.mat')))
+        load(fullfile(FilePaths,'processed',strrep(MyFileName,'.mat','_processed.mat')),...
+            'sessionstart','sessionstop');
+    else
+        sessionstart = 0;
+        sessionstop = 0;
+        if ReplotSession
             RecreateSession(Data.(['session',num2str(i)]).data);
-        %end
-%         sessionstart = str2double(input('Enter start timestamp:','s'));
-%         sessionstop = str2double(input('Enter stop timestamp:','s'));
-%     end
+        end
+        sessionstart = str2double(input('Enter start timestamp:','s'));
+        sessionstop = str2double(input('Enter stop timestamp:','s'));
+    end
     
     if sessionstop
         close(gcf);

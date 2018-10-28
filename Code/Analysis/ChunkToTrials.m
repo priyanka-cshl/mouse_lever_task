@@ -80,7 +80,7 @@ function [Traces, TrialInfo, TargetZones] = ChunkToTrials(MyData, TargetZones, s
                         TrialInfo.Perturbation(t,:) = [4 0];
                     case 500
                         TrialInfo.Perturbation(t,:) = [WhichPerturbation/100 PerturbationValue];
-                    case 600
+                    case {600, 700}
                         TrialInfo.Perturbation(t,:) = [WhichPerturbation/100 PerturbationValue];
                         TrialInfo.PerturbationStart(t) = find( diff([ MyData(TrialOn(t):TrialOff(t), RZoneCol); 0] )==1);
                         TrialInfo.FeedbackStart(t) = find( diff([ MyData(TrialOn(t):TrialOff(t), RZoneCol); 0] )==-1);
@@ -96,6 +96,9 @@ function [Traces, TrialInfo, TargetZones] = ChunkToTrials(MyData, TargetZones, s
                             TrialInfo.StayTime(t) = {tempstays};
                             TrialInfo.StayTimeStart(t) = {tempstaytimes};
                         end
+                    case 800
+                        TrialInfo.Perturbation(t,:) = [WhichPerturbation/100 PerturbationValue];
+                    case 900
                         
                 end
             end

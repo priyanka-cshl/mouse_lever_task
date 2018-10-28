@@ -46,8 +46,8 @@ else
         MyData(:,16) = Temp.session_data.trace(:,whichcol);
     end
     
-    if find(ismember(Temp.session_data.trace_legend,'camera2sync'))
-        whichcol = find(ismember(Temp.session_data.trace_legend,'camera2sync'));
+    if size(Temp.session_data.trace,2)>whichcol
+        whichcol = whichcol + 1;
         MyData(:,17) = Temp.session_data.trace(:,whichcol);
     end
     
@@ -84,9 +84,13 @@ for t = 1:size(Temp.session_data.params,1)
                 case 4 % flip mapping
                     MyData(f,11) = 400;
                     MyData(f,12) = 0;
-                case {5,6} % location offset
+                case {5,6,7} % location offset
                     MyData(f,11) = 100*Temp.session_data.params(t,26);
                     MyData(f,12) = Temp.session_data.params(t,27);
+                case 8
+                    MyData(f,11) = 100*Temp.session_data.params(t,26);
+                    MyData(f,12) = Temp.session_data.params(t,27);
+                case 9
             end
         end
     else

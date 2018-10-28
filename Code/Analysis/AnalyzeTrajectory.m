@@ -25,6 +25,7 @@ end
 
 TargetZone = TrialInfo.TargetZoneType(trialnum);
 Perturbation = TrialInfo.Perturbation(trialnum,:);
+Odor = TrialInfo.Odor(trialnum);
 
 % Perturbation specific analysis
 if TrialInfo.Perturbation(trialnum,1)==6
@@ -33,5 +34,5 @@ else
     PerturbationOffsetStart = NaN;
 end
 
-ThisTrialStats = [maxstay totalstay entrylatency attempts rewardlatency TargetZone Perturbation PerturbationOffsetStart];
+ThisTrialStats = [maxstay totalstay entrylatency attempts rewardlatency TargetZone Perturbation PerturbationOffsetStart Odor];
 end
