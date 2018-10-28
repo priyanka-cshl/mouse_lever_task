@@ -15,4 +15,6 @@ function [ColumnNames] = WhatsMyData()
     ColumnNames(13) = {'MotorPosition'};
     ColumnNames(14) = {'HomeSensor'};
     ColumnNames(15) = {'Respiration'};
+    ColumnNames(16) = {'Camerasync'};
+    ColumnNames(17) = {'Camera2sync'};
 end

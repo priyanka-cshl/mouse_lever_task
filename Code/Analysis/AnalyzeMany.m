@@ -8,24 +8,7 @@ global timewindow;
 global MyFileName;
 timewindow = 100; % sampling rate of 500 Hz, 50 points = 100ms
 
-% read computer name
-!hostname > hostname.txt
-computername = char(textread('hostname.txt','%s'));
-
-switch computername
-    case 'priyanka-gupta.cshl.edu'
-        DataRoot = '/Volumes/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
-    case {'priyanka-gupta.home', 'priyanka-gupta.local'}
-        if exist('/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior','dir')
-            DataRoot = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior'; % local copy
-        else
-            DataRoot = '/Volumes/Albeanu-Norepl/pgupta/Behavior'; 
-        end
-    case 'Priyanka-PC'
-        DataRoot = 'C:\Data\Behavior'; % location on rig computer
-    otherwise
-        DataRoot = '//sonas-hs.cshl.edu/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
-end
+[DataRoot] = WhichComputer();
 
 if ~isempty(strfind(MouseName,'.mat'))
     foo = strsplit(MouseName,'_');
@@ -44,76 +27,89 @@ else
     end
 end
 
-for i = 1:size(FileNames,2) 
+for i = 1:size(FileNames,2)
     
     %% core data extraction (and settings)
     Data.(['session',num2str(i)]).path = fullfile(FilePaths,FileNames{i});
     [Data.(['session',num2str(i)]).data, Data.(['session',num2str(i)]).settings, TargetZones, FakeTargetZones] = ...
-        ExtractSessionData(fullfile(FilePaths,FileNames{i}));
+        ExtractSessionDataFixedGain(fullfile(FilePaths,FileNames{i}));
     MyFileName = FileNames{i};
+    disp(MyFileName);
     
-    if ReplotSession
-        RecreateSession(Data.(['session',num2str(i)]).data);
-    end
     
-    %% Parse trials
-    [Lever, Motor, TrialInfo, TargetZones] = ChunkUpTrials(Data.(['session',num2str(i)]).data, TargetZones, FakeTargetZones);
-    [Odors, ZonesToUse, LeverTruncated, MotorTruncated] = TruncateTrials(Lever, Motor, TrialInfo, TargetZones);
-    
-    %% Correct for incorrect Target Zone assignments
-    [TrialInfo] = FixTargetZoneAssignments(Data.(['session',num2str(i)]).data,TrialInfo,TargetZones,Data.(['session',num2str(i)]).settings);
-    
-    %% Get TFs
-    if abs(mode(MotorTruncated(:,1)))<70
-        [AllTFs] = GetAllTransferFunctions(Data.(['session',num2str(i)]).settings, TargetZones(ZonesToUse,:),'fixedspeed');
+    if exist(fullfile(FilePaths,'processed',strrep(MyFileName,'.mat','_processed.mat')))
+        load(fullfile(FilePaths,'processed',strrep(MyFileName,'.mat','_processed.mat')),...
+            'sessionstart','sessionstop');
     else
-        [AllTFs] = GetAllTransferFunctions(Data.(['session',num2str(i)]).settings, TargetZones(ZonesToUse,:));
+        sessionstart = 0;
+        sessionstop = 0;
+        if ReplotSession
+            RecreateSession(Data.(['session',num2str(i)]).data);
+        end
+        sessionstart = str2double(input('Enter start timestamp:','s'));
+        sessionstop = str2double(input('Enter stop timestamp:','s'));
     end
     
-    %% Trajectory Analysis
-     [Trajectories] = SortTrajectories2018(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, Data.(['session',num2str(i)]).settings, 1);
-   %  [Trajectories] = SingleTrialTrajectories2018(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, 1);
-%     [Trajectories] = SingleTrialTrajectoriesLocationOffset2018(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, Data.(['session',num2str(i)]).settings, 1);
-   %  SortMotorTrajectories2018(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, Data.(['session',num2str(i)]).settings, 1);
-
-     %     if i == 1
-%         [Trajectories] = SortTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones, 1);
-%     else
-%         [Trajectories] = OverLayTrajectories(LeverTruncated,TrialInfo, ZonesToUse, TargetZones,1);
-%     end
-    %% Basic session statistics
-    [NumTrials] = SessionStats(TrialInfo,Trajectories,ZonesToUse,TargetZones,1);    
-    
-    % if number of Zones>6 split the data set into two
-    
-    if numel(ZonesToUse)>6
-       HistogramOfOccupancy(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, AllTFs, Trajectories, 1);
-       [StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, Data.(['session',num2str(i)]).settings, 1);
+    if sessionstop
+        close(gcf);
+        %% Parse trials
+        [Traces, TrialInfo, TargetZones] = ChunkToTrials(Data.(['session',num2str(i)]).data, TargetZones, sessionstart, sessionstop);
+        [Odors, ZonesToUse, Traces] = TruncateTrials(Traces, TrialInfo, TargetZones);
         
-    elseif numel(ZonesToUse)>3
-        LeverTruncated_all = LeverTruncated;
-        TrialInfo_all = TrialInfo;
-        TargetZones_all = TargetZones;
-        ZonesToUse_all = ZonesToUse;
+        %% Correct for incorrect Target Zone assignments
+        %[TrialInfo] = FixTargetZoneAssignments(Data.(['session',num2str(i)]).data,TrialInfo,TargetZones,Data.(['session',num2str(i)]).settings);
         
-        n = numel(ZonesToUse)/3;
-        for m = 1:n
-            f = find(mod(TrialInfo_all.TargetZoneType,n)==m-1);
-            LeverTruncated = LeverTruncated_all(f,:);
-            TrialInfo.TargetZoneType = TrialInfo_all.TargetZoneType(f,:);
-            TrialInfo.Success = TrialInfo_all.Success(f,:);
-            TargetZones = TargetZones_all(n+1-m:n:end,:);
-            ZonesToUse = ZonesToUse_all(n+1-m:n:end,:);
-            [Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 1);
-            %[StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, 1);
-            [Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
+        %% Get TFs
+        if size(Data.(['session',num2str(i)]).settings,2)>=35
+            [AllTFs] = GetAllTransferFunctions(Data.(['session',num2str(i)]).settings, TargetZones(ZonesToUse,:),'fixedgain');
+        else
+            if abs(mode(MotorTruncated(:,1)))<70
+                [AllTFs] = GetAllTransferFunctions(Data.(['session',num2str(i)]).settings, TargetZones(ZonesToUse,:),'fixedspeed');
+            else
+                [AllTFs] = GetAllTransferFunctions(Data.(['session',num2str(i)]).settings, TargetZones(ZonesToUse,:));
+            end
         end
         
-    else
-        [Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, Data.(['session',num2str(i)]).settings, 1);
-        %[StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, Data.(['session',num2str(i)]).settings, 1);
-        %[Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
+        %% Trajectory Analysis
+        [Trajectories, TrajectoryStats, ZoneStays] = GroupTrajectories(Traces, TrialInfo, TargetZones, Data.(['session',num2str(i)]).settings);
+        
+        %% save processed files
+        savepath = fullfile(FilePaths,'processed',filesep,MyFileName);
+        save(strrep(savepath,'.mat','_processed.mat'),'Trajectories','TrajectoryStats','ZoneStays','sessionstart','sessionstop');
+        
+        %     %% Basic session statistics
+        %     [NumTrials] = SessionStats(TrialInfo,Trajectories,ZonesToUse,TargetZones,1);
+        %
+        %     % if number of Zones>6 split the data set into two
+        %
+        %     if numel(ZonesToUse)>6
+        %        HistogramOfOccupancy(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, AllTFs, Trajectories, 1);
+        %        [StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, Data.(['session',num2str(i)]).settings, 1);
+        %
+        %     elseif numel(ZonesToUse)>3
+        %         LeverTruncated_all = LeverTruncated;
+        %         TrialInfo_all = TrialInfo;
+        %         TargetZones_all = TargetZones;
+        %         ZonesToUse_all = ZonesToUse;
+        %
+        %         n = numel(ZonesToUse)/3;
+        %         for m = 1:n
+        %             f = find(mod(TrialInfo_all.TargetZoneType,n)==m-1);
+        %             LeverTruncated = LeverTruncated_all(f,:);
+        %             TrialInfo.TargetZoneType = TrialInfo_all.TargetZoneType(f,:);
+        %             TrialInfo.Success = TrialInfo_all.Success(f,:);
+        %             TargetZones = TargetZones_all(n+1-m:n:end,:);
+        %             ZonesToUse = ZonesToUse_all(n+1-m:n:end,:);
+        %             [Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 1);
+        %             %[StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, 1);
+        %             [Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
+        %         end
+        %
+        %     else
+        %         [Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, Data.(['session',num2str(i)]).settings, 1);
+        %         %[StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, Data.(['session',num2str(i)]).settings, 1);
+        %         %[Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
+        %     end
     end
-
 end
 end
