@@ -94,7 +94,10 @@ int offset_perturbation_trial_typeII = 0;
 bool out_of_target_zone = false;
 int feedback_halt = 0;
 bool feedback_halt_trial = false;
+bool feedback_pause_trial = false;
 int feedback_halt_duration = 500;
+long feedback_halt_timestamp = micros();
+long feedback_halt_lever_position = 0L;
 
 //variables : trial related
 int trialstate[] = {0, 0}; // old, new
@@ -394,9 +397,9 @@ void loop()
         digitalWrite(in_reward_zone_reporter_pin, use_offset_perturbation == 2); // in_reward_zone?
       }
     }
-    else if (feedback_halt_trial)
+    else if ((feedback_halt_trial)||(feedback_pause_trial))
     {
-      digitalWrite(in_reward_zone_reporter_pin, feedback_halt); // in_reward_zone?
+      digitalWrite(in_reward_zone_reporter_pin, (feedback_halt==1)); // in_reward_zone?
     }
     else
     {
@@ -487,8 +490,9 @@ void loop()
         case 4:
           time_in_target_zone = 0; // reset timespent value
           last_target_stay = 0;
-          if (feedback_halt_duration > 0)
+          if ((feedback_halt_duration > 0) && (feedback_halt_trial == 1))
           {
+            feedback_halt_timestamp = micros();
             feedback_halt = 1;
           }
           break;
@@ -514,9 +518,15 @@ void loop()
     send_odor_to_manifold();
   }
 
-  if ((feedback_halt == 1) && (micros() - trial_timestamp) > 1000*feedback_halt_duration)
+  if ((feedback_halt == 1) && (micros() - feedback_halt_timestamp) > 1000*feedback_halt_duration)
   {
-    feedback_halt = 0;
+    feedback_halt = 2;
+  }
+
+  if (trialstate[1]==4 && feedback_halt==0 && feedback_pause_trial==1 && lever_position < feedback_halt_lever_position)
+  {
+    feedback_halt_timestamp = micros();
+    feedback_halt = 1;
   }
   
   if ((trialstate[1] != trialstate[0]) && open_loop_mode) // trial state changes
@@ -836,6 +846,7 @@ void UpdateAllParams()
   offset_perturbation_trial = (param_array[24]==5);
   offset_perturbation_trial_typeII = (param_array[24]==6);
   feedback_halt_trial = (param_array[24]==9);
+  feedback_pause_trial = (param_array[24]==10);
   if (offset_perturbation_trial)
   {
     perturbation_offset = param_array[25] - param_array[21];
@@ -851,20 +862,23 @@ void UpdateAllParams()
   {
     perturbation_offset = 0;
   }
-
-  if (feedback_halt_trial)
-  {
-    feedback_halt_duration = param_array[25];
-  }
-  else
-  {
-    feedback_halt_duration = 0;
-  }
   
   for (i = 0; i < 3; i++)
   {
     fake_target_params[i] = param_array[26 + i]; // high lim, target, low lim
   }
+
+  if ((feedback_halt_trial) || (feedback_pause_trial))
+  {
+    feedback_halt_duration = param_array[25];
+    feedback_halt_lever_position = param_array[27];
+  }
+  else
+  {
+    feedback_halt_duration = 0;
+    fake_target_params[1] = 0;
+  }
+  
   decouple_reward_and_stimulus = (fake_target_params[1] > 0);
   //delay_feedback_by = param_array[29];
   training_stage = param_array[30];

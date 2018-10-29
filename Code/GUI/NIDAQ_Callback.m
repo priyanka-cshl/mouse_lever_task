@@ -101,7 +101,7 @@ if TotalTime(end)>2
 %                         end
                     case 8
                         foo = 5 + h.PerturbationSettings.Data(3);
-                    case 9
+                    case {9,10}
                         foo = which_target;
                     otherwise
                         foo = which_target;
@@ -152,7 +152,7 @@ if TotalTime(end)>2
 %                     end
                 case 8
                     foo = 5 + h.PerturbationSettings.Data(3);
-                case 9
+                case {9,10}
                     foo = which_target;
                 otherwise
                     foo = which_target;
