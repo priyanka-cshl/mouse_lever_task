@@ -20,8 +20,8 @@ handles.trial_on_4.EdgeColor = 'none';
 
 handles.in_target_zone_plot = fill(NaN,NaN,Plot_Colors('r'));
 handles.in_target_zone_plot.EdgeColor = 'none';
-% handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
-% handles.in_reward_zone_plot.EdgeColor = 'none';
+handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
+handles.in_reward_zone_plot.EdgeColor = 'none';
 
 % handles.fake_target_plot = plot(NaN, NaN, 'color',[.7 .7 .7]);
 handles.targetzone = fill(NaN,NaN,[1 1 0],'FaceAlpha',0.2);
@@ -34,6 +34,8 @@ handles.trial_off = fill(NaN,NaN,[1 1 1]);
 handles.trial_off.EdgeColor = 'none';
 
 handles.lever_DAC_plot = plot(NaN, NaN,'k'); %lever rescaled
+handles.Camera_plot = plot(NaN, NaN,'k');
+handles.respiration_plot = plot(NaN, NaN,'color',Plot_Colors('r')); %lever rescaled
 %handles.stimulus_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor location
 handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.25); %rewards
 handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1); %licks
@@ -47,7 +49,12 @@ MyHandle = get(gca);
 set(handles.lever_DAC_plot,'XData',MyData(:,1),'YData',MyData(:,4));
 % set(handles.stimulus_plot,'XData',MyData(:,1),'YData',...
 %    1*(MyData(:,5)- 0) );
-
+if size(MyData,2)>=15
+    set(handles.respiration_plot,'XData',MyData(:,1),'YData',6.5+ 2*(MyData(:,15)/max(MyData(:,15))));
+end
+if size(MyData,2)>15
+    set(handles.Camera_plot,'XData',MyData(:,1),'YData',7+ 0.5*MyData(:,16));
+end
 % trial_on
 [handles] = PlotToPatch_Trial(handles, MyData(:,6), MyData(:,1), [0 5],1);
 [handles] = PlotToPatch_TrialOFFhack(handles, MyData(:,6), MyData(:,1), [0 5],1);
@@ -55,7 +62,7 @@ set(handles.lever_DAC_plot,'XData',MyData(:,1),'YData',MyData(:,4));
 [handles.faketargetzone] = PlotToPatch_TargetZone(handles.faketargetzone, MyData(:,11:12), MyData(:,1));
 
 % % in_target_zone, in_reward_zone
-[handles.in_target_zone_plot] = PlotToPatch(handles.in_target_zone_plot, MyData(:,end), MyData(:,1), [-1 0],1);
+% [handles.in_target_zone_plot] = PlotToPatch(handles.in_target_zone_plot, MyData(:,7), MyData(:,1), [-1 0],1);
 % [handles.in_reward_zone_plot] = PlotToPatch(handles.in_reward_zone_plot,  MyData(:,8), MyData(:,1), [-1 -0.2],1);
 
 % rewards

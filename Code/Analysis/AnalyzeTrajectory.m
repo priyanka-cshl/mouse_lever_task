@@ -1,10 +1,10 @@
-function [ThisTrialStats ZoneTimes] = AnalyzeTrajectory(mylevertrace, trialnum, TrialInfo, TargetZones, indicesdeleted)
+function [ThisTrialStats ZoneTimes Exhalation Inhalation] = AnalyzeTrajectory(mylevertrace, trialnum, TrialInfo, TargetZones, indicesdeleted)
 
 TrialID = TrialInfo.TrialID(trialnum);
 if ~isempty(TrialInfo.StayTimeStart{trialnum})
     [maxstay, stayID]   = max(TrialInfo.StayTime{trialnum});
     entrylatency        = TrialInfo.StayTimeStart{trialnum}(stayID);
-    totalstay           = sum(TrialInfo.StayTime{trialnum});
+    totalstay           = sum(TrialInfo.StayTime{trialnum})/TrialInfo.Duration(trialnum);
     attempts            = numel(TrialInfo.StayTimeStart{trialnum});
 else
     maxstay     = NaN;
@@ -27,12 +27,34 @@ TargetZone = TrialInfo.TargetZoneType(trialnum);
 Perturbation = TrialInfo.Perturbation(trialnum,:);
 Odor = TrialInfo.Odor(trialnum);
 
-% Perturbation specific analysis
-if TrialInfo.Perturbation(trialnum,1)==6
-    PerturbationOffsetStart = TrialInfo.FeedbackStart(trialnum) - indicesdeleted;
+if ~isempty(TrialInfo.Inhalation)
+    Inhalation = {cell2mat(TrialInfo.Inhalation(trialnum)) - TrialInfo.TimeIndices(trialnum,1)};
+    Exhalation = {cell2mat(TrialInfo.Exhalation(trialnum)) - TrialInfo.TimeIndices(trialnum,1)};
 else
-    PerturbationOffsetStart = NaN;
+    Inhalation = {[]};
+    Exhalation = {[]};
 end
 
-ThisTrialStats = [maxstay totalstay entrylatency attempts rewardlatency TargetZone Perturbation PerturbationOffsetStart Odor];
+% Perturbation specific analysis
+switch TrialInfo.Perturbation(trialnum,1)
+    case {6,7,9}
+        if isfield(TrialInfo,'PerturbationStart')
+            PerturbationStart = TrialInfo.PerturbationStart(trialnum) - indicesdeleted;
+        else
+            PerturbationStart = NaN;
+        end
+        if isfield(TrialInfo,'FeedbackStart')
+            PerturbationOffsetStart = TrialInfo.FeedbackStart(trialnum) - indicesdeleted;
+        else
+            PerturbationOffsetStart = NaN;
+        end
+    case 10
+        PerturbationStart = TrialInfo.PerturbationStart(trialnum) - indicesdeleted;
+        PerturbationOffsetStart = TrialInfo.FeedbackStart(trialnum) - indicesdeleted;
+    otherwise
+        PerturbationOffsetStart = NaN;
+        PerturbationStart = NaN;
+end
+
+ThisTrialStats = [maxstay totalstay entrylatency attempts rewardlatency TargetZone Perturbation PerturbationOffsetStart Odor PerturbationStart];
 end

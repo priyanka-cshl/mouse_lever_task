@@ -29,16 +29,20 @@ handles.trial_off = fill(NaN,NaN,[1 1 1]);
 handles.trial_off.EdgeColor = 'none';
 
 handles.lever_DAC_plot = plot(NaN, NaN,'k'); %lever rescaled
+handles.respiration_plot = plot(NaN, NaN,'color',Plot_Colors('r')); %respiration sensor
+
 handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.25); %rewards
 handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1.25); %licks
 
-set(gca,'YLim',[-0.4 5.7]);
+set(gca,'YLim',[-0.4 7.7]);
 
 MyHandle = get(gca);
 %% Update plots
 
 % lever positions, motor locations 
 set(handles.lever_DAC_plot,'XData',MyData(:,1),'YData',MyData(:,4));
+set(handles.respiration_plot,'XData',MyData(:,1),'YData',5.5+2*MyData(:,15)/max(MyData(:,15)));
+
 %set(handles.stimulus_plot,'XData',MyData(:,1),'YData',...
 %  1*(MyData(:,5)- 0) );
 

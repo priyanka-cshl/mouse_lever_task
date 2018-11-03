@@ -91,6 +91,9 @@ for t = 1:size(Temp.session_data.params,1)
                     MyData(f,11) = 100*Temp.session_data.params(t,26);
                     MyData(f,12) = Temp.session_data.params(t,27);
                 case 9
+                    MyData(f,11) = 100*Temp.session_data.params(t,26);
+                case 10
+                    MyData(f,11) = 100*Temp.session_data.params(t,26);
             end
         end
     else
