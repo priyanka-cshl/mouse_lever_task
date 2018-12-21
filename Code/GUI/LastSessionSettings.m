@@ -21,11 +21,11 @@ if ~isempty(Allfiles)
                 handles.TargetHold.Data(1) = 0;
             elseif last_session_median >= 300
                 %handles.TargetHold.Data(2) = 300;
-                handles.TargetHold.Data(2) = last_session_median;
-                handles.TargetHold.Data(1) = max([250 last_session_median-50]);
-                handles.AntiBias.Value = 1;
-                %handles.TargetHold.Data(3) = 400;
-                %handles.adaptive_holds.Value = 0;
+                handles.TargetHold.Data(2) = 325; %last_session_median;
+                handles.TargetHold.Data(1) = 300; %max([250 last_session_median-50]);
+                handles.AntiBias.Value = 0;
+                handles.TargetHold.Data(3) = 400;
+                handles.adaptive_holds.Value = 0;
             else
                 handles.TargetHold.Data(2) = last_session_median;
                 handles.TargetHold.Data(1) = handles.TargetHold.Data(2) - 25;

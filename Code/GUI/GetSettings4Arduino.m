@@ -56,17 +56,21 @@ if h.current_trial_block.Data(3) == 1
             param(26) = h.PerturbationSettings.Data(3) + h.MotorLocationArduinoMax + 1;
         case 8
             param(26) = ceil(h.TFgain.Data(1));
-        case 9
+        case {9, 10}
             param(26) = h.feedback_halt.Data(1);
         otherwise
     end
 else
     param(26) = 0;
 end
+
 legend(27:29) = {'FakeHighLim' 'FakeTarget' 'FakeLowLim'};
 if h.which_perturbation.Value == 2 && h.current_trial_block.Data(3) == 1
     param(27:29) = h.fake_target_zone.Data(1:3);
     not_ints = [not_ints 27:29]; % convert to integers for Arduino communication purpose
+elseif h.which_perturbation.Value == 10
+    param(28) = h.feedback_pause_location.Data(1);
+    not_ints = [not_ints 28];
 else
     param(27:29) = [0 0 0];
 end

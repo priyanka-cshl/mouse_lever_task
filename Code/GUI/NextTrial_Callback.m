@@ -174,8 +174,12 @@ if (h.which_perturbation.Value>1)
                     h.TargetDefinition.Data(2) = 3.5; % normally 1.25
                     h.PerturbationSettings.Data(3) = -1;
                 else
-                    h.TFgain.Data = 2.5;
-                    h.TargetDefinition.Data(2) = 1.5; % normally 3.5
+                    %h.TFgain.Data = 2.5;
+                    %h.TargetDefinition.Data(2) = 1.5;
+                    h.TFgain.Data = 3;
+                    h.TargetDefinition.Data(2) = 1;
+%                     h.TFgain.Data = 2.5;
+%                     h.TargetDefinition.Data(2) = 1.5; % normally 3.5
                     h.PerturbationSettings.Data(3) = 1;
                 end
                 % sanity check to make sure there are not too many trials
@@ -196,10 +200,10 @@ if (h.which_perturbation.Value>1)
                 h.current_trial_block.Data(4) = 1 + ...
                     (h.TargetDefinition.Data(2)<mean(h.target_level_array.Data)); % 2 if lower 6 zones, 1 if upper six zones
            
-            case 9
+            case {9,10}
                 % one of three target zones
                 % 3.5, 2.5, 1.5
-                h.TargetDefinition.Data(2) = 0.5 + randperm(3,1);
+                h.TargetDefinition.Data(2) = randperm(3,1);
                 switch floor(h.TargetDefinition.Data(2))
                     case 1
                         h.current_trial_block.Data(4) = 1;
