@@ -10,11 +10,13 @@ vid_folder2 = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior/Movies/Raw/20181
 filetag = 'fc3_save_2018-10-24-175140-'; %0000
 filetag2 = 'fc3_save_2018-10-24-175139-'; %0000';
 DataFile = fullfile('/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior/N8/N8_20181024_r1.mat');
+slowby = 5;
 
 %% Read the Data File
 [MyData, MySettings, TargetZones, ~] = ExtractSessionDataFixedGain(DataFile);
 [~, TrialInfo, TargetZones] = ChunkToTrials(MyData, TargetZones);
 [AllTFs] = GetAllTransferFunctions(MySettings, TargetZones,'fixedgain');
+AllTFs = -AllTFs;
 MaxMotorLocation = 100;
 
 %% Find the time periods when camera was acquiring in sync
@@ -30,7 +32,7 @@ FrameTimeStamps_Cam1 = MyData(find(diff(MyData(:,16))==1),1);
 FrameTimeStamps_Cam2 = MyData(find(diff(MyData(:,17))==1),1);
 
 % define stretch of time you want to use for the video (in seconds)
-tstart = 291; tstop = 319;
+tstart = 297; tstop = 311;
 FrameStartIdx_Cam1 = find(FrameTimeStamps_Cam1>=tstart,1);
 FrameStartIdx_Cam2 = find(FrameTimeStamps_Cam2>=tstart,1);
 FrameStopIdx_Cam1 = find(FrameTimeStamps_Cam1<=tstop,1,'last');
@@ -41,7 +43,7 @@ timewindow = [-0.25 (tstop-tstart+1)]; % seconds
 
 %% Video writing related initializations
 if write_video
-    writerObj = VideoWriter('test_video','MPEG-4');
+    writerObj = VideoWriter('N8_20181024_r1_cropped','MPEG-4');
     writerObj.FrameRate = framerate;
     open(writerObj);
 end
@@ -139,7 +141,7 @@ handles.H6.Position = handles.H5.Position;
 handles.H6.Position(1) = handles.H6.Position(1) + handles.H5.Position(3);
 handles.motor_location = plot(1,2,'r<','MarkerFaceColor','k','MarkerEdgeColor','k');
 axis off tight
-set(handles.H6,'YLim',[0 120]);
+set(handles.H6,'YLim',[0 MaxMotorLocation]);
 set(handles.H6, 'Color', 'none');
 
 % add another axes to mark the targetzone boundaries
@@ -180,7 +182,7 @@ for i = 1:frames_to_show
     %tstart = tstart + (1/framerate);
     tstart = FrameTimeStamps_Cam1(frameID);
     handles.bar.XData = [tstart tstart];
-    %pause(1/(framerate/5));
+    pause(1/(framerate)/slowby);
     
     % encoding of trial state
     t1 = find(abs(MyData(:,1)-tstart)==min(abs(MyData(:,1)-tstart)),1);
@@ -201,19 +203,26 @@ for i = 1:frames_to_show
     end
     
     % if trial just went off
-    if (trialstate(1)-trialstate(2))==1
-        TrialNum = find(TrialInfo.Timestamps(:,1)>=tstart,1);
+    if (trialstate(1)-trialstate(2))==-1
+        TrialNum = find(TrialInfo.Timestamps(:,1)>=tstart,1)-1;
         MyTF = AllTFs(TrialInfo.TargetZoneType(TrialNum,:),:);
-        handles.TF_plot.CData = flipud(MyTF')/MaxMotorLocation;
+        handles.TF_plot.CData = (MyTF')/MaxMotorLocation;
     end
     
     % Show motorlocation
-    motor_location = MyData(t1,13);
-    [~,foo] = min(handles.TF_plot.CData);
-    MyMap = handles.TF_plot.CData;
-    MyMap(foo:end,1) = -1*MyMap(foo:end,1);
-    [~,idx] = min(abs(MyMap-motor_location/MaxMotorLocation));
-    idx = 100 - idx;
+    motor_location = MyData(t1,13)/MaxMotorLocation;
+%     [~,foo] = min(handles.TF_plot.CData);
+%     MyMap = handles.TF_plot.CData;
+%     MyMap(foo:end,1) = -1*MyMap(foo:end,1);
+%     [~,idx] = min(abs(MyMap-motor_location/MaxMotorLocation));
+%     %idx = 100 - idx;
+    
+% if trialstate(2) == 1
+%     foo = 1;
+% end
+    MyMap = flipud(handles.TF_plot.CData);
+    %MyMap(foo:end,1) = -1*MyMap(foo:end,1);
+    [~,idx] = min(abs(MyMap-motor_location));
     handles.motor_location.YData = idx;
     
     trialstate(1) = trialstate(2);
@@ -227,7 +236,7 @@ end
 if write_video
     % cleanup
     close(writerObj);
-    delete(vidObj);
+    %delete(vidObj);
     delete(writerObj);
 end
 

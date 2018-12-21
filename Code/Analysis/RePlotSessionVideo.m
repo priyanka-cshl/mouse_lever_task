@@ -28,11 +28,11 @@ handles.targetzone.EdgeColor = 'none';
 handles.trial_off = fill(NaN,NaN,[1 1 1]);
 handles.trial_off.EdgeColor = 'none';
 
-handles.lever_DAC_plot = plot(NaN, NaN,'k'); %lever rescaled
-handles.respiration_plot = plot(NaN, NaN,'color',Plot_Colors('r')); %respiration sensor
+handles.lever_DAC_plot = plot(NaN, NaN,'k','Linewidth',1); %lever rescaled
+handles.respiration_plot = plot(NaN, NaN,'color',Plot_Colors('b'),'Linewidth',1.5); %respiration sensor
 
-handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.25); %rewards
-handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1.25); %licks
+handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',2); %rewards
+handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('r'),'Linewidth',1.25); %licks
 
 set(gca,'YLim',[-0.4 7.7]);
 
