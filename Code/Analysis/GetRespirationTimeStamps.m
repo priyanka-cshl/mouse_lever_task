@@ -28,7 +28,18 @@ for i = 1:numel(pks)-1
         end
     end
 end
+
+% detect inhalation starts
+for i = 1:size(sniff_stamps,1)
+    sniff_stamps(i,3) = -1 + sniff_stamps(i,1) + find(RespData(sniff_stamps(i,1):sniff_stamps(i,2))<=0,1,'first');
+    if i < size(sniff_stamps,1)
+        sniff_stamps(i,4) = -1 + sniff_stamps(i,2) + find(RespData(sniff_stamps(i,2):sniff_stamps(i+1,1))>=0,1,'first');
+    end
+        
+end
+
 plot(sniff_stamps(:,1),RespData(sniff_stamps(:,1)),'ok');
 plot(sniff_stamps(:,2),RespData(sniff_stamps(:,2)),'or');
-
+plot(sniff_stamps(:,3),RespData(sniff_stamps(:,3)),'og');
+plot(sniff_stamps(:,4),RespData(sniff_stamps(:,3)),'om');
 end
