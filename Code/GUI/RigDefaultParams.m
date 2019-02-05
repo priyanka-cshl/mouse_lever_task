@@ -21,7 +21,8 @@ switch char(handles.computername)
         handles.respiration_on.Value = 0;
         handles.lick_piezo_on.Value = 1; 
         handles.camera_sync_on.Value = 1;
-        handles.watercoeffs = [0.00134 0.0515 0.099]; % water per drop
+        %handles.watercoeffs = [0.00134 0.0515 0.099]; % water per drop
+        handles.watercoeffs = [0.0006286 0.09254 0.918]; % water per drop
         handles.fliphome = 0; 
         
         % default params

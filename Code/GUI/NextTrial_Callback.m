@@ -66,14 +66,14 @@ h.thistarget.YData = h.which_target.Data;
 
 %% update odor
 if h.odor_priors.Value
-    which_target = h.which_target.Data;
+    %which_target = h.which_target.Data;
     odor_probability = [zeros(60,1); ones(30,1)]; %2/3rds chance of being a priored odor, 1/3rd un-priored
     odor_probability = odor_probability(randperm(length(odor_probability)));
     if odor_probability(1)
         h.current_trial_block.Data(4) = 3; % odor 3
     else
         h.current_trial_block.Data(4) = 1 + ...
-            (h.TargetDefinition.Data(2)>mean(h.target_level_array.Data)); % 1 if upper 6 zones, 2 if lower six zones
+            (h.TargetDefinition.Data(2) > mean(h.target_level_array.Data)); % odor 2 if upper 6 zones, odor 1 if lower six zones
     end
 else
     % no biases - any TF can be any odor - pick randomly
@@ -140,11 +140,33 @@ if (h.which_perturbation.Value>1)
             case 4 % flip map
                 h.current_trial_block.Data(5) = 2000; % increase target hold time in this trial
                 
-            case {5, 6, 7} % location offset I and II
+            case {5, 6, 7} % location offset I, II and III
+                
                 % only applies to particular target zones and odors
-                % so force current zone to TZ of choice and odor
-                h.TargetDefinition.Data(2) = h.PerturbationSettings.Data(4);
-                h.current_trial_block.Data(4) = 3; % odor 3
+                % pick a target zone randomly - either zone 6 (2.5) or zone
+                % 7 (2.25)
+                if rand(1)<0.5
+                    h.TargetDefinition.Data(2) = h.PerturbationSettings.Data(4) - 0.25; % 2.25
+                    % since its on of the lower TZs - pick from odor 1 or 3
+                    if rand(1)<0.5
+                        h.current_trial_block.Data(4) = 1; % odor 3
+                    else
+                        h.current_trial_block.Data(4) = 3; % odor 3
+                    end
+                else
+                    h.TargetDefinition.Data(2) = h.PerturbationSettings.Data(4); % 2.5
+                    % since its on of the upper TZs - pick from odor 2 or 3
+                    if rand(1)<0.5
+                        h.current_trial_block.Data(4) = 2; % odor 3
+                    else
+                        h.current_trial_block.Data(4) = 3; % odor 3
+                    end
+                end
+                    
+%                 % so force current zone to TZ of choice and odor
+%                 h.TargetDefinition.Data(2) = h.PerturbationSettings.Data(4);
+%                 h.current_trial_block.Data(4) = 3; % odor 3
+                
                 % randomly choose if its an upward or a downward shift
                 myoffset = h.myoffset.Data(1);
                 if rand(1)<0.5

@@ -793,11 +793,11 @@ guidata(hObject, handles);
 % --- Executes on button press in lick_piezo_on.
 function lick_piezo_on_Callback(hObject, eventdata, handles)
 if get(handles.lick_piezo_on,'Value')
-    set(handles.lick_piezo_on,'BackgroundColor',[0.5 0.94 0.94]);
-    set(handles.lickpiezo_plot,'LineStyle','none');
-else
     set(handles.lick_piezo_on,'BackgroundColor',[0.94 0.94 0.94]);
     set(handles.lickpiezo_plot,'LineStyle','-');
+else
+    set(handles.lick_piezo_on,'BackgroundColor',[0.5 0.94 0.94]);
+    set(handles.lickpiezo_plot,'LineStyle','none');
 end
 guidata(hObject, handles);
 
