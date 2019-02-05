@@ -8,7 +8,7 @@ DAC_limits = [0 5];
 TriggerLim = params(1,9:10);
 Zone_limits = [params(1,21), 0, params(1,23)];
 MotorLocations = params(1,22) - 1;
-bins = params(1,29);
+bins = 0; %params(1,29);
 if bins == 0
     bins = 100;
 end

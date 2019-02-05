@@ -14,7 +14,7 @@ MotorLocations = 115;
 % calculate stepsize - lever displacement corresponding to one location
 stepsize = (lever_max - minimumtarget)/(total_motor_locations + 0.5);
 % gain = 0.4255;
-% gain = 2.5;
+gain = .37;
 stepsize = stepsize*gain;
 start_location = numel(target:stepsize:lever_max);
 end_location = -numel(target:-stepsize:lever_min);

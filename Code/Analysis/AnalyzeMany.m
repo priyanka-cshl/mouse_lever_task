@@ -36,10 +36,10 @@ for i = 1:size(FileNames,2)
     MyFileName = FileNames{i};
     disp(MyFileName);
     
-    
+    clear respthresh
     if exist(fullfile(FilePaths,'processed',strrep(MyFileName,'.mat','_processed.mat')))
         load(fullfile(FilePaths,'processed',strrep(MyFileName,'.mat','_processed.mat')),...
-            'sessionstart','sessionstop');
+            'sessionstart','sessionstop','respthresh');
     else
         sessionstart = 0;
         sessionstop = 0;
@@ -52,8 +52,33 @@ for i = 1:size(FileNames,2)
     
     if sessionstop
         close(gcf);
+        if exist('respthresh','var') && respthresh ~= 0
+            RespData = Data.(['session',num2str(i)]).data(:,15);
+            TimeStamps = Data.(['session',num2str(i)]).data(:,1);
+            threshold = respthresh;
+            [sniff_stamps] = GetRespirationTimeStamps(RespData, respthresh);
+        else
+            respthresh = 0;
+            sniff_stamps = [];
+%             newthreshold = 0.2;
+%             
+%             %% Process Respiration Data
+%             while newthreshold
+%                 if size(Data.(['session',num2str(i)]).data,2)>=15 & median(Data.(['session',num2str(i)]).data(:,15)>0)
+%                     RespData = Data.(['session',num2str(i)]).data(:,15);
+%                     TimeStamps = Data.(['session',num2str(i)]).data(:,1);
+%                     threshold = 0.2;
+%                     [sniff_stamps] = GetRespirationTimeStamps(RespData, newthreshold);
+%                 end
+%                 respthresh = newthreshold;
+%                 disp(['current threshold = ',num2str(respthresh)]);
+%                 newthreshold = str2double(input('Enter new threshold: [0 if current thresh is ok] ','s'));
+%             end
+        end
+%         close(gcf);
+        
         %% Parse trials
-        [Traces, TrialInfo, TargetZones] = ChunkToTrials(Data.(['session',num2str(i)]).data, TargetZones, sessionstart, sessionstop);
+        [Traces, TrialInfo, TargetZones] = ChunkToTrials(Data.(['session',num2str(i)]).data, TargetZones, sessionstart, sessionstop, sniff_stamps);
         [Odors, ZonesToUse, Traces] = TruncateTrials(Traces, TrialInfo, TargetZones);
         
         %% Correct for incorrect Target Zone assignments
@@ -71,11 +96,11 @@ for i = 1:size(FileNames,2)
         end
         
         %% Trajectory Analysis
-        [Trajectories, TrajectoryStats, ZoneStays] = GroupTrajectories(Traces, TrialInfo, TargetZones, Data.(['session',num2str(i)]).settings);
+        [Trajectories, TrajectoryStats, ZoneStays, Exhalations, Inhalations] = GroupTrajectories(Traces, TrialInfo, TargetZones, Data.(['session',num2str(i)]).settings);
         
         %% save processed files
         savepath = fullfile(FilePaths,'processed',filesep,MyFileName);
-        save(strrep(savepath,'.mat','_processed.mat'),'Trajectories','TrajectoryStats','ZoneStays','sessionstart','sessionstop');
+        save(strrep(savepath,'.mat','_processed.mat'),'Trajectories','TrajectoryStats','ZoneStays','sessionstart','sessionstop','respthresh', 'Exhalations', 'Inhalations');
         
         %     %% Basic session statistics
         %     [NumTrials] = SessionStats(TrialInfo,Trajectories,ZonesToUse,TargetZones,1);

@@ -1,5 +1,24 @@
 % organize the session data into a cell array of trials
-function [Traces, TrialInfo, TargetZones] = ChunkToTrials(MyData, TargetZones, sessionstart, sessionstop)
+function [Traces, TrialInfo, TargetZones] = ChunkToTrials(MyData, TargetZones, sessionstart, sessionstop, sniff_stamps)
+
+    if nargin < 3
+        sessionstart = 0;
+        sessionstop = max(MyData(:,1));
+        sniff_stamps = [];
+    elseif nargin < 4
+        sessionstop = max(MyData(:,1));
+        sniff_stamps = [];
+    elseif nargin<5
+        sniff_stamps = [];
+    end
+    
+    if size(TargetZones,1)>12
+        TargetZonesTemp = TargetZones;
+        f = find(round(TargetZones(:,1) - TargetZones(:,3))~=1);
+        %f = find((TargetZones(:,1) - TargetZones(:,3))~=0.6);
+        TargetZones(f,:) = [];
+    end
+    
     % column ID for trial column
     TrialCol = find(cellfun(@isempty,regexp(WhatsMyData','Trial'))==0);
     TrialColumn = MyData(:,TrialCol);
@@ -47,7 +66,27 @@ function [Traces, TrialInfo, TargetZones] = ChunkToTrials(MyData, TargetZones, s
         TrialInfo.Timestamps(t,:) = MyData([TrialOn(t) TrialOff(t)],1);
         TrialInfo.TimeIndices(t,:) = [TrialOn(t) TrialOff(t)];
         TrialInfo.Odor(t,1) = mode( MyData(TrialOn(t):TrialOff(t), TrialCol) );
-        TrialInfo.TargetZoneType(t,1) = find(TargetZones(:,1) == mode( MyData(TrialOn(t):TrialOff(t), 2) ),1);
+        
+        if ~isempty(find(TargetZones(:,1) == mode( MyData(TrialOn(t):TrialOff(t), 2) ),1))
+            TrialInfo.TargetZoneType(t,1) = ...
+                find(TargetZones(:,1) == mode( MyData(TrialOn(t):TrialOff(t), 2) ),1);
+        else
+            thiszonetarget = TargetZonesTemp(find(TargetZonesTemp(:,1) == mode( MyData(TrialOn(t):TrialOff(t), 2) ),1),2);
+            TrialInfo.TargetZoneType(t,1) = find(TargetZones(:,2) == thiszonetarget);
+        end
+        
+        if ~isempty(sniff_stamps)
+            mysniffs = find(sniff_stamps(:,2)>=TrialOn(t) & sniff_stamps(:,2)<=TrialOff(t));
+            % include one sniff before and one after
+            if ~isempty(mysniffs)
+                mysniffs = [mysniffs(1)-1; mysniffs; mysniffs(end)+1];
+                TrialInfo.Inhalation(t) = {sniff_stamps(mysniffs,2)};
+                TrialInfo.Exhalation(t) = {sniff_stamps(mysniffs,1)};
+            else
+                TrialInfo.Inhalation(t) = {[]};
+                TrialInfo.Exhalation(t) = {[]};
+            end
+        end
         
         % check the 10 samples before trial start to verify if the transfer
         % function was inverted in this trial
@@ -81,24 +120,62 @@ function [Traces, TrialInfo, TargetZones] = ChunkToTrials(MyData, TargetZones, s
                     case 500
                         TrialInfo.Perturbation(t,:) = [WhichPerturbation/100 PerturbationValue];
                     case {600, 700}
-                        TrialInfo.Perturbation(t,:) = [WhichPerturbation/100 PerturbationValue];
-                        TrialInfo.PerturbationStart(t) = find( diff([ MyData(TrialOn(t):TrialOff(t), RZoneCol); 0] )==1);
-                        TrialInfo.FeedbackStart(t) = find( diff([ MyData(TrialOn(t):TrialOff(t), RZoneCol); 0] )==-1);
-                        % get targetzone stay times for this trial
-                        tempstays = cell2mat(TrialInfo.StayTimeStart(t));
-                        tempstaytimes = cell2mat(TrialInfo.StayTime(t));
-                        % find tzone stays after odor offset
-                        foo = find(tempstays>TrialInfo.PerturbationStart(t));
-                        if ~isempty(foo)
-                            TrialInfo.OffsetStays = {tempstaytimes(foo)};
-                            tempstays(foo,:) = [];
-                            tempstaytimes(foo,:) = [];
-                            TrialInfo.StayTime(t) = {tempstays};
-                            TrialInfo.StayTimeStart(t) = {tempstaytimes};
+                        if ~isempty(find( diff([ MyData(TrialOn(t):TrialOff(t), RZoneCol); 0] )==1))
+                            TrialInfo.Perturbation(t,:) = [WhichPerturbation/100 PerturbationValue];
+                            TrialInfo.PerturbationStart(t) = find( diff([ MyData(TrialOn(t):TrialOff(t), RZoneCol); 0] )==1);
+                            TrialInfo.FeedbackStart(t) = find( diff([ MyData(TrialOn(t):TrialOff(t), RZoneCol); 0] )==-1);
+                            % get targetzone stay times for this trial
+                            tempstays = cell2mat(TrialInfo.StayTimeStart(t));
+                            tempstaytimes = cell2mat(TrialInfo.StayTime(t));
+                            % find tzone stays after odor offset
+                            foo = find(tempstays>TrialInfo.PerturbationStart(t));
+                            if ~isempty(foo)
+                                TrialInfo.OffsetStays = {tempstaytimes(foo)};
+                                tempstays(foo,:) = [];
+                                tempstaytimes(foo,:) = [];
+                                TrialInfo.StayTime(t) = {tempstays};
+                                TrialInfo.StayTimeStart(t) = {tempstaytimes};
+                            end
                         end
                     case 800
                         TrialInfo.Perturbation(t,:) = [WhichPerturbation/100 PerturbationValue];
                     case 900
+                        if ~isempty(find( diff([ MyData(TrialOn(t):TrialOff(t), RZoneCol); 0] )==-1))
+                            TrialInfo.Perturbation(t,:) = [WhichPerturbation/100 PerturbationValue];
+                            TrialInfo.FeedbackStart(t) = find( diff([ MyData(TrialOn(t):TrialOff(t), RZoneCol); 0] )==-1);
+                            
+                            % get targetzone stay times for this trial
+                            tempstays = cell2mat(TrialInfo.StayTimeStart(t));
+                            tempstaytimes = cell2mat(TrialInfo.StayTime(t));
+                            % find tzone stays after odor offset
+                            foo = find(tempstays<TrialInfo.FeedbackStart(t));
+                            if ~isempty(foo)
+                                TrialInfo.TZoneStays = {tempstaytimes(foo)};
+                                tempstays(foo,:) = [];
+                                tempstaytimes(foo,:) = [];
+                                TrialInfo.StayTime(t) = {tempstays};
+                                TrialInfo.StayTimeStart(t) = {tempstaytimes};
+                            end
+                        end
+                    case 1000
+                        if ~isempty(find( diff([ MyData(TrialOn(t):TrialOff(t), RZoneCol); 0] )==-1))
+                            TrialInfo.Perturbation(t,:) = [WhichPerturbation/100 PerturbationValue];
+                            TrialInfo.PerturbationStart(t) = find( diff([ MyData(TrialOn(t):TrialOff(t), RZoneCol); 0] )==1);
+                            TrialInfo.FeedbackStart(t) = find( diff([ MyData(TrialOn(t):TrialOff(t), RZoneCol); 0] )==-1);
+                            
+                            % get targetzone stay times for this trial
+                            tempstays = cell2mat(TrialInfo.StayTimeStart(t));
+                            tempstaytimes = cell2mat(TrialInfo.StayTime(t));
+                            % find tzone stays after odor offset
+                            foo = find(tempstays<TrialInfo.FeedbackStart(t));
+                            if ~isempty(foo)
+                                TrialInfo.TZoneStays = {tempstaytimes(foo)};
+                                tempstays(foo,:) = [];
+                                tempstaytimes(foo,:) = [];
+                                TrialInfo.StayTime(t) = {tempstays};
+                                TrialInfo.StayTimeStart(t) = {tempstaytimes};
+                            end
+                        end
                         
                 end
             end
@@ -140,7 +217,9 @@ function [Traces, TrialInfo, TargetZones] = ChunkToTrials(MyData, TargetZones, s
     TrialInfo.TrialID(:,todelete) = [];
     TrialInfo.Perturbation(todelete,:) = [];
     TrialInfo.Success(todelete,:) = [];
-
+    TrialInfo.Inhalation(todelete,:) = {};
+    TrialInfo.Exhalation(todelete,:) = {};
+    
     Traces.Lever = Lever;
     Traces.Motor = Motor;
     Traces.Licks = Licks;
