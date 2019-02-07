@@ -687,10 +687,18 @@ guidata(hObject,handles);
 Params2File(handles);
 
 [handles] = UpdateTransferFunction(handles);
-guidata(hObject,handles);
 
+if handles.which_perturbation.Value == 11 && ...
+        mod(floor(handles.current_trial_block.Data(2)/handles.TransferFunction.Data(2)),2)
+    if handles.TFtype.Value
+        handles.TargetDefinition.Data = handles.TargetDefinition.Data + 2*handles.ZoneLimitSettings.Data(1);
+    end
+end
+
+guidata(hObject,handles);
 pause(0.1);
 Send2Arduino(handles);
+
 % --------------------------------------------------------------------
 
 % --- Executes on button press in stay_time_up.

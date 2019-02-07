@@ -61,7 +61,7 @@ if NoAntiBias
     end
 end
 
-h.which_target.Data = find(h.all_targets == h.TargetDefinition.Data(2));
+h.which_target.Data = find(h.all_targets == h.TargetDefinition.Data(2)); 
 h.thistarget.YData = h.which_target.Data;
 
 %% update odor
@@ -234,6 +234,7 @@ if (h.which_perturbation.Value>1)
                     case 3
                         h.current_trial_block.Data(4) = 2;
                 end
+                
                 
         end
     else
