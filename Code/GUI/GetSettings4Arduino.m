@@ -30,8 +30,17 @@ param(17:19) = h.TargetDefinition.Data;
 not_ints = [not_ints 17:19]; % convert to integers for Arduino communication purpose
 legend(20) = {'TFsize'}; param(20) = h.TransferFunction.Data(1);
 
-legend(21) = {'HalfZoneSize'}; param(21) = h.locations_per_zone.Data(1);
-legend(22) = {'MotorZero'}; param(22) = h.MotorLocationArduinoMax + 1;
+if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.TransferFunction.Data(2)),2)
+    legend(21) = {'HalfZoneSize'}; param(21) = h.locations_per_zone.Data(1);
+    if h.TFLeftprobability.Data(1)
+        legend(22) = {'MotorZero'}; param(22) = h.MotorLocationArduinoMax + 1 + 2*h.locations_per_zone.Data(1);
+    else
+        legend(22) = {'MotorZero'}; param(22) = h.MotorLocationArduinoMax + 1 - 2*h.locations_per_zone.Data(1);
+    end
+else
+    legend(21) = {'HalfZoneSize'}; param(21) = h.locations_per_zone.Data(1);
+    legend(22) = {'MotorZero'}; param(22) = h.MotorLocationArduinoMax + 1;
+end
 
 legend(23) = {'offtarget_locations'}; param(23) = h.locations_per_zone.Data(3); 
 

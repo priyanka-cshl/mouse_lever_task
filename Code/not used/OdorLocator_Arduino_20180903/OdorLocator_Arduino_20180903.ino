@@ -386,24 +386,31 @@ void loop()
   {
     digitalWrite(trial_reporter_pin, (trialstate[0] == 4)); // active trial?
     digitalWrite(in_target_zone_reporter_pin, in_target_zone[0]); // in_target_zone?
-    if (perturbation_offset != 0)
+    if (trialstate[0] == 1)
     {
-      if (offset_perturbation_trial_typeII)
-      {
-        digitalWrite(in_reward_zone_reporter_pin, use_offset_perturbation == 1);
-      }
-      else
-      {
-        digitalWrite(in_reward_zone_reporter_pin, use_offset_perturbation == 2); // in_reward_zone?
-      }
-    }
-    else if ((feedback_halt_trial)||(feedback_pause_trial))
-    {
-      digitalWrite(in_reward_zone_reporter_pin, (feedback_halt==1)); // in_reward_zone?
+      digitalWrite(in_reward_zone_reporter_pin, HIGH);
     }
     else
     {
-      digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2) || (reward_state == 5)); // in_reward_zone?
+      if (perturbation_offset != 0)
+      {
+        if (offset_perturbation_trial_typeII)
+        {
+          digitalWrite(in_reward_zone_reporter_pin, use_offset_perturbation == 1);
+        }
+        else
+        {
+          digitalWrite(in_reward_zone_reporter_pin, use_offset_perturbation == 2); // in_reward_zone?
+        }
+      }
+      else if ((feedback_halt_trial)||(feedback_pause_trial))
+      {
+        digitalWrite(in_reward_zone_reporter_pin, (feedback_halt==1)); // in_reward_zone?
+      }
+      else
+      {
+        digitalWrite(in_reward_zone_reporter_pin, (reward_state == 2) || (reward_state == 5)); // in_reward_zone?
+      }
     }
   }
   else if (open_loop_mode)
@@ -868,6 +875,8 @@ void UpdateAllParams()
     fake_target_params[i] = param_array[26 + i]; // high lim, target, low lim
   }
 
+  decouple_reward_and_stimulus = (fake_target_params[2] > 0);
+  
   if ((feedback_halt_trial) || (feedback_pause_trial))
   {
     feedback_halt_duration = param_array[25];
@@ -876,10 +885,11 @@ void UpdateAllParams()
   else
   {
     feedback_halt_duration = 0;
-    fake_target_params[1] = 0;
+    //fake_target_params[1] = 0;
+    //decouple_reward_and_stimulus = false;
   }
   
-  decouple_reward_and_stimulus = (fake_target_params[1] > 0);
+  
   //delay_feedback_by = param_array[29];
   training_stage = param_array[30];
 

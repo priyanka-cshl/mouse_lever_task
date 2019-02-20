@@ -21,7 +21,8 @@ switch char(handles.computername)
         handles.respiration_on.Value = 0;
         handles.lick_piezo_on.Value = 1; 
         handles.camera_sync_on.Value = 1;
-        handles.watercoeffs = [0.00134 0.0515 0.099]; % water per drop
+        %handles.watercoeffs = [0.00134 0.0515 0.099]; % water per drop
+        handles.watercoeffs = [0.0006286 0.09254 0.918]; % water per drop
         handles.fliphome = 0; 
         
         % default params
@@ -63,7 +64,7 @@ switch char(handles.computername)
         handles.MFC_table.Data = [1.6 0.64]'; %[1.6 0.4]';
         handles.Zero_MFC.Value = 0;
         handles.which_stage.Value = 3; % training stage
-        handles.TransferFunction.Data(2) = 1; % block size (1 = no blocks)
+        handles.TransferFunction.Data(2) = 100; % block size (1 = no blocks)
         
         % hacks - for recreating a specific session
         handles.trialsequence = [8 11 5 10 3];% 8 4 1 6 2 8 2 11 2 11 3 8 4 7 1];
