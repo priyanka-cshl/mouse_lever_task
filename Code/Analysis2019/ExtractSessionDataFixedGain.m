@@ -61,6 +61,21 @@ MyParams(1: find(MyParams(:,1)==0,1,'last')-1,:) = [];
 % if timestamps are negative - ignore those
 MyParams(find(MyParams(:,1)<0),:) = [];
 
+% HACK: for first day of block shifts - fix target zone definitions
+f = find(MyParams(:,23)~=121);
+if ~isempty(f)
+    U = unique(MyParams(:,18:20),'rows');
+    for i = 1:size(U,1)
+        if rem(U(i,2),0.25)
+            x = find(MyParams(:,19) == U(i,2));
+            y = find(abs(MyParams(:,19) - U(i,2) + 0.6)<=0.1); 
+            for j = 1:numel(x)
+                MyParams(x(j),18:20) = MyParams(y(1),18:20); 
+            end
+        end
+    end
+end
+
 % for each trial
 for thisTrial = 1:size(MyParams,1)
     
@@ -101,7 +116,7 @@ for thisTrial = 1:size(MyParams,1)
     
     %% detect block shift trials
     if MyParams(thisTrial,23)~=121 % was a perturbed trial
-        MyData(f,11) = 100*MyParams(thisTrial,11);
+        MyData(f,11) = 100*11;
         MyData(f,12) = MyParams(thisTrial,23)-121;
     end
 end

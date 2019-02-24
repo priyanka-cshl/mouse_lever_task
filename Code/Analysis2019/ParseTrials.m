@@ -1,12 +1,12 @@
 % organize the session data into a cell array of trials
-function [Traces, TrialInfo, TargetZones] = ParseTrials(MyData, TargetZones, sessionstart, sessionstop)
+function [Traces, TrialInfo, TargetZones] = ParseTrials(MyData, MySettings, TargetZones, sessionstart, sessionstop)
 
-SampleRate = 500; % samples/second
+global SampleRate; % = 500; % samples/second
 
-if nargin < 3
+if nargin < 4
     sessionstart = 0;
     sessionstop = max(MyData(:,1));
-elseif nargin < 4
+elseif nargin < 5
     sessionstop = max(MyData(:,1));
 end
 
@@ -52,19 +52,19 @@ for thisTrial = 1:length(TrialOn)
     
     %% 1: extract continuous traces for lever, motor position, licks and sniffs
     
-    % take a 1 sec window before and the entire trial + ITI after
-    if TrialOn(thisTrial) > 1
+    if thisTrial > 1
         start_offset = 0;
         start_idx = TrialOff(thisTrial-1); % start from the end of the previous trial
     else % very first trial
-        start_offset = -1;
-        start_idx = TrialOn(thisTrial) + start_offset*SampleRate;
+        start_offset = -1; % start one second before trial start
+        start_idx = TrialOn(thisTrial) - min(-start_offset*SampleRate,TrialOn(thisTrial)-1);
         trialflag = -1; % ignore this trial
     end
+    
+    stop_idx = TrialOff(thisTrial); % until end of current trial
+    
     if thisTrial < length(TrialOn) 
-        stop_idx = TrialOff(thisTrial); % until end of current trial
     else % last trial
-        stop_idx = TrialOff(thisTrial); % until end of current trial
         trialflag = -1;
     end
     
@@ -82,16 +82,36 @@ for thisTrial = 1:length(TrialOn)
     TrialInfo.SessionTimestamps(thisTrial,:) = MyData(thisTrialIdx,1); % actual timestamps of trial start and end
     TrialInfo.Timestamps(thisTrial,:) = MyData(thisTrialIdx,1) - MyData(start_idx,1); % in seconds, relative to trace start
     TrialInfo.TimeIndices(thisTrial,:) = thisTrialIdx - start_idx;
-    TrialInfo.Duration(thisTrial,1) = (diff(thisTrialIdx) + 1)*SampleRate; % in seconds
+    TrialInfo.Duration(thisTrial,1) = (diff(thisTrialIdx) + 1)/SampleRate; % in seconds
     
     % Flag invalid trials
-    if (MyData(TrialOn,1) < sessionstart) || (MyData(TrialOn,1) > sessionstop)
+    if (MyData(thisTrialIdx(1),1) < sessionstart) || (MyData(thisTrialIdx(1),1) > sessionstop)
         trialflag = -1;
     end
     TrialInfo.Valid(thisTrial,1) = trialflag;
-    
     % Which odor
     TrialInfo.Odor(thisTrial,1) = mode(MyData(thisTrialIdx(1):thisTrialIdx(2),TrialCol));
+    
+    % Odor ON timestamp
+    thisTrialInZone = find(diff(MyData(start_idx:thisTrialIdx, RZoneCol))==-1);
+    if ~isempty(thisTrialInZone)
+        TrialInfo.OdorStart(thisTrial,1) = thisTrialInZone(end);
+    else
+        TrialInfo.OdorStart(thisTrial,1) = NaN;
+    end
+    LeverTemp = MyData(start_idx:thisTrialIdx(1), LeverCol);
+    LeverTemp(LeverTemp<4.8) = 0;
+    LeverTemp(LeverTemp>0) = 1;
+    Initiations = [find(diff([0; LeverTemp; 0])==1) find(diff([0; LeverTemp; 0])==-1)-1];
+    TriggerHold = MySettings(thisTrial,13); % in msec
+    TriggerHold = floor(TriggerHold*SampleRate/1000); % in samples
+    OdorStart = find((Initiations(:,2)-Initiations(:,1))>=TriggerHold,1,'first');
+    if isempty(OdorStart)
+        OdorStart = 1;
+    end
+    TrialInfo.OdorStart(thisTrial,2) = Initiations(OdorStart,1) + TriggerHold - 1;
+    TrialInfo.OdorStart(thisTrial,:) = TrialInfo.OdorStart(thisTrial,:)/SampleRate; % convert to seconds
+    
     
     % Which TargetZone
     if ~isempty(find(TargetZones(:,1) == mode(MyData(thisTrialIdx(1):thisTrialIdx(2),2)),1))
@@ -109,19 +129,21 @@ for thisTrial = 1:length(TrialOn)
     
     % Reward timestamps
     thisTrialRewards = find(diff(MyData(start_idx:stop_idx,RewardCol))==1); % indices w.r.t. to trace start
-    thisTrialRewards = thisTraceRewards/SampleRate; % convert to seconds
+    thisTrialRewards = thisTrialRewards/SampleRate; % convert to seconds
     % force the reward time stamps that were before trial start to -ve
     thisTrialRewards(thisTrialRewards < TrialInfo.Timestamps(thisTrial,1)) = ...
         -1*thisTrialRewards(thisTrialRewards < TrialInfo.Timestamps(thisTrial,1));
     if ~isempty(thisTrialRewards)
         TrialInfo.Reward(thisTrial) = { thisTrialRewards };
+        TrialInfo.Success = any(thisTrialRewards>0); % successes and failures
     else
         TrialInfo.Reward(thisTrial) = { [] };
+        TrialInfo.Success = 0; % successes and failures
     end
     
     % Calculate all stay times
-    thisTrialInZone = [find(diff([MyData(TrialOn(thisTrial):TrialOff(thisTrial), TZoneCol);0])==1)' ...
-        find(diff([MyData(TrialOn(thisTrial):TrialOff(thisTrial), TZoneCol);0])==-1)']; % entry and exit indices w.r.t. Trial ON    
+    thisTrialInZone = [find(diff([0;MyData(TrialOn(thisTrial):TrialOff(thisTrial), TZoneCol)])==1) ...
+        find(diff([MyData(TrialOn(thisTrial):TrialOff(thisTrial), TZoneCol);0])==-1)]; % entry and exit indices w.r.t. Trial ON    
     thisTrialInZone = TrialInfo.Timestamps(thisTrial,1) + thisTrialInZone/SampleRate; % convert to seconds and offset w.r.t. trace start
     if ~isempty(thisTrialInZone)
         TrialInfo.InZone(thisTrial) = { thisTrialInZone };
@@ -148,23 +170,30 @@ for thisTrial = 1:length(TrialOn)
                     TrialInfo.Perturbation(thisTrial,:) = [4 0];
                 case 500 % location offset I
                     TrialInfo.Perturbation(thisTrial,:) = [WhichPerturbation/100 PerturbationValue];
+                    
                 case {600, 700} % location offset II and III
                     if ~isempty(find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==1))
                         TrialInfo.Perturbation(thisTrial,:) = [WhichPerturbation/100 PerturbationValue];
                         TrialInfo.PerturbationStart(thisTrial) = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==1);
                         TrialInfo.FeedbackStart(thisTrial) = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==-1);
-                        % get targetzone stay times for this trial
-                        tempstays = cell2mat(TrialInfo.StayTimeStart(thisTrial));
-                        tempstaytimes = cell2mat(TrialInfo.StayTime(thisTrial));
-                        % find tzone stays after odor offset
-                        foo = find(tempstays>TrialInfo.PerturbationStart(thisTrial));
-                        if ~isempty(foo)
-                            TrialInfo.OffsetStays = {tempstaytimes(foo)};
-                            tempstays(foo,:) = [];
-                            tempstaytimes(foo,:) = [];
-                            TrialInfo.StayTime(thisTrial) = {tempstays};
-                            TrialInfo.StayTimeStart(thisTrial) = {tempstaytimes};
-                        end
+                        % convert to seconds w.r.t. trial start
+                        TrialInfo.PerturbationStart(thisTrial) = TrialInfo.PerturbationStart(thisTrial)/SampleRate;
+                        TrialInfo.FeedbackStart(thisTrial) = TrialInfo.FeedbackStart(thisTrial)/SampleRate;
+                        % convert to seconds w.r.t. trace start
+                        TrialInfo.PerturbationStart(thisTrial) = TrialInfo.PerturbationStart(thisTrial) + TrialInfo.Timestamps(thisTrial,1);
+                        TrialInfo.FeedbackStart(thisTrial) = TrialInfo.FeedbackStart(thisTrial) + TrialInfo.Timestamps(thisTrial,1);
+%                         % get targetzone stay times for this trial
+%                         tempstays = cell2mat(TrialInfo.StayTimeStart(thisTrial));
+%                         tempstaytimes = cell2mat(TrialInfo.StayTime(thisTrial));
+%                         % find tzone stays after odor offset
+%                         foo = find(tempstays>TrialInfo.PerturbationStart(thisTrial));
+%                         if ~isempty(foo)
+%                             TrialInfo.OffsetStays = {tempstaytimes(foo)};
+%                             tempstays(foo,:) = [];
+%                             tempstaytimes(foo,:) = [];
+%                             TrialInfo.StayTime(thisTrial) = {tempstays};
+%                             TrialInfo.StayTimeStart(thisTrial) = {tempstaytimes};
+%                         end
                     end
                 case 800 % gain change
                     TrialInfo.Perturbation(thisTrial,:) = [WhichPerturbation/100 PerturbationValue];
@@ -206,6 +235,9 @@ for thisTrial = 1:length(TrialOn)
                         end
                     end
                     
+                case 1100 % block shift perturbations
+                    TrialInfo.Perturbation(thisTrial,:) = [11 PerturbationValue];
+                    
             end
         end
     else
@@ -214,41 +246,46 @@ for thisTrial = 1:length(TrialOn)
 
 end
 
-% successes and failures
-TrialInfo.Success = ~cellfun(@isempty, TrialInfo.Reward)';
+% count trials of each target zone type
 for i = 1:size(TargetZones,1)
     TargetZones(i,4) = numel( find(TrialInfo.TargetZoneType == i));
 end
 
+% sanity checks for buggy zone definitions - historical
 f = find(TargetZones(:,1)==3); % buggy zone definition
 
-todelete = [];
-for i = 1:numel(f)
-    todelete = [todelete; find(TrialInfo.TargetZoneType==f(i))];
+if ~isempty(f)
+    disp('CAUTION: session contains weird target zones');
+    todelete = [];
+    for i = 1:numel(f)
+        todelete = [todelete; find(TrialInfo.TargetZoneType==f(i))];
+    end
+    
+    
+    Traces.Lever(todelete,:) = [];
+    Traces.Motor(todelete,:) = [];
+    Traces.Sniffs(todelete,:) = {};
+    Traces.Licks(todelete,:) = {};
+    
+    TrialInfo.TrialID(:,todelete) = [];  
+    TrialInfo.Valid(todelete,:) = [];
+    TrialInfo.SessionTimestamps(todelete,:) = [];
+    TrialInfo.Timestamps(todelete,:) = [];
+    TrialInfo.TimeIndices(todelete,:) = [];
+    TrialInfo.Duration(:,todelete) = [];
+    
+    TrialInfo.Odor(todelete,:) = [];
+    TrialInfo.OdorStart(todelete,:) = [];
+    TrialInfo.TargetZoneType(todelete,:) = [];
+    TrialInfo.TransferFunctionLeft(todelete,:) = [];
+    TrialInfo.Reward(:,todelete) = [];
+    TrialInfo.Success(todelete,:) = [];
+    
+    TrialInfo.StayTime(:,todelete) = [];
+    TrialInfo.StayTimeStart(:,todelete) = [];
+    TrialInfo.TrialID(:,todelete) = [];
+    TrialInfo.Perturbation(todelete,:) = [];
+
 end
 
-Lever(:,todelete) = [];
-Motor(:,todelete) = [];
-Respiration(:,todelete) = [];
-Licks(:,todelete) = [];
-
-TrialInfo.Timestamps(todelete,:) = [];
-TrialInfo.TimeIndices(todelete,:) = [];
-TrialInfo.Odor(todelete,:) = [];
-TrialInfo.TargetZoneType(todelete,:) = [];
-TrialInfo.TransferFunctionLeft(todelete,:) = [];
-TrialInfo.Reward(:,todelete) = [];
-TrialInfo.Duration(:,todelete) = [];
-TrialInfo.StayTime(:,todelete) = [];
-TrialInfo.StayTimeStart(:,todelete) = [];
-TrialInfo.TrialID(:,todelete) = [];
-TrialInfo.Perturbation(todelete,:) = [];
-TrialInfo.Success(todelete,:) = [];
-TrialInfo.Inhalation(todelete,:) = {};
-TrialInfo.Exhalation(todelete,:) = {};
-
-Traces.Lever = Lever;
-Traces.Motor = Motor;
-Traces.Licks = Licks;
-Traces.Respiration = Respiration;
 end

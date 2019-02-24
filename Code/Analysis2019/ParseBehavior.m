@@ -8,14 +8,17 @@ if nargin < 2
 end
 
 % global timewindow;
-% global MyFileName;
+global MyFileName;
+global subplotcol
 % timewindow = 100; % sampling rate of 500 Hz, 50 points = 100ms
+global SampleRate;
+SampleRate = 500; % Samples/second
 
 [DataRoot] = WhichComputer(); % load rig specific paths etc
 
 %% File selection
 % Let the user select one or more behavioral files for analysis
-if ~isempty(strfind(MouseName,'.mat')) % generally unused condition
+if contains(MouseName,'.mat') % generally unused condition
     foo = strsplit(MouseName,'_');
     FileNames{1} = MouseName;
     MouseName = char(foo(1));
@@ -51,99 +54,91 @@ for i = 1:size(FileNames,2) % For each file
         if ReplotSession
             RecreateSession(MyData);
         end
-        sessionstart = str2double(input('Enter start timestamp:','s'));
-        sessionstop = str2double(input('Enter stop timestamp:','s'));
+%         sessionstart = str2double(input('Enter start timestamp:','s'));
+%         sessionstop = str2double(input('Enter stop timestamp:','s'));
+        sessionstart = 0;
+        sessionstop = -1;
+        
+        if sessionstart<0
+            sessionstart = 0;
+        end
+        if sessionstop<0
+            sessionstop = MyData(end,1);
+        end
     end
     
     %% Parse trials
-    [Traces, TrialInfo, TargetZones] = ParseTrials(MyData, TargetZones, sessionstart, sessionstop);
-    [Traces, TrialInfo, TargetZones] = ChunkToTrials(MyData, TargetZones, sessionstart, sessionstop, sniff_stamps);
-    [Odors, ZonesToUse, Traces] = TruncateTrials(Traces, TrialInfo, TargetZones);
+    [Traces, TrialInfo, TargetZones] = ParseTrials(MyData, MySettings, TargetZones, sessionstart, sessionstop);
     
-%     %% process respiration data
-%     clear respthresh
-%     if sessionstop
+    %% get Spikes
+    [myephysdir] = WhereSpikeFile(MyFileName);
+    [spiketimes] = Spikes2Trials(myephysdir);
+    
+    for unit = 1:size(spiketimes,2)
+%         figure;
+%         PlotPSTH(unit,TrialInfo,spiketimes);
+%         set(gcf,'Units','inches');
+%         screenposition = get(gcf,'Position');
+%         set(gcf,'PaperPosition',[0 0 screenposition(3:4)],...
+%             'PaperSize',[screenposition(3:4)]);
+%         figureName = [MyFileName(1:end-4),'_',num2str(unit),'_rasters'];
+%         print(figureName,'-dpdf','-fillpage');
 %         close(gcf);
-%         if exist('respthresh','var') && respthresh ~= 0
-%             RespData = MyData(:,15);
-%             TimeStamps = MyData(:,1);
-%             threshold = respthresh;
-%             [sniff_stamps] = GetRespirationTimeStamps(RespData, respthresh);
-%         else
-%             respthresh = 0;
-%             sniff_stamps = [];
-%             newthreshold = 0.2;
+        
+%         figure(2);
+%         clf
+%         PlotLocationOffsetPSTH(unit,Traces,TrialInfo,spiketimes);
+%         pause(2);
+%         %set(gcf,'Position',[274         365        1512         565]);
+%         set(gcf,'Units','inches');
+%         screenposition = get(gcf,'Position');
+%         set(gcf,'PaperPosition',[0 0 screenposition(3:4)],...
+%             'PaperSize',screenposition(3:4));
+%         figureName = [MyFileName(1:end-4),'_',num2str(unit),'_offset'];
+%         print(figureName,'-dpdf');
+%         pause(5);
+        
+%         subplotcol = rem(unit,5);
+%         figure(1);
+%         LeverSpikeHistograms(unit, Traces, TargetZones, TrialInfo, spiketimes);
+%         pause(2);
+%         
+%         
+%         if rem(unit,5) == 0 || unit == size(spiketimes,2)
+%             figure(1);
+%             set(gcf,'Units','inches');
+%             screenposition = get(gcf,'Position');
+%             set(gcf,'PaperPosition',[0 0 screenposition(3:4)],...
+%                 'PaperSize',screenposition(3:4));
+%             figureName = [MyFileName(1:end-4),'_',num2str(unit),'_tuning'];
+%             print(figureName,'-dpdf');
+%             pause(5);
+%             clf
 %             
-%             % Process Respiration Data
-%             while newthreshold
-%                 if size(MyData,2)>=15 && median(MyData(:,15)>0)
-%                     RespData = MyData(:,15);
-%                     TimeStamps = MyData(:,1);
-%                     threshold = 0.2;
-%                     [sniff_stamps] = GetRespirationTimeStamps(RespData, newthreshold);
-%                 end
-%                 respthresh = newthreshold;
-%                 disp(['current threshold = ',num2str(respthresh)]);
-%                 newthreshold = str2double(input('Enter new threshold: [0 if current thresh is ok] ','s'));
-%             end
+% %             if unit < size(spiketimes,2)
+% %                 figure(1);
+% %             end
 %         end
-%         close(gcf);
-        
-        
-        
-        %% Correct for incorrect Target Zone assignments
-        %[TrialInfo] = FixTargetZoneAssignments(Data.(['session',num2str(i)]).data,TrialInfo,TargetZones,Data.(['session',num2str(i)]).settings);
-        
-        %% Get TFs
-        if size(Data.(['session',num2str(i)]).settings,2)>=35
-            [AllTFs] = GetAllTransferFunctions(Data.(['session',num2str(i)]).settings, TargetZones(ZonesToUse,:),'fixedgain');
-        else
-            if abs(mode(MotorTruncated(:,1)))<70
-                [AllTFs] = GetAllTransferFunctions(Data.(['session',num2str(i)]).settings, TargetZones(ZonesToUse,:),'fixedspeed');
-            else
-                [AllTFs] = GetAllTransferFunctions(Data.(['session',num2str(i)]).settings, TargetZones(ZonesToUse,:));
-            end
+
+        subplotcol = rem(unit,6);
+        if subplotcol == 0
+            subplotcol = 6;
         end
+        figure(1);
+        PlotOdorArmTuning(unit,Traces,TrialInfo,spiketimes);
+        pause(2);
         
-        %% Trajectory Analysis
-        [Trajectories, TrajectoryStats, ZoneStays, Exhalations, Inhalations] = GroupTrajectories(Traces, TrialInfo, TargetZones, Data.(['session',num2str(i)]).settings);
-        
-        %% save processed files
-        savepath = fullfile(FilePaths,'processed',filesep,MyFileName);
-        save(strrep(savepath,'.mat','_processed.mat'),'Trajectories','TrajectoryStats','ZoneStays','sessionstart','sessionstop','respthresh', 'Exhalations', 'Inhalations');
-        
-        %     %% Basic session statistics
-        %     [NumTrials] = SessionStats(TrialInfo,Trajectories,ZonesToUse,TargetZones,1);
-        %
-        %     % if number of Zones>6 split the data set into two
-        %
-        %     if numel(ZonesToUse)>6
-        %        HistogramOfOccupancy(LeverTruncated, MotorTruncated, TrialInfo, ZonesToUse, TargetZones, AllTFs, Trajectories, 1);
-        %        [StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, Data.(['session',num2str(i)]).settings, 1);
-        %
-        %     elseif numel(ZonesToUse)>3
-        %         LeverTruncated_all = LeverTruncated;
-        %         TrialInfo_all = TrialInfo;
-        %         TargetZones_all = TargetZones;
-        %         ZonesToUse_all = ZonesToUse;
-        %
-        %         n = numel(ZonesToUse)/3;
-        %         for m = 1:n
-        %             f = find(mod(TrialInfo_all.TargetZoneType,n)==m-1);
-        %             LeverTruncated = LeverTruncated_all(f,:);
-        %             TrialInfo.TargetZoneType = TrialInfo_all.TargetZoneType(f,:);
-        %             TrialInfo.Success = TrialInfo_all.Success(f,:);
-        %             TargetZones = TargetZones_all(n+1-m:n:end,:);
-        %             ZonesToUse = ZonesToUse_all(n+1-m:n:end,:);
-        %             [Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 1);
-        %             %[StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, 1);
-        %             [Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
-        %         end
-        %
-        %     else
-        %         [Histogram] = occupancy_histogram(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, Data.(['session',num2str(i)]).settings, 1);
-        %         %[StayTimes, TrialStats, M, S] = TimeSpentInZone(LeverTruncated, ZonesToUse, TargetZones, TrialInfo, Data.(['session',num2str(i)]).settings, 1);
-        %         %[Trajectories] = TestAllZOnes(LeverTruncated, TrialInfo, ZonesToUse, TargetZones, 2, 1);
-        %     end
+        if rem(unit,6) == 0 || unit == size(spiketimes,2)
+            figure(1);
+            set(gcf,'Units','inches');
+            screenposition = get(gcf,'Position');
+            set(gcf,'PaperPosition',[0 0 screenposition(3:4)],...
+                'PaperSize',screenposition(3:4));
+            figureName = [MyFileName(1:end-4),'_',num2str(unit),'_armodortuning'];
+            print(figureName,'-dpdf');
+            pause(5);
+            clf
+        end
+    end
     end
 end
