@@ -23,7 +23,7 @@ function varargout = OpenLoopOdorLocator(varargin)
 
 % Edit the above text to modify the response to help OpenLoopOdorLocator
 
-% Last Modified by GUIDE v2.5 15-Aug-2018 13:36:34
+% Last Modified by GUIDE v2.5 13-Apr-2019 23:21:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -53,6 +53,7 @@ handles.startAcquisition.Enable = 'off';
 
 % rig specific settings
 handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
+handles.useserver = 1;
 [handles] = OpenLoopDefaults(handles);
 
 % clear indicators
@@ -110,6 +111,9 @@ handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('r'),'Linewidth',1); %lic
 handles.homesensor_plot = plot(NaN, NaN,'k'); %homesensor
 handles.respiration_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % respiration sensor
 handles.lickpiezo_plot = plot(NaN, NaN, 'color',Plot_Colors('p')); % lick piezo
+handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.25); %rewards
+handles.camerasync_plot = plot(NaN, NaN, 'color',Plot_Colors('pl'),'Linewidth',1); %point-grey cam sync
+handles.camerasync2_plot = plot(NaN, NaN, 'color',Plot_Colors('pd'),'Linewidth',1); %point-grey cam sync
 
 set(handles.axes1,'YLim',handles.Plot_YLim.Data);
 
@@ -131,6 +135,20 @@ set(handles.axes4, 'Color', 'none');
 handles.camera_available = 0;
 if ~isempty(webcamlist)    
     switch char(handles.computername)
+        case {'JUSTINE'}
+            handles.mycam = webcam(1);% {'logitech'}
+            handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
+            handles.camera_available = 1;
+            handles.focus_mode.Enable = 'on';
+            handles.exposure_mode.Enable = 'on';
+            handles.exposure_value.Enable = 'on';
+            handles.camera_available = 1;
+            handles.focus_mode.Value = 2;
+            handles.mycam.ExposureMode = 'auto';
+            handles.exposure_mode.Value = 1;                                                                      
+            handles.mycam.Focus = 250;
+            handles.exposure_value.Data = handles.mycam.Exposure;
+            handles.mycam.Zoom = 100;
        case {'PRIYANKA-HP'}
             handles.mycam = webcam(1);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
@@ -154,6 +172,18 @@ guidata(hObject, handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
 SessionSettings_CellEditCallback(hObject, eventdata, handles);
 Update_Callback(hObject,eventdata,handles); % auto calls Update_Params
+
+% set up odors
+handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
+handles.odor_vial.Value = 1;
+odor_vial_Callback(hObject, eventdata, handles);
+handles.odor_to_manifold.Value = 1;
+handles.air_to_manifold.Value = 0;
+handles.Vial0.Value = 1;
+handles.Vial1.Value = 0;
+handles.Vial2.Value = 0;
+handles.Vial3.Value = 0;
+Vial2Manifold_Callback(hObject, eventdata, handles);
 
 % disable motor override
 handles.motor_override.Value = 0;
@@ -237,8 +267,12 @@ if get(handles.startAcquisition,'value')
         set(handles.lick_plot,'XData',NaN,'YData',NaN);
         
         % open odor vials
+        %handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
         handles.odor_vial.Value = 1;
         odor_vial_Callback(hObject, eventdata, handles);
+        handles.odor_to_manifold.Value = 1;
+        handles.air_to_manifold.Value = 0;
+        Vial2Manifold_Callback(hObject, eventdata, handles);
         
         tstart = tic;
         
@@ -529,10 +563,14 @@ end
 
 % --- Executes on button press in Vial3.
 function Vial2Manifold_Callback(hObject, eventdata, handles)
-if strcmp(eventdata.Source.Tag,'odor_to_manifold')
-    MyVial = find([handles.Vial0.Value handles.Vial1.Value handles.Vial2.Value handles.Vial3.Value]);
+if ~isempty(eventdata)
+    if strcmp(eventdata.Source.Tag,'odor_to_manifold')
+        MyVial = find([handles.Vial0.Value handles.Vial1.Value handles.Vial2.Value handles.Vial3.Value]);
+    else
+        MyVial = 1 + str2num(eventdata.Source.Tag(end));
+    end
 else
-    MyVial = 1 + str2num(eventdata.Source.Tag(end));
+    MyVial = 1;
 end
 MyVial = handles.odor_to_manifold.Value * MyVial;
 handles.Arduino.write(50 + MyVial, 'uint16'); 
@@ -669,3 +707,11 @@ function TFtype_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of TFtype
+
+
+% --- Executes on button press in reward_now.
+function reward_now_Callback(hObject, eventdata, handles)
+% hObject    handle to reward_now (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.Arduino.write(82, 'uint16'); 

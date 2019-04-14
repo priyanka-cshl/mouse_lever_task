@@ -2,7 +2,7 @@ function [NI_session, MFC_session, Channels, NIchannels]=configure_NIDAQ(handles
 
 % rig specific settings
 switch char(handles.computername)
-    case {'marbprec', 'PRIYANKA-HP'}
+    case {'marbprec', 'PRIYANKA-HP','JUSTINE'}
         DeviceName = 'Dev2';
         Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','Respiration','LickPiezo'};
         AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai12'};
