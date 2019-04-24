@@ -48,6 +48,14 @@ for i = 1:size(FileNames,2) % For each file
     if exist(fullfile(FilePaths,'processed',strrep(MyFileName,'.mat','_processed.mat')))
         load(fullfile(FilePaths,'processed',strrep(MyFileName,'.mat','_processed.mat')),...
             'sessionstart','sessionstop','respthresh');
+        if ReplotSession
+            RecreateSession(MyData);
+        end
+        
+%          RespData = MyData(:,15);
+%          
+%          [sniff_stamps] = GetRespirationTimeStamps(RespData, 0.2, 1);
+        
     else
         sessionstart = 0;
         sessionstop = 0;
@@ -73,10 +81,14 @@ for i = 1:size(FileNames,2) % For each file
     %% get Spikes
     [myephysdir] = WhereSpikeFile(MyFileName);
     [spiketimes] = Spikes2Trials(myephysdir);
-    
+% [spiketimes] = [];
     savepath = fullfile(FilePaths,'processed',filesep,MyFileName);
     save(strrep(savepath,'.mat','_processed.mat'),'Traces','TrialInfo','TargetZones','spiketimes','sessionstart','sessionstop');
-        
+    
+%     OdorTuningSummary;
+%     figureName = [MyFileName(1:end-4)];
+%     print(figureName,'-dpdf');
+%     close(gcf);
     
 %     for unit = 1:size(spiketimes,2)
 % %         figure;

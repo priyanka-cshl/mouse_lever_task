@@ -1,6 +1,9 @@
 
 x_ind = 0;
 mydiffs = [];
+isperturbed = 0;
+blockshift = [];
+%figure;
 for mytrial = 1:numel(TrialInfo.TrialID)
     % use only valid trials
     if TrialInfo.Valid(mytrial)~=-1
@@ -34,31 +37,46 @@ for mytrial = 1:numel(TrialInfo.TrialID)
             case 0 % control
                 Lever = Lever - thisTrialZone;
 %                 thisTrialZone = counts(find(counts==thisTrialZone));
-                subplot(2,1,1); hold on
-                plot(x_ind,favoriteZone-thisTrialZone,'.r');
+%                 subplot(2,1,1); hold on
+%                 plot(x_ind,favoriteZone-thisTrialZone,'.r');
                 subplot(2,1,2); hold on
-                errorbar(x_ind,mean(Lever),std(Lever),'r');
+                line([x_ind x_ind],mean(Lever)+[-std(Lever) std(Lever)],'color','r');
+                plot(x_ind,mean(Lever),'.k');
+                %errorbar(x_ind,mean(Lever),std(Lever),'r');
             case 11 % block shift
                 thisTrialZone = thisTrialZone+0.9;
                 Lever = Lever - thisTrialZone;
-                subplot(2,1,1); hold on
-                plot(x_ind,favoriteZone-thisTrialZone,'.b');
+%                 subplot(2,1,1); hold on
+%                 plot(x_ind,favoriteZone-thisTrialZone,'.b');
                 subplot(2,1,2); hold on
-                errorbar(x_ind,mean(Lever),std(Lever),'b');
+                line([x_ind x_ind],mean(Lever)+[-std(Lever) std(Lever)],'color','b');
+                plot(x_ind,mean(Lever),'.k');
+                %errorbar(x_ind,mean(Lever),std(Lever),'b');
         end
+        
+        if isperturbed ~= TrialInfo.Perturbation(mytrial,1)
+            blockshift = [blockshift; [mytrial TrialInfo.SessionTimestamps(mytrial,1)]];
+            isperturbed = TrialInfo.Perturbation(mytrial,1);
+        end
+        
         mydiffs(x_ind,1) = mean(Lever);
         mydiffs(x_ind,2) = TrialInfo.Perturbation(mytrial,1)==11;
         
     end
 end
+line([0 x_ind],-0.3+[0 0],'LineStyle',':','color','k')
+line([0 x_ind],0.3+[0 0],'LineStyle',':','color','k')
+subplot(2,1,1); set(gca,'XLim',[0 x_ind]);
+subplot(2,1,2); set(gca,'XLim',[0 x_ind],'YLim',[-2.5 2.5]);
+set(gcf,'Position',[680   383   932   586]);
+% figure; hold on
+% blocksize = 5;
+% for i = blocksize:blocksize:x_ind
+%     if mode(mydiffs(i-blocksize+1:i,2)) == 0
+%         errorbar(i/blocksize,mean(mydiffs(i-blocksize+1:i,1)),std(mydiffs(i-blocksize+1:i,1)),'r');
+%     else
+%         errorbar(i/blocksize,mean(mydiffs(i-blocksize+1:i,1)),std(mydiffs(i-blocksize+1:i,1)),'b');
+%     end
+% end
+% line([0 x_ind/blocksize],[0 0],'LineStyle',':','color','k')
 
-figure; hold on
-blocksize = 10;
-for i = blocksize:blocksize:x_ind
-    if mode(mydiffs(i-blocksize+1:i,2)) == 0
-        errorbar(i/blocksize,mean(mydiffs(i-blocksize+1:i,1)),std(mydiffs(i-blocksize+1:i,1)),'r');
-    else
-        errorbar(i/blocksize,mean(mydiffs(i-blocksize+1:i,1)),std(mydiffs(i-blocksize+1:i,1)),'b');
-    end
-end
-line([0 x_ind/blocksize],[0 0],'LineStyle',':','color','k')
