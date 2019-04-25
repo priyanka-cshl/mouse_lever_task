@@ -15,6 +15,8 @@ switch computername
         end
     case 'Priyanka-PC'
         DataRoot = 'C:\Data\Behavior'; % location on rig computer
+    case 'andaman'
+        DataRoot = '/mnt/grid-hs/pgupta/Behavior'; % location on rig computer
     otherwise
         DataRoot = '//sonas-hs.cshl.edu/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
 end

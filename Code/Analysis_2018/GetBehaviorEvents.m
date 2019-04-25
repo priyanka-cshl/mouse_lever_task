@@ -1,4 +1,4 @@
-function [] = GetBehaviorEvents(filename)
+function [TrialInfo, Traces] = GetBehaviorEvents(filename)
 
 [data, settings, TargetZones, FakeTargetZones] = ExtractSessionDataFixedGain(filename);
 [Traces, TrialInfo, TargetZones] = ChunkToTrials(data, TargetZones);
