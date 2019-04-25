@@ -4,10 +4,10 @@
 int i = 0;
 
 // motor control pins
-const byte enable_pin = 23;
-const byte dir_pin = 25;
-const byte step_pin = 27;
-const byte servoON_pin = 31; //HFLB
+const byte enable_pin = 7;
+const byte dir_pin = 6;
+const byte step_pin = 5;
+const byte servoON_pin = 4; //HFLB
 const byte home_pin = 51;
 const byte end_stop_pin_left = 2;
 const byte end_stop_pin_right = 3;
@@ -84,14 +84,14 @@ void SafetyStopLeft()
 {
   detachInterrupt(digitalPinToInterrupt(end_stop_pin_left));
   detachInterrupt(digitalPinToInterrupt(end_stop_pin_right));
-  FindHome(true);
+  FindHome(false);
 }
 
 void SafetyStopRight()
 {
   detachInterrupt(digitalPinToInterrupt(end_stop_pin_right));
   detachInterrupt(digitalPinToInterrupt(end_stop_pin_left));
-  FindHome(false);
+  FindHome(true);
 }
 
 void FindHome(bool which_direction)
@@ -112,7 +112,7 @@ void FindHome(bool which_direction)
 
     // move until it reaches home OR hits the other switch
     //while (!digitalRead(home_pin) && digitalRead(end_stop_pin_left + (int)which_direction))
-    while (digitalRead(home_pin) && digitalRead(end_stop_pin_left + (int)which_direction)) //&& digitalRead(end_stop_pin_right))
+    while (digitalRead(home_pin) && digitalRead(end_stop_pin_right - (int)which_direction)) //&& digitalRead(end_stop_pin_right))
     {
       digitalWrite(step_pin, HIGH);
       digitalWrite(step_pin, LOW);
@@ -268,11 +268,10 @@ void MyCheatHome()
   }
   else if (digitalRead(end_stop_pin_left))
   {
-    FindHome(true);
+    FindHome(false);
   }
   else
   {
-    FindHome(false);
+    FindHome(true);
   }
 }
-

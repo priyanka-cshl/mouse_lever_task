@@ -78,8 +78,7 @@ for i = 1:h.NIchannels
 end
 
 %% detect significant events - trial transitions and rewards
-if TotalTime(end)>2
-    
+if TotalTime(end)>=2
     %% REWARDS
     %     % append new sampples and take diff to get events
     %     TotalData(:,h.Channels.reward_channel) = [ TotalData(num_new_samples+1:end,h.Channels.reward_channel); ...
