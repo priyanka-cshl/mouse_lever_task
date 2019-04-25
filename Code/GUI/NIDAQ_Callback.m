@@ -24,7 +24,20 @@ callreward = 0;
 
 %% populate TotalTime with newly available timestamps
 TotalTime = [ TotalTime(num_new_samples+1:end); event.TimeStamps ];
-TargetLevel = [TargetLevel(num_new_samples+1:end,:); h.TargetDefinition.Data(3)+0*event.Data(:,1) h.TargetDefinition.Data(1)+0*event.Data(:,1)];
+if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.TransferFunction.Data(2)),2)
+    if h.TFtype.Value
+        TargetLevel = [TargetLevel(num_new_samples+1:end,:); ...
+            h.blockshiftfactor.Data(1)*h.ZoneLimitSettings.Data(1) + h.TargetDefinition.Data(3) + 0*event.Data(:,1) ...
+            h.blockshiftfactor.Data(1)*h.ZoneLimitSettings.Data(1) + h.TargetDefinition.Data(1) + 0*event.Data(:,1)];
+    else
+        TargetLevel = [TargetLevel(num_new_samples+1:end,:); ...
+            -h.blockshiftfactor.Data(1)*h.ZoneLimitSettings.Data(1) + h.TargetDefinition.Data(3) + 0*event.Data(:,1) ...
+            -h.blockshiftfactor.Data(1)*h.ZoneLimitSettings.Data(1) + h.TargetDefinition.Data(1) + 0*event.Data(:,1)];
+    end
+else
+    TargetLevel = [TargetLevel(num_new_samples+1:end,:); h.TargetDefinition.Data(3)+0*event.Data(:,1) h.TargetDefinition.Data(1)+0*event.Data(:,1)];
+end
+
 % variables used later for plotting etc
 which_target = h.which_target.Data;
 which_fake_target = h.which_fake_target.Data;

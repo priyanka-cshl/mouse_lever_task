@@ -113,12 +113,12 @@ h.current_trial_block.Data(6) = round(h.TriggerHold.Data(1)+x,0);
 %% feedback perturbation settings
 
 % shuffle pertubation vector if needed
-if (h.which_perturbation.Value>1) && ~mod(h.current_trial_block.Data(2),numel(TrialsToPerturb))
+if (h.which_perturbation.Value>1) && ~mod(h.current_trial_block.Data(2),numel(TrialsToPerturb)) && (h.which_perturbation.Value~=11)
     TrialsToPerturb = TrialsToPerturb([randperm(floor(numel(TrialsToPerturb)/2)) ...
             floor(numel(TrialsToPerturb)/2)+(1:floor(numel(TrialsToPerturb)/2))]);
 end
 
-if (h.which_perturbation.Value>1)
+if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11)
     % bsed on the user set probability: check if the trial is to be perturbed or not
     h.current_trial_block.Data(3) = TrialsToPerturb(mod(h.current_trial_block.Data(2),numel(TrialsToPerturb)) + 1);
     
