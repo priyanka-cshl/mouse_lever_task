@@ -226,6 +226,20 @@ handles.camera_available = 0;
 if ~isempty(webcamlist)
     
     switch char(handles.computername)
+       case {'JUSTINE'}
+            handles.mycam = webcam(1);% {'logitech'}
+            handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
+            handles.camera_available = 1;
+            handles.focus_mode.Enable = 'on';
+            handles.exposure_mode.Enable = 'on';
+            handles.exposure_value.Enable = 'on';
+            handles.camera_available = 1;
+            handles.focus_mode.Value = 2;
+            handles.mycam.ExposureMode = 'auto';
+            handles.exposure_mode.Value = 1;                                                                      
+            handles.mycam.Focus = 250;
+            handles.exposure_value.Data = handles.mycam.Exposure;
+            handles.mycam.Zoom = 100;
        case {'PRIYANKA-HP'}
             handles.mycam = webcam(1);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
@@ -687,15 +701,6 @@ guidata(hObject,handles);
 Params2File(handles);
 
 [handles] = UpdateTransferFunction(handles);
-
-if handles.which_perturbation.Value == 11 && ...
-        mod(floor(handles.current_trial_block.Data(2)/handles.TransferFunction.Data(2)),2)
-    if handles.TFtype.Value
-        handles.TargetDefinition.Data = handles.TargetDefinition.Data + 2*handles.ZoneLimitSettings.Data(1);
-    end
-end
-
-guidata(hObject,handles);
 pause(0.1);
 Send2Arduino(handles);
 

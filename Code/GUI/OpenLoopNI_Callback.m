@@ -52,7 +52,7 @@ for i = 1:h.NIchannels
 end
              
 if TotalTime(end)>2 
-
+    
     % register if the trial was turned ON or OFF
     if any(diff(TotalData(end-num_new_samples:end,h.Channels.trial_channel)) < 0)
         trial_just_ended = 1;
@@ -82,14 +82,27 @@ h.motor_location.YData = MapRotaryEncoderToTFColorMapOpenLoop(h,mean(event.Data(
 set(h.respiration_plot,'XData',TotalTime(indices_to_plot),'YData',...
     h.RS_scaling.Data(1)*TotalData(indices_to_plot,5) + h.RS_scaling.Data(2) );
 set(h.lickpiezo_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    h.LickPiezo.Data(1)*TotalData(indices_to_plot,6) + h.RS_scaling.Data(2) );
+    h.LickPiezo.Data(1)*TotalData(indices_to_plot,6) + h.LickPiezo.Data(2) );
 set(h.homesensor_plot,'XData',TotalTime(indices_to_plot),'YData', 5 + 0.5*TotalData(indices_to_plot,h.Channels.homesensor_channel));
+set(h.camerasync_plot,'XData',TotalTime(indices_to_plot),'YData', 6.5 + 0.5*TotalData(indices_to_plot,h.Channels.camerasync_channel));
+set(h.camerasync2_plot,'XData',TotalTime(indices_to_plot),'YData', 7.2 + 0.5*TotalData(indices_to_plot,h.Channels.camerasync_channel+1));
 
 % trial_on
 [h] = PlotToPatch_Trial(h, TotalData(:,h.Channels.trial_channel), TotalTime, [0 5]);
 
 % odor valve ON
 [h.in_reward_zone_plot] = PlotToPatch(h.in_reward_zone_plot, TotalData(:,h.Channels.trial_channel+2), TotalTime, [-1 -0.2]);
+
+% rewards
+if h.Channels.reward_channel<=size(TotalData,2)
+    tick_timestamps = TotalTime(TotalData(:,h.Channels.reward_channel)==1);
+    tick_x = [tick_timestamps'; tick_timestamps'; ...
+        NaN(1,numel(tick_timestamps))]; % creates timestamp1 timestamp1 NaN timestamp2 timestamp2..
+    tick_x = tick_x(:);
+    tick_y = repmat( [0; 6.5; NaN],...
+        numel(tick_timestamps),1); % creates y1 y2 NaN y1 timestamp2..
+    set(h.reward_plot,'XData',tick_x,'YData',tick_y);
+end
 
 % licks
 if h.Channels.lick_channel<=size(TotalData,2)
