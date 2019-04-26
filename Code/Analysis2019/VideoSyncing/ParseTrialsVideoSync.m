@@ -47,13 +47,16 @@ for thisTrial = 1:length(TrialOn)-1 % ignore the last trial
         Traces.Cams(camTrials) = { MyData(start_idx:stop_idx, [CamCol CamCol+1]) };
         Traces.Timestamps(camTrials) = { (1:numel(MyData(start_idx:stop_idx, LeverCol)))/SampleRate };
         
-        CamA.NumFrames(camTrials) = numel(find(diff(MyData(start_idx:stop_idx, CamCol+1))==-1));
-        CamA.Indices(camTrials) = { find(diff(MyData(start_idx:stop_idx, CamCol+1))==-1) };
-        CamA.Timestamps(camTrials) = { find(diff(MyData(start_idx:stop_idx, CamCol+1))==-1)/SampleRate };
+        CamATriggers = find(diff([0; MyData(start_idx:stop_idx, CamCol+1)])==1);
+        CamBTriggers = find(diff([0; MyData(start_idx:stop_idx, CamCol+1)])==1);
         
-        CamB.NumFrames(camTrials) = numel(find(diff(MyData(start_idx:stop_idx, CamCol))==-1));
-        CamB.Indices(camTrials) = { find(diff(MyData(start_idx:stop_idx, CamCol))==-1) };
-        CamB.Timestamps(camTrials) = { find(diff(MyData(start_idx:stop_idx, CamCol))==-1)/SampleRate };
+        CamA.NumFrames(camTrials) = numel(CamATriggers);
+        CamA.Indices(camTrials) = { CamATriggers };
+        CamA.Timestamps(camTrials) = { CamATriggers/SampleRate };
+        
+        CamB.NumFrames(camTrials) = numel(CamBTriggers);
+        CamB.Indices(camTrials) = { CamBTriggers };
+        CamB.Timestamps(camTrials) = { CamBTriggers/SampleRate };
         
         TrialInfo.TrialID(camTrials) = thisTrial;
     end
