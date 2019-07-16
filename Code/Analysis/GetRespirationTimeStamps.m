@@ -1,15 +1,23 @@
-function [sniff_stamps] = GetRespirationTimeStamps(RespData, threshold)
+function [sniff_stamps] = GetRespirationTimeStamps(RespData, threshold, doplot)
 
 if nargin<2
     threshold = 0.2;
 end
+
+if nargin<3
+    doplot = 0;
+end
+
 % rescale the data
 RespData = RespData - median(RespData);
 
-figure;
-plot(1:length(RespData),RespData); 
-hold on
-plot(1:length(RespData),0*RespData,'k');
+if doplot
+    figure;
+    plot(1:length(RespData),RespData);
+    hold on
+    plot(1:length(RespData),0*RespData,'k');
+end
+
 [pks,dep,pid,did] = peakdet(RespData,threshold);
 
 sniff_stamps = [];
@@ -38,8 +46,11 @@ for i = 1:size(sniff_stamps,1)
         
 end
 
-plot(sniff_stamps(:,1),RespData(sniff_stamps(:,1)),'ok');
-plot(sniff_stamps(:,2),RespData(sniff_stamps(:,2)),'or');
-plot(sniff_stamps(:,3),RespData(sniff_stamps(:,3)),'og');
-plot(sniff_stamps(:,4),RespData(sniff_stamps(:,3)),'om');
+if doplot
+    plot(sniff_stamps(:,1),RespData(sniff_stamps(:,1)),'ok');
+    plot(sniff_stamps(:,2),RespData(sniff_stamps(:,2)),'or');
+    plot(sniff_stamps(:,3),RespData(sniff_stamps(:,3)),'og');
+    plot(sniff_stamps(:,4),RespData(sniff_stamps(:,3)),'om');
+end
+
 end

@@ -63,16 +63,21 @@ for odor = 1:4
         end
         
         FullHistogram(odor,zone,:) = FullHistogram(odor,zone,:)/sum(FullHistogram(odor,zone,:));
+        
+        
         SpikeHistogram(odor,zone,:) = 500*SpikeHistogram(odor,zone,:); % convert to Hz
         
         for mybin = 1:numel(Motorbins)-1
             temp = find(MotorAll>=Motorbins(mybin) & MotorAll<(Motorbins(mybin)+MotorBinsize));
-            if ~isempty(temp)
-                OdorHistogram(odor,zone,mybin) = sum(SpikesAll(temp))/numel(temp); % normalized to account for oversampling
-            else
-                OdorHistogram(odor,zone,mybin) = NaN;
-            end
+%             if ~isempty(temp)
+%                 OdorHistogram(odor,zone,mybin) = sum(SpikesAll(temp))/numel(temp); % normalized to account for oversampling
+%             else
+%                 OdorHistogram(odor,zone,mybin) = NaN;
+%             end
+            OdorHistogram(odor,zone,mybin) = numel(temp);
         end
+%         OdorHistogram(odor,zone,:) = 500*OdorHistogram(odor,zone,:);
+           OdorHistogram(odor,zone,:) = OdorHistogram(odor,zone,:)/sum(OdorHistogram(odor,zone,:));
         
     end
 end

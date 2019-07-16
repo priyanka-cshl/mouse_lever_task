@@ -7,19 +7,22 @@ global MyFileName
 %     subplotcol = 5;
 % end
 global SampleRate;
-plotX = 4; % one for each odor and one pooled
+plotX = 2; % one for each odor and one pooled
 plotY = 6; % behavior, aligned to perturbation start (raster, psth), behavior, aligned to feedback start (raster, psth)
 
 xbins = -2000:1:2000;
 
 X = colormap(brewermap([11],'*RdBu'));
+colorA = X(2,:);
+colorB = X(end-1,:);
 
 % [Traces, TrialInfo, TargetZones] = ParseTrials(MyData, MySettings, TargetZones, sessionstart, sessionstop);
 % [spiketimes] = Spikes2Trials(myephysdir);
-
+figure;
 % split by different odors
-for whichodor = 1:4
-    
+odors = [1 3];
+for foo = 1:numel(odors)
+    whichodor = odors(foo);
     if whichodor<4
         % extract trials that were perturbed
         whichtrials = find(TrialInfo.Odor==whichodor & (TrialInfo.Perturbation(:,1)==6 | TrialInfo.Perturbation(:,1)==7));
@@ -54,29 +57,34 @@ for whichodor = 1:4
             %% 1: align to perturbation start
             
             % plot the lever traces
-            subplot(plotX,plotY,whichodor*plotY - plotY + 1);
+            subplot(plotX,plotY,foo*plotY - plotY + 1);
             hold on
             time_idx = (1000/SampleRate)*(1:numel(lever)) - round(perturbationstart*1000);
             if trial < div_line
-                plot(time_idx,lever,'color',X(2,:));
+                plot(time_idx,lever,'color',colorA);
             else
-                plot(time_idx,lever,'color',X(end-1,:));
+                plot(time_idx,lever,'color',colorB);
             end
             
             % plot spikes
-            subplot(plotX,plotY,whichodor*plotY - plotY + 2);
+            subplot(plotX,plotY,foo*plotY - plotY + 2);
             hold on
             myspikes = round((thisTrialSpikes - perturbationstart)*1000); % in ms
+            if trial < div_line
+                spikecolor = colorA;
+            else
+                spikecolor = colorB;
+            end
             for eachspike = 1:numel(myspikes) % plot raster line
                 line([myspikes(eachspike) myspikes(eachspike)],...
-                    [trial-1 trial],'Color','k');
+                    [trial-1 trial],'Color',spikecolor);
                 hold on
             end
             
             % overlay feedback start (as red ticks)
             feedbacktick = round((feedbackstart - perturbationstart)*1000);
             line([feedbacktick feedbacktick],...
-                [trial-1 trial],'Color','r', 'LineWidth', 2);
+                [trial-1 trial],'Color','k', 'LineWidth', 2);
             
             % update psth
             for inx = 1:length(xbins)-1 %calculate # spikes in ms bins
@@ -91,22 +99,22 @@ for whichodor = 1:4
             %% 2: align to feedback start
 
             % plot the lever traces
-            subplot(plotX,plotY,whichodor*plotY - plotY + 4);
+            subplot(plotX,plotY,foo*plotY - plotY + 4);
             hold on
             time_idx = (1000/SampleRate)*(1:numel(lever)) - round(feedbackstart*1000);
             if trial < div_line
-                plot(time_idx,lever,'color',X(2,:));
+                plot(time_idx,lever,'color',colorA);
             else
-                plot(time_idx,lever,'color',X(end-1,:));
+                plot(time_idx,lever,'color',colorB);
             end
             
             % plot spikes
-            subplot(plotX,plotY,whichodor*plotY - plotY + 5);
+            subplot(plotX,plotY,foo*plotY - plotY + 5);
             hold on
             myspikes = round((thisTrialSpikes - feedbackstart)*1000); % in ms
             for eachspike = 1:numel(myspikes) % plot raster line
                 line([myspikes(eachspike) myspikes(eachspike)],...
-                    [trial-1 trial],'Color','k');
+                    [trial-1 trial],'Color',spikecolor);
                 hold on
             end
             
@@ -114,7 +122,7 @@ for whichodor = 1:4
             if ~isnan(reward)
                 rewardtick = round((reward - feedbackstart)*1000);
                 line([rewardtick rewardtick],...
-                    [trial-1 trial],'Color','g', 'LineWidth', 2);
+                    [trial-1 trial],'Color','k', 'LineWidth', 2);
             end
             % update psth
             for inx = 1:length(xbins)-1 %calculate # spikes in ms bins
@@ -136,7 +144,7 @@ for whichodor = 1:4
         end
         psth(1,:) = 1000*psth(1,:); % Hz
         psth(2,:) = 1000*psth(2,:); % Hz
-        sigma = 20;
+        sigma = 40;
         conv_psth(1,:) = convPSTH(psth(1,:), sigma);
         conv_psth(2,:) = convPSTH(psth(2,:), sigma);
         
@@ -145,44 +153,46 @@ for whichodor = 1:4
         conv_psth2(1,:) = convPSTH(psth2(1,:), sigma);
         conv_psth2(2,:) = convPSTH(psth2(2,:), sigma);
         
-        subplot(plotX,plotY,whichodor*plotY - plotY + 3);
+        subplot(plotX,plotY,foo*plotY - plotY + 3);
         hold on
-        plot(xbins, conv_psth(1,:), 'color', X(2,:), 'LineWidth', 1);
-        plot(xbins, conv_psth(2,:), 'color', X(end-1,:), 'LineWidth', 1);
-        line([0 0],get(gca,'YLim'),'Color','b', 'LineWidth', 1);
+        plot(xbins, conv_psth(1,:), 'color', colorA, 'LineWidth', 1);
+        plot(xbins, conv_psth(2,:), 'color', colorB, 'LineWidth', 1);
+        line([0 0],get(gca,'YLim'),'Color','k');
         set(gca,'XLim',[xbins(1) xbins(end)],'XTick',[xbins(1) 0 xbins(end)]);
         
-        subplot(plotX,plotY,whichodor*plotY - plotY + 6);
+        subplot(plotX,plotY,foo*plotY - plotY + 6);
         hold on
-        plot(xbins, conv_psth2(1,:), 'color', X(2,:), 'LineWidth', 1);
-        plot(xbins, conv_psth2(2,:), 'color', X(end-1,:), 'LineWidth', 1);
-        line([0 0],get(gca,'YLim'),'Color','r', 'LineWidth', 1);
+        plot(xbins, conv_psth2(1,:), 'color', colorA, 'LineWidth', 1);
+        plot(xbins, conv_psth2(2,:), 'color', colorB, 'LineWidth', 1);
+        line([0 0],get(gca,'YLim'),'Color','k');
         set(gca,'XLim',[xbins(1) xbins(end)],'XTick',[xbins(1) 0 xbins(end)]);
         
         
-        subplot(plotX,plotY,whichodor*plotY - plotY + 2);
-        line([0 0],[-1 trial+1],'Color','b', 'LineWidth', 1);
-        if div_line
-            line([xbins(1) xbins(end)],[div_line div_line],'Color','k','LineStyle',':', 'LineWidth', 1);
-        end
+        subplot(plotX,plotY,foo*plotY - plotY + 2);
+        line([0 0],[-1 trial+1],'Color','k');
+%         if div_line
+%             line([xbins(1) xbins(end)],[div_line div_line],'Color','k','LineStyle',':', 'LineWidth', 1);
+%         end
         set(gca,'XLim',[xbins(1) xbins(end)],'YLim',[-1 trial+1]);
         set(gca,'YTick',[],'XTick',[xbins(1) 0 xbins(end)]);
+        set(gca,'YDir','reverse');
         
-        subplot(plotX,plotY,whichodor*plotY - plotY + 5);
-        line([0 0],[-1 trial+1],'Color','b', 'LineWidth', 1);
-        if div_line
-            line([xbins(1) xbins(end)],[div_line div_line],'Color','k','LineStyle',':', 'LineWidth', 1);
-        end
+        subplot(plotX,plotY,foo*plotY - plotY + 5);
+        line([0 0],[-1 trial+1],'Color','k');
+%         if div_line
+%             line([xbins(1) xbins(end)],[div_line div_line],'Color','k','LineStyle',':', 'LineWidth', 1);
+%         end
         set(gca,'XLim',[xbins(1) xbins(end)],'YLim',[-1 trial+1]);
         set(gca,'YTick',[],'XTick',[xbins(1) 0 xbins(end)]);
+        set(gca,'YDir','reverse');
         
-        subplot(plotX,plotY,whichodor*plotY - plotY + 1);
-        line([0 0],[0 5],'Color','b', 'LineWidth', 1);
+        subplot(plotX,plotY,foo*plotY - plotY + 1);
+        line([0 0],[0 5],'Color','k');
         set(gca,'XLim',[xbins(1) xbins(end)],'YLim',[0 5]);
         set(gca,'YTick',[],'XTick',[xbins(1) 0 xbins(end)]);
         
-        subplot(plotX,plotY,whichodor*plotY - plotY + 4);
-        line([0 0],[0 5],'Color','r', 'LineWidth', 1);
+        subplot(plotX,plotY,foo*plotY - plotY + 4);
+        line([0 0],[0 5],'Color','k');
         set(gca,'XLim',[xbins(1) xbins(end)],'YLim',[0 5]);
         set(gca,'YTick',[],'XTick',[xbins(1) 0 xbins(end)]);
         
@@ -190,4 +200,10 @@ for whichodor = 1:4
 end
 
 end
+
+% set(gcf,'Position',[96  417 1303 278]);
+% for i = 3:3:12; subplot(2,6,i); set(gca,'YLim', [0 40]); end
+%     
+%     
+% 
 

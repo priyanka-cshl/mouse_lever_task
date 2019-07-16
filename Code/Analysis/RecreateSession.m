@@ -46,7 +46,11 @@ MyHandle = get(gca);
 %% Update plots
 
 % lever positions, motor locations 
+% [a,b] = butter(3,100/250,'low');
+% mylever = filter(a,b,MyData(:,4));
+% set(handles.lever_DAC_plot,'XData',MyData(:,1),'YData',mylever);
 set(handles.lever_DAC_plot,'XData',MyData(:,1),'YData',MyData(:,4));
+
 % set(handles.stimulus_plot,'XData',MyData(:,1),'YData',...
 %    1*(MyData(:,5)- 0) );
 if size(MyData,2)>=15

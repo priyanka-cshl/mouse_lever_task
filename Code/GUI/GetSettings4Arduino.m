@@ -33,9 +33,9 @@ legend(20) = {'TFsize'}; param(20) = h.TransferFunction.Data(1);
 if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.TransferFunction.Data(2)),2)
     legend(21) = {'HalfZoneSize'}; param(21) = h.locations_per_zone.Data(1);
     if h.TFLeftprobability.Data(1)
-        legend(22) = {'MotorZero'}; param(22) = h.MotorLocationArduinoMax + 1 + 2*h.locations_per_zone.Data(1);
+        legend(22) = {'MotorZero'}; param(22) = h.MotorLocationArduinoMax + 1 + h.blockshiftfactor.Data(1)*h.locations_per_zone.Data(1);
     else
-        legend(22) = {'MotorZero'}; param(22) = h.MotorLocationArduinoMax + 1 - 2*h.locations_per_zone.Data(1);
+        legend(22) = {'MotorZero'}; param(22) = h.MotorLocationArduinoMax + 1 - h.blockshiftfactor.Data(1)*h.locations_per_zone.Data(1);
     end
 else
     legend(21) = {'HalfZoneSize'}; param(21) = h.locations_per_zone.Data(1);

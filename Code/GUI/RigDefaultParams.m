@@ -133,6 +133,7 @@ switch char(handles.computername)
         handles.Zero_MFC.Value = 0;
         handles.which_stage.Value = 3; % training stage
         handles.TransferFunction.Data(2) = 100; % block size (1 = no blocks)
+        handles.blockshiftfactor.Data(1) = 2;
         
         % hacks - for recreating a specific session
         handles.trialsequence = [8 11 5 10 3];% 8 4 1 6 2 8 2 11 2 11 3 8 4 7 1];

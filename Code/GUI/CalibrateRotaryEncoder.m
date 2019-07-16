@@ -21,7 +21,11 @@ else
     my_location = [handles.MotorLocationArduinoMax 0 -handles.MotorLocationArduinoMax];
 end
 
-my_location = my_location;
+% <<<<<<< HEAD
+% my_location = my_location;
+% =======
+% my_location
+% >>>>>>> origin/lever-working
 
 for i = 1:3    
     handles.Arduino.write(62, 'uint16'); % handler - move motor to specific location

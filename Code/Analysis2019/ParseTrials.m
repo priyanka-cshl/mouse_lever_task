@@ -221,18 +221,18 @@ for thisTrial = 1:length(TrialOn)
                         TrialInfo.PerturbationStart(thisTrial) = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==1);
                         TrialInfo.FeedbackStart(thisTrial) = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==-1);
                         
-                        % get targetzone stay times for this trial
-                        tempstays = cell2mat(TrialInfo.StayTimeStart(thisTrial));
-                        tempstaytimes = cell2mat(TrialInfo.StayTime(thisTrial));
-                        % find tzone stays after odor offset
-                        foo = find(tempstays<TrialInfo.FeedbackStart(thisTrial));
-                        if ~isempty(foo)
-                            TrialInfo.TZoneStays = {tempstaytimes(foo)};
-                            tempstays(foo,:) = [];
-                            tempstaytimes(foo,:) = [];
-                            TrialInfo.StayTime(thisTrial) = {tempstays};
-                            TrialInfo.StayTimeStart(thisTrial) = {tempstaytimes};
-                        end
+%                         % get targetzone stay times for this trial
+%                         tempstays = cell2mat(TrialInfo.StayTimeStart(thisTrial));
+%                         tempstaytimes = cell2mat(TrialInfo.StayTime(thisTrial));
+%                         % find tzone stays after odor offset
+%                         foo = find(tempstays<TrialInfo.FeedbackStart(thisTrial));
+%                         if ~isempty(foo)
+%                             TrialInfo.TZoneStays = {tempstaytimes(foo)};
+%                             tempstays(foo,:) = [];
+%                             tempstaytimes(foo,:) = [];
+%                             TrialInfo.StayTime(thisTrial) = {tempstays};
+%                             TrialInfo.StayTimeStart(thisTrial) = {tempstaytimes};
+%                         end
                     end
                     
                 case 1100 % block shift perturbations
