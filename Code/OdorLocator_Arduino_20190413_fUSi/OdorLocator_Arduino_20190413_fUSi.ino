@@ -189,7 +189,7 @@ void setup()
 
   // Timer for motor update
   Timer3.attachInterrupt(MoveMotor);
-  Timer3.start(1000 * min_time_since_last_motor_call_default); // Calls every 10 msec
+  //Timer3.start(1000 * min_time_since_last_motor_call_default); // Calls every 10 msec
 
   // Timer for reward delivery
   Timer4.attachInterrupt(RewardNow);
@@ -200,9 +200,10 @@ void setup()
   // analog read - lever position
   analogReadResolution(12);
 
-//  // rotary encodr
+  // rotary encoder
+  analogWriteResolution(12);
   pinMode(home_pin,INPUT_PULLUP);
-//  attachInterrupt(digitalPinToInterrupt(home_pin), ZeroMotor, FALLING);
+  attachInterrupt(digitalPinToInterrupt(home_pin), ZeroMotor, FALLING);
   
   // first call to set up params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
@@ -214,7 +215,8 @@ void setup()
 void loop()
 {
   rotary_position = RotaryEncoder.read();
-  analogWrite(rotary_out,2000+rotary_position);
+  rotary_position = map(rotary_position, -2500, 2500, 0, 4095);
+  analogWrite(rotary_out,rotary_position);
   //----------------------------------------------------------------------------
   // 1) process the incoming lever position data - and resend to DAC
   //----------------------------------------------------------------------------
@@ -630,12 +632,12 @@ void loop()
             close_loop_mode = 1;
             open_loop_mode = 0; 
             // fill stimulus position array
-            stimulus_state[0] = 20;
-            stimulus_state[1] = 20;
+            //stimulus_state[0] = 0;
+            //stimulus_state[1] = 0;
             odor_valve_state = false;
             air_valve_state = false;
             send_odor_to_manifold();
-            timer_override = true;
+            timer_override = false;
             camera_on = 0;
             camera = 0;
             break;
@@ -957,7 +959,7 @@ void UpdateOpenLoopParams() // 23.01.2018
 void MoveMotor()
 {
   //digitalWrite(camera_pin, camera_on);
-  if (!motor_override)// && (trialstate[1] == 4))
+  if (!motor_override) // && stimulus_state[1] > 0)
   {
     if (use_offset_perturbation == 1)
     {
@@ -1018,7 +1020,11 @@ void UpdateTF()
   {
     transfer_function[i] = transfer_function_temp[i];
   }
-  session_just_started = false;
+  if (session_just_started)
+  {
+    timer_override = true;
+    session_just_started = false;
+  }
 }
 
 void CleaningRoutine()

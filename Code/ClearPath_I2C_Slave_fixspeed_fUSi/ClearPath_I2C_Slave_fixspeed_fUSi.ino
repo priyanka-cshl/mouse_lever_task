@@ -36,6 +36,7 @@ volatile bool homing = 0;
 // SPI variables
 volatile int Wire_received = 0; //edited
 byte motor_positions = 0;
+byte last_value = 0;
 byte readpointer = 0;
 byte writepointer = 0;
 byte value_received = 0;
@@ -168,9 +169,14 @@ void FindHome(bool which_direction)
 
 void loop ()
 {
-  Serial.println(motor_positions);
+  if (motor_positions != last_value)
+  {
+    //Serial.println(motor_positions);
+    last_value = motor_positions;
+  }
   if (Wire_received > 0) //edited
   {
+    Serial.println(motor_positions);
     //value_received = motor_positions[readpointer];
     value_received = motor_positions;
     //Serial.println(value_received);

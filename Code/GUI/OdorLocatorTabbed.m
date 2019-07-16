@@ -434,6 +434,7 @@ if get(handles.startAcquisition,'value')
         % enable the motors
         set(handles.motor_status,'String','OFF')
         motor_toggle_Callback(hObject, eventdata, handles);
+        pause(0.2);
         
         if handles.which_stage.Value>1
             % start the Arduino timer
