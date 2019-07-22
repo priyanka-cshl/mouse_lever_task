@@ -78,6 +78,8 @@ if h.odor_priors.Value
 else
     % no biases - any TF can be any odor - pick randomly
     odor_list = randperm(length(h.Odor_list.Value)); % shuffle odor list
+    % ignore odor 0
+    odor_list(find(odor_list==1)) = [];
     h.current_trial_block.Data(4) = h.Odor_list.Value(odor_list(1)) - 1;
 end
 

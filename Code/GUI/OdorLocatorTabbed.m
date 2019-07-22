@@ -107,8 +107,8 @@ foldername_server = char(handles.file_names.Data(3));
 if ~exist(fullfile(foldername_local,animal_name),'dir')
     mkdir(fullfile(foldername_local,animal_name));
     disp('making local data directory');
-    handles.TargetHold.Data = [5 10 15]';
-    handles.TriggerHold.Data = [5 10 15]';
+    handles.TargetHold.Data = [1 5 10]';
+    handles.TriggerHold.Data = [1 5 10]';
     handles.TrialSettings.Data(end) = 200;
 end
 if handles.useserver
@@ -196,8 +196,6 @@ handles.targetzone = fill(NaN,NaN,[1 1 0],'FaceAlpha',0.2);
 handles.targetzone.EdgeColor = 'none';
 handles.fake_target_plot = plot(NaN, NaN, 'color',[.7 .7 .7]);
 handles.minlim = plot(NaN, NaN, 'k','LineStyle',':'); % lower limit of lever range (trigger Off)
-
-% currently unused plots
 handles.respiration_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % respiration sensor 1
 handles.lickpiezo_plot = plot(NaN, NaN, 'color',Plot_Colors('p')); % respiration sensor 2
 
@@ -280,10 +278,10 @@ if ~isempty(handles.MFC)
 end
 
 % set up odors
-handles.Odor_list.Value = 1; % only blank vial
-handles.odor_vial.Value = 1;
+handles.Odor_list.Value = 1 + [0 1 2 3]'; % all odors active; 
+handles.odor_vial.Value = 0; % blank vial 
 odor_vial_Callback(hObject, eventdata, handles);
-handles.odor_to_manifold.Value = 1;
+handles.odor_to_manifold.Value = 0;
 handles.air_to_manifold.Value = 0;
 handles.Vial0.Value = 1;
 handles.Vial1.Value = 0;
@@ -653,8 +651,8 @@ if usrans == 1
     end
     clear a b c session_data
     set(gcf,'PaperPositionMode','auto')
-    print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name],'-dpng','-r0');
-    display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
+    print(gcf,['C:\Users\Rig\Desktop\','GUI_',animal_name],'-dpng','-r0');
+    display(['saved GUI screen shot at ' ('C:\Users\Rig\Desktop')])
     disp(['median hold = ',num2str(median(handles.MeanHoldTimes.Data)),' ms']);
     guidata(hObject, handles);
 end
@@ -781,14 +779,10 @@ handles.NI.DurationInSeconds = temp_duration;
 function lever_raw_on_Callback(hObject, eventdata, handles)
 if get(handles.lever_raw_on,'Value')
     set(handles.lever_raw_on,'BackgroundColor',[0.5 0.94 0.94]);
-    set(handles.lever_raw_plot,'LineStyle','none');
-    %set(handles.respiration_plot,'LineStyle','none');
-    %set(handles.respiration_2_plot,'LineStyle','none');
+    set(handles.lever_raw_plot,'LineStyle','-');
 else
     set(handles.lever_raw_on,'BackgroundColor',[0.94 0.94 0.94]);
-    set(handles.lever_raw_plot,'LineStyle','-');
-    %set(handles.respiration_plot,'LineStyle','-');
-    %set(handles.respiration_2_plot,'LineStyle','-');
+    set(handles.lever_raw_plot,'LineStyle','none');
 end
 guidata(hObject, handles);
 
@@ -796,36 +790,34 @@ guidata(hObject, handles);
 function respiration_on_Callback(hObject, eventdata, handles)
 if get(handles.respiration_on,'Value')
     set(handles.respiration_on,'BackgroundColor',[0.5 0.94 0.94]);
-    set(handles.respiration_plot,'LineStyle','none');
+    set(handles.respiration_plot,'LineStyle','-');
 else
     set(handles.respiration_on,'BackgroundColor',[0.94 0.94 0.94]);
-    set(handles.respiration_plot,'LineStyle','-');
+    set(handles.respiration_plot,'LineStyle','none');
 end
 guidata(hObject, handles);
-
 
 % --- Executes on button press in lick_piezo_on.
 function lick_piezo_on_Callback(hObject, eventdata, handles)
 if get(handles.lick_piezo_on,'Value')
-    set(handles.lick_piezo_on,'BackgroundColor',[0.94 0.94 0.94]);
+    set(handles.lick_piezo_on,'BackgroundColor',[0.5 0.94 0.94]);
     set(handles.lickpiezo_plot,'LineStyle','-');
 else
-    set(handles.lick_piezo_on,'BackgroundColor',[0.5 0.94 0.94]);
+    set(handles.lick_piezo_on,'BackgroundColor',[0.94 0.94 0.94]);
     set(handles.lickpiezo_plot,'LineStyle','none');
 end
 guidata(hObject, handles);
-
 
 % --- Executes on button press in camera_sync_on.
 function camera_sync_on_Callback(hObject, eventdata, handles)
 if get(handles.camera_sync_on,'Value')
     set(handles.camera_sync_on,'BackgroundColor',[0.5 0.94 0.94]);
-    set(handles.camerasync_plot,'LineStyle','none');
-    set(handles.camerasync2_plot,'LineStyle','none');
+    set(handles.camerasync_plot,'LineStyle','-');
+    set(handles.camerasync2_plot,'LineStyle','-');    
 else
     set(handles.camera_sync_on,'BackgroundColor',[0.94 0.94 0.94]);
-    set(handles.camerasync_plot,'LineStyle','-');
-    set(handles.camerasync2_plot,'LineStyle','-');
+    set(handles.camerasync_plot,'LineStyle','none');
+    set(handles.camerasync2_plot,'LineStyle','none');
 end
 guidata(hObject, handles);
 

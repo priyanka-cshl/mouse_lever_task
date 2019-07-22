@@ -12,25 +12,26 @@ switch char(handles.computername)
         handles.DAQrates.Data = [500 20]';
         
         % sensors and scaling
-        handles.DAC_settings.Data = [2.0 2.5]';
+        handles.DAC_settings.Data = [1.85 1.65]';
         handles.RS_scaling.Data = [0.5 6.5]';
         handles.RE_scaling.Data = [1 0]';
         handles.LickPiezo.Data = [0.2 6]';
         %handles.LickTicks.Data = [0.1 6]';
-        handles.lever_raw_on.Value = 1; % hide extra traces
-        handles.respiration_on.Value = 0;
-        handles.lick_piezo_on.Value = 1; 
-        handles.camera_sync_on.Value = 1;
+        handles.lever_raw_on.Value = 0; % hide extra traces
+        handles.respiration_on.Value = 1;
+        handles.lick_piezo_on.Value = 0; 
+        handles.camera_sync_on.Value = 0;
         %handles.watercoeffs = [0.00134 0.0515 0.099]; % water per drop
-        handles.watercoeffs = [0.0006286 0.09254 0.918]; % water per drop
+        handles.watercoeffs = [ 0.0007619 0.00746 0.9861]; % water per drop
         handles.fliphome = 1; 
         
         % default params
         handles.TrialSettings.Data = [4.8 0.2 200 100 5000 500]'; % trial highlim, trial lowlim, ~ , trialmin, trialmax, ITI
-        handles.RewardControls.Data = [35 5 50 100 100]'; % reward: time-I, time-II, IRI, hold-II, trial-off-lag
+        handles.RewardControls.Data = [40 15 50 100 200]'; % reward: time-I, time-II, IRI, hold-II, trial-off-lag
         handles.MultiRewards.Value = 1;
         handles.adaptive_holds.Value = 1;
         handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
+        handles.odor_priors.Value = 0; % no odor biased TFs
         handles.which_perturbation.Value = 1; % no perturbations
         handles.openloop = 0; % Run in close-loop mode
         

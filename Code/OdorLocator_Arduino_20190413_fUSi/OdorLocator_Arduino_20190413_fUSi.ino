@@ -25,8 +25,10 @@ int in_reward_zone_reporter_pin = 45;
 int reward_reporter_pin = 47;
 int reward_valve_pin = 39;
 int air_valve = 35;
-int odor_valves[] = {4, 5, 6, 7};
+int odor_valves[] = {8, 5, 6, 7};
 int odor_valves_3way[] = {33, 27, 29, 31};
+int dilution_line = 4;
+int allvialsoff = 0;
 
 // rotary encoder
 Encoder RotaryEncoder(9, 10);
@@ -155,6 +157,8 @@ void setup()
     digitalWrite(odor_valves[i], LOW);
     pinMode(odor_valves_3way[i], OUTPUT);
     digitalWrite(odor_valves_3way[i], LOW);
+    pinMode(dilution_line, OUTPUT);
+    digitalWrite(dilution_line, LOW);
   }
 
   pinMode(reward_valve_pin, OUTPUT);
@@ -1042,18 +1046,21 @@ void CleaningRoutine()
   send_odor_to_manifold ();
 }
 
-void open_odor_vial (int myvial, bool myvialstate)
-{
-  digitalWrite(odor_valves[myvial], myvialstate);
-}
+//void open_odor_vial (int myvial, bool myvialstate)
+//{
+//  digitalWrite(odor_valves[myvial], myvialstate);
+//}
 
 void update_odor_vials ()
 {
   myUSB.writeUint16(51);
+  allvialsoff = 0;
   for (i = 0; i < 4; i++)
   {
     digitalWrite(odor_valves[i], odor_vial_states[i]);
+    allvialsoff = allvialsoff + 1*odor_vial_states[i];
   }
+   digitalWrite(dilution_line, (allvialsoff>0));
 }
 
 void send_odor_to_manifold ()
