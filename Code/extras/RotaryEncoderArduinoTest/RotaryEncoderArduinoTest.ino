@@ -14,11 +14,13 @@ void setup() {
 }
 
 void loop() {
+  SerialUSB.println("oh well");
   // put your main code here, to run repeatedly:
   if (RotaryEncoder.read() != rotary_position)
   {
     rotary_position = RotaryEncoder.read();
     SerialUSB.println(rotary_position);
+    
   }
   analogWrite(rotary_out,1500+rotary_position);
 }

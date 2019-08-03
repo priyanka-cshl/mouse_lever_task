@@ -237,7 +237,7 @@ if ~isempty(webcamlist)
             handles.exposure_mode.Value = 1;                                                                      
             handles.mycam.Focus = 250;
             handles.exposure_value.Data = handles.mycam.Exposure;
-            handles.mycam.Zoom = 100;
+            handles.mycam.Zoom = 250;
        case {'PRIYANKA-HP'}
             handles.mycam = webcam(1);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
