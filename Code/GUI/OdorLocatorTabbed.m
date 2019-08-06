@@ -104,19 +104,20 @@ handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
 animal_name = char(handles.file_names.Data(1));
 foldername_local = char(handles.file_names.Data(2));
 foldername_server = char(handles.file_names.Data(3));
-if ~exist(fullfile(foldername_local,animal_name),'dir')
-    mkdir(fullfile(foldername_local,animal_name));
-    disp('making local data directory');
-    handles.TargetHold.Data = [5 10 15]';
-    handles.TriggerHold.Data = [5 10 15]';
-    handles.TrialSettings.Data(end) = 200;
-end
 if handles.useserver
     if ~exist(fullfile(foldername_server,animal_name),'dir')
     	mkdir(fullfile(foldername_server,animal_name));
         disp('making remote data directory');
+        handles.TargetHold.Data = [5 10 15]';
+        handles.TriggerHold.Data = [5 10 15]';
+        handles.TrialSettings.Data(end) = 200;
     end
 end
+if ~exist(fullfile(foldername_local,animal_name),'dir')
+    mkdir(fullfile(foldername_local,animal_name));
+    disp('making local data directory');
+end
+
 
 % mouse specific settings
 [handles] = MouseDefaults(handles);
