@@ -37,10 +37,13 @@ int home_pin = 13;
 volatile int rotary_position = 0;
 
 //communication related
-int dac_spi_pin = 22;
+int dac_spi_pin = 22; //CS
 const byte SDA_pin = 20;
 const byte SCL_pin = 21;
 int motor1_i2c_address = 7;
+
+//SD card related
+int SD_spi_pin = 3;
 
 //variables : lever related
 long lever_position = 0L;
@@ -176,6 +179,7 @@ void setup()
 
   // set up SPI
   pinMode (dac_spi_pin, OUTPUT);
+  pinMode (SD_spi_pin, OUTPUT);
   SPI.begin(dac_spi_pin);
 
   // set up I2C
@@ -977,6 +981,7 @@ void MoveMotor()
     {
       I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
     }
+    //SPIWriter(SD_spi_pin, stimulus_state[1]);
   }
 
   if (!close_loop_mode)
