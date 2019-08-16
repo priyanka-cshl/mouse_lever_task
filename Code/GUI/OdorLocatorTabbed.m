@@ -23,7 +23,7 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
-% Last Modified by GUIDE v2.5 13-Oct-2018 14:29:15
+% Last Modified by GUIDE v2.5 16-Aug-2019 17:40:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1245,4 +1245,10 @@ function odor_priors_Callback(hObject, eventdata, handles)
 % --- Executes on button press in TFtype.
 function TFtype_Callback(hObject, eventdata, handles)
 
+% --- Executes on button press in PIDMode.
+function PIDMode_Callback(hObject, eventdata, handles)
+% hObject    handle to PIDMode (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 
+% Hint: get(hObject,'Value') returns toggle state of PIDMode

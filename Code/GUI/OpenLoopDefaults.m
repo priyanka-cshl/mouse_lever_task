@@ -1,6 +1,9 @@
 function [handles] = OpenLoopDefaults(handles)
 % rig specific settings
 %handles.computername = textread('C:\Users\pgupta\Documents\hostname.txt','%s'); %#ok<*DTXTRD>
+
+handles.PIDMode.Value = 1;
+
 switch char(handles.computername)
     case {'JUSTINE'}
         % files and paths
@@ -79,7 +82,7 @@ switch char(handles.computername)
         handles.motor_params = 4; % motor step size
         
     case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
-        {'C:\Data\OpenLoop'};
+        handles.file_names.Data(2) = {'C:\Data\OpenLoop'};
         handles.file_names.Data(3) = {'\\sonas-hs\Albeanu-Norepl\pgupta\OpenLoop'};
         handles.ManifoldOutlets = 16;
         % motor location settings

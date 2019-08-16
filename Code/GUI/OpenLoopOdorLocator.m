@@ -23,7 +23,7 @@ function varargout = OpenLoopOdorLocator(varargin)
 
 % Edit the above text to modify the response to help OpenLoopOdorLocator
 
-% Last Modified by GUIDE v2.5 16-Aug-2019 17:28:08
+% Last Modified by GUIDE v2.5 16-Aug-2019 17:39:27
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -114,6 +114,10 @@ handles.lickpiezo_plot = plot(NaN, NaN, 'color',Plot_Colors('p')); % lick piezo
 handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.25); %rewards
 handles.camerasync_plot = plot(NaN, NaN, 'color',Plot_Colors('pl'),'Linewidth',1); %point-grey cam sync
 handles.camerasync2_plot = plot(NaN, NaN, 'color',Plot_Colors('pd'),'Linewidth',1); %point-grey cam sync
+
+%disable unused plots
+set(handles.camerasync_plot,'LineStyle','none');
+set(handles.camerasync2_plot,'LineStyle','none');
 
 set(handles.axes1,'YLim',handles.Plot_YLim.Data);
 
@@ -292,9 +296,11 @@ if get(handles.startAcquisition,'value')
         set(handles.motor_status,'String','OFF')
         motor_toggle_Callback(hObject, eventdata, handles);
         
+        disp('odor build up period ...');
         while toc(tstart) < handles.odor_build_up.Data
             %disp(toc(tstart));
         end
+        disp('odor build up period done');
         
         % start the Arduino timer
         handles.Arduino.write(15, 'uint16'); 
@@ -717,8 +723,11 @@ function reward_now_Callback(hObject, eventdata, handles)
 handles.Arduino.write(82, 'uint16'); 
 
 
-% --- Executes on button press in pushbutton34.
-function pushbutton34_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton34 (see GCBO)
+
+% --- Executes on button press in PIDMode.
+function PIDMode_Callback(hObject, eventdata, handles)
+% hObject    handle to PIDMode (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of PIDMode

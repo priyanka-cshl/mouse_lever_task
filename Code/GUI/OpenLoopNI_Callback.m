@@ -142,4 +142,3 @@ fwrite(fid1,data,'double');
 %% for next round
 samplenum = samplenum + num_new_samples;
 last_data_value = event.Data(end,:);
-

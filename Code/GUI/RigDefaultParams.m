@@ -1,6 +1,8 @@
 function [handles] = RigDefaultParams(handles)
 % rig specific settings
 %handles.computername = textread('C:\Users\pgupta\Documents\hostname.txt','%s'); %#ok<*DTXTRD>
+handles.PIDMode.Value = 0;
+
 switch char(handles.computername)
      case {'JUSTINE'}
         % files and paths
