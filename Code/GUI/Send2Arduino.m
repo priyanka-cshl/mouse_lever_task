@@ -63,6 +63,9 @@ if sending_attempts == 9
     error('arduino: failed to update values')
 end
 
+% update water per drop
+h.waterperdrop.Data(1) = WaterPerDrop(h);
+
 %% if acquisition is Running and params were sent - update settings file
 if get(h.startAcquisition,'value') && (sent == 1)
     if (h.current_trial_block.Data(2)-1>0)

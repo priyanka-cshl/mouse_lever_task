@@ -31,6 +31,7 @@ switch char(handles.computername)
         handles.MultiRewards.Value = 1;
         handles.adaptive_holds.Value = 1;
         handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
+        handles.odor_priors.Value = 0;
         handles.which_perturbation.Value = 1; % no perturbations
         handles.openloop = 0; % Run in close-loop mode
         
@@ -90,7 +91,7 @@ switch char(handles.computername)
         handles.lick_piezo_on.Value = 1; 
         handles.camera_sync_on.Value = 1;
         %handles.watercoeffs = [0.00134 0.0515 0.099]; % water per drop
-        handles.watercoeffs = [0.0006286 0.09254 0.918]; % water per drop
+        handles.watercoeffs = [0.001738 0.04964 1.275]; % water per drop [0.0006286 0.09254 0.918];
         handles.fliphome = 0; 
         
         % default params
@@ -99,6 +100,7 @@ switch char(handles.computername)
         handles.MultiRewards.Value = 1;
         handles.adaptive_holds.Value = 1;
         handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
+        handles.odor_priors.Value = 0;
         handles.which_perturbation.Value = 1; % no perturbations
         handles.openloop = 0; % Run in close-loop mode
         

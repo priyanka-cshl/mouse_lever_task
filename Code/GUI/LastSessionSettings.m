@@ -24,12 +24,12 @@ if ~isempty(Allfiles)
             if last_session_median < 25
                 handles.TargetHold.Data(2) = 25;
                 handles.TargetHold.Data(1) = 0;
-            elseif last_session_median >= 300
+            elseif last_session_median >= 400
                 %handles.TargetHold.Data(2) = 300;
-                handles.TargetHold.Data(2) = 325; %last_session_median;
+                handles.TargetHold.Data(2) = 400; %last_session_median;
                 handles.TargetHold.Data(1) = 300; %max([250 last_session_median-50]);
                 handles.AntiBias.Value = 0;
-                handles.TargetHold.Data(3) = 400;
+                handles.TargetHold.Data(3) = 500;
                 handles.adaptive_holds.Value = 0;
             else
                 handles.TargetHold.Data(2) = last_session_median;

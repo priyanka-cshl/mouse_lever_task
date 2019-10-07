@@ -159,6 +159,7 @@ handles.update_call = 0;
 
 %% clear indicators
 handles.Reward_Report.Data = zeros(size(handles.Reward_Report.Data));
+handles.rewardgiven.Data(1) = 0;
 handles.ProgressReport.Data = zeros(size(handles.ProgressReport.Data));
 handles.ProgressReportPerturbed.Data = zeros(size(handles.ProgressReportPerturbed.Data));
 handles.hold_times.Data = zeros(size(handles.hold_times.Data));
@@ -373,6 +374,7 @@ if get(handles.startAcquisition,'value')
 
         % clear indicators and reset flags
         handles.Reward_Report.Data = zeros(size(handles.Reward_Report.Data));
+        handles.rewardgiven.Data(1) = 0;
         handles.ProgressReport.Data = zeros(size(handles.ProgressReport.Data));
         handles.ProgressReportPerturbed.Data = zeros(size(handles.ProgressReportPerturbed.Data));
         handles.hold_times.Data = zeros(size(handles.hold_times.Data));
@@ -678,7 +680,9 @@ else
     %handles.Reward_Report.Data(1,3) = handles.Reward_Report.Data(1,3) + 1;
     handles.Reward_Report.Data(3) = handles.Reward_Report.Data(3) + 1;
 end
-handles.Reward_Report.Data(1) = floor(handles.Reward_Report.Data(1) + WaterPerDrop(handles));
+
+handles.rewardgiven.Data(1) = (handles.rewardgiven.Data(1) + WaterPerDrop(handles));
+handles.Reward_Report.Data(1) = floor(handles.rewardgiven.Data(1));
 handles.lastrewardtime = handles.timestamp.Data;
 guidata(hObject, handles);
 

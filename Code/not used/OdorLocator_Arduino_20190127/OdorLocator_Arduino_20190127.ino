@@ -834,6 +834,7 @@ void I2Cwriter (int wire_address, int DataToWrite)
 void UpdateAllParams()
 {
   myUSB.writeUint16(89);
+  use_offset_perturbation = 0;
   // parse param array to variable names
   //which_odor = param_array[0]; // odor vial number
   camera_on = param_array[1];
