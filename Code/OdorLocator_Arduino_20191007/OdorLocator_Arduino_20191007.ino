@@ -566,30 +566,39 @@ void loop()
         case 0: // move motor to desired location and give it time to settle
           stimulus_state[1] = open_loop_location;
           odor_valve_state = false; // keep odor valve closed (blank vial is Onand going to exhaust)
-          air_valve_state = false;
+          air_valve_state = false; 
+          send_odor_to_manifold();
           break;
         case 1: // pre-odor, no-flow
-          odor_valve_state = false; // keep odor valve closed
-          air_valve_state = false;
+          which_odor = 0;
+          odor_valve_state = true; // blank vial on
+          air_valve_state = true; 
+          send_odor_to_manifold();
           break;
         case 4: // odor, switch odor vial to odor, turn on flow
-          odor_valve_state = true; // turn odor valve ON
+          which_odor = open_loop_param_array[0]; // odor vial number
+          odor_valve_state = true;
           air_valve_state = true;
+          send_odor_to_manifold();
           break;
         case 2: // purge, switch to air vial, flow still on
           which_odor = 0;
+          odor_valve_state = true; // blank vial on
+          air_valve_state = true; 
           send_odor_to_manifold();
-          odor_valve_state = true; // keep odor valve closed (blank vial is Onand going to exhaust)
-          air_valve_state = true;
           break;
         case 3: // post-odor, switch to air vial
-          odor_valve_state = false; // keep odor valve closed (blank vial is Onand going to exhaust)
-          air_valve_state = false;
+          which_odor = 0;
+          odor_valve_state = true; // keep odor valve closed (blank vial is On and going to mouse)
+          air_valve_state = true; 
+          send_odor_to_manifold();
           break;
         case 5: // iti - no flow, clean air to exhaust
           odor_valve_state = false; // keep odor valve closed (blank vial is Onand going to exhaust)
-          air_valve_state = false;
+          air_valve_state = false; 
+          send_odor_to_manifold();
           break;
+
       }
     }
     trialstate[0] = trialstate[1];
@@ -806,6 +815,13 @@ void loop()
             //myUSB.readUint16Array(multi_reward_params, 3);
             //myUSB.writeUint16Array(multi_reward_params, 3);
             break;
+          case 5: // open_loop_reward
+              digitalWrite(reward_valve_pin, HIGH);
+              digitalWrite(reward_reporter_pin, HIGH);
+              delay(open_loop_param_array[10]);
+              digitalWrite(reward_valve_pin, LOW);
+              digitalWrite(reward_reporter_pin, LOW);
+            break;
         }
         break;
       case 90: // SPI communication
@@ -923,13 +939,15 @@ void UpdateOpenLoopParams() // 23.01.2018
   myUSB.writeUint16(98);
   trialstate[0] = 5;
   // parse param array to variable names
-  which_odor = open_loop_param_array[0]; // odor vial number
+  //which_odor = open_loop_param_array[0]; // odor vial number
   open_loop_location = open_loop_param_array[1]; // desired location
   for (i = 0; i < 6; i++)
   {
     open_loop_trial_timing[i] = open_loop_param_array[2 + i]; // motor_settle, pre-odor, odor, post-odor, iti in ms
   }
-
+  lever_rescale_params[0] = open_loop_param_array[8]; // gain, offset
+  lever_rescale_params[1] = open_loop_param_array[9];
+  //reward_params[1] = open_loop_param_array[10];
   // update trial state params
   openlooptrialstates.UpdateOpenLoopTrialParams(open_loop_trial_timing);
 }
@@ -939,23 +957,12 @@ void MoveMotor()
   //digitalWrite(camera_pin, camera_on);
   if (!motor_override)// && (trialstate[1] == 4))
   {
-    //if (use_offset_perturbation == 1)
-    //{
-    //  I2Cwriter(motor1_i2c_address, 10 + perturbation_offset_location);
-    //}
-    //else if (use_offset_perturbation == 2)
-    //{
-    //  I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1] + perturbation_offset);
-    //}
-    //else if (feedback_halt == 1)
     if (feedback_halt == 1)
     {
 
     }
     else
     {
-      // make sure the simulus state is within the current TF
-
       I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
     }
   }
