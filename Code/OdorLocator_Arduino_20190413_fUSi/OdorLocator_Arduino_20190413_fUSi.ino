@@ -6,7 +6,6 @@
 #include "ArCOM.h"
 #include "openlooptrialstates.h" // function to process open loop trial states 13.02.18
 #include <Encoder.h>
-
 // ----------------------------------------------------------------------------
 
 // ---- initialize function calls ---------------------------------------------
@@ -200,9 +199,9 @@ void setup()
   // analog read - lever position
   analogReadResolution(12);
 
-//  // rotary encodr
+ // rotary encoder
   pinMode(home_pin,INPUT_PULLUP);
-//  attachInterrupt(digitalPinToInterrupt(home_pin), ZeroMotor, FALLING);
+//attachInterrupt(digitalPinToInterrupt(home_pin), ZeroMotor, FALLING);
   
   // first call to set up params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
@@ -244,29 +243,38 @@ void loop()
     // 2) convert lever position to stimuli given current target zone definition
     //----------------------------------------------------------------------------
     motor_location = map(lever_position, 0, 65534, 0, num_of_locations - 1);
+    motor_location = constrain(motor_location, 0, 98); // otherwise weird stuff happens on the trial after an offset trial
     if (flip_lever)
     {
       motor_location = constrain((offset_location - (motor_location - offset_location)), 0, num_of_locations - 1);
     }
-    stimulus_state[1] = transfer_function[motor_location];
-    if (use_offset_perturbation)
+
+    switch (use_offset_perturbation)
     {
-      out_of_target_zone = !(stimulus_state[1] == constrain(stimulus_state[1], neutral_locations[0], neutral_locations[1]));
-      if (out_of_target_zone && (use_offset_perturbation == 1))
-      {
-        use_offset_perturbation = 2;
-        trial_timestamp = micros() - (1000*trial_trigger_timing[1]); // reset trial timestamp to give extra time for the trial
-      }
-      stimulus_state[1] = stimulus_state[1] + perturbation_offset;
-      stimulus_state[1] = constrain(stimulus_state[1], 0, 240);
+      case 0:
+        stimulus_state[1] = transfer_function[motor_location];
+        break;
+      case 1:
+        //stimulus_state[1] = transfer_function[motor_location];
+        out_of_target_zone = !(transfer_function[motor_location] == constrain(transfer_function[motor_location], neutral_locations[0], neutral_locations[1]));
+        if (out_of_target_zone && (use_offset_perturbation == 1))
+        {
+          use_offset_perturbation = 2;
+          trial_timestamp = micros() - (1000 * trial_trigger_timing[1]); // reset trial timestamp to give extra time for the trial
+        }
+        stimulus_state[1] = perturbation_offset_location;
+        break;
+      case 2:
+        stimulus_state[1] = transfer_function[motor_location] + perturbation_offset;
+        break;
     }
+
   }
   else if (open_loop_mode) // 13.02.18
   {
     //lever_position = 0;
     motor_location = map(open_loop_location, 0, 255, 0, 65534); // max location is 256 - 8 bit
     SPIWriter(dac_spi_pin, lever_position);
-    //SPIWriter(dac_spi_pin, motor_location);
   }
   else
   {
@@ -427,9 +435,9 @@ void loop()
           digitalWrite(in_reward_zone_reporter_pin, use_offset_perturbation == 2); // in_reward_zone?
         }
       }
-      else if ((feedback_halt_trial)||(feedback_pause_trial))
+      else if ((feedback_halt_trial) || (feedback_pause_trial))
       {
-        digitalWrite(in_reward_zone_reporter_pin, (feedback_halt==1)); // in_reward_zone?
+        digitalWrite(in_reward_zone_reporter_pin, (feedback_halt == 1)); // in_reward_zone?
       }
       else
       {
@@ -959,13 +967,9 @@ void MoveMotor()
   //digitalWrite(camera_pin, camera_on);
   if (!motor_override)// && (trialstate[1] == 4))
   {
-    if (use_offset_perturbation == 1)
+    if (feedback_halt == 1)
     {
-      I2Cwriter(motor1_i2c_address, 10 + perturbation_offset_location);
-    }
-    else if (feedback_halt == 1)
-    {
-      
+
     }
     else
     {
