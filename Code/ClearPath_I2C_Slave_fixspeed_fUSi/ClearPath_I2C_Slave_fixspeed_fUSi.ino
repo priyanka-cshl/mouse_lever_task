@@ -9,7 +9,7 @@ const byte dir_pin = 6;
 const byte step_pin = 5;
 const byte servoON_pin = 4; //HFLB
 const byte home_pin = 51;
-const byte end_stop_pin_left = 2;
+const byte end_stop_pin_left = 2; //right of mouse
 const byte end_stop_pin_right = 3;
 const byte SDA_pin = 20;
 const byte SCL_pin = 21;
@@ -168,9 +168,10 @@ void FindHome(bool which_direction)
 
 void loop ()
 {
-  Serial.println(motor_positions);
+
   if (Wire_received > 0) //edited
   {
+    Serial.println(motor_positions);
     //value_received = motor_positions[readpointer];
     value_received = motor_positions;
     //Serial.println(value_received);
