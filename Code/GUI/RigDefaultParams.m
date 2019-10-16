@@ -1,6 +1,8 @@
 function [handles] = RigDefaultParams(handles)
 % rig specific settings
 %handles.computername = textread('C:\Users\pgupta\Documents\hostname.txt','%s'); %#ok<*DTXTRD>
+handles.PIDMode.Value = 0;
+
 switch char(handles.computername)
      case {'JUSTINE'}
         % files and paths
@@ -17,17 +19,17 @@ switch char(handles.computername)
         handles.RE_scaling.Data = [1 0]';
         handles.LickPiezo.Data = [0.2 6]';
         %handles.LickTicks.Data = [0.1 6]';
-        handles.lever_raw_on.Value = 1; % hide extra traces
-        handles.respiration_on.Value = 0;
-        handles.lick_piezo_on.Value = 1; 
-        handles.camera_sync_on.Value = 1;
+        handles.lever_raw_on.Value = 0; % hide extra traces
+        handles.respiration_on.Value = 1;
+        handles.lick_piezo_on.Value = 0; 
+        handles.camera_sync_on.Value = 0;
         %handles.watercoeffs = [0.00134 0.0515 0.099]; % water per drop
         handles.watercoeffs = [0.0006286 0.09254 0.918]; % water per drop
         handles.fliphome = 1; 
         
         % default params
         handles.TrialSettings.Data = [4.8 0.2 200 100 5000 500]'; % trial highlim, trial lowlim, ~ , trialmin, trialmax, ITI
-        handles.RewardControls.Data = [35 5 50 100 100]'; % reward: time-I, time-II, IRI, hold-II, trial-off-lag
+        handles.RewardControls.Data = [35 5 50 100 200]'; % reward: time-I, time-II, IRI, hold-II, trial-off-lag
         handles.MultiRewards.Value = 1;
         handles.adaptive_holds.Value = 1;
         handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors

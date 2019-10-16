@@ -4,8 +4,13 @@ function [NI_session, MFC_session, Channels, NIchannels]=configure_NIDAQ(handles
 switch char(handles.computername)
     case {'marbprec', 'PRIYANKA-HP','JUSTINE'}
         DeviceName = 'Dev2';
-        Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','Respiration','LickPiezo'};
-        AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai12'};
+        if handles.PIDMode.Value
+            Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','Respiration','PID'};
+            AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai13'};
+        else
+            Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','Respiration','LickPiezo'};
+            AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai12'};
+        end
         Channels.Digital = {'trial_on', 'in_target_zone', 'in_reward_zone', 'rewards', 'licks', 'homesensor', 'camerasync1', 'camerasync2'};
         DigitalChannelIDs = {'Port0/Line0:7'};
         % channel map for plotting 
@@ -23,8 +28,13 @@ switch char(handles.computername)
         
     case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
         DeviceName = 'Dev1';
-        Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','Respiration','LickPiezo'};
-        AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai12'};
+        if handles.PIDMode.Value
+            Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','Respiration','PID'};
+            AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai13'};
+        else
+            Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','Respiration','LickPiezo'};
+            AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai12'};
+        end
         Channels.Digital = {'trial_on', 'in_target_zone', 'in_reward_zone', 'rewards', 'licks', 'homesensor', 'camerasync'};
         DigitalChannelIDs = {'Port0/Line0:6'};
         Channels.trial_channel = 7;
