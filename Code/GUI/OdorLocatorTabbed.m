@@ -655,8 +655,8 @@ if usrans == 1
     end
     clear a b c session_data
     set(gcf,'PaperPositionMode','auto')
-    print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name],'-dpng','-r0');
-    display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
+    print(gcf,['C:\Users\Rig\Desktop\','GUI_',animal_name],'-dpng','-r0');
+    display(['saved GUI screen shot at ' ('C:\Users\Rig\Desktop')])
     disp(['median hold = ',num2str(median(handles.MeanHoldTimes.Data)),' ms']);
     guidata(hObject, handles);
 end

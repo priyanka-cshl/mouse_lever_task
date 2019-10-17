@@ -200,6 +200,7 @@ void setup()
   analogReadResolution(12);
 
  // rotary encoder
+  analogWriteResolution(12);
   pinMode(home_pin,INPUT_PULLUP);
 //attachInterrupt(digitalPinToInterrupt(home_pin), ZeroMotor, FALLING);
   
@@ -213,7 +214,9 @@ void setup()
 void loop()
 {
   rotary_position = RotaryEncoder.read();
-  analogWrite(rotary_out,2000+rotary_position);
+  rotary_position = constrain(rotary_position, -3000, 3000);
+  rotary_position = map(rotary_position, -3000, 3000, 500, 3500);
+  analogWrite(rotary_out,rotary_position);
   //----------------------------------------------------------------------------
   // 1) process the incoming lever position data - and resend to DAC
   //----------------------------------------------------------------------------
@@ -795,6 +798,10 @@ void loop()
         break;
       case 70: // motor related
         I2Cwriter(motor1_i2c_address, int(FSMheader - 70));
+        if (int(FSMheader - 70)==2)
+        {
+          ZeroMotor();
+        }
         break;
       case 80: // reward valve related
         switch (FSMheader - 80)

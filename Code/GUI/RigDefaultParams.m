@@ -14,7 +14,7 @@ switch char(handles.computername)
         handles.DAQrates.Data = [500 20]';
         
         % sensors and scaling
-        handles.DAC_settings.Data = [2.0 2.5]';
+        handles.DAC_settings.Data = [2.0 2.45]';
         handles.RS_scaling.Data = [0.5 6.5]';
         handles.RE_scaling.Data = [1 0]';
         handles.LickPiezo.Data = [0.2 6]';
