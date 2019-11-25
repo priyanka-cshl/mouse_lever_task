@@ -103,6 +103,8 @@ switch char(handles.computername)
         handles.odor_priors.Value = 0;
         handles.which_perturbation.Value = 1; % no perturbations
         handles.openloop = 0; % Run in close-loop mode
+        handles.AdaptiveTrigger.Value = 1;
+        handles.OdorSequence.Value = 1;
         
         % Target zones
         handles.ZoneLimitSettings.Data(1) = 0.3; % zone width

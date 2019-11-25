@@ -76,10 +76,15 @@ if h.odor_priors.Value
             (h.TargetDefinition.Data(2) > mean(h.target_level_array.Data)); % odor 2 if upper 6 zones, odor 1 if lower six zones
     end
 else
-    % no biases - any TF can be any odor - pick randomly
-    odor_list = randperm(length(h.Odor_list.Value)); % shuffle odor list
-    odor_list(find(odor_list==1)) = [];
-    h.current_trial_block.Data(4) = h.Odor_list.Value(odor_list(1)) - 1;
+    if h.OdorSequence.Value
+        odor_list = h.odor_sequence.Data;
+        h.current_trial_block.Data(4) = odor_list(mod(find(odor_list==h.current_trial_block.Data(4)),3)+1);
+    else
+        % no biases - any TF can be any odor - pick randomly
+        odor_list = randperm(length(h.Odor_list.Value)); % shuffle odor list
+        odor_list(find(odor_list==1)) = [];
+        h.current_trial_block.Data(4) = h.Odor_list.Value(odor_list(1)) - 1;
+    end
 end
 
 %% update target hold time
