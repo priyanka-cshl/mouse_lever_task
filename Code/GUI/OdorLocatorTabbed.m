@@ -641,7 +641,8 @@ if usrans == 1
     session_data.trace_legend = Connections_list();
     session_data.params = b';
     session_data.TF = c';
-    session_data.ForNextSession = [handles.DAC_settings.Data' handles.TriggerHold.Data' ...
+    median_trigger_hold = nanmedian(handles.hold_times.Data(find(handles.hold_times.Data(:,4)),4));
+    session_data.ForNextSession = [handles.DAC_settings.Data' handles.TriggerHold.Data'...
         median(handles.MeanHoldTimes.Data)...
         handles.RewardControls.Data(1) handles.TFLeftprobability.Data(1) handles.summedholdfactor.Data];
     session_data.ForNextSession_Legends = {'DAQGain', 'DAQDC', 'TriggerHoldMin', 'TriggerHoldMean', 'TriggerHoldMax', ...
@@ -658,6 +659,7 @@ if usrans == 1
     print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name],'-dpng','-r0');
     display(['saved GUI screen shot at ' ('C:\Users\florin\Desktop')])
     disp(['median hold = ',num2str(median(handles.MeanHoldTimes.Data)),' ms']);
+    disp(['median trigger hold = ',num2str(median_trigger_hold),' ms']);
     guidata(hObject, handles);
 end
 

@@ -10,6 +10,11 @@ global TrialsToPerturb;
 
 disp(['---------- New Trial (#', num2str(h.current_trial_block.Data(2)),') ----------']);
 
+%% copy current trial settings into last trial
+h.LastTrialSettings.Data = h.current_trial_block.Data;
+% update row 1 to store which target zone it was
+h.LastTrialSettings.Data(1) = h.which_target.Data;
+
 %% update performance
 h.ProgressReport.Data(:,3) = round(100*(h.ProgressReport.Data(:,2)./h.ProgressReport.Data(:,1)),0,'decimals');
 h.ProgressReportPerturbed.Data(:,3) = round(100*(h.ProgressReportPerturbed.Data(:,2)./h.ProgressReportPerturbed.Data(:,1)),0,'decimals');
@@ -21,7 +26,7 @@ h.TFgain.Data = 1;
 if h.which_target.Data
     f = find(h.hold_times.Data(:,1)==h.which_target.Data);
     if ~isempty(f)
-        h.MeanHoldTimes.Data(h.which_target.Data) = floor(median(h.hold_times.Data(f,3)));
+        h.MeanHoldTimes.Data(h.which_target.Data) = floor(nanmedian(h.hold_times.Data(f,3)));
     end
 end
 
@@ -90,6 +95,11 @@ end
 %% update target hold time
 if ~h.preloaded_sequence.Value
     if h.adaptive_holds.Value
+        % check if success rate is below 50% and accordingly adjust min hold time
+        if h.ProgressReport.Data(end,3) <= 50
+            h.TargetHold.Data(1) = max(0,h.TargetHold.Data(1)-25);
+        end
+        
         % get mean holds for this particular target zone
         h.current_trial_block.Data(5) = 25 + h.MeanHoldTimes.Data(h.which_target.Data);
         
