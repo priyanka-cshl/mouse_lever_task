@@ -142,12 +142,12 @@ if TotalTime(end)>=2
     end
     
     %% trial just turned ON or OFF
-    % trial ON
+    % trial OFF
     if any(diff(TotalData(end-num_new_samples:end,h.Channels.trial_channel)) < 0)
         
         trial_just_ended = 1;
         
-        % trial OFF
+        % trial ON
     elseif any(diff(TotalData(end-num_new_samples:end,h.Channels.trial_channel)) > 0)
         
         % pull down rewarded flag

@@ -10,6 +10,11 @@ global TrialsToPerturb;
 
 disp(['---------- New Trial (#', num2str(h.current_trial_block.Data(2)),') ----------']);
 
+%% copy current trial settings into last trial
+h.LastTrialSettings.Data = h.current_trial_block.Data;
+% update row 1 to store which target zone it was
+h.LastTrialSettings.Data(1) = h.which_target.Data;
+
 %% update performance
 h.ProgressReport.Data(:,3) = round(100*(h.ProgressReport.Data(:,2)./h.ProgressReport.Data(:,1)),0,'decimals');
 h.ProgressReportPerturbed.Data(:,3) = round(100*(h.ProgressReportPerturbed.Data(:,2)./h.ProgressReportPerturbed.Data(:,1)),0,'decimals');
@@ -21,7 +26,7 @@ h.TFgain.Data = 1;
 if h.which_target.Data
     f = find(h.hold_times.Data(:,1)==h.which_target.Data);
     if ~isempty(f)
-        h.MeanHoldTimes.Data(h.which_target.Data) = floor(median(h.hold_times.Data(f,3)));
+        h.MeanHoldTimes.Data(h.which_target.Data) = floor(nanmedian(h.hold_times.Data(f,3)));
     end
 end
 
@@ -76,15 +81,25 @@ if h.odor_priors.Value
             (h.TargetDefinition.Data(2) > mean(h.target_level_array.Data)); % odor 2 if upper 6 zones, odor 1 if lower six zones
     end
 else
-    % no biases - any TF can be any odor - pick randomly
-    odor_list = randperm(length(h.Odor_list.Value)); % shuffle odor list
-    odor_list(find(odor_list==1)) = [];
-    h.current_trial_block.Data(4) = h.Odor_list.Value(odor_list(1)) - 1;
+    if h.OdorSequence.Value
+        odor_list = h.odor_sequence.Data;
+        h.current_trial_block.Data(4) = odor_list(mod(find(odor_list==h.current_trial_block.Data(4)),3)+1);
+    else
+        % no biases - any TF can be any odor - pick randomly
+        odor_list = randperm(length(h.Odor_list.Value)); % shuffle odor list
+        odor_list(find(odor_list==1)) = [];
+        h.current_trial_block.Data(4) = h.Odor_list.Value(odor_list(1)) - 1;
+    end
 end
 
 %% update target hold time
 if ~h.preloaded_sequence.Value
     if h.adaptive_holds.Value
+        % check if success rate is below 50% and accordingly adjust min hold time
+        if h.ProgressReport.Data(end,3) <= 50
+            h.TargetHold.Data(1) = max(0,h.TargetHold.Data(1)-25);
+        end
+        
         % get mean holds for this particular target zone
         h.current_trial_block.Data(5) = 25 + h.MeanHoldTimes.Data(h.which_target.Data);
         

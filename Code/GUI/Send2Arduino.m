@@ -70,7 +70,17 @@ h.waterperdrop.Data(1) = WaterPerDrop(h);
 if get(h.startAcquisition,'value') && (sent == 1)
     if (h.current_trial_block.Data(2)-1>0)
         h.hold_times.Data(h.current_trial_block.Data(2)-1,1) = h.which_target.Data;
-        h.hold_times.Data(h.current_trial_block.Data(2)-1,3) = ParamsBack(1);
+        if ParamsBack(1) < 7000
+            h.hold_times.Data(h.current_trial_block.Data(2)-1,3) = ParamsBack(1);
+            h.hold_times.Data(h.current_trial_block.Data(2)-1,4) = h.LastTrialSettings.Data(end);
+        else
+            h.hold_times.Data(h.current_trial_block.Data(2)-1,3) = NaN;
+            h.hold_times.Data(h.current_trial_block.Data(2)-1,4) = NaN;
+            which_target = h.LastTrialSettings.Data(1);
+            % decrement trial counts for failed trials
+            h.ProgressReport.Data(which_target,1) = h.ProgressReport.Data(which_target,1) - 1;
+            h.ProgressReport.Data(end,1) = h.ProgressReport.Data(end,1) - 1;
+        end        
     end
     % replace last three values in params1 to store Stay Time min and Stay
     % Time Max
