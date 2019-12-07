@@ -23,7 +23,7 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
-% Last Modified by GUIDE v2.5 25-Nov-2019 15:53:41
+% Last Modified by GUIDE v2.5 06-Dec-2019 20:19:23
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -185,6 +185,7 @@ handles.trial_on_4.EdgeColor = 'none';
 handles.lever_DAC_plot = plot(NaN, NaN,'k','linewidth',1); %lever rescaled
 handles.lever_raw_plot = plot(NaN, NaN, 'color',Plot_Colors('b')); %lever raw
 handles.stimulus_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor location (rotary encoder)
+handles.thermistor_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor location (rotary encoder)
 handles.in_target_zone_plot = fill(NaN,NaN,Plot_Colors('r'));
 handles.in_target_zone_plot.EdgeColor = 'none';
 handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
@@ -269,10 +270,11 @@ set(handles.cameraAxes,'YTick',[],'YTickLabel',' ','YTickMode','manual','YTickLa
 
 %% Others
 guidata(hObject, handles); % Update handles structure
-lever_raw_on_Callback(hObject,eventdata,handles);
-respiration_on_Callback(hObject,eventdata,handles);
-lick_piezo_on_Callback(hObject,eventdata,handles);
-camera_sync_on_Callback(hObject,eventdata,handles);
+UpdateAllPlots(hObject,eventdata,handles)
+% lever_raw_on_Callback(hObject,eventdata,handles);
+% respiration_on_Callback(hObject,eventdata,handles);
+% lick_piezo_on_Callback(hObject,eventdata,handles);
+% camera_sync_on_Callback(hObject,eventdata,handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
 ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Send2Arduino
 
@@ -783,58 +785,6 @@ data = startForeground(handles.NI);
 handles.DAC_levels.Data = round([min(data(:,1)) max(data(:,1))]',4,'significant');
 handles.NI.DurationInSeconds = temp_duration;
 
-% --- Executes on button press in lever_raw_on.
-function lever_raw_on_Callback(hObject, eventdata, handles)
-if get(handles.lever_raw_on,'Value')
-    set(handles.lever_raw_on,'BackgroundColor',[0.5 0.94 0.94]);
-    set(handles.lever_raw_plot,'LineStyle','none');
-    %set(handles.respiration_plot,'LineStyle','none');
-    %set(handles.respiration_2_plot,'LineStyle','none');
-else
-    set(handles.lever_raw_on,'BackgroundColor',[0.94 0.94 0.94]);
-    set(handles.lever_raw_plot,'LineStyle','-');
-    %set(handles.respiration_plot,'LineStyle','-');
-    %set(handles.respiration_2_plot,'LineStyle','-');
-end
-guidata(hObject, handles);
-
-% --- Executes on button press in respiration_on.
-function respiration_on_Callback(hObject, eventdata, handles)
-if get(handles.respiration_on,'Value')
-    set(handles.respiration_on,'BackgroundColor',[0.5 0.94 0.94]);
-    set(handles.respiration_plot,'LineStyle','none');
-else
-    set(handles.respiration_on,'BackgroundColor',[0.94 0.94 0.94]);
-    set(handles.respiration_plot,'LineStyle','-');
-end
-guidata(hObject, handles);
-
-
-% --- Executes on button press in lick_piezo_on.
-function lick_piezo_on_Callback(hObject, eventdata, handles)
-if get(handles.lick_piezo_on,'Value')
-    set(handles.lick_piezo_on,'BackgroundColor',[0.94 0.94 0.94]);
-    set(handles.lickpiezo_plot,'LineStyle','-');
-else
-    set(handles.lick_piezo_on,'BackgroundColor',[0.5 0.94 0.94]);
-    set(handles.lickpiezo_plot,'LineStyle','none');
-end
-guidata(hObject, handles);
-
-
-% --- Executes on button press in camera_sync_on.
-function camera_sync_on_Callback(hObject, eventdata, handles)
-if get(handles.camera_sync_on,'Value')
-    set(handles.camera_sync_on,'BackgroundColor',[0.5 0.94 0.94]);
-    set(handles.camerasync_plot,'LineStyle','none');
-    set(handles.camerasync2_plot,'LineStyle','none');
-else
-    set(handles.camera_sync_on,'BackgroundColor',[0.94 0.94 0.94]);
-    set(handles.camerasync_plot,'LineStyle','-');
-    set(handles.camerasync2_plot,'LineStyle','-');
-end
-guidata(hObject, handles);
-
 
 % --- Executes when entered data in editable cell(s) in TargetHold.
 function TargetHold_CellEditCallback(hObject, eventdata, handles)
@@ -1264,4 +1214,66 @@ function AdaptiveTrigger_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in OdorSequence.
 function OdorSequence_Callback(hObject, eventdata, handles)
+
+
+
+% --- Executes when entered data in editable cell(s) in PlotToggles.
+function PlotToggles_CellEditCallback(hObject, eventdata, handles)
+% hObject    handle to PlotToggles (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
+%	Indices: row and column indices of the cell(s) edited
+%	PreviousData: previous data for the cell(s) edited
+%	EditData: string(s) entered by the user
+%	NewData: EditData or its converted form set on the Data property. Empty if Data was not changed
+%	Error: error string when failed to convert EditData to appropriate value for Data
+
+%for i = 1:7
+if eventdata.NewData
+    MyLineStyle = '-';
+else
+    MyLineStyle = 'none';
+end
+switch eventdata.Indices(1)
+    case 1 % Lever Raw
+        set(handles.lever_raw_plot,'LineStyle',MyLineStyle);
+    case 2
+        set(handles.stimulus_plot,'LineStyle',MyLineStyle);
+    case 3
+        set(handles.respiration_plot,'LineStyle',MyLineStyle);
+    case 4
+        set(handles.thermistor_plot,'LineStyle',MyLineStyle);
+    case 5
+        set(handles.lickpiezo_plot,'LineStyle',MyLineStyle);
+    case 6
+    case 7
+        set(handles.camerasync_plot,'LineStyle',MyLineStyle);
+        set(handles.camerasync2_plot,'LineStyle',MyLineStyle);
+end
+%end
+% handles    structure with handles and user data (see GUIDATA)
+
+function UpdateAllPlots(hObject,eventdata,handles)
+for i = 1:7
+    if handles.PlotToggles.Data(i)
+        MyLineStyle = '-';
+    else
+        MyLineStyle = 'none';
+    end
+    switch i
+        case 1 % Lever Raw
+            set(handles.lever_raw_plot,'LineStyle',MyLineStyle);
+        case 2
+            set(handles.stimulus_plot,'LineStyle',MyLineStyle);
+        case 3
+            set(handles.respiration_plot,'LineStyle',MyLineStyle);
+        case 4
+            set(handles.thermistor_plot,'LineStyle',MyLineStyle);
+        case 5
+            set(handles.lickpiezo_plot,'LineStyle',MyLineStyle);
+        case 6
+        case 7
+            set(handles.camerasync_plot,'LineStyle',MyLineStyle);
+            set(handles.camerasync2_plot,'LineStyle',MyLineStyle);
+    end
+end
 

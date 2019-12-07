@@ -216,18 +216,22 @@ indices_to_plot = find( TotalTime>TotalTime(end)-xwin & TotalTime>=0 );
 set(h.lever_DAC_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,1));
 set(h.lever_raw_plot,'XData',TotalTime(indices_to_plot),'YData',TotalData(indices_to_plot,2));
 set(h.stimulus_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    h.RE_scaling.Data(1)*(TotalData(indices_to_plot,3) - h.RE_scaling.Data(2)) );
+    h.PlotSettings.Data(2,1)*(TotalData(indices_to_plot,3) - h.PlotSettings.Data(2,2)) );
 
 h.motor_location.YData = MapRotaryEncoderToTFColorMap(h,mean(event.Data(:,3)));
 
 % respiration sensors
 set(h.respiration_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    h.RS_scaling.Data(1)*TotalData(indices_to_plot,5) + h.RS_scaling.Data(2) );
+    h.PlotSettings.Data(3,1)*TotalData(indices_to_plot,5) + h.PlotSettings.Data(3,2) );
+set(h.thermistor_plot,'XData',TotalTime(indices_to_plot),'YData',...
+    h.PlotSettings.Data(4,1)*TotalData(indices_to_plot,5) + h.PlotSettings.Data(4,2) );
 set(h.lickpiezo_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    h.LickPiezo.Data(1)*TotalData(indices_to_plot,6) + h.LickPiezo.Data(2) );
+    h.PlotSettings.Data(5,1)*TotalData(indices_to_plot,5) + h.PlotSettings.Data(5,2) );
 set(h.homesensor_plot,'XData',TotalTime(indices_to_plot),'YData', 5 + 0.5*TotalData(indices_to_plot,h.Channels.homesensor_channel));
-set(h.camerasync_plot,'XData',TotalTime(indices_to_plot),'YData', 6.5 + 0.5*TotalData(indices_to_plot,h.Channels.camerasync_channel));
-set(h.camerasync2_plot,'XData',TotalTime(indices_to_plot),'YData', 7.2 + 0.5*TotalData(indices_to_plot,h.Channels.camerasync_channel+1));
+set(h.camerasync_plot,'XData',TotalTime(indices_to_plot),'YData',...
+    6.5 + 0.5*TotalData(indices_to_plot,h.Channels.camerasync_channel));
+set(h.camerasync2_plot,'XData',TotalTime(indices_to_plot),'YData',...
+    7.2 + 0.5*TotalData(indices_to_plot,h.Channels.camerasync_channel+1));
 
 % trial_on
 [h] = PlotToPatch_Trial(h, TotalData(:,h.Channels.trial_channel), TotalTime, [0 5]);
