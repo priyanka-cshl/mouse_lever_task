@@ -658,8 +658,14 @@ if usrans == 1
     end
     clear a b c session_data
     set(gcf,'PaperPositionMode','auto')
-    print(gcf,['C:\Users\Rig\Desktop\','GUI_',animal_name],'-dpng','-r0');
-    display(['saved GUI screen shot at ' ('C:\Users\Rig\Desktop')])
+    switch char(handles.computername)
+        case {'PRIYANKA-HP'}
+            print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name],'-dpng','-r0');
+            display(['saved GUI screen shot at ' ('C:\Users\pgupta\Desktop')])
+        case {'JUSTINE'}
+            print(gcf,['C:\Users\Rig\Desktop\','GUI_',animal_name],'-dpng','-r0');
+            display(['saved GUI screen shot at ' ('C:\Users\Rig\Desktop')])
+    end
     disp(['median hold = ',num2str(median(handles.MeanHoldTimes.Data)),' ms']);
     disp(['median trigger hold = ',num2str(median_trigger_hold),' ms']);
     guidata(hObject, handles);

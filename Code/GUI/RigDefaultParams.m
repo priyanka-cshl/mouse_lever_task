@@ -80,7 +80,7 @@ switch char(handles.computername)
         % sensors and scaling
         handles.DAC_settings.Data = [2.0 2.5]';
         handles.PlotSettings.Data(:,1) = [NaN 1 0.5 1 0.2 NaN NaN]; % gains
-        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 7 4 NaN NaN]; % gains
+        handles.PlotSettings.Data(:,2) = [NaN 0 6.0 3 5 NaN NaN]; % offsets
         handles.PlotToggles.Data(:,1) = logical([0 1 1 1 1 1 1]);
         %handles.watercoeffs = [0.00134 0.0515 0.099]; % water per drop
         handles.watercoeffs = [0.001738 0.04964 1.275]; % water per drop [0.0006286 0.09254 0.918];
