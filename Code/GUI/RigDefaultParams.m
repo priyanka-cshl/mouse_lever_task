@@ -14,7 +14,7 @@ switch char(handles.computername)
         handles.DAQrates.Data = [500 20]';
         
         % sensors and scaling
-        handles.DAC_settings.Data = [2.0 2.45]';
+        handles.DAC_settings.Data = [2.0 2.5]';
         handles.PlotSettings.Data(:,1) = [NaN 1 0.5 1 0.2 NaN NaN]; % gains
         handles.PlotSettings.Data(:,2) = [NaN 0 6.5 7 4 NaN NaN]; % gains
         handles.PlotToggles.Data(:,1) = logical([0 1 1 1 1 1 1]);
