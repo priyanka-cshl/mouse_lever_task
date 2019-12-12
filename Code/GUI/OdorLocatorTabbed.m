@@ -448,6 +448,8 @@ if get(handles.startAcquisition,'value')
             end
             if(handles.Arduino.Port.BytesAvailable == 0)
                 error('arduino: Motor Timer Start did not send confirmation byte')
+%             elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==66
+%                 disp('arduino: Motor Timer Started; SD active');
             elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==6
                 disp('arduino: Motor Timer Started');
             end
