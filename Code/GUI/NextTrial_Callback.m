@@ -95,10 +95,10 @@ end
 %% update target hold time
 if ~h.preloaded_sequence.Value
     if h.adaptive_holds.Value
-        % check if success rate is below 50% and accordingly adjust min hold time
-        if h.ProgressReport.Data(end,3) <= 50
-            h.TargetHold.Data(1) = max(0,h.TargetHold.Data(1)-25);
-        end
+%         % check if success rate is below 50% and accordingly adjust min hold time
+%         if h.ProgressReport.Data(end,3) <= 50
+%             h.TargetHold.Data(1) = max(0,h.TargetHold.Data(1)-25);
+%         end
         
         % get mean holds for this particular target zone
         h.current_trial_block.Data(5) = 25 + h.MeanHoldTimes.Data(h.which_target.Data);
