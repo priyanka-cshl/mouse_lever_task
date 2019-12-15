@@ -52,7 +52,7 @@ int actual_stimulus_state = 0;
 long stimulus_state_timestamp = micros();
 bool in_target_zone[2] = {false, false};
 bool timer_override = false; // to disable timer start after serial communication
-int training_stage = 2;
+//int training_stage = 2;
 
 // MFC related and valves related
 int which_odor = 0;
@@ -114,6 +114,14 @@ int normal_iti = 200;
 int last_trial_duration = 0;
 int last_trigger_hold = 0;
 
+// Replay related
+int openloop_state = 0;
+int openloop_flag = 0;
+int ReplayVal = 0;
+int byteHIGH = 0;
+int byteLOW = 0;
+
+
 // open_loop_related - 13.02.18
 int open_loop_mode = 0; // deliver odor stimuli at different locations
 int open_loop_trial_timing[] = {500, 500, 500, 50, 500, 500}; //motor_settle, pre-odor, odor, purge, post-odor, iti in ms
@@ -169,7 +177,7 @@ void setup()
   pinMode(camera_pin, OUTPUT);
   digitalWrite(camera_pin, LOW);
 
-  // set up SPI 
+  // set up SPI
   pinMode (dac_spi_pin, OUTPUT);
   SPI.begin(dac_spi_pin);
 
@@ -445,7 +453,7 @@ void loop()
   {
     send_odor_to_manifold();
     digitalWrite(trial_reporter_pin, ((trialstate[0] > 0) && (trialstate[0] < 5))); // active trial?
-    digitalWrite(in_reward_zone_reporter_pin, (which_odor>0)); // is Odor valve ON?
+    digitalWrite(in_reward_zone_reporter_pin, (which_odor > 0)); // is Odor valve ON?
   }
 
   //----------------------------------------------------------------------------
@@ -457,25 +465,18 @@ void loop()
   {
     if (close_loop_mode)
     {
-      if (training_stage == 2)
+      // if trialstate is active and reward has been received
+      // - trialstate should be pushed to 0 after a buffer time has elapsed
+      // buffer time = multi_reward_params[0] if multiplerewards==0
+      // buffer time = multiplerewards if multiplerewards!=0
+      // note: reward_zone_timestamp will be updated when reward valve is turned off
+      if ( trialstate[0] == 4 && ( (reward_state == 4) || (reward_state == 7) ) && (micros() - reward_zone_timestamp) > trial_off_buffer)
       {
-        trialstate[1] = 4 * in_target_zone[1];
+        trialstate[1] = 5;
       }
       else
       {
-        // if trialstate is active and reward has been received
-        // - trialstate should be pushed to 0 after a buffer time has elapsed
-        // buffer time = multi_reward_params[0] if multiplerewards==0
-        // buffer time = multiplerewards if multiplerewards!=0
-        // note: reward_zone_timestamp will be updated when reward valve is turned off
-        if ( trialstate[0] == 4 && ( (reward_state == 4) || (reward_state == 7) ) && (micros() - reward_zone_timestamp) > trial_off_buffer)
-        {
-          trialstate[1] = 5;
-        }
-        else
-        {
-          trialstate[1] = trialstates.WhichState(trialstate[0], lever_position, (micros() - trial_timestamp));
-        }
+        trialstate[1] = trialstates.WhichState(trialstate[0], lever_position, (micros() - trial_timestamp));
       }
     }
     else if (open_loop_mode)
@@ -492,7 +493,7 @@ void loop()
   {
     reward_state = (int)(trialstate[1] == 4); // trial was just activated, rewards can be triggered now
     if (trialstate[1] == 5) //trial just ended
-    { 
+    {
       last_trial_duration = (micros() - trial_timestamp) / 1000;
     }
     trial_timestamp = micros();
@@ -534,6 +535,14 @@ void loop()
           {
             feedback_halt_timestamp = micros();
             feedback_halt = 1;
+          }
+          if (openloop_flag == 1)
+          {
+            openloop_flag = 2; // this will begin the writing to SD file
+          }
+          if (openloop_flag == 3)
+          {
+            openloop_flag = 4; // this will begin the reading from SD file
           }
           break;
         case 5:
@@ -579,13 +588,13 @@ void loop()
         case 0: // move motor to desired location and give it time to settle
           stimulus_state[1] = open_loop_location;
           odor_valve_state = false; // keep odor valve closed (blank vial is Onand going to exhaust)
-          air_valve_state = false; 
+          air_valve_state = false;
           send_odor_to_manifold();
           break;
         case 1: // pre-odor, no-flow
           which_odor = 0;
           odor_valve_state = true; // blank vial on
-          air_valve_state = true; 
+          air_valve_state = true;
           send_odor_to_manifold();
           break;
         case 4: // odor, switch odor vial to odor, turn on flow
@@ -597,18 +606,18 @@ void loop()
         case 2: // purge, switch to air vial, flow still on
           which_odor = 0;
           odor_valve_state = true; // blank vial on
-          air_valve_state = true; 
+          air_valve_state = true;
           send_odor_to_manifold();
           break;
         case 3: // post-odor, switch to air vial
           which_odor = 0;
           odor_valve_state = true; // keep odor valve closed (blank vial is On and going to mouse)
-          air_valve_state = true; 
+          air_valve_state = true;
           send_odor_to_manifold();
           break;
         case 5: // iti - no flow, clean air to exhaust
           odor_valve_state = false; // keep odor valve closed (blank vial is Onand going to exhaust)
-          air_valve_state = false; 
+          air_valve_state = false;
           send_odor_to_manifold();
           break;
 
@@ -636,16 +645,17 @@ void loop()
             break;
           case 1: // Acquisition start handshake
             // check if a file can be opened on the SD card
-            SD.remove("openloop.txt");
             mySDFile = SD.open("openloop.txt", FILE_WRITE);
             if (mySDFile)
             {
-              myUSB.writeUint16(66);
+              myUSB.writeUint16(2);
             }
             else
             {
               myUSB.writeUint16(6);
             }
+            openloop_state = 0;
+            openloop_flag = 0;
             session_just_started = true;
             close_loop_mode = 1;
             open_loop_mode = 0;
@@ -845,11 +855,11 @@ void loop()
             //myUSB.writeUint16Array(multi_reward_params, 3);
             break;
           case 5: // open_loop_reward
-              digitalWrite(reward_valve_pin, HIGH);
-              digitalWrite(reward_reporter_pin, HIGH);
-              delay(open_loop_param_array[10]);
-              digitalWrite(reward_valve_pin, LOW);
-              digitalWrite(reward_reporter_pin, LOW);
+            digitalWrite(reward_valve_pin, HIGH);
+            digitalWrite(reward_reporter_pin, HIGH);
+            delay(open_loop_param_array[10]);
+            digitalWrite(reward_valve_pin, LOW);
+            digitalWrite(reward_reporter_pin, LOW);
             break;
         }
         break;
@@ -955,9 +965,33 @@ void UpdateAllParams()
     //decouple_reward_and_stimulus = false;
   }
 
-
   //delay_feedback_by = param_array[29];
-  training_stage = param_array[30];
+  // training_stage = param_array[30];
+
+  // Handle Open loop and Replay states
+  if (openloop_state != param_array[30]) // state transitions
+  {
+    openloop_state = param_array[30];
+    switch (openloop_state)
+    {
+      case 0:
+        openloop_flag = 0;
+        mySDFile.close();
+        break;
+      case 1:
+        // start a new open loop recording
+        // 1) delete old file and create new
+        SD.remove("openloop.txt");
+        mySDFile = SD.open("openloop.txt", FILE_WRITE);
+        openloop_flag = 1; // this will update to 2 on next trial start and file writing will begin
+        break;
+      case 2:
+        // Replay from file
+        mySDFile = SD.open("openloop.txt");
+        openloop_flag = 3; // this will update to 4 on next trial start and file reading will begin
+        break;
+    }
+  }
 
   // update trial state params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
@@ -992,8 +1026,31 @@ void MoveMotor()
     }
     else
     {
-      I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
-      mySDFile.println(1000*stimulus_state[1]);
+      if (openloop_flag == 4)
+      {
+        // read stim state
+        if (mySDFile.available())
+        {
+          byteHIGH = mySDFile.read();
+          byteLOW = mySDFile.read();
+          ReplayVal = byteHIGH*256+byteLOW;
+          I2Cwriter(motor1_i2c_address, 10 + ReplayVal);
+        }
+        else
+        {
+          openloop_flag = 5;
+        }
+      }
+      else
+      {
+        I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
+        if (openloop_flag == 2)
+        {
+          // write to SD file
+          mySDFile.write(highByte(stimulus_state[1]));
+          mySDFile.write(lowByte(stimulus_state[1]));
+        }
+      }
     }
   }
 

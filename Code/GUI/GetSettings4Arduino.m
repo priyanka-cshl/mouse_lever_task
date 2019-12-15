@@ -85,7 +85,10 @@ else
 end
 
 legend(30) = {'FeedbackDelay'}; param(30) = 0;
-legend(31) = {'Stage'}; param(31) = h.which_stage.Value;
+
+%legend(31) = {'Stage'}; param(31) = h.which_stage.Value;
+legend(31) = {'OpenLoop'}; param(31) = h.OpenLoopSettings.Value - 1;
+
 % 32 and 33 are for sending numbers back from Arduino
 legend(34:35) = {'SampleRate' 'RefreshRate'}; param(34:35) = h.DAQrates.Data;
 end

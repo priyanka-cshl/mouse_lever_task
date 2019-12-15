@@ -10,6 +10,7 @@ global TotalTime; % matrix containing timestamps from the current callback
 persistent last_data_value; % event.Data(end,:) from last call
 global TargetLevel;
 global IsRewardedTrial;
+global TimeSinceOL;
 
 fid1 = varargin{3}; % C:\temp_data_files\log.bin
 h = varargin{1}; % handles
@@ -152,6 +153,32 @@ if TotalTime(end)>=2
         
         % pull down rewarded flag
         IsRewardedTrial = 0;
+        
+        % update Open Loop Progress (if needed)
+        switch h.OpenLoopSettings.Value
+            case 1
+            case 2
+                if isnan(h.OpenLoopProgress.Data(1))
+                    h.OpenLoopProgress.Data(1) = 0;
+                    h.OpenLoopProgress.Data(2) = 0;
+                    TimeSinceOL = tic;
+                else
+                    h.OpenLoopProgress.Data(1) = toc(TimeSinceOL);
+                    h.OpenLoopProgress.Data(2) = h.OpenLoopProgress.Data(2) + 1;
+                    
+                    if h.OpenLoopSettings.Data(1)
+                        if h.OpenLoopProgress.Data(2) >= h.OpenLoopSettings.Data(3)
+                            h.OpenLoopSettings.Value = 1;
+                        end
+                    else
+                        if h.OpenLoopProgress.Data(1) >= h.OpenLoopSettings.Data(2)
+                            h.OpenLoopSettings.Value = 1;
+                        end
+                    end
+                end
+            case 3
+            case 4
+        end
         
         % increment 'trial number'
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1;

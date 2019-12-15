@@ -30,7 +30,7 @@ switch char(handles.computername)
         handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
         handles.odor_priors.Value = 0;
         handles.which_perturbation.Value = 1; % no perturbations
-        handles.openloop = 0; % Run in close-loop mode
+        handles.openloop = 0; % Run in close-loop mode - not PID
         
         % Target zones
         handles.ZoneLimitSettings.Data(1) = 0.3; % zone width
@@ -97,6 +97,7 @@ switch char(handles.computername)
         handles.openloop = 0; % Run in close-loop mode
         handles.AdaptiveTrigger.Value = 1;
         handles.OdorSequence.Value = 1;
+        handles.OpenLoopSettings.Value = 1; % normal close loop mode
         
         % Target zones
         handles.ZoneLimitSettings.Data(1) = 0.3; % zone width

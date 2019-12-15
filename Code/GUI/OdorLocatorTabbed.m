@@ -23,7 +23,7 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
-% Last Modified by GUIDE v2.5 06-Dec-2019 20:19:23
+% Last Modified by GUIDE v2.5 14-Dec-2019 10:30:42
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -67,14 +67,17 @@ handles.tgroupB = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
 handles.tabB1 = uitab('Parent', handles.tgroupB, 'Title', 'Session controls');
 handles.tabB2 = uitab('Parent', handles.tgroupB, 'Title', 'Extra');
 handles.tabB3 = uitab('Parent', handles.tgroupB, 'Title', 'Plots');
+handles.tabB4 = uitab('Parent', handles.tgroupB, 'Title', 'OpenLoop');
 %Place panels into each tab
 set(handles.B1,'Parent',handles.tabB1)
 set(handles.B2,'Parent',handles.tabB2)
 set(handles.B3,'Parent',handles.tabB3)
+set(handles.B4,'Parent',handles.tabB4)
 %Reposition each panel to same location as panel 1
 handles.B1.Position = [1    0.1   84.6000   24.0000];
 set(handles.B2,'position',get(handles.B1,'position'));
 set(handles.B3,'position',get(handles.B2,'position'));
+set(handles.B4,'position',get(handles.B2,'position'));
 
 %Create tab groupC - Session controls, Extra controls
 handles.tgroupC = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
@@ -320,6 +323,7 @@ global samplenum;
 global TargetLevel;
 global IsRewardedTrial;
 global TrialsToPerturb;
+global TimeSinceOL;
 
 if get(handles.startAcquisition,'value')    
     % checks whether last file was saved and enable quiting if not
@@ -386,6 +390,10 @@ if get(handles.startAcquisition,'value')
         handles.timestamp.Data = 0;
         handles.lastrewardtime = 0;
         
+        % start by default in normal close loop mode
+        handles.OpenLoopSettings.Value = 1;
+        OpenLoopSettings_Callback(hObject, eventdata, handles);
+        
         % clear plots
         handles.trial_on.Vertices = [];
         handles.trial_on.Faces = [];
@@ -448,8 +456,8 @@ if get(handles.startAcquisition,'value')
             end
             if(handles.Arduino.Port.BytesAvailable == 0)
                 error('arduino: Motor Timer Start did not send confirmation byte')
-%             elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==66
-%                 disp('arduino: Motor Timer Started; SD active');
+            elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==2
+                disp('arduino: Motor Timer Started; SD active');
             elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==6
                 disp('arduino: Motor Timer Started');
             end
@@ -1285,3 +1293,51 @@ for i = 1:7
     end
 end
 
+
+
+% --- Executes on selection change in OpenLoopSettings.
+function OpenLoopSettings_Callback(hObject, eventdata, handles)
+% hObject    handle to OpenLoopSettings (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns OpenLoopSettings contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from OpenLoopSettings
+MyEdgeColor = [0.5 0.5 0.5];
+switch handles.OpenLoopSettings.Value
+    case 1
+        handles.axes1.XColor = [0.1500 0.1500 0.1500];
+        handles.axes1.YColor = [0.1500 0.1500 0.1500];
+        handles.axes1.ZColor = [0.1500 0.1500 0.1500];
+        handles.axes1.LineWidth = 0.5000;
+        
+        % set open loop progress to NaNs
+        handles.OpenLoopProgress.Data(:,2) = handles.OpenLoopProgress.Data(:,1);
+        handles.OpenLoopProgress.Data(:,1) = [NaN 0 0 0]';        
+        
+    case 2
+        handles.axes1.XColor = 'r';
+        handles.axes1.YColor = 'r';
+        handles.axes1.ZColor = 'r';
+        handles.axes1.LineWidth = 1.5;
+        
+        
+    case 3
+        handles.axes1.XColor = 'b';
+        handles.axes1.YColor = 'b';
+        handles.axes1.ZColor = 'b';
+        handles.axes1.LineWidth = 1.5;
+    case 4
+end
+
+% --- Executes during object creation, after setting all properties.
+function OpenLoopSettings_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to OpenLoopSettings (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
