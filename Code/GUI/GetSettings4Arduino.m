@@ -59,6 +59,8 @@ end
 legend(26) = {'PerturbationValue'};
 if h.current_trial_block.Data(3) == 1
     switch h.which_perturbation.Value
+        case 3
+            param(1) = 0; % no odor
         case 4
             param(26) = 1;
         case {5,6,7}

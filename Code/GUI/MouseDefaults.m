@@ -22,7 +22,11 @@ switch char(handles.file_names.Data(1))
         handles.odor_sequence.Data = [2 1 3];
     case ('J5')
         handles.odor_sequence.Data = [2 3 1];
-    otherwise
+    case ('K4')
         handles.odor_sequence.Data = [1 2 3];
+    case ('K1')
+        handles.odor_sequence.Data = [1 3 2];
+    otherwise
+        handles.odor_sequence.Data = [1 3 2];
 end
 end

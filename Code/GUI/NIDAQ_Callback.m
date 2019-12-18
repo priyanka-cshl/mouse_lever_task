@@ -41,10 +41,11 @@ end
 % variables used later for plotting etc
 which_target = h.which_target.Data;
 which_fake_target = h.which_fake_target.Data;
-if h.current_trial_block.Data(4)
-    odorID = h.current_trial_block.Data(4);
-else
+
+if h.current_trial_block.Data(3) && h.which_perturbation.Value == 3
     odorID = 4;
+else
+    odorID = h.current_trial_block.Data(4);
 end
 
 %% update MFC setpoints
