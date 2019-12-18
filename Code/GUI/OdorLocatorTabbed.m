@@ -23,7 +23,7 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
-% Last Modified by GUIDE v2.5 14-Dec-2019 10:30:42
+% Last Modified by GUIDE v2.5 16-Dec-2019 23:57:36
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -392,7 +392,10 @@ if get(handles.startAcquisition,'value')
         
         % start by default in normal close loop mode
         handles.OpenLoopSettings.Value = 1;
-        OpenLoopSettings_Callback(hObject, eventdata, handles);
+        handles.ReplayState.String = 'Close loop';
+        handles.OpenLoopProgress.Data(:,1) = [NaN 0 0 0]';
+        handles.OpenLoopProgress.Data(:,2) = [0 0 0 0];
+        %OpenLoopSettings_Callback(hObject, eventdata, handles);
         
         % clear plots
         handles.trial_on.Vertices = [];
@@ -1303,41 +1306,3 @@ function OpenLoopSettings_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns OpenLoopSettings contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from OpenLoopSettings
-MyEdgeColor = [0.5 0.5 0.5];
-switch handles.OpenLoopSettings.Value
-    case 1
-        handles.axes1.XColor = [0.1500 0.1500 0.1500];
-        handles.axes1.YColor = [0.1500 0.1500 0.1500];
-        handles.axes1.ZColor = [0.1500 0.1500 0.1500];
-        handles.axes1.LineWidth = 0.5000;
-        
-        % set open loop progress to NaNs
-        handles.OpenLoopProgress.Data(:,2) = handles.OpenLoopProgress.Data(:,1);
-        handles.OpenLoopProgress.Data(:,1) = [NaN 0 0 0]';        
-        
-    case 2
-        handles.axes1.XColor = 'r';
-        handles.axes1.YColor = 'r';
-        handles.axes1.ZColor = 'r';
-        handles.axes1.LineWidth = 1.5;
-        
-        
-    case 3
-        handles.axes1.XColor = 'b';
-        handles.axes1.YColor = 'b';
-        handles.axes1.ZColor = 'b';
-        handles.axes1.LineWidth = 1.5;
-    case 4
-end
-
-% --- Executes during object creation, after setting all properties.
-function OpenLoopSettings_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to OpenLoopSettings (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: listbox controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end

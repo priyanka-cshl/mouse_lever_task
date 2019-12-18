@@ -21,11 +21,15 @@
 #include <SPI.h>
 #include <SD.h>
 const int SDSelect = 24; // SS pin for the SD card
-int mydata = 0;
+int ReplayVal = 0;
 int byteHIGH = 0;
 int byteLOW = 0;
 String myval = String(0);
 String teststring = String(128);
+bool replay_reward_valve_state[2] = {false, false};
+bool replay_air_valve_state[2] = {false, false};
+int replay_odor_valve_state[2] = {0, 0};
+int stimulus_state[] = {0, 0}; // old, new
 
 File myFile;
 
@@ -57,11 +61,25 @@ void setup() {
     {
       byteHIGH = myFile.read();
       byteLOW = myFile.read();
-      mydata = byteHIGH*256+byteLOW;
+      ReplayVal = byteHIGH*256+byteLOW;
+
+      replay_reward_valve_state[1] = (ReplayVal >= 20000);
+          ReplayVal = ReplayVal - 10000*(1+replay_reward_valve_state[1]);
+          stimulus_state[1] = ReplayVal % 1000;
+          ReplayVal = (ReplayVal - stimulus_state[1])/1000;
+          if (ReplayVal >= 5)
+          {
+            replay_air_valve_state[1] = true;
+            replay_odor_valve_state[1] = ReplayVal - 4;
+          }
+          else
+          {
+            replay_air_valve_state[1] = false;
+          }
       //myval = myFile.read();
       //mydata = atoi(myval);
-      mydata = mydata - 20;
-      SerialUSB.println(mydata);
+      //mydata = mydata - 20;
+      SerialUSB.println(stimulus_state[1]);
     }
     // close the file:
     myFile.close();

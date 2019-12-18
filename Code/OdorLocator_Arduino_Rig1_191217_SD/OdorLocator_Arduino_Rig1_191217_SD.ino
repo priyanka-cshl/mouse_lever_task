@@ -115,18 +115,22 @@ int last_trial_duration = 0;
 int last_trigger_hold = 0;
 
 // Replay related
-int openloop_state = 0;
-int openloop_flag = 0;
+int replay_state = 0;
+int replay_flag = 0;
 int ReplayVal = 0;
 int byteHIGH = 0;
 int byteLOW = 0;
+int current_odor_state = 0;
+bool current_reward_state = false;
+bool replay_reward_valve_state[2] = {false, false};
+bool replay_air_valve_state[2] = {false, false};
+int replay_odor_valve_state[2] = {0, 0};
 
-
-// open_loop_related - 13.02.18
-int open_loop_mode = 0; // deliver odor stimuli at different locations
-int open_loop_trial_timing[] = {500, 500, 500, 50, 500, 500}; //motor_settle, pre-odor, odor, purge, post-odor, iti in ms
-int open_loop_location = 0;
-unsigned short open_loop_param_array[6] = {0}; // ArCOM aray needs unsigned shorts, trial timing, odor and location
+// PID_related - 13.02.18
+int PID_mode = 0; // deliver odor stimuli at different locations
+int PID_trial_timing[] = {500, 500, 500, 50, 500, 500}; //motor_settle, pre-odor, odor, purge, post-odor, iti in ms
+int PID_location = 0;
+unsigned short PID_param_array[6] = {0}; // ArCOM aray needs unsigned shorts, trial timing, odor and location
 
 //variables : general
 int i = 0;
@@ -213,7 +217,7 @@ void setup()
   // first call to set up params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
   trialstates.UpdateITI(normal_iti);
-  openlooptrialstates.UpdateOpenLoopTrialParams(open_loop_trial_timing); // 13.02.18
+  openlooptrialstates.UpdateOpenLoopTrialParams(PID_trial_timing); // 13.02.18
 }
 
 
@@ -275,9 +279,13 @@ void loop()
     }
 
   }
-  else if (open_loop_mode) // 13.02.18
+  else if (PID_mode) // 13.02.18
   {
-    motor_location = map(open_loop_location, 0, 255, 0, 65534); // max location is 256 - 8 bit
+    motor_location = map(PID_location, 0, 255, 0, 65534); // max location is 256 - 8 bit
+    SPIWriter(dac_spi_pin, lever_position);
+  }
+  else if (replay_flag == 4)
+  {
     SPIWriter(dac_spi_pin, lever_position);
   }
   else
@@ -290,66 +298,71 @@ void loop()
     stimulus_state[1] = motor_location;
   }
 
-  // in reward zone or not : if in, odor location ranges between 17 and 48
-  in_target_zone[0] = (stimulus_state[1] == constrain(stimulus_state[1], rewarded_locations[0], rewarded_locations[1]));
-  if (decouple_reward_and_stimulus)
+  if (close_loop_mode)
   {
-    in_target_zone[1] = (lever_position == constrain(lever_position, fake_target_params[2], fake_target_params[0]));
-  }
-  else
-  {
-    in_target_zone[1] = (stimulus_state[1] == constrain(stimulus_state[1], rewarded_locations[0], rewarded_locations[1]));
-  }
 
-  //----------------------------------------------------------------------------
-
-  //----------------------------------------------------------------------------
-  // 3) update stimulus state, direction etc. if the stimulus_state has changed
-  //----------------------------------------------------------------------------
-  if (stimulus_state[1] != stimulus_state[0])
-  {
-    if ( ((micros() - stimulus_state_timestamp) >= 1000 * min_time_since_last_motor_call) )
+    // in reward zone or not : if in, odor location ranges between 17 and 48
+    in_target_zone[0] = (stimulus_state[1] == constrain(stimulus_state[1], rewarded_locations[0], rewarded_locations[1]));
+    if (decouple_reward_and_stimulus)
     {
-      stimulus_state_timestamp = micros(); // valid event
-      // update reward zone time stamp, if needed
-      if (trialstate[0] == 4)
+      in_target_zone[1] = (lever_position == constrain(lever_position, fake_target_params[2], fake_target_params[0]));
+    }
+    else
+    {
+      in_target_zone[1] = (stimulus_state[1] == constrain(stimulus_state[1], rewarded_locations[0], rewarded_locations[1]));
+    }
+
+    //----------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------
+    // 3) update stimulus state, direction etc. if the stimulus_state has changed
+    //----------------------------------------------------------------------------
+    if (stimulus_state[1] != stimulus_state[0])
+    {
+      if ( ((micros() - stimulus_state_timestamp) >= 1000 * min_time_since_last_motor_call) )
       {
-        if (in_target_zone[1] && (reward_state == 1))
-          // in trial, entered target zone, and has not received reward in this trial
+        stimulus_state_timestamp = micros(); // valid event
+        // update reward zone time stamp, if needed
+        if (trialstate[0] == 4)
         {
-          reward_zone_timestamp = micros();
-          reward_state = 2;
-          if (flip_lever_trial && !flip_lever)
-          {
-            flip_lever = true;
-            offset_location = motor_location;
-          }
-        }
-        if (!in_target_zone[1] && (reward_state == 2))
-        {
-          reward_state = 1; // was in reward zone in this trial, but exited reward zone before getting a reward, retrigger reward availability
-          time_in_target_zone = time_in_target_zone + (micros() - reward_zone_timestamp);
-          if ((micros() - reward_zone_timestamp) / 1000 > last_target_stay)
-          {
-            last_target_stay = (micros() - reward_zone_timestamp) / 1000;
-          }
-        }
-        if (multiplerewards > 0)
-        {
-          if ( in_target_zone[1] && ((reward_state == 4) || (reward_state == 7)) && (micros() - reward_zone_timestamp) <= 1000 * multiplerewards )
+          if (in_target_zone[1] && (reward_state == 1))
+            // in trial, entered target zone, and has not received reward in this trial
           {
             reward_zone_timestamp = micros();
-            reward_state = 5;
+            reward_state = 2;
+            if (flip_lever_trial && !flip_lever)
+            {
+              flip_lever = true;
+              offset_location = motor_location;
+            }
           }
-          if (!in_target_zone[1] && (reward_state == 5))
+          if (!in_target_zone[1] && (reward_state == 2))
           {
-            reward_state = 4; // was in reward zone in this trial, but exited reward zone before getting a reward, retrigger reward availability
+            reward_state = 1; // was in reward zone in this trial, but exited reward zone before getting a reward, retrigger reward availability
+            time_in_target_zone = time_in_target_zone + (micros() - reward_zone_timestamp);
+            if ((micros() - reward_zone_timestamp) / 1000 > last_target_stay)
+            {
+              last_target_stay = (micros() - reward_zone_timestamp) / 1000;
+            }
+          }
+          if (multiplerewards > 0)
+          {
+            if ( in_target_zone[1] && ((reward_state == 4) || (reward_state == 7)) && (micros() - reward_zone_timestamp) <= 1000 * multiplerewards )
+            {
+              reward_zone_timestamp = micros();
+              reward_state = 5;
+            }
+            if (!in_target_zone[1] && (reward_state == 5))
+            {
+              reward_state = 4; // was in reward zone in this trial, but exited reward zone before getting a reward, retrigger reward availability
+            }
           }
         }
+        // update stimulus state
+        stimulus_state[0] = stimulus_state[1];
       }
-      // update stimulus state
-      stimulus_state[0] = stimulus_state[1];
     }
+    
   }
   //----------------------------------------------------------------------------
 
@@ -449,7 +462,7 @@ void loop()
       }
     }
   }
-  else if (open_loop_mode)
+  else if (PID_mode)
   {
     send_odor_to_manifold();
     digitalWrite(trial_reporter_pin, ((trialstate[0] > 0) && (trialstate[0] < 5))); // active trial?
@@ -479,7 +492,7 @@ void loop()
         trialstate[1] = trialstates.WhichState(trialstate[0], lever_position, (micros() - trial_timestamp));
       }
     }
-    else if (open_loop_mode)
+    else if (PID_mode)
     {
       trialstate[1] = openlooptrialstates.WhichState(trialstate[0], (micros() - trial_timestamp));
     }
@@ -536,13 +549,15 @@ void loop()
             feedback_halt_timestamp = micros();
             feedback_halt = 1;
           }
-          if (openloop_flag == 1)
+          if (replay_flag == 1)
           {
-            openloop_flag = 2; // this will begin the writing to SD file
+            replay_flag = 2; // this will begin the writing to SD file
           }
-          if (openloop_flag == 3)
+          if (replay_flag == 3)
           {
-            openloop_flag = 4; // this will begin the reading from SD file
+            replay_flag = 4; // this will begin the reading from SD file
+            close_loop_mode = 0;
+            digitalWrite(trial_reporter_pin, HIGH);
           }
           break;
         case 5:
@@ -578,7 +593,7 @@ void loop()
     feedback_halt = 1;
   }
 
-  if ((trialstate[1] != trialstate[0]) && open_loop_mode) // trial state changes
+  if ((trialstate[1] != trialstate[0]) && PID_mode) // trial state changes
   {
     trial_timestamp = micros();
     if (timer_override)
@@ -586,7 +601,7 @@ void loop()
       switch (trialstate[1])
       {
         case 0: // move motor to desired location and give it time to settle
-          stimulus_state[1] = open_loop_location;
+          stimulus_state[1] = PID_location;
           odor_valve_state = false; // keep odor valve closed (blank vial is Onand going to exhaust)
           air_valve_state = false;
           send_odor_to_manifold();
@@ -598,7 +613,7 @@ void loop()
           send_odor_to_manifold();
           break;
         case 4: // odor, switch odor vial to odor, turn on flow
-          which_odor = open_loop_param_array[0]; // odor vial number
+          which_odor = PID_param_array[0]; // odor vial number
           odor_valve_state = true;
           air_valve_state = true;
           send_odor_to_manifold();
@@ -627,6 +642,32 @@ void loop()
   }
   //----------------------------------------------------------------------------
 
+  if (replay_flag == 4)
+  {
+    // reward
+    if (replay_reward_valve_state[1] != replay_reward_valve_state[0])
+    {
+      digitalWrite(reward_valve_pin, replay_reward_valve_state[1]);
+      digitalWrite(reward_reporter_pin, replay_reward_valve_state[1]);
+      replay_reward_valve_state[0] = replay_reward_valve_state[1];
+    }
+    // air 
+    if (replay_air_valve_state[1] != replay_air_valve_state[0])
+    {
+      digitalWrite(air_valve, replay_air_valve_state[1]);
+      replay_air_valve_state[0] = replay_air_valve_state[1];
+    }
+    // odor
+    if (replay_odor_valve_state[1] != replay_odor_valve_state[0])
+    {
+      for (i = 1; i < 5; i++)
+      {
+        digitalWrite(odor_valves_3way[i-1], (i == replay_odor_valve_state[1]));
+      }
+      replay_odor_valve_state[0] = replay_odor_valve_state[1];
+    }
+  }
+  
   //----------------------------------------------------------------------------
   // 7) Serial handshakes to check for parameter updates etc
   //----------------------------------------------------------------------------
@@ -654,11 +695,11 @@ void loop()
             {
               myUSB.writeUint16(6);
             }
-            openloop_state = 0;
-            openloop_flag = 0;
+            replay_state = 0;
+            replay_flag = 0;
             session_just_started = true;
             close_loop_mode = 1;
-            open_loop_mode = 0;
+            PID_mode = 0;
             // fill stimulus position array
             stimulus_state[0] = 20;
             stimulus_state[1] = 20;
@@ -673,7 +714,7 @@ void loop()
             mySDFile.close(); // close open loop file on SD card
             myUSB.writeUint16(7);
             close_loop_mode = 0;
-            open_loop_mode = 0;
+            PID_mode = 0;
             timer_override = false;
             odor_valve_state = false;
             air_valve_state = false;
@@ -683,7 +724,7 @@ void loop()
           case 3: // Cleaning Routine start
             myUSB.writeUint16(3);
             close_loop_mode = 0;
-            open_loop_mode = 0;
+            PID_mode = 0;
             cleaningON = true;
             odorON = false;
             timer_override = false;
@@ -693,7 +734,7 @@ void loop()
           case 4: // Cleaning Routine stop
             myUSB.writeUint16(4);
             close_loop_mode = 0;
-            open_loop_mode = 0;
+            PID_mode = 0;
             cleaningON = false;
             timer_override = false;
             camera_on = 1;
@@ -701,7 +742,7 @@ void loop()
             break;
           case 5: // open loop start
             myUSB.writeUint16(8);
-            open_loop_mode = 1;
+            PID_mode = 1;
             close_loop_mode = 0;
             // fill stimulus position array
             stimulus_state[0] = 20;
@@ -714,7 +755,7 @@ void loop()
             break;
           case 6: // open loop stop
             myUSB.writeUint16(9);
-            open_loop_mode = 0;
+            PID_mode = 0;
             close_loop_mode = 0;
             odor_valve_state = false;
             air_valve_state = false;
@@ -754,8 +795,8 @@ void loop()
             break;
           case 1: // update variables for open loop mode - 23.01.2018
             num_of_params = myUSB.readUint16(); // get number of params to be updated
-            myUSB.readUint16Array(open_loop_param_array, num_of_params);
-            myUSB.writeUint16Array(open_loop_param_array, num_of_params);
+            myUSB.readUint16Array(PID_param_array, num_of_params);
+            myUSB.writeUint16Array(PID_param_array, num_of_params);
             UpdateOpenLoopParams(); // parse param array to variable names and update motor params
             break;
         }
@@ -854,10 +895,10 @@ void loop()
             //myUSB.readUint16Array(multi_reward_params, 3);
             //myUSB.writeUint16Array(multi_reward_params, 3);
             break;
-          case 5: // open_loop_reward
+          case 5: // PID_reward
             digitalWrite(reward_valve_pin, HIGH);
             digitalWrite(reward_reporter_pin, HIGH);
-            delay(open_loop_param_array[10]);
+            delay(PID_param_array[10]);
             digitalWrite(reward_valve_pin, LOW);
             digitalWrite(reward_reporter_pin, LOW);
             break;
@@ -969,13 +1010,13 @@ void UpdateAllParams()
   // training_stage = param_array[30];
 
   // Handle Open loop and Replay states
-  if (openloop_state != param_array[30]) // state transitions
+  if (replay_state != param_array[30]) // state transitions
   {
-    openloop_state = param_array[30];
-    switch (openloop_state)
+    replay_state = param_array[30];
+    switch (replay_state)
     {
       case 0:
-        openloop_flag = 0;
+        replay_flag = 0;
         mySDFile.close();
         break;
       case 1:
@@ -983,12 +1024,12 @@ void UpdateAllParams()
         // 1) delete old file and create new
         SD.remove("openloop.txt");
         mySDFile = SD.open("openloop.txt", FILE_WRITE);
-        openloop_flag = 1; // this will update to 2 on next trial start and file writing will begin
+        replay_flag = 1; // this will update to 2 on next trial start and file writing will begin
         break;
       case 2:
         // Replay from file
         mySDFile = SD.open("openloop.txt");
-        openloop_flag = 3; // this will update to 4 on next trial start and file reading will begin
+        replay_flag = 3; // this will update to 4 on next trial start and file reading will begin
         break;
     }
   }
@@ -1002,17 +1043,17 @@ void UpdateOpenLoopParams() // 23.01.2018
   myUSB.writeUint16(98);
   trialstate[0] = 5;
   // parse param array to variable names
-  //which_odor = open_loop_param_array[0]; // odor vial number
-  open_loop_location = open_loop_param_array[1]; // desired location
+  //which_odor = PID_param_array[0]; // odor vial number
+  PID_location = PID_param_array[1]; // desired location
   for (i = 0; i < 6; i++)
   {
-    open_loop_trial_timing[i] = open_loop_param_array[2 + i]; // motor_settle, pre-odor, odor, post-odor, iti in ms
+    PID_trial_timing[i] = PID_param_array[2 + i]; // motor_settle, pre-odor, odor, post-odor, iti in ms
   }
-  lever_rescale_params[0] = open_loop_param_array[8]; // gain, offset
-  lever_rescale_params[1] = open_loop_param_array[9];
-  //reward_params[1] = open_loop_param_array[10];
+  lever_rescale_params[0] = PID_param_array[8]; // gain, offset
+  lever_rescale_params[1] = PID_param_array[9];
+  //reward_params[1] = PID_param_array[10];
   // update trial state params
-  openlooptrialstates.UpdateOpenLoopTrialParams(open_loop_trial_timing);
+  openlooptrialstates.UpdateOpenLoopTrialParams(PID_trial_timing);
 }
 
 void MoveMotor()
@@ -1026,29 +1067,47 @@ void MoveMotor()
     }
     else
     {
-      if (openloop_flag == 4)
+      if (replay_flag == 4)
       {
         // read stim state
         if (mySDFile.available())
         {
           byteHIGH = mySDFile.read();
           byteLOW = mySDFile.read();
-          ReplayVal = byteHIGH*256+byteLOW;
-          I2Cwriter(motor1_i2c_address, 10 + ReplayVal);
+          ReplayVal = byteHIGH * 256 + byteLOW;
+
+          replay_reward_valve_state[1] = (ReplayVal >= 20000);
+          ReplayVal = ReplayVal - 10000 * (1 + replay_reward_valve_state[1]);
+          stimulus_state[1] = ReplayVal % 1000;
+          ReplayVal = (ReplayVal - stimulus_state[1]) / 1000;
+          if (ReplayVal >= 5)
+          {
+            replay_air_valve_state[1] = true;
+            replay_odor_valve_state[1] = ReplayVal - 4;
+          }
+          else
+          {
+            replay_air_valve_state[1] = false;
+          }
+
+          I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
         }
         else
         {
-          openloop_flag = 5;
+          replay_flag = 5;
+          close_loop_mode = 1;
+          digitalWrite(trial_reporter_pin, LOW);
         }
       }
       else
       {
         I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
-        if (openloop_flag == 2)
+        if (replay_flag == 2)
         {
           // write to SD file
-          mySDFile.write(highByte(stimulus_state[1]));
-          mySDFile.write(lowByte(stimulus_state[1]));
+          ReplayVal = 10000 * (current_reward_state + 1) + 1000 * (current_odor_state) + stimulus_state[1];
+          mySDFile.write(highByte(ReplayVal));
+          mySDFile.write(lowByte(ReplayVal));
         }
       }
     }
@@ -1072,6 +1131,7 @@ void RewardNow()
     digitalWrite(reward_reporter_pin, HIGH);
     reward_state = reward_state + 1;
     reward_zone_timestamp = micros();
+    current_reward_state = true;
   }
   else if (reward_state == -1)
   {
@@ -1084,6 +1144,7 @@ void RewardNow()
     Timer4.stop();
     digitalWrite(reward_valve_pin, LOW);
     digitalWrite(reward_reporter_pin, LOW);
+    current_reward_state = false;
   }
 }
 
@@ -1131,5 +1192,7 @@ void send_odor_to_manifold ()
   {
     digitalWrite(odor_valves_3way[i], (odor_valve_state) && (i == which_odor));
   }
+  current_odor_state = odor_valve_state * (1 + which_odor);
   digitalWrite(air_valve, air_valve_state); // open air valve
+  current_odor_state = current_odor_state + 4 * (air_valve_state);
 }

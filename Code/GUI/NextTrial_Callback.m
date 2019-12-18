@@ -151,7 +151,8 @@ if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11)
                 h.which_fake_target.Data = find(h.all_targets == h.fake_target_zone.Data(2));
                 
             case 3 % no odor
-                h.current_trial_block.Data(4) = 0;
+                % h.current_trial_block.Data(4) = 0; handled by
+                % GetSettings4Arduino.m
                 
             case 4 % flip map
                 h.current_trial_block.Data(5) = 2000; % increase target hold time in this trial
