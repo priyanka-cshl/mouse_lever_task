@@ -10,6 +10,7 @@ global TotalTime; % matrix containing timestamps from the current callback
 persistent last_data_value; % event.Data(end,:) from last call
 global TargetLevel;
 global IsRewardedTrial;
+global TimeSinceOL;
 
 fid1 = varargin{3}; % C:\temp_data_files\log.bin
 h = varargin{1}; % handles
@@ -21,6 +22,7 @@ lastsample = samplenum + num_new_samples - 1;
 % flags for event calls
 trial_just_ended = 0;
 callreward = 0;
+UpdateOpenLoop = 0;
 
 %% populate TotalTime with newly available timestamps
 TotalTime = [ TotalTime(num_new_samples+1:end); event.TimeStamps ];
@@ -45,7 +47,7 @@ which_fake_target = h.which_fake_target.Data;
 if h.current_trial_block.Data(3) && h.which_perturbation.Value == 3
     odorID = 4;
 else
-    odorID = h.current_trial_block.Data(4);
+    odorID = h.current_trial_block.Data(4);  
 end
 
 %% update MFC setpoints
@@ -148,11 +150,74 @@ if TotalTime(end)>=2
         
         trial_just_ended = 1;
         
+        % handle Open loop and Replay
+        switch h.ReplayState.String
+            
+            case {'Replaying Open Loop'} % Replay session just ended
+               h.OpenLoopProgress.Data(3,1) = h.OpenLoopProgress.Data(3,1) + 1; 
+               h.OpenLoopSettings.Value = 1;
+               h.ReplayState.String = 'Recovery close loop';
+               TimeSinceOL = tic;
+               h.OpenLoopProgress.Data(1,1) = 0;
+               
+            case {'Recovery close loop'}
+               %h.OpenLoopProgress.Data(1,1) = h.OpenLoopProgress.Data(1,1) + toc(TimeSinceOL);
+                    
+        end
+        
         % trial ON
     elseif any(diff(TotalData(end-num_new_samples:end,h.Channels.trial_channel)) > 0)
         
         % pull down rewarded flag
         IsRewardedTrial = 0;
+        
+        % update Open Loop Progress (if needed)
+        switch h.ReplayState.String
+            
+            case {'Recording Open Loop'}
+                
+                % if first trial start after open loop recording
+                % - Zero the time and trials elapsed
+                if isnan(h.OpenLoopProgress.Data(1,1))
+                    h.OpenLoopProgress.Data(1,1:2) = 0;
+                    h.OpenLoopProgress.Data(2,1:2) = [1 0];
+                    TimeSinceOL = tic;
+                    
+                else % not the first trial
+                    h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
+                    h.OpenLoopProgress.Data(2,1) = h.OpenLoopProgress.Data(2,1) + 1;
+                    
+                    % check if time or trial criterion has passed already
+                    if h.OpenLoopProgress.Data(2,1) >= h.OpenLoopParams.Data(1) % Trial Mode
+                        h.OpenLoopSettings.Value = 1;
+                    end
+                end
+                
+            case {'Open Loop Recorded'}
+                
+                if h.OpenLoopProgress.Data(1,2) == 0 % open loop recording has just finished
+                    h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
+                    h.OpenLoopProgress.Data(1:2,2) = h.OpenLoopProgress.Data(1:2,1);
+                    h.OpenLoopProgress.Data(1:2,1) = [0 0]'; % reset for Recovery period
+                    TimeSinceOL = tic; % reset clock
+                else
+                    % update time and trials elapsed
+                    h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
+                    h.OpenLoopProgress.Data(2,1) = h.OpenLoopProgress.Data(2,1) + 1;
+                    
+                    % check if time or trial criterion has passed already
+                    if h.OpenLoopProgress.Data(1,1) >= h.OpenLoopParams.Data(2) 
+                        h.OpenLoopSettings.Value = 3; % trigger replay
+                    end
+                    
+                end
+                
+            case {'Replaying Open Loop'}
+                    % only one trial per replay
+                    h.OpenLoopProgress.Data(4,1) = h.OpenLoopProgress.Data(4,1) + 1;
+                    
+                
+        end
         
         % increment 'trial number'
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1;
@@ -189,6 +254,19 @@ if TotalTime(end)>=2
             
         end
         
+    end
+    
+    if strcmp(h.ReplayState.String, 'Recovery close loop')
+        h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
+        
+        if h.OpenLoopProgress.Data(1,1) >= h.OpenLoopParams.Data(2)
+            if h.OpenLoopProgress.Data(3,1) < h.OpenLoopParams.Data(3)
+                h.OpenLoopSettings.Value = 3; % trigger replay again
+            else
+                h.OpenLoopSettings.Value = 1;
+                h.ReplayState.String = 'Close loop';
+            end
+        end
     end
     
     %% LICKS
@@ -299,5 +377,8 @@ samplenum = samplenum + num_new_samples;
 last_data_value = event.Data(end,:);
 if callreward
     OdorLocatorTabbed('reward_now_Callback',h.hObject,[],h);
+end
+if UpdateOpenLoop
+    OdorLocatorTabbed('OpenLoopSettings_Callback',h.hObject,[],h);
 end
 

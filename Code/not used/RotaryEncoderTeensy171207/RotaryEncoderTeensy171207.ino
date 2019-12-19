@@ -13,6 +13,7 @@ void setup() {
   pinMode(home_pin,INPUT);
   analogWriteResolution(12);
   DACOUTTimer.begin(WritePosition, 2000); // every 2 msec
+  Serial.begin(9600);
 }
 
 void home_interrupt()
@@ -29,4 +30,5 @@ void WritePosition()
 void loop() {
   // put your main code here, to run repeatedly:
   rotary_position = RotaryEncoder.read();
+  Serial.println(rotary_position);
 }

@@ -95,7 +95,7 @@ end
 %% update target hold time
 if ~h.preloaded_sequence.Value
     if h.adaptive_holds.Value
-        % check if success rate is below 50% and accordingly adjust min hold time
+%         % check if success rate is below 50% and accordingly adjust min hold time
 %         if h.ProgressReport.Data(end,3) <= 50
 %             h.TargetHold.Data(1) = max(0,h.TargetHold.Data(1)-25);
 %         end
@@ -151,7 +151,7 @@ if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11)
                 h.which_fake_target.Data = find(h.all_targets == h.fake_target_zone.Data(2));
                 
             case 3 % no odor
-                % h.current_trial_block.Data(4) = 0; This is handled in
+                % h.current_trial_block.Data(4) = 0; handled by
                 % GetSettings4Arduino.m
                 
             case 4 % flip map

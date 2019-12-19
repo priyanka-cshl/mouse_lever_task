@@ -82,6 +82,27 @@ if get(h.startAcquisition,'value') && (sent == 1)
             h.ProgressReport.Data(end,1) = h.ProgressReport.Data(end,1) - 1;
         end        
     end
+    
+    % Update Open loop flags
+    % Open Loop Recording is about to start on next trial
+    if h.OpenLoopSettings.Value==2 && strcmp(h.ReplayState.String,'Close loop') && params_returned(31) == 1
+        h.ReplayState.String = 'Recording Open Loop';
+    end
+    
+    % Open Loop Recording is about to stop on next trial
+    if h.OpenLoopSettings.Value == 1 && strcmp(h.ReplayState.String,'Recording Open Loop') && params_returned(31) == 0
+        h.ReplayState.String = 'Open Loop Recorded';
+    end
+    
+    % Replay is about to start on next trial
+    if h.OpenLoopSettings.Value==3 && strcmp(h.ReplayState.String,'Open Loop Recorded') && params_returned(31) == 2
+        h.ReplayState.String = 'Replaying Open Loop';
+    end
+    
+    if h.OpenLoopSettings.Value==3 && strcmp(h.ReplayState.String,'Recovery close loop') && params_returned(31) == 2
+        h.ReplayState.String = 'Replaying Open Loop';
+    end
+    
     % replace last three values in params1 to store Stay Time min and Stay
     % Time Max
 %     params(1) = h.ZoneLimitSettings.Data(1); % MinWidth

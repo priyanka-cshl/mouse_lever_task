@@ -23,7 +23,7 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
-% Last Modified by GUIDE v2.5 06-Dec-2019 20:19:23
+% Last Modified by GUIDE v2.5 16-Dec-2019 23:57:36
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -67,14 +67,17 @@ handles.tgroupB = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
 handles.tabB1 = uitab('Parent', handles.tgroupB, 'Title', 'Session controls');
 handles.tabB2 = uitab('Parent', handles.tgroupB, 'Title', 'Extra');
 handles.tabB3 = uitab('Parent', handles.tgroupB, 'Title', 'Plots');
+handles.tabB4 = uitab('Parent', handles.tgroupB, 'Title', 'OpenLoop');
 %Place panels into each tab
 set(handles.B1,'Parent',handles.tabB1)
 set(handles.B2,'Parent',handles.tabB2)
 set(handles.B3,'Parent',handles.tabB3)
+set(handles.B4,'Parent',handles.tabB4)
 %Reposition each panel to same location as panel 1
 handles.B1.Position = [1    0.1   84.6000   24.0000];
 set(handles.B2,'position',get(handles.B1,'position'));
 set(handles.B3,'position',get(handles.B2,'position'));
+set(handles.B4,'position',get(handles.B2,'position'));
 
 %Create tab groupC - Session controls, Extra controls
 handles.tgroupC = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
@@ -320,6 +323,7 @@ global samplenum;
 global TargetLevel;
 global IsRewardedTrial;
 global TrialsToPerturb;
+global TimeSinceOL;
 
 if get(handles.startAcquisition,'value')    
     % checks whether last file was saved and enable quiting if not
@@ -386,6 +390,13 @@ if get(handles.startAcquisition,'value')
         handles.timestamp.Data = 0;
         handles.lastrewardtime = 0;
         
+        % start by default in normal close loop mode
+        handles.OpenLoopSettings.Value = 1;
+        handles.ReplayState.String = 'Close loop';
+        handles.OpenLoopProgress.Data(:,1) = [NaN 0 0 0]';
+        handles.OpenLoopProgress.Data(:,2) = [0 0 0 0];
+        %OpenLoopSettings_Callback(hObject, eventdata, handles);
+        
         % clear plots
         handles.trial_on.Vertices = [];
         handles.trial_on.Faces = [];
@@ -448,6 +459,8 @@ if get(handles.startAcquisition,'value')
             end
             if(handles.Arduino.Port.BytesAvailable == 0)
                 error('arduino: Motor Timer Start did not send confirmation byte')
+            elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==2
+                disp('arduino: Motor Timer Started; SD active');
             elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==6
                 disp('arduino: Motor Timer Started');
             end
@@ -658,8 +671,14 @@ if usrans == 1
     end
     clear a b c session_data
     set(gcf,'PaperPositionMode','auto')
-    print(gcf,['C:\Users\Rig\Desktop\','GUI_',animal_name],'-dpng','-r0');
-    display(['saved GUI screen shot at ' ('C:\Users\Rig\Desktop')])
+    switch char(handles.computername)
+        case {'PRIYANKA-HP'}
+            print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name],'-dpng','-r0');
+            display(['saved GUI screen shot at ' ('C:\Users\pgupta\Desktop')])
+        case {'JUSTINE'}
+            print(gcf,['C:\Users\Rig\Desktop\','GUI_',animal_name],'-dpng','-r0');
+            display(['saved GUI screen shot at ' ('C:\Users\Rig\Desktop')])
+    end
     disp(['median hold = ',num2str(median(handles.MeanHoldTimes.Data)),' ms']);
     disp(['median trigger hold = ',num2str(median_trigger_hold),' ms']);
     guidata(hObject, handles);
@@ -1277,3 +1296,13 @@ for i = 1:7
     end
 end
 
+
+
+% --- Executes on selection change in OpenLoopSettings.
+function OpenLoopSettings_Callback(hObject, eventdata, handles)
+% hObject    handle to OpenLoopSettings (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns OpenLoopSettings contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from OpenLoopSettings

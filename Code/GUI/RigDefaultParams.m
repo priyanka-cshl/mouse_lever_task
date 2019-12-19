@@ -30,7 +30,7 @@ switch char(handles.computername)
         handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
         handles.odor_priors.Value = 0;
         handles.which_perturbation.Value = 1; % no perturbations
-        handles.openloop = 0; % Run in close-loop mode
+        handles.openloop = 0; % Run in close-loop mode - not PID
         
         % Target zones
         handles.ZoneLimitSettings.Data(1) = 0.3; % zone width
@@ -80,7 +80,7 @@ switch char(handles.computername)
         % sensors and scaling
         handles.DAC_settings.Data = [2.0 2.5]';
         handles.PlotSettings.Data(:,1) = [NaN 1 0.5 1 0.2 NaN NaN]; % gains
-        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 7 4 NaN NaN]; % gains
+        handles.PlotSettings.Data(:,2) = [NaN 0 6.0 3 5 NaN NaN]; % offsets
         handles.PlotToggles.Data(:,1) = logical([0 1 1 1 1 1 1]);
         %handles.watercoeffs = [0.00134 0.0515 0.099]; % water per drop
         handles.watercoeffs = [0.001738 0.04964 1.275]; % water per drop [0.0006286 0.09254 0.918];
@@ -97,6 +97,7 @@ switch char(handles.computername)
         handles.openloop = 0; % Run in close-loop mode
         handles.AdaptiveTrigger.Value = 1;
         handles.OdorSequence.Value = 1;
+        handles.OpenLoopSettings.Value = 1; % normal close loop mode
         
         % Target zones
         handles.ZoneLimitSettings.Data(1) = 0.3; % zone width
