@@ -44,7 +44,8 @@ end
 which_target = h.which_target.Data;
 which_fake_target = h.which_fake_target.Data;
 
-if h.current_trial_block.Data(3) && h.which_perturbation.Value == 3
+if (h.current_trial_block.Data(3) && h.which_perturbation.Value == 3) || ...
+        strcmp(h.ReplayState.String, 'Replaying Open Loop')
     odorID = 4;
 else
     odorID = h.current_trial_block.Data(4);  
@@ -156,9 +157,17 @@ if TotalTime(end)>=2
             case {'Replaying Open Loop'} % Replay session just ended
                h.OpenLoopProgress.Data(3,1) = h.OpenLoopProgress.Data(3,1) + 1; 
                h.OpenLoopSettings.Value = 1;
-               h.ReplayState.String = 'Recovery close loop';
-               TimeSinceOL = tic;
-               h.OpenLoopProgress.Data(1,1) = 0;
+               
+               if h.OpenLoopProgress.Data(3,1) < h.OpenLoopParams.Data(3)
+                   h.ReplayState.String = 'Recovery close loop';
+                   TimeSinceOL = tic;
+                   h.OpenLoopProgress.Data(1,1) = 0;
+               else
+                   h.OpenLoopSettings.Value = 1;
+                   h.ReplayState.String = 'Close loop';
+                   h.OpenLoopProgress.Data(:,1) = [NaN 0 0 0]';
+                   h.OpenLoopProgress.Data(:,2) = [0 0 0 0];
+               end
                
             case {'Recovery close loop'}
                %h.OpenLoopProgress.Data(1,1) = h.OpenLoopProgress.Data(1,1) + toc(TimeSinceOL);
@@ -262,9 +271,27 @@ if TotalTime(end)>=2
         if h.OpenLoopProgress.Data(1,1) >= h.OpenLoopParams.Data(2)
             if h.OpenLoopProgress.Data(3,1) < h.OpenLoopParams.Data(3)
                 h.OpenLoopSettings.Value = 3; % trigger replay again
+                if ~any(TotalData(end-num_new_samples:end,h.Channels.trial_channel)>0)
+                    UpdateOpenLoop = 1;
+                end
             else
                 h.OpenLoopSettings.Value = 1;
                 h.ReplayState.String = 'Close loop';
+                h.OpenLoopProgress.Data(:,1) = [NaN 0 0 0]';
+                h.OpenLoopProgress.Data(:,2) = [0 0 0 0];
+                
+            end
+        end
+    end
+    
+    if strcmp(h.ReplayState.String, 'Open Loop Recorded') 
+        if h.OpenLoopProgress.Data(1,2) > 0
+            h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
+            if (h.OpenLoopProgress.Data(1,1) >= h.OpenLoopParams.Data(2)) && ...
+                    ~any(TotalData(end-num_new_samples:end,h.Channels.trial_channel)>0)
+                % force call arduino param update if in ITI mode
+                h.OpenLoopSettings.Value = 3; % trigger replay
+                UpdateOpenLoop = 1;
             end
         end
     end
@@ -379,6 +406,7 @@ if callreward
     OdorLocatorTabbed('reward_now_Callback',h.hObject,[],h);
 end
 if UpdateOpenLoop
-    OdorLocatorTabbed('OpenLoopSettings_Callback',h.hObject,[],h);
+    OdorLocatorTabbed('RewardControls_CellEditCallback',h.hObject,[],h); % cheat to update Arduino params
+    %OdorLocatorTabbed('OpenLoopSettings_Callback',h.hObject,[],h);
 end
 
