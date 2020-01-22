@@ -72,7 +72,13 @@ if h.current_trial_block.Data(3) == 1
         otherwise
     end
 else
-    param(26) = 0;
+    param(1) = 0;
+end
+
+%% override odors for visual only trials
+if h.visual_trials.Value
+    param(1) = 0;
+    h.current_trial_block.Data(3) = 1;
 end
 
 legend(27:29) = {'FakeHighLim' 'FakeTarget' 'FakeLowLim'};

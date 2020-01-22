@@ -45,7 +45,8 @@ which_target = h.which_target.Data;
 which_fake_target = h.which_fake_target.Data;
 
 if (h.current_trial_block.Data(3) && h.which_perturbation.Value == 3) || ...
-        strcmp(h.ReplayState.String, 'Replaying Open Loop')
+        strcmp(h.ReplayState.String, 'Replaying Open Loop') || ...
+            (h.current_trial_block.Data(3) && h.visual_trials.Value)
     odorID = 4;
 else
     odorID = h.current_trial_block.Data(4);  

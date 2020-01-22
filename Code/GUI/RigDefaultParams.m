@@ -77,8 +77,8 @@ switch char(handles.computername)
         handles.DAC_settings.Data = [2.0 2.5]'; % Lever scaling
         
         % Plots
-        handles.PlotSettings.Data(:,1) = [NaN 1 0.5 1 0.2 NaN NaN]; % gains
-        handles.PlotSettings.Data(:,2) = [NaN 0 6.0 3 5 NaN NaN]; % offsets
+        handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.2 NaN NaN]; % gains
+        handles.PlotSettings.Data(:,2) = [NaN 0 6.0 6 5 NaN NaN]; % offsets
         handles.PlotToggles.Data(:,1) = logical([0 1 1 1 1 1 1]);
         
         % Rewards
@@ -88,6 +88,9 @@ switch char(handles.computername)
         
         % HomeSensor type
         handles.fliphome = 0;
+        
+        % visual trials
+        handles.visual_trials.Value = 0;
         
     case {'JUSTINE'} % Rig2
         

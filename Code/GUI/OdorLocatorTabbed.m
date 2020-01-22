@@ -23,7 +23,7 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
-% Last Modified by GUIDE v2.5 16-Dec-2019 23:57:36
+% Last Modified by GUIDE v2.5 20-Jan-2020 16:50:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1306,3 +1306,4 @@ function OpenLoopSettings_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns OpenLoopSettings contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from OpenLoopSettings
+
