@@ -90,7 +90,8 @@ switch char(handles.computername)
         handles.fliphome = 0;
         
         % visual trials
-        handles.visual_trials.Value = 0;
+        handles.VisualAirTrials.Value = 0;
+        handles.VisualOnlyTrials.Value = 0;
         
     case {'JUSTINE'} % Rig2
         

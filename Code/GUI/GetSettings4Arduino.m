@@ -69,16 +69,29 @@ if h.current_trial_block.Data(3) == 1
             param(26) = ceil(h.TFgain.Data(1));
         case {9, 10}
             param(26) = h.feedback_halt.Data(1);
+        case 12 % LED+air
+            param(1) = 4;
+            h.trial_on_4.FaceColor = [0.9300 0.8400 0.8400];
+        case 13 % LED only
+            param(1) = 5;
+            h.trial_on_4.FaceColor = [0.9900 0.9200 0.8000];
         otherwise
     end
 else
-    param(1) = 0;
+    param(26) = 0;
 end
 
 %% override odors for visual only trials
-if h.visual_trials.Value
-    param(1) = 0;
+if h.VisualAirTrials.Value
+    param(1) = 4;
     h.current_trial_block.Data(3) = 1;
+    h.trial_on_4.FaceColor = [0.9300 0.8400 0.8400];
+elseif h.VisualOnlyTrials.Value
+    param(1) = 5;
+    h.current_trial_block.Data(3) = 1;
+    h.trial_on_4.FaceColor = [0.9900 0.9200 0.8000];
+else
+    h.trial_on_4.FaceColor = [0.9300 0.8400 0.8400];
 end
 
 legend(27:29) = {'FakeHighLim' 'FakeTarget' 'FakeLowLim'};
