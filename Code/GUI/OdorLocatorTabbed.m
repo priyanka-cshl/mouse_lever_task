@@ -560,7 +560,7 @@ handles.targetlevel = TargetLevel;
 guidata(hObject,handles);
 
 % --- Executes on button press in PauseSession.
-function PauseSession_Callback(hObject, eventdata, handles)
+function PauseSession_FakeCallback(hObject, eventdata, handles)
 if get(handles.PauseSession,'value')
     handles.Arduino.write(17, 'uint16');
     tic
@@ -573,7 +573,24 @@ if get(handles.PauseSession,'value')
         set(handles.PauseSession,'String','Paused');
         set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
     end
-else
+end
+guidata(hObject,handles);
+
+% --- Executes on button press in PauseSession.
+function PauseSession_Callback(hObject, eventdata, handles)
+if ~get(handles.PauseSession,'value')
+%     handles.Arduino.write(17, 'uint16');
+%     tic
+%     while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
+%     end
+%     if(handles.Arduino.Port.BytesAvailable == 0)
+%         error('arduino: Pause attempt failed')
+%     elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==7
+%         disp('arduino: Session Paused');
+%         set(handles.PauseSession,'String','Paused');
+%         set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
+%     end
+% else
     handles.Arduino.write(18, 'uint16');
     tic
     while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
@@ -732,6 +749,12 @@ Params2File(handles);
 pause(0.1);
 Send2Arduino(handles);
 
+% Pause if needed
+if get(handles.PauseSession,'value')
+    if isempty(find(handles.PauseSession.BackgroundColor == 0.5))
+        PauseSession_FakeCallback(hObject, eventdata, handles);
+    end
+end
 % --------------------------------------------------------------------
 
 % --- Executes on button press in stay_time_up.
