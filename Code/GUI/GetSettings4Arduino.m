@@ -56,6 +56,20 @@ if h.which_perturbation.Value > 0 && h.current_trial_block.Data(3) == 1
 else
     param(25) = 0;
 end
+
+% hack plot colors
+% defaults
+if h.VisualAirTrials.Value || h.VisualOnlyTrials.Value
+    h.trial_on_1.FaceColor = [0.9900 0.9200 0.8000];
+    h.trial_on_2.FaceColor = [0.9900 0.9200 0.8000];
+    h.trial_on_3.FaceColor = [0.9900 0.9200 0.8000];
+else
+    h.trial_on_1.FaceColor = [0.8000 0.8000 0.8000];
+    h.trial_on_2.FaceColor = [0.8941 0.9412 0.9020];
+    h.trial_on_3.FaceColor = [0.8706 0.9216 0.9804];
+end
+h.trial_on_4.FaceColor = [0.9300 0.8400 0.8400];
+
 legend(26) = {'PerturbationValue'};
 if h.current_trial_block.Data(3) == 1
     switch h.which_perturbation.Value
@@ -82,16 +96,14 @@ else
 end
 
 %% override odors for visual only trials
-if h.VisualAirTrials.Value
-    param(1) = 4;
-    h.current_trial_block.Data(3) = 1;
-    h.trial_on_4.FaceColor = [0.9300 0.8400 0.8400];
-elseif h.VisualOnlyTrials.Value
-    param(1) = 5;
-    h.current_trial_block.Data(3) = 1;
-    h.trial_on_4.FaceColor = [0.9900 0.9200 0.8000];
-else
-    h.trial_on_4.FaceColor = [0.9300 0.8400 0.8400];
+if h.current_trial_block.Data(3) ~= 1 % only if they aren't already perturbation trials
+    if h.VisualAirTrials.Value
+        param(1) = 4;
+        h.current_trial_block.Data(3) = 2;
+    elseif h.VisualOnlyTrials.Value
+        param(1) = 5;
+        h.current_trial_block.Data(3) = 2;
+    end
 end
 
 legend(27:29) = {'FakeHighLim' 'FakeTarget' 'FakeLowLim'};

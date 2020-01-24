@@ -44,17 +44,31 @@ end
 which_target = h.which_target.Data;
 which_fake_target = h.which_fake_target.Data;
 
-if h.current_trial_block.Data(3)
-    if (h.which_perturbation.Value == 3) || ...
-        strcmp(h.ReplayState.String, 'Replaying Open Loop') || ...
-             h.VisualAirTrials.Value || h.VisualOnlyTrials.Value
-        odorID = 4;
-    else
-       odorID = h.current_trial_block.Data(4); 
-    end
-else
-    odorID = h.current_trial_block.Data(4);  
+% hack for changing trial ON plot colors
+switch h.current_trial_block.Data(3)
+    case 0
+        odorID = h.current_trial_block.Data(4);
+    case 1 % perturbation trials
+        if (h.which_perturbation.Value == 3) || ...
+            strcmp(h.ReplayState.String, 'Replaying Open Loop') % No Odor trials or open loop replay
+            odorID = 4;
+        else
+            odorID = h.current_trial_block.Data(4);
+        end
+    case 2
+        odorID = h.current_trial_block.Data(4);
 end
+% if h.current_trial_block.Data(3)
+%     if (h.which_perturbation.Value == 3) || ...
+%         strcmp(h.ReplayState.String, 'Replaying Open Loop') || ...
+%              h.VisualAirTrials.Value || h.VisualOnlyTrials.Value
+%         odorID = 4;
+%     else
+%        odorID = h.current_trial_block.Data(4); 
+%     end
+% else
+%     odorID = h.current_trial_block.Data(4);  
+% end
 
 %% update MFC setpoints
 if ~isempty(h.MFC)
@@ -107,7 +121,7 @@ if TotalTime(end)>=2
             h.Reward_Report.Data(1) = floor(h.rewardgiven.Data(1));
             %h.Reward_Report.Data(1) = (h.Reward_Report.Data(1) + WaterPerDrop(h));
             % Update # correct trials in performance plots
-            if ~h.current_trial_block.Data(3) % not a perturbed trial
+            if h.current_trial_block.Data(3) ~= 1 % not a perturbed trial
                 if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.TransferFunction.Data(2)),2)
                     h.ProgressReportPerturbed.Data(which_target,2) = h.ProgressReportPerturbed.Data(which_target,2) + 1;
                     h.ProgressReportPerturbed.Data(end,2) = h.ProgressReportPerturbed.Data(end,2) + 1;
@@ -237,7 +251,7 @@ if TotalTime(end)>=2
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1;
         
         % increment trials done in the progress report
-        if ~h.current_trial_block.Data(3) % not a perturbed trial
+        if h.current_trial_block.Data(3) ~= 1 % not a perturbed trial
             if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.TransferFunction.Data(2)),2)
                 h.ProgressReportPerturbed.Data(which_target,1) = h.ProgressReportPerturbed.Data(which_target,1) + 1;
                 h.ProgressReportPerturbed.Data(end,1) = h.ProgressReportPerturbed.Data(end,1) + 1;

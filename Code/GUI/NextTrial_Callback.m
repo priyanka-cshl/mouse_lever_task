@@ -40,7 +40,7 @@ h.target_level_array.Data = h.target_level_array.Data(randperm(length(h.target_l
 
 % check if antibias needs to be implemented and if previous trial was a failure
 NoAntiBias = 1;
-if (h.AntiBias.Value && ~IsRewardedTrial && ~h.current_trial_block.Data(3))
+if (h.AntiBias.Value && ~IsRewardedTrial && (h.current_trial_block.Data(3) ~= 1))
     find(h.all_targets == h.TargetDefinition.Data(2));
     % find next closest targets
     similar_targets = h.target_level_array.Data(find(abs(h.target_level_array.Data - h.TargetDefinition.Data(2))<=0.25));
@@ -139,7 +139,7 @@ if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11)
     h.current_trial_block.Data(3) = TrialsToPerturb(mod(h.current_trial_block.Data(2),numel(TrialsToPerturb)) + 1);
     
     % if perturbation trial
-    if h.current_trial_block.Data(3) %&& h.which_perturbation.Value>1
+    if h.current_trial_block.Data(3) == 1 %&& h.which_perturbation.Value>1
         h.hold_times.Data(h.current_trial_block.Data(2)-1,2) = NaN;
         switch h.which_perturbation.Value
             case 2 % decouple water and odor
