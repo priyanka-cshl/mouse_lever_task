@@ -23,7 +23,7 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
-% Last Modified by GUIDE v2.5 16-Dec-2019 23:57:36
+% Last Modified by GUIDE v2.5 20-Jan-2020 16:50:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -560,7 +560,7 @@ handles.targetlevel = TargetLevel;
 guidata(hObject,handles);
 
 % --- Executes on button press in PauseSession.
-function PauseSession_FakeCallback(hObject, eventdata, handles)
+function PauseSession_Callback(hObject, eventdata, handles)
 if get(handles.PauseSession,'value')
     handles.Arduino.write(17, 'uint16');
     tic
@@ -573,24 +573,7 @@ if get(handles.PauseSession,'value')
         set(handles.PauseSession,'String','Paused');
         set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
     end
-end
-guidata(hObject,handles);
-
-% --- Executes on button press in PauseSession.
-function PauseSession_Callback(hObject, eventdata, handles)
-if ~get(handles.PauseSession,'value')
-%     handles.Arduino.write(17, 'uint16');
-%     tic
-%     while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
-%     end
-%     if(handles.Arduino.Port.BytesAvailable == 0)
-%         error('arduino: Pause attempt failed')
-%     elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==7
-%         disp('arduino: Session Paused');
-%         set(handles.PauseSession,'String','Paused');
-%         set(hObject,'BackgroundColor',[0.5 0.94 0.94]);
-%     end
-% else
+else
     handles.Arduino.write(18, 'uint16');
     tic
     while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
@@ -749,12 +732,6 @@ Params2File(handles);
 pause(0.1);
 Send2Arduino(handles);
 
-% Pause if needed
-if get(handles.PauseSession,'value')
-    if isempty(find(handles.PauseSession.BackgroundColor == 0.5))
-        PauseSession_FakeCallback(hObject, eventdata, handles);
-    end
-end
 % --------------------------------------------------------------------
 
 % --- Executes on button press in stay_time_up.
@@ -1329,3 +1306,4 @@ function OpenLoopSettings_Callback(hObject, eventdata, handles)
 
 % Hints: contents = cellstr(get(hObject,'String')) returns OpenLoopSettings contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from OpenLoopSettings
+
