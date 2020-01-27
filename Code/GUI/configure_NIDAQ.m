@@ -1,4 +1,4 @@
-function [NI_session, MFC_session, Channels, NIchannels]=configure_NIDAQ(handles)
+function [NI_session, MFC_session, Channels, NIchannels, Photometry_session]=configure_NIDAQ(handles)
 
 % rig specific settings
 switch char(handles.computername)
@@ -25,6 +25,10 @@ switch char(handles.computername)
         Channels.MFC = {};
         MFCSetPointChannelIDs = {};
         MFCControlChannelIDs = {};
+        
+        Channels.LEDs = {'LED1','LED2'};
+        LEDChannelIDs = {'ao0','ao1'};
+        
         
     case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
         DeviceName = 'Dev1';
@@ -98,4 +102,16 @@ if ~isempty(MFCSetPointChannelIDs)
     addAnalogOutputChannel(MFC_session,DeviceName,MFCControlChannelIDs, 'Voltage');
 else
     MFC_session = [];
+end
+
+% configure NI DAQ - analog output for LED control
+if ~isempty(LEDChannelIDs) && handles.Photometry.Value
+    Photometry_session = daq.createSession('ni');
+    release(Photometry_session);
+    stop(Photometry_session);
+    addAnalogOutputChannel(Photometry_session,DeviceName,LEDChannelIDs, 'Voltage');
+    Photometry_session.IsContinuous = true;
+    Photometry_session.Rate = 1000;
+else
+    Photometry_session = [];
 end

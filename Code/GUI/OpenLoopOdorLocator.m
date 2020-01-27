@@ -23,7 +23,7 @@ function varargout = OpenLoopOdorLocator(varargin)
 
 % Edit the above text to modify the response to help OpenLoopOdorLocator
 
-% Last Modified by GUIDE v2.5 13-Apr-2019 23:21:39
+% Last Modified by GUIDE v2.5 26-Jan-2020 12:08:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -105,6 +105,7 @@ handles.trial_on_4.EdgeColor = 'none';
 
 handles.lever_DAC_plot = plot(NaN, NaN,'k','linewidth',1); %lever rescaled
 handles.stimulus_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor location (rotary encoder)
+handles.thermistor_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor location (rotary encoder)
 handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
 handles.in_reward_zone_plot.EdgeColor = 'none';
 handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('r'),'Linewidth',1); %licks
@@ -119,8 +120,8 @@ set(handles.axes1,'YLim',handles.Plot_YLim.Data);
 
 axes(handles.axes9); % Transfer function plot
 handles.TF_plot = ...
-    imagesc(((-handles.MotorLocations:1:handles.MotorLocations)')/...
-    handles.MotorLocations,[-1 1]);
+    imagesc(((-handles.MotorLocationsFixSpeed:1:handles.MotorLocationsFixSpeed)')/...
+    handles.MotorLocationsFixSpeed,[-1 1]);
 colormap(brewermap([handles.ManifoldOutlets],'rdbu'));
 axis off tight
 set(handles.axes9,'YLim',[0 100]);
@@ -171,6 +172,7 @@ set(handles.cameraAxes,'YTick',[],'YTickLabel',' ','YTickMode','manual','YTickLa
 guidata(hObject, handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
 SessionSettings_CellEditCallback(hObject, eventdata, handles);
+UpdateAllPlots(hObject,eventdata,handles);
 Update_Callback(hObject,eventdata,handles); % auto calls Update_Params
 
 % set up odors
@@ -418,7 +420,7 @@ if usrans == 1
     
     while FileExistChecker
         filename = [foldername_local, filesep, animal_name, filesep, ...
-            animal_name, '_', datestr(now, 'yyyymmdd'), ['_r' num2str(run_num) ], '.mat'];
+            animal_name, '_', datestr(now, 'yyyymmdd'), ['_o' num2str(run_num) ], '.mat'];
         run_num = run_num + 1;
         if ~exist(fileparts(filename)) %#ok<*EXIST>
             mkdir(fileparts(filename));
@@ -715,3 +717,71 @@ function reward_now_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.Arduino.write(82, 'uint16'); 
+
+
+% --- Executes on button press in PIDMode.
+function PIDMode_Callback(hObject, eventdata, handles)
+% hObject    handle to PIDMode (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of PIDMode
+
+function PlotToggles_CellEditCallback(hObject, eventdata, handles)
+% hObject    handle to PlotToggles (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
+%	Indices: row and column indices of the cell(s) edited
+%	PreviousData: previous data for the cell(s) edited
+%	EditData: string(s) entered by the user
+%	NewData: EditData or its converted form set on the Data property. Empty if Data was not changed
+%	Error: error string when failed to convert EditData to appropriate value for Data
+
+%for i = 1:7
+if eventdata.NewData
+    MyLineStyle = '-';
+else
+    MyLineStyle = 'none';
+end
+switch eventdata.Indices(1)
+    case 1 % Lever Raw
+        set(handles.lever_raw_plot,'LineStyle',MyLineStyle);
+    case 2
+        set(handles.stimulus_plot,'LineStyle',MyLineStyle);
+    case 3
+        set(handles.respiration_plot,'LineStyle',MyLineStyle);
+    case 4
+        set(handles.thermistor_plot,'LineStyle',MyLineStyle);
+    case 5
+        set(handles.lickpiezo_plot,'LineStyle',MyLineStyle);
+    case 6
+    case 7
+        set(handles.camerasync_plot,'LineStyle',MyLineStyle);
+        set(handles.camerasync2_plot,'LineStyle',MyLineStyle);
+end
+%end
+% handles    structure with handles and user data (see GUIDATA)
+
+function UpdateAllPlots(hObject,eventdata,handles)
+for i = 1:7
+    if handles.PlotToggles.Data(i)
+        MyLineStyle = '-';
+    else
+        MyLineStyle = 'none';
+    end
+    switch i
+        case 1 % Lever Raw
+            %set(handles.lever_raw_plot,'LineStyle',MyLineStyle);
+        case 2
+            set(handles.stimulus_plot,'LineStyle',MyLineStyle);
+        case 3
+            set(handles.respiration_plot,'LineStyle',MyLineStyle);
+        case 4
+            set(handles.thermistor_plot,'LineStyle',MyLineStyle);
+        case 5
+            set(handles.lickpiezo_plot,'LineStyle',MyLineStyle);
+        case 6
+        case 7
+            set(handles.camerasync_plot,'LineStyle',MyLineStyle);
+            set(handles.camerasync2_plot,'LineStyle',MyLineStyle);
+    end
+end
