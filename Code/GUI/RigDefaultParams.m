@@ -94,7 +94,7 @@ switch char(handles.computername)
         handles.VisualOnlyTrials.Value = 0;
         
         % Photometry 
-        handles.Photometry.value = 0;
+        handles.Photometry.Value = 0;
         handles.PhotometryParams.Data = [211 531]';
         
     case {'JUSTINE'} % Rig2

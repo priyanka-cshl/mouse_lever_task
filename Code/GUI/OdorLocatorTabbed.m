@@ -23,12 +23,6 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
-<<<<<<< HEAD
-% Last Modified by GUIDE v2.5 26-Jan-2020 15:05:36
-=======
-% Last Modified by GUIDE v2.5 27-Jan-2020 14:45:59
->>>>>>> origin/Smellocator
-
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
@@ -230,6 +224,16 @@ handles.thistarget = plot([1],[2],'r>','MarkerFaceColor','k','MarkerEdgeColor','
 axis off tight
 set(handles.axes10,'YLim',[0.5 12.5],'YDir','reverse');
 set(handles.axes10, 'Color', 'none');
+
+axes(handles.axes16); % drive depth plot
+handles.depthofinterest = line([0 0],[2.2 3.5],'color','r','LineWidth',2);
+hold on
+handles.drivedepth = plot(0.5, 2.5,'r<','MarkerFaceColor','k','MarkerEdgeColor','k');
+set(handles.axes16, 'Fontsize', 6, 'Color', [0.94 0.94 0.94], 'box', 'off', 'Linewidth', 1.5, 'TickLength', [0.02 0.025], 'TickDir', 'out');
+set(handles.axes16, 'XLim', [0 1], 'XTick',[],'XColor',[0.94 0.94 0.94], 'YLim',[0 5], 'YTick',[0:1:5], 'YDir','reverse');
+axis manual
+
+GetCurrentDepth(hObject, eventdata, handles);
 
 %% webcam
 handles.camera_available = 0;
@@ -1313,9 +1317,6 @@ for i = 1:7
             set(handles.camerasync2_plot,'LineStyle',MyLineStyle);
     end
 end
-<<<<<<< HEAD
-
-
 
 % --- Executes on selection change in OpenLoopSettings.
 function OpenLoopSettings_Callback(hObject, eventdata, handles)
@@ -1361,108 +1362,76 @@ while ~FileExistChecker
         defaultans = {num2str(2200), num2str(3500), num2str(150), num2str(1500)};
         userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
         if ~isempty(userans)
-            for i = 1:3
-                weightparams(i) = str2double(userans(i));
+            % save params (minimum depth, max depth, turn pitch and current
+            % depth
+            for i = 1:4
+                depth.params(i) = str2double(userans(i));
             end
-            weight(1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(1))};
-            weight(2,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(2))};
-            save(filename,'weight*');
+            
+            % make the first entry
+            depth.log(1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(4))};
+            
+            % update graph
+            handles.axes16.Visible = 'on';
+            handles.depthofinterest.YData = depth.params(1:2)/1000;
+            handles.drivedepth.YData = str2double(char(userans(4)))/1000; 
+            save(filename,'depth*');
             if handles.useserver
-                save(server_file_name,'weight*');
+                save(server_file_name,'depth*');
             end
             MadeNewFile = 1;
-            w_o = str2num(char(userans(1)));
-            w_c = str2num(char(userans(2)));
-            w_p = round(100*w_c/w_o,0,'decimals');
-            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [85% = ', num2str(0.85*w_o), ' grams]'];
+        else
+            break;
         end
     end
     FileExistChecker = exist(filename,'file');
 end
-% --- Executes on button press in log_weight.
-function log_depth_Callback(hObject, eventdata, handles)
 
-% check if the weight log file exists
+if ~MadeNewFile && FileExistChecker
+    clear depth;
+    load(filename);
+    if ~isempty(strmatch(datestr(now, 'yyyymmdd'),depth.log(:,1)))
+        % check with the use if he/she wants to make a repeat entry
+        dlg_title = 'A depth entry for today already exists. You can still add more turns or cancel';
+    else
+        dlg_title = 'Drive depth Log';
+    end
+    prompt = {'current depth:', 'turns to add:'}; %, 'turns to subtract:'};
+    num_lines = 2;
+    currentdepth = depth.log(end,3);
+    defaultans = {char(currentdepth), '+0.25'};
+    userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+    
+    if ~isempty(userans) % user wants to update
+        newdepth = str2double(char(currentdepth)) + depth.params(3)*str2double(userans(2));
+        depth.log(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(num2str(newdepth))};
+        handles.drivedepth.YData = newdepth/1000;
+        save(filename,'depth*');
+        if handles.useserver
+            save(server_file_name,'depth*');
+        end
+    else % user pressed cancel
+    end
+    
+end
+
+function GetCurrentDepth(hObject, eventdata, handles)
 animal_name = char(handles.file_names.Data(1));
 foldername_local = char(handles.file_names.Data(2));
 foldername_server = char(handles.file_names.Data(3));
 
-MadeNewFile = 0;
-FileExistChecker = 0;
-while ~FileExistChecker
-    filename = [foldername_local, filesep, animal_name, '_DepthLog.mat'];
-    [~,justname] = fileparts(filename);
-    server_file_name = [foldername_server,filesep,justname,'.mat'];
-    
-    if ~exist(filename) %#ok<*EXIST>
-        % get weight
-        prompt = {'Enter original depth (um from surface):', 'Enter turns added:'};
-        dlg_title = 'Drive depth Log';
-        num_lines = 2;
-        defaultans = {num2str(23), num2str(23)};
-        userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
-        if ~isempty(userans)
-            depth(1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(1))};
-            depth(2,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(2))};
-            save(filename,'depth*');
-            if handles.useserver
-                save(server_file_name,'depth*');
-            end
-            MadeNewFile = 1;
-            w_o = str2num(char(userans(1)));
-            w_c = str2num(char(userans(2)));
-            w_p = round(100*w_c/w_o,0,'decimals');
-            %handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [85% = ', num2str(0.85*w_o), ' grams]'];
-        end
-    end
-    FileExistChecker = exist(filename,'file');
-end
-    
-if ~MadeNewFile
-    clear weight;
+filename = [foldername_local, filesep, animal_name, '_DepthLog.mat'];
+
+if  exist(filename) %#ok<*EXIST>
+    clear depth;
     load(filename);
-    if ~isempty(strmatch(datestr(now, 'yyyymmdd'),depth(:,1)))
-        % check with the use if he/she wants to make a repeat entry
-        prompt = {'A depth entry for today already exists. You can still add more turns or cancel'};
-        dlg_title = 'Drive depth Log';
-        num_lines = 1;
-        defaultans = deptht(end,3);
-        userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
-        if ~isempty(userans)
-            depth(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans)};
-            save(filename,'depth*');
-            if handles.useserver
-                save(server_file_name,'depth*');
-            end
-            w_o = str2num(char(weight(1,3)));
-            w_c = str2num(char(userans));
-            w_p = round(100*w_c/w_o,0,'decimals');
-            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [85% = ', num2str(0.85*w_o), ' grams]'];
-        else
-            w_o = str2num(char(weight(1,3)));
-            w_c = str2num(char(weight(end,3)));
-            w_p = round(100*w_c/w_o,0,'decimals');
-            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [85% = ', num2str(0.85*w_o), ' grams]'];
-        end
-    else
-        % check with the use if he/she wants to make a repeat entry
-        prompt = {'Please enter weight (in grams)'};
-        dlg_title = 'Weight Log';
-        num_lines = 1;
-        defaultans = weight(end,3);
-        userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
-        if ~isempty(userans)
-            weight(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans)};
-            save(filename,'weight*');
-            if handles.useserver
-                save(server_file_name,'weight*');
-            end
-            w_o = str2num(char(weight(1,3)));
-            w_c = str2num(char(userans));
-            w_p = round(100*w_c/w_o,0,'decimals');
-            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [85% = ', num2str(0.85*w_o), ' grams]'];
-        end
-    end
+    handles.axes16.Visible = 'on';
+    handles.depthofinterest.YData = depth.params(1:2)/1000;
+    handles.drivedepth.YData = str2double(char(depth.log(end,3)))/1000; 
+else
+    handles.axes16.Visible = 'off';
+    handles.depthofinterest.YData = NaN*handles.depthofinterest.YData;
+    handles.drivedepth.YData = NaN*handles.drivedepth.YData;
+    
 end
-=======
->>>>>>> origin/Smellocator
+    

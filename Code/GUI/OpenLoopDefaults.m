@@ -53,7 +53,11 @@ switch char(handles.computername)
         handles.watercoeffs = [0.0006286 0.09254 0.918]; % water per drop
         
         % HomeSensor type
-        handles.fliphome = 1; 
+        handles.fliphome = 1;
+        
+        % Photometry 
+        handles.Photometry.Value = 0;
+        handles.PhotometryParams.Data = [211 531]';
         
     case {'PRIYANKA-HP'}
         handles.useserver = 1; % change to zero if there's a network issue
@@ -71,6 +75,10 @@ switch char(handles.computername)
         
         % HomeSensor type
         handles.fliphome = 0;
+        
+        % Photometry 
+        handles.Photometry.Value = 0;
+        handles.PhotometryParams.Data = [211 531]';
 
 end
 end
