@@ -18,7 +18,7 @@ if ~handles.openloop
     end
     
 else
-    my_location = [handles.MotorLocationArduinoMax 0 -handles.MotorLocationArduinoMax];
+    my_location = [handles.MotorLocationsFixSpeed 0 -handles.MotorLocationsFixSpeed];
 end
 
 my_location

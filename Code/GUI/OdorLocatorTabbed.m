@@ -23,7 +23,11 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
+<<<<<<< HEAD
 % Last Modified by GUIDE v2.5 26-Jan-2020 15:05:36
+=======
+% Last Modified by GUIDE v2.5 27-Jan-2020 14:45:59
+>>>>>>> origin/Smellocator
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -149,7 +153,7 @@ end
 %% set up NI acquisition and reset Arduino
 handles.sampling_rate_array = handles.DAQrates.Data;
 %[handles.NI,handles.Arduino,handles.MFC,handles.Odors,handles.Teensy] = configure_NI_and_Arduino_ArCOM(handles);
-[handles.NI,handles.MFC,handles.Channels,handles.NIchannels] = configure_NIDAQ(handles);
+[handles.NI,handles.MFC,handles.Channels,handles.NIchannels,handles.PhotometrySession] = configure_NIDAQ(handles);
 handles.Arduino = configure_ArduinoMain(handles);
 
 %% Files - for data logging
@@ -488,7 +492,18 @@ if get(handles.startAcquisition,'value')
         % update pointer to match motor location
         handles.axes4.YLim = [0 handles.TransferFunction.Data(1)];
         handles.motor_location.YData = MapRotaryEncoderToTFColorMap(handles, handles.Rotary.Limits(3));
-       
+        
+        % photomtery
+        if handles.Photometry.Value
+            data0 = sin(linspace(0, 2*pi, 1001))';
+            data1 = sin(linspace(0, 2*pi, 1001) + pi/4)';
+            data0(end) = [];
+            data1(end) = [];
+            handles.lis_led = handles.PhotometrySession.addlistener('DataRequired', @(src,event) src.queueOutputData([data0, data1]));
+            queueOutputData(handles.PhotometrySession,[data0, data1]);
+            startBackground(handles.PhotometrySession);
+        end
+        % acquisition
         handles.lis = handles.NI.addlistener('DataAvailable', @(src,evt) NIDAQ_Callback(src,evt,handles,hObject,fid1));
         handles.NI.startBackground();
         wait(handles.NI);
@@ -496,7 +511,10 @@ if get(handles.startAcquisition,'value')
     end
     
 else
-    
+   if handles.Photometry.Value
+       handles.PhotometrySession.stop;
+       release(handles.PhotometrySession);
+   end
    handles.NI.stop;
    release(handles.NI);
    fclose('all');
@@ -1295,6 +1313,7 @@ for i = 1:7
             set(handles.camerasync2_plot,'LineStyle',MyLineStyle);
     end
 end
+<<<<<<< HEAD
 
 
 
@@ -1445,3 +1464,5 @@ if ~MadeNewFile
         end
     end
 end
+=======
+>>>>>>> origin/Smellocator

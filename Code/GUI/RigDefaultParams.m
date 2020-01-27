@@ -93,6 +93,10 @@ switch char(handles.computername)
         handles.VisualAirTrials.Value = 0;
         handles.VisualOnlyTrials.Value = 0;
         
+        % Photometry 
+        handles.Photometry.value = 0;
+        handles.PhotometryParams.Data = [211 531]';
+        
     case {'JUSTINE'} % Rig2
         
         handles.useserver = 1; % change to zero if there's a network issue
@@ -112,5 +116,9 @@ switch char(handles.computername)
         
         % HomeSensor type
         handles.fliphome = 1;
+        
+        % Photometry 
+        handles.Photometry.Value = 1;
+        handles.PhotometryParams.Data = [211 531]';
 end
 end
