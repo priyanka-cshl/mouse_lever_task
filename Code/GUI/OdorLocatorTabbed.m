@@ -23,7 +23,7 @@ function varargout = OdorLocatorTabbed(varargin)
 
 % Edit the above text to modify the response to help OdorLocatorTabbed
 
-% Last Modified by GUIDE v2.5 20-Jan-2020 16:50:11
+% Last Modified by GUIDE v2.5 26-Jan-2020 15:05:36
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1307,3 +1307,141 @@ function OpenLoopSettings_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns OpenLoopSettings contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from OpenLoopSettings
 
+
+
+% --- Executes on button press in DriveDepth.
+function DriveDepth_Callback(hObject, eventdata, handles)
+% hObject    handle to DriveDepth (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in SetDepthParams.
+function SetDepthParams_Callback(hObject, eventdata, handles)
+% hObject    handle to SetDepthParams (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% check if the weight log file exists
+animal_name = char(handles.file_names.Data(1));
+foldername_local = char(handles.file_names.Data(2));
+foldername_server = char(handles.file_names.Data(3));
+
+MadeNewFile = 0;
+FileExistChecker = 0;
+
+while ~FileExistChecker
+    filename = [foldername_local, filesep, animal_name, '_DepthLog.mat'];
+    [~,justname] = fileparts(filename);
+    server_file_name = [foldername_server,filesep,justname,'.mat'];
+    
+    if ~exist(filename) %#ok<*EXIST>
+        % get current depth, and coordinates of interest
+        prompt = {'minimum depth:', 'maximum depth:', 'turn pitch:', 'current depth:'};
+        dlg_title = 'Enter depth parameters (um from surface)';
+        num_lines = 4;
+        defaultans = {num2str(2200), num2str(3500), num2str(150), num2str(1500)};
+        userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+        if ~isempty(userans)
+            for i = 1:3
+                weightparams(i) = str2double(userans(i));
+            end
+            weight(1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(1))};
+            weight(2,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(2))};
+            save(filename,'weight*');
+            if handles.useserver
+                save(server_file_name,'weight*');
+            end
+            MadeNewFile = 1;
+            w_o = str2num(char(userans(1)));
+            w_c = str2num(char(userans(2)));
+            w_p = round(100*w_c/w_o,0,'decimals');
+            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [85% = ', num2str(0.85*w_o), ' grams]'];
+        end
+    end
+    FileExistChecker = exist(filename,'file');
+end
+% --- Executes on button press in log_weight.
+function log_depth_Callback(hObject, eventdata, handles)
+
+% check if the weight log file exists
+animal_name = char(handles.file_names.Data(1));
+foldername_local = char(handles.file_names.Data(2));
+foldername_server = char(handles.file_names.Data(3));
+
+MadeNewFile = 0;
+FileExistChecker = 0;
+while ~FileExistChecker
+    filename = [foldername_local, filesep, animal_name, '_DepthLog.mat'];
+    [~,justname] = fileparts(filename);
+    server_file_name = [foldername_server,filesep,justname,'.mat'];
+    
+    if ~exist(filename) %#ok<*EXIST>
+        % get weight
+        prompt = {'Enter original depth (um from surface):', 'Enter turns added:'};
+        dlg_title = 'Drive depth Log';
+        num_lines = 2;
+        defaultans = {num2str(23), num2str(23)};
+        userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+        if ~isempty(userans)
+            depth(1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(1))};
+            depth(2,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(2))};
+            save(filename,'depth*');
+            if handles.useserver
+                save(server_file_name,'depth*');
+            end
+            MadeNewFile = 1;
+            w_o = str2num(char(userans(1)));
+            w_c = str2num(char(userans(2)));
+            w_p = round(100*w_c/w_o,0,'decimals');
+            %handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [85% = ', num2str(0.85*w_o), ' grams]'];
+        end
+    end
+    FileExistChecker = exist(filename,'file');
+end
+    
+if ~MadeNewFile
+    clear weight;
+    load(filename);
+    if ~isempty(strmatch(datestr(now, 'yyyymmdd'),depth(:,1)))
+        % check with the use if he/she wants to make a repeat entry
+        prompt = {'A depth entry for today already exists. You can still add more turns or cancel'};
+        dlg_title = 'Drive depth Log';
+        num_lines = 1;
+        defaultans = deptht(end,3);
+        userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+        if ~isempty(userans)
+            depth(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans)};
+            save(filename,'depth*');
+            if handles.useserver
+                save(server_file_name,'depth*');
+            end
+            w_o = str2num(char(weight(1,3)));
+            w_c = str2num(char(userans));
+            w_p = round(100*w_c/w_o,0,'decimals');
+            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [85% = ', num2str(0.85*w_o), ' grams]'];
+        else
+            w_o = str2num(char(weight(1,3)));
+            w_c = str2num(char(weight(end,3)));
+            w_p = round(100*w_c/w_o,0,'decimals');
+            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [85% = ', num2str(0.85*w_o), ' grams]'];
+        end
+    else
+        % check with the use if he/she wants to make a repeat entry
+        prompt = {'Please enter weight (in grams)'};
+        dlg_title = 'Weight Log';
+        num_lines = 1;
+        defaultans = weight(end,3);
+        userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+        if ~isempty(userans)
+            weight(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans)};
+            save(filename,'weight*');
+            if handles.useserver
+                save(server_file_name,'weight*');
+            end
+            w_o = str2num(char(weight(1,3)));
+            w_c = str2num(char(userans));
+            w_p = round(100*w_c/w_o,0,'decimals');
+            handles.WeightString.String = [num2str(w_p),'%,  ', num2str(w_c), ' grams,  [85% = ', num2str(0.85*w_o), ' grams]'];
+        end
+    end
+end
