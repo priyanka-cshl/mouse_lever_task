@@ -47,8 +47,8 @@ for thisTrial = 1:length(TrialOn)-1 % ignore the last trial
         Traces.Cams(camTrials) = { MyData(start_idx:stop_idx, [CamCol CamCol+1]) };
         Traces.Timestamps(camTrials) = { (1:numel(MyData(start_idx:stop_idx, LeverCol)))/SampleRate };
         
-        CamATriggers = find(diff([0; MyData(start_idx:stop_idx, CamCol+1)])==1);
-        CamBTriggers = find(diff([0; MyData(start_idx:stop_idx, CamCol+1)])==1);
+        CamATriggers = find(diff(MyData(start_idx:stop_idx, CamCol+1))==1) + 1;
+        CamBTriggers = find(diff(MyData(start_idx:stop_idx, CamCol))==1) + 1;
         
         CamA.NumFrames(camTrials) = numel(CamATriggers);
         CamA.Indices(camTrials) = { CamATriggers };

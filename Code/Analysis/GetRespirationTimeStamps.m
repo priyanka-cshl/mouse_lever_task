@@ -21,21 +21,21 @@ end
 [pks,dep,pid,did] = peakdet(RespData,threshold);
 
 sniff_stamps = [];
-% do some pruning
-for i = 1:numel(pks)-1
-    % pks are exhalations
-    % is there an inhalation in between, if not, delete this entry
-    if any((did>pid(i)) & (did<pid(i+1)))
-        f = find((did>pid(i)) & (did<pid(i+1)));
-        if numel(f)>1
-            all_dips = dep(f);
-            [~,m] = min(all_dips);
-            sniff_stamps = [sniff_stamps; [pid(i) did(f(m))]];
-        else
-            sniff_stamps = [sniff_stamps; [pid(i) did(f)]];
-        end
-    end
-end
+% % do some pruning
+% for i = 1:numel(pks)-1
+%     % pks are exhalations
+%     % is there an inhalation in between, if not, delete this entry
+%     if any((did>pid(i)) & (did<pid(i+1)))
+%         f = find((did>pid(i)) & (did<pid(i+1)));
+%         if numel(f)>1
+%             all_dips = dep(f);
+%             [~,m] = min(all_dips);
+%             sniff_stamps = [sniff_stamps; [pid(i) did(f(m))]];
+%         else
+%             sniff_stamps = [sniff_stamps; [pid(i) did(f)]];
+%         end
+%     end
+% end
 
 % detect inhalation starts
 for i = 1:size(sniff_stamps,1)
