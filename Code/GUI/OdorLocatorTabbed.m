@@ -497,14 +497,14 @@ if get(handles.startAcquisition,'value')
         handles.axes4.YLim = [0 handles.TransferFunction.Data(1)];
         handles.motor_location.YData = MapRotaryEncoderToTFColorMap(handles, handles.Rotary.Limits(3));
         
-        % photomtery
+        % Photometry
         if handles.Photometry.Value
-            data0 = sin(linspace(0, 2*pi, 1001))';
-            data1 = sin(linspace(0, 2*pi, 1001) + pi/4)';
-            data0(end) = [];
-            data1(end) = [];
-            handles.lis_led = handles.PhotometrySession.addlistener('DataRequired', @(src,event) src.queueOutputData([data0, data1]));
-            queueOutputData(handles.PhotometrySession,[data0, data1]);
+            deltaT = 1/handles.PhotometryParams.Data(1);
+            Time = 0:deltaT:(1-deltaT);
+            LED1 = 2 * (sin(2 * pi * handles.PhotometryParams.Data(2) * Time)+1)/2;
+            LED2 = 2 * (sin(2 * pi * handles.PhotometryParams.Data(3) * Time)+1)/2;
+            handles.lis_led = handles.PhotometrySession.addlistener('DataRequired', @(src,event) src.queueOutputData([LED1', LED2']));
+            queueOutputData(handles.PhotometrySession,[LED1', LED2']);
             startBackground(handles.PhotometrySession);
         end
         % acquisition
