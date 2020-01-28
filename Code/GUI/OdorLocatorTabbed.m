@@ -230,7 +230,7 @@ handles.depthofinterest = line([0 0],[2.2 3.5],'color','r','LineWidth',2);
 hold on
 handles.drivedepth = plot(0.5, 2.5,'r<','MarkerFaceColor','k','MarkerEdgeColor','k');
 set(handles.axes16, 'Fontsize', 6, 'Color', [0.94 0.94 0.94], 'box', 'off', 'Linewidth', 1.5, 'TickLength', [0.02 0.025], 'TickDir', 'out');
-set(handles.axes16, 'XLim', [0 1], 'XTick',[],'XColor',[0.94 0.94 0.94], 'YLim',[0 5], 'YTick',[0:1:5], 'YDir','reverse');
+set(handles.axes16, 'XLim', [0 1], 'XTick',[],'XColor',[0.94 0.94 0.94], 'YLim',[0 4], 'YTick',[0:1:4], 'YDir','reverse');
 axis manual
 
 GetCurrentDepth(hObject, eventdata, handles);
