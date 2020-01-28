@@ -5,10 +5,10 @@ switch char(handles.computername)
     case {'marbprec', 'PRIYANKA-HP','JUSTINE'}
         DeviceName = 'Dev2';
         if handles.PIDMode.Value
-            Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','Respiration','PID'};
+            Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','Thermistor','Respiration','PID'};
             AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai13'};
         else
-            Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','Respiration','LickPiezo'};
+            Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','Thermistor','Respiration','LickPiezo'};
             AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai12'};
         end
         Channels.Digital = {'trial_on', 'in_target_zone', 'in_reward_zone', 'rewards', 'licks', 'homesensor', 'camerasync1', 'camerasync2'};
@@ -19,42 +19,17 @@ switch char(handles.computername)
         Channels.lick_channel = 11;
         Channels.homesensor_channel = 12;
         Channels.camerasync_channel = 13;
-%         Channels.MFC = {'MFCAir','MFCOdor'};
-%         MFCSetPointChannelIDs = {'ai6','ai7'};
-%         MFCControlChannelIDs = {'ao0','ao1'};
-        Channels.MFC = {};
-        MFCSetPointChannelIDs = {};
-        MFCControlChannelIDs = {};
         
         Channels.LEDs = {'LED1','LED2'};
         LEDChannelIDs = {'ao0','ao1'};
         
-        
-    case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
-        DeviceName = 'Dev1';
-        if handles.PIDMode.Value
-            Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','Respiration','PID'};
-            AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai13'};
-        else
-            Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','EncoderB','Respiration','LickPiezo'};
-            AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai12'};
-        end
-        Channels.Digital = {'trial_on', 'in_target_zone', 'in_reward_zone', 'rewards', 'licks', 'homesensor', 'camerasync'};
-        DigitalChannelIDs = {'Port0/Line0:6'};
-        Channels.trial_channel = 7;
-        Channels.reward_channel = 10;
-        Channels.lick_channel = 11;
-        Channels.homesensor_channel = 12;
-        Channels.camerasync_channel = 13; 
+        % NOT USED
 %         Channels.MFC = {'MFCAir','MFCOdor'};
 %         MFCSetPointChannelIDs = {'ai6','ai7'};
 %         MFCControlChannelIDs = {'ao0','ao1'};
         Channels.MFC = {};
         MFCSetPointChannelIDs = {};
         MFCControlChannelIDs = {};
-        % magic commands to make USB DAQ work on this compouter
-        daq.reset
-        daq.HardwareInfo.getInstance('DisableReferenceClockSynchronization',true);
         
 end
 
@@ -111,7 +86,7 @@ if ~isempty(LEDChannelIDs) && handles.Photometry.Value
     stop(Photometry_session);
     addAnalogOutputChannel(Photometry_session,DeviceName,LEDChannelIDs, 'Voltage');
     Photometry_session.IsContinuous = true;
-    Photometry_session.Rate = 1000;
+    Photometry_session.Rate = handles.PhotometryParams.Data(1);
 else
     Photometry_session = [];
 end
