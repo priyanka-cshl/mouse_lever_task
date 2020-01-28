@@ -118,7 +118,7 @@ switch char(handles.computername)
         handles.fliphome = 1;
         
         % Photometry 
-        handles.Photometry.Value = 1;
+        handles.Photometry.Value = 0;
         handles.PhotometryParams.Data = [5000 211 531];
 end
 end
