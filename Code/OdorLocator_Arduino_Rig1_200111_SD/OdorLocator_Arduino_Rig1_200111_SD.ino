@@ -783,11 +783,14 @@ void loop()
             // fill stimulus position array
             stimulus_state[0] = 20;
             stimulus_state[1] = 20;
+            trialstate[0] = 0;
+            trialstate[1] = 0;
             odor_valve_state = false;
             air_valve_state = false;
             send_odor_to_manifold();
             timer_override = true;
-            camera_on = 1;
+            camera_on = 0;
+            camera = 0;
             break;
           case 6: // open loop stop
             myUSB.writeUint16(9);
