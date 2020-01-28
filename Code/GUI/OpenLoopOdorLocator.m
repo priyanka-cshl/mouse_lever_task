@@ -132,6 +132,16 @@ axis off tight
 set(handles.axes4,'YLim',[0 100]);
 set(handles.axes4, 'Color', 'none');
 
+axes(handles.axes16); % drive depth plot
+handles.depthofinterest = line([0 0],[2.2 3.5],'color','r','LineWidth',2);
+hold on
+handles.drivedepth = plot(0.5, 2.5,'r<','MarkerFaceColor','k','MarkerEdgeColor','k');
+set(handles.axes16, 'Fontsize', 6, 'Color', [0.94 0.94 0.94], 'box', 'off', 'Linewidth', 1.5, 'TickLength', [0.02 0.025], 'TickDir', 'out');
+set(handles.axes16, 'XLim', [0 1], 'XTick',[],'XColor',[0.94 0.94 0.94], 'YLim',[0 4], 'YTick',[0:1:4], 'YDir','reverse');
+axis manual
+
+GetCurrentDepth(hObject, eventdata, handles);
+
 % for webcam
 handles.camera_available = 0;
 if ~isempty(webcamlist)    
@@ -784,4 +794,103 @@ for i = 1:7
             set(handles.camerasync_plot,'LineStyle',MyLineStyle);
             set(handles.camerasync2_plot,'LineStyle',MyLineStyle);
     end
+end
+
+% --- Executes on button press in SetDepthParams.
+function SetDepthParams_Callback(hObject, eventdata, handles)
+% hObject    handle to SetDepthParams (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% check if the weight log file exists
+animal_name = char(handles.file_names.Data(1));
+foldername_local = char(handles.file_names.Data(2));
+foldername_server = char(handles.file_names.Data(3));
+
+MadeNewFile = 0;
+FileExistChecker = 0;
+
+while ~FileExistChecker
+    filename = [foldername_local, filesep, animal_name, '_DepthLog.mat'];
+    [~,justname] = fileparts(filename);
+    server_file_name = [foldername_server,filesep,justname,'.mat'];
+    
+    if ~exist(filename) %#ok<*EXIST>
+        % get current depth, and coordinates of interest
+        prompt = {'minimum depth:', 'maximum depth:', 'turn pitch:', 'current depth:'};
+        dlg_title = 'Enter depth parameters (um from surface)';
+        num_lines = 4;
+        defaultans = {num2str(2200), num2str(3500), num2str(150), num2str(1500)};
+        userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+        if ~isempty(userans)
+            % save params (minimum depth, max depth, turn pitch and current
+            % depth
+            for i = 1:4
+                depth.params(i) = str2double(userans(i));
+            end
+            
+            % make the first entry
+            depth.log(1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(4))};
+            
+            % update graph
+            handles.axes16.Visible = 'on';
+            handles.depthofinterest.YData = depth.params(1:2)/1000;
+            handles.drivedepth.YData = str2double(char(userans(4)))/1000; 
+            save(filename,'depth*');
+            if handles.useserver
+                save(server_file_name,'depth*');
+            end
+            MadeNewFile = 1;
+        else
+            break;
+        end
+    end
+    FileExistChecker = exist(filename,'file');
+end
+
+if ~MadeNewFile && FileExistChecker
+    clear depth;
+    load(filename);
+    if ~isempty(strmatch(datestr(now, 'yyyymmdd'),depth.log(:,1)))
+        % check with the use if he/she wants to make a repeat entry
+        dlg_title = 'A depth entry for today already exists. You can still add more turns or cancel';
+    else
+        dlg_title = 'Drive depth Log';
+    end
+    prompt = {'current depth:', 'turns to add:'}; %, 'turns to subtract:'};
+    num_lines = 2;
+    currentdepth = depth.log(end,3);
+    defaultans = {char(currentdepth), '+0.25'};
+    userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+    
+    if ~isempty(userans) % user wants to update
+        newdepth = str2double(char(currentdepth)) + depth.params(3)*str2double(userans(2));
+        depth.log(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(num2str(newdepth))};
+        handles.drivedepth.YData = newdepth/1000;
+        save(filename,'depth*');
+        if handles.useserver
+            save(server_file_name,'depth*');
+        end
+    else % user pressed cancel
+    end
+    
+end
+
+function GetCurrentDepth(hObject, eventdata, handles)
+animal_name = char(handles.file_names.Data(1));
+foldername_local = char(handles.file_names.Data(2));
+foldername_server = char(handles.file_names.Data(3));
+
+filename = [foldername_local, filesep, animal_name, '_DepthLog.mat'];
+
+if  exist(filename) %#ok<*EXIST>
+    clear depth;
+    load(filename);
+    handles.axes16.Visible = 'on';
+    handles.depthofinterest.YData = depth.params(1:2)/1000;
+    handles.drivedepth.YData = str2double(char(depth.log(end,3)))/1000; 
+else
+    handles.axes16.Visible = 'off';
+    handles.depthofinterest.YData = NaN*handles.depthofinterest.YData;
+    handles.drivedepth.YData = NaN*handles.drivedepth.YData;
+    
 end

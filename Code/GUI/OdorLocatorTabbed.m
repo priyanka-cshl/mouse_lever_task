@@ -499,12 +499,14 @@ if get(handles.startAcquisition,'value')
         
         % photomtery
         if handles.Photometry.Value
-            data0 = sin(linspace(0, 2*pi, 1001))';
-            data1 = sin(linspace(0, 2*pi, 1001) + pi/4)';
-            data0(end) = [];
-            data1(end) = [];
+            deltaT = 1/handles.PhotometryParams.Data(1);
+            Time = 0:deltaT:(1-deltaT);
+            LED1 = 2 * (sin(2 * pi * handles.PhotometryParams.Data(2)  * Time)+1)/2;
+            LED2 = 2 * (sin(2 * pi * handles.PhotometryParams.Data(3)  * Time)+1)/2;
+            LED1 = LED1';
+            LED2 = LED2';
             handles.lis_led = handles.PhotometrySession.addlistener('DataRequired', @(src,event) src.queueOutputData([data0, data1]));
-            queueOutputData(handles.PhotometrySession,[data0, data1]);
+            queueOutputData(handles.PhotometrySession,[LED1, LED2]);
             startBackground(handles.PhotometrySession);
         end
         % acquisition
@@ -1317,24 +1319,6 @@ for i = 1:7
             set(handles.camerasync2_plot,'LineStyle',MyLineStyle);
     end
 end
-
-% --- Executes on selection change in OpenLoopSettings.
-function OpenLoopSettings_Callback(hObject, eventdata, handles)
-% hObject    handle to OpenLoopSettings (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns OpenLoopSettings contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from OpenLoopSettings
-
-
-
-% --- Executes on button press in DriveDepth.
-function DriveDepth_Callback(hObject, eventdata, handles)
-% hObject    handle to DriveDepth (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
 
 % --- Executes on button press in SetDepthParams.
 function SetDepthParams_Callback(hObject, eventdata, handles)
