@@ -95,7 +95,7 @@ switch char(handles.computername)
         
         % Photometry 
         handles.Photometry.Value = 0;
-        handles.PhotometryParams.Data = [5000 211 531];
+        handles.PhotometryParams.Data = [5000 211 531 0.6 0.6];
         
     case {'JUSTINE'} % Rig2
         
@@ -119,6 +119,6 @@ switch char(handles.computername)
         
         % Photometry 
         handles.Photometry.Value = 0;
-        handles.PhotometryParams.Data = [5000 211 531];
+        handles.PhotometryParams.Data = [5000 211 531 0.6 0.6];
 end
 end

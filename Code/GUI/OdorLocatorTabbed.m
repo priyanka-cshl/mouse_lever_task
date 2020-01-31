@@ -479,6 +479,10 @@ if get(handles.startAcquisition,'value')
             handles.lis.delete
         end
         
+        if isfield(handles,'lis_led')
+            handles.lis_led.delete
+        end
+        
         % refresh DAC levels
         calibrate_DAC_Callback(hObject,eventdata,handles);
         
@@ -501,8 +505,8 @@ if get(handles.startAcquisition,'value')
         if handles.Photometry.Value
             deltaT = 1/handles.PhotometryParams.Data(1);
             Time = 0:deltaT:(1-deltaT);
-            LED1 = 2 * (sin(2 * pi * handles.PhotometryParams.Data(2) * Time)+1)/2;
-            LED2 = 2 * (sin(2 * pi * handles.PhotometryParams.Data(3) * Time)+1)/2;
+            LED1 = handles.PhotometryParams.Data(4) * (sin(2 * pi * handles.PhotometryParams.Data(2) * Time)+1)/2;
+            LED2 = handles.PhotometryParams.Data(5) * (sin(2 * pi * handles.PhotometryParams.Data(3) * Time)+1)/2;
             handles.lis_led = handles.PhotometrySession.addlistener('DataRequired', @(src,event) src.queueOutputData([LED1', LED2']));
             queueOutputData(handles.PhotometrySession,[LED1', LED2']);
             startBackground(handles.PhotometrySession);
