@@ -39,7 +39,7 @@ handles.TransferFunction.Data(2) = 100; % block size (1 = no blocks)
 switch char(handles.computername)
     
     case {'JUSTINE'} % Rig 2
-        handles.useserver = 1; % change to zero if there's a network issue
+        handles.useserver = 0; % change to zero if there's a network issue
         
         % sensors and scaling
         handles.DAC_settings.Data = [2.0 2.15]';
