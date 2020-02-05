@@ -23,7 +23,7 @@ function varargout = OpenLoopOdorLocator(varargin)
 
 % Edit the above text to modify the response to help OpenLoopOdorLocator
 
-% Last Modified by GUIDE v2.5 26-Jan-2020 12:08:19
+% Last Modified by GUIDE v2.5 05-Feb-2020 11:58:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -46,6 +46,7 @@ end
 
 % --- Executes just before OpenLoopOdorLocator is made visible.
 function OpenLoopOdorLocator_OpeningFcn(hObject, eventdata, handles, varargin)
+
 % basic housekeeping
 handles.output = hObject;
 handles.mfilename = mfilename;
@@ -53,7 +54,6 @@ handles.startAcquisition.Enable = 'off';
 
 % rig specific settings
 handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
-handles.useserver = 1;
 [handles] = OpenLoopDefaults(handles);
 
 % clear indicators

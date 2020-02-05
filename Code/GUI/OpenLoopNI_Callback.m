@@ -137,6 +137,7 @@ if trial_just_ended
     else
         set(h.startAcquisition,'value',0);
         OpenLoopOdorLocator('startAcquisition_Callback',h.hObject,[],h);
+        OpenLoopOdorLocator('SaveFile_Callback',h.hObject,[],h);
     end
 end
 
