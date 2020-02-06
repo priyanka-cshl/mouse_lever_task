@@ -95,7 +95,7 @@ switch char(handles.computername)
         
         % Photometry 
         handles.Photometry.Value = 0;
-        handles.PhotometryParams.Data = [5000 211 531];
+        handles.PhotometryParams.Data = [5000 211 531 0.6 0.6];
         
     case {'JUSTINE'} % Rig2
         
@@ -110,7 +110,7 @@ switch char(handles.computername)
         handles.PlotToggles.Data(:,1) = logical([0 1 1 1 1 1 1]);
         
         % Rewards
-        handles.watercoeffs = [0.0006286 0.09254 0.918]; % water per drop
+        handles.watercoeffs = [0.0009982 0.1313 0.3161]; % water per drop
         handles.RewardControls.Data = [35 5 50 100 200]'; % reward: time-I, time-II, IRI, hold-II, trial-off-lag
         handles.MultiRewards.Value = 1;
         
@@ -119,6 +119,6 @@ switch char(handles.computername)
         
         % Photometry 
         handles.Photometry.Value = 0;
-        handles.PhotometryParams.Data = [5000 211 531];
+        handles.PhotometryParams.Data = [5000 211 531 0.6 0.6];
 end
 end

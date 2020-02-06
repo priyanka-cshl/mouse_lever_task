@@ -23,7 +23,7 @@ function varargout = OpenLoopOdorLocator(varargin)
 
 % Edit the above text to modify the response to help OpenLoopOdorLocator
 
-% Last Modified by GUIDE v2.5 26-Jan-2020 12:08:19
+% Last Modified by GUIDE v2.5 05-Feb-2020 11:58:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -46,6 +46,7 @@ end
 
 % --- Executes just before OpenLoopOdorLocator is made visible.
 function OpenLoopOdorLocator_OpeningFcn(hObject, eventdata, handles, varargin)
+
 % basic housekeeping
 handles.output = hObject;
 handles.mfilename = mfilename;
@@ -53,7 +54,6 @@ handles.startAcquisition.Enable = 'off';
 
 % rig specific settings
 handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
-handles.useserver = 1;
 [handles] = OpenLoopDefaults(handles);
 
 % clear indicators
@@ -72,9 +72,11 @@ if ~exist(fullfile(foldername_local,animal_name),'dir')
     mkdir(fullfile(foldername_local,animal_name));
     disp('making local data directory');
 end
-if ~exist(fullfile(foldername_server,animal_name),'dir')
-    mkdir(fullfile(foldername_server,animal_name));
-    disp('making remote data directory');
+if handles.useserver
+    if ~exist(fullfile(foldername_server,animal_name),'dir')
+        mkdir(fullfile(foldername_server,animal_name));
+        disp('making remote data directory');
+    end
 end
 
 %% set up NI acquisition and reset Arduino
@@ -442,7 +444,7 @@ if usrans == 1
     handles.file_final_name=file_final_name;
     server_file_name=[foldername_server,filesep,animal_name,filesep,file_final_name];
     if ~exist(fileparts(server_file_name))
-        mkdir(fileparts(server_file_name));
+%        mkdir(fileparts(server_file_name));
     end
     % read session settings
     load('C:\temp_data_files\session_settings.mat'); % loads variable settings
@@ -458,10 +460,12 @@ if usrans == 1
 %     session_data.ForNextSession_Legends = {'DAQGain', 'DAQDC', 'TriggerHoldMin', 'TriggerHoldMean', 'TriggerHoldMax', 'RewardHold-II', 'LeftvsRightTFs', 'SummedHoldFactor' };
     
     save(filename,'session_data*');
-    save(server_file_name,'session_data*');
-    clear a b c session_data
     display(['saved to ' filename])
-    display(['saved to ' server_file_name])
+    if handles.useserver
+        save(server_file_name,'session_data*');
+        display(['saved to ' server_file_name])
+    end
+    clear a b c session_data
 %     set(gcf,'PaperPositionMode','auto')
 %     print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name, '_', datestr(now, 'yyyymmdd'), '_r' num2str(run_num)],...
 %         '-dpng','-r0');

@@ -80,13 +80,13 @@ else
 end
 
 % configure NI DAQ - analog output for LED control
-if ~isempty(LEDChannelIDs) && handles.Photometry.Value
+% if ~isempty(LEDChannelIDs) && handles.Photometry.Value
     Photometry_session = daq.createSession('ni');
     release(Photometry_session);
     stop(Photometry_session);
     addAnalogOutputChannel(Photometry_session,DeviceName,LEDChannelIDs, 'Voltage');
     Photometry_session.IsContinuous = true;
     Photometry_session.Rate = handles.PhotometryParams.Data(1);
-else
-    Photometry_session = [];
-end
+% else
+%     Photometry_session = [];
+% end
