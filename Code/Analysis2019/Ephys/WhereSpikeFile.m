@@ -6,7 +6,7 @@ datetoken = [date(1:4),'-',date(5:6),'-',date(7:8)];
 root = ['/mnt/data/Priyanka/',mousename,'/'];
 myfolders = dir ([root,'/',datetoken,'*']);
 
-if size(myfolders.name,1) == 1
+if size(myfolders,1) == 1
     myephysdir = myfolders.name;
 else
     sessionname = char(foo(3));
