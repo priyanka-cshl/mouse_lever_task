@@ -10,6 +10,7 @@ elseif nargin < 3
     do_spikes = 0;
 end
 
+do_tuning = 1;
 
 % global timewindow;
 global MyFileName;
@@ -83,16 +84,30 @@ for i = 1:size(FileNames,2) % For each file
     %[Traces, TrialInfo, TargetZones] = ParseTrials(MyData, MySettings, TargetZones, sessionstart, sessionstop);
     [Traces, TrialInfo, TargetZones, TS, Replay] = ParseAllTrials(MyData, MySettings, TargetZones, sessionstart, sessionstop);
     
+    if do_tuning
+        [TuningFile] = WhereTuningFile(FilePaths,MyFileName);
+        if ~isempty(TuningFile)
+            [MyTuningData, MyTuningSettings, MyTuningTrials] = ExtractTuningSession(TuningFile);
+            disp(['Loaded Tuining File: ',TuningFile]);
+        else
+            MyTuningTrials = [];
+        end
+    end
+    
     if do_spikes
         %% get Spikes
         [myephysdir] = WhereSpikeFile(MyFileName);
-        [SingleUnits] = Spikes2Trials(myephysdir, TS, TrialInfo);
+        [SingleUnits, EphysTuningTrials] = Spikes2Trials(myephysdir, TS, TrialInfo, MyTuningTrials);
         
+        if ~isempty(EphysTuningTrials)
+            PlotTuning(SingleUnits, EphysTuningTrials, MyTuningTrials);
+        end
         PlotReplay(Traces, TrialInfo, Replay, SingleUnits);
         
-        savepath = fullfile(FilePaths,'processed',filesep,MyFileName);
-        save(strrep(savepath,'.mat','_processed.mat'),'Traces','TrialInfo',...
-            'TargetZones','spiketimes','sessionstart','sessionstop');
+        
+%         savepath = fullfile(FilePaths,'processed',filesep,MyFileName);
+%         save(strrep(savepath,'.mat','_processed.mat'),'Traces','TrialInfo',...
+%             'TargetZones','spiketimes','sessionstart','sessionstop');
     end
     
     
