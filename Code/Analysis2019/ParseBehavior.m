@@ -5,7 +5,11 @@
 function [Traces, TrialInfo, TargetZones, spiketimes] = ParseBehavior(MouseName, ReplotSession)
 if nargin < 2
     ReplotSession = 0;
+    do_spikes = 0;
+elseif nargin < 3
+    do_spikes = 0;
 end
+
 
 % global timewindow;
 global MyFileName;
@@ -62,10 +66,10 @@ for i = 1:size(FileNames,2) % For each file
         if ReplotSession
             RecreateSession(MyData);
         end
-        sessionstart = str2double(input('Enter start timestamp:','s'));
-        sessionstop = str2double(input('Enter stop timestamp:','s'));
-%         sessionstart = 0;
-%         sessionstop = -1;
+        % sessionstart = str2double(input('Enter start timestamp:','s'));
+        % sessionstop = str2double(input('Enter stop timestamp:','s'));
+        sessionstart = 0;
+        sessionstop = -1;
         
         if sessionstart<0
             sessionstart = 0;
@@ -76,15 +80,18 @@ for i = 1:size(FileNames,2) % For each file
     end
     
     %% Parse trials
-    [Traces, TrialInfo, TargetZones] = ParseTrials(MyData, MySettings, TargetZones, sessionstart, sessionstop);
+    [Traces, TrialInfo, TargetZones] = ParseReplayTrials(MyData, MySettings, TargetZones, sessionstart, sessionstop);
+    %[Traces, TrialInfo, TargetZones] = ParseTrials(MyData, MySettings, TargetZones, sessionstart, sessionstop);
     
-    %% get Spikes
-    [myephysdir] = WhereSpikeFile(MyFileName);
-    [spiketimes] = Spikes2Trials(myephysdir);
-% [spiketimes] = [];
-    savepath = fullfile(FilePaths,'processed',filesep,MyFileName);
-    save(strrep(savepath,'.mat','_processed.mat'),'Traces','TrialInfo','TargetZones','spiketimes','sessionstart','sessionstop');
-    
+    if do_spikes
+        %% get Spikes
+        [myephysdir] = WhereSpikeFile(MyFileName);
+        [spiketimes] = Spikes2Trials(myephysdir);
+        [spiketimes] = [];
+        savepath = fullfile(FilePaths,'processed',filesep,MyFileName);
+        save(strrep(savepath,'.mat','_processed.mat'),'Traces','TrialInfo',...
+            'TargetZones','spiketimes','sessionstart','sessionstop');
+    end
 %     OdorTuningSummary;
 %     figureName = [MyFileName(1:end-4)];
 %     print(figureName,'-dpdf');
