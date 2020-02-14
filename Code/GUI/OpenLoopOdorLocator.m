@@ -23,7 +23,7 @@ function varargout = OpenLoopOdorLocator(varargin)
 
 % Edit the above text to modify the response to help OpenLoopOdorLocator
 
-% Last Modified by GUIDE v2.5 05-Feb-2020 11:58:10
+% Last Modified by GUIDE v2.5 14-Feb-2020 17:02:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -81,7 +81,7 @@ end
 
 %% set up NI acquisition and reset Arduino
 handles.sampling_rate_array = handles.DAQrates.Data;
-[handles.NI,handles.MFC,handles.Channels,handles.NIchannels] = configure_NIDAQ(handles);
+[handles.NI,handles.MFC,handles.Channels,handles.NIchannels,handles.PhotometrySession] = configure_NIDAQ(handles);
 handles.Arduino = configure_ArduinoMain(handles);
 
 %% Files - for data logging
@@ -326,6 +326,10 @@ if get(handles.startAcquisition,'value')
             handles.lis.delete
         end
         
+        if isfield(handles,'lis_led')
+            handles.lis_led.delete
+        end
+        
         % refresh DAC levels
         calibrate_DAC_Callback(hObject,eventdata,handles);
         
@@ -344,13 +348,28 @@ if get(handles.startAcquisition,'value')
         % update pointer to match motor location
         handles.axes4.YLim = [0 size(handles.all_locations.String,1)];
         handles.motor_location.YData = MapRotaryEncoderToTFColorMapOpenLoop(handles, handles.Rotary.Limits(3));
-       
+        
+        % Photometry
+        if handles.Photometry.Value
+            deltaT = 1/handles.PhotometryParams.Data(1);
+            Time = 0:deltaT:(1-deltaT);
+            LED1 = handles.PhotometryParams.Data(4) * (sin(2 * pi * handles.PhotometryParams.Data(2) * Time)+1)/2;
+            LED2 = handles.PhotometryParams.Data(5) * (sin(2 * pi * handles.PhotometryParams.Data(3) * Time)+1)/2;
+            handles.lis_led = handles.PhotometrySession.addlistener('DataRequired', @(src,event) src.queueOutputData([LED1', LED2']));
+            queueOutputData(handles.PhotometrySession,[LED1', LED2']);
+            startBackground(handles.PhotometrySession);
+        end
+        
         handles.lis = handles.NI.addlistener('DataAvailable', @(src,evt) OpenLoopNI_Callback(src,evt,handles,hObject,fid1));
         handles.NI.startBackground();
         wait(handles.NI);
         guidata(hObject,handles);
     end
 else
+   if handles.Photometry.Value
+       handles.PhotometrySession.stop;
+       release(handles.PhotometrySession);
+   end
    handles.NI.stop;
    release(handles.NI);
    fclose('all');
