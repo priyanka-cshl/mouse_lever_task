@@ -1,7 +1,8 @@
 % organize the session data into a cell array of trials
-function [Traces, TrialInfo, TargetZones] = ParseTrials(MyData, MySettings, TargetZones, sessionstart, sessionstop)
+function [Traces, TrialInfo, TargetZones, TrialTimeStamps, Replay] = ParseAllTrials(MyData, MySettings, TargetZones, sessionstart, sessionstop)
 
 global SampleRate; % = 500; % samples/second
+global startoffset; % = 1; % seconds
 
 if nargin < 4
     sessionstart = 0;
@@ -44,6 +45,9 @@ while TrialOn(end)>TrialOff(end)
     TrialOn(end,:) = [];
 end
 
+TrialTimeStamps = [TrialOn TrialOff]/SampleRate;
+TrialTimeStamps(:,3) = TrialTimeStamps(:,2) - TrialTimeStamps(:,1);
+
 % Crunch data trial-by-trial
 for thisTrial = 1:length(TrialOn)
     
@@ -51,26 +55,25 @@ for thisTrial = 1:length(TrialOn)
     trialflag = 0;
     
     %% 1: extract continuous traces for lever, motor position, licks and sniffs
+    % extract 1s before trial ON, and upto 1s before next trial start
     
-    if thisTrial > 1
-        start_offset = 0;
-        start_idx = TrialOff(thisTrial-1); % start from the end of the previous trial
-    else % very first trial
-        start_offset = -1; % start one second before trial start
-        start_idx = TrialOn(thisTrial) - min(-start_offset*SampleRate,TrialOn(thisTrial)-1);
+    start_idx = TrialOn(thisTrial) - startoffset*SampleRate;
+        
+    if thisTrial > 1 % all except first trial
         trialflag = -1; % ignore this trial
     end
     
-    stop_idx = TrialOff(thisTrial); % until end of current trial
-    
     if thisTrial < length(TrialOn) 
+        stop_idx = TrialOn(thisTrial+1) - startoffset*SampleRate - 1; % until the next trial start
     else % last trial
-        trialflag = -1;
+        stop_idx = TrialOff(thisTrial) + startoffset*SampleRate;
+        trialflag = -1; % ignore this trial
     end
-    
+        
     % Extract traces
     Traces.Lever(thisTrial) = { MyData(start_idx:stop_idx, LeverCol) };
     Traces.Motor(thisTrial) = { MyData(start_idx:stop_idx, MotorCol) };
+    Traces.Encoder(thisTrial) = { MyData(start_idx:stop_idx, EncoderCol) };
     Traces.Sniffs(thisTrial) = { MyData(start_idx:stop_idx, RespCol) };
     Traces.Licks(thisTrial) = { MyData(start_idx:stop_idx, LickCol) };
     
@@ -79,16 +82,22 @@ for thisTrial = 1:length(TrialOn)
     
     % Trial Timestamps
     thisTrialIdx = [TrialOn(thisTrial) TrialOff(thisTrial)];
+    TrialInfo.SessionIndices(thisTrial,:) = thisTrialIdx;
     TrialInfo.SessionTimestamps(thisTrial,:) = MyData(thisTrialIdx,1); % actual timestamps of trial start and end
     TrialInfo.Timestamps(thisTrial,:) = MyData(thisTrialIdx,1) - MyData(start_idx,1); % in seconds, relative to trace start
     TrialInfo.TimeIndices(thisTrial,:) = thisTrialIdx - start_idx;
     TrialInfo.Duration(thisTrial,1) = (diff(thisTrialIdx) + 1)/SampleRate; % in seconds
+    TrialInfo.TraceIndices(thisTrial,:) = [start_idx stop_idx];
+    TrialInfo.TraceTimeStamps(thisTrial,:) = MyData([start_idx, stop_idx],1);
+    TrialInfo.TraceDuration(thisTrial,1) = (diff([start_idx stop_idx]) + 1)/SampleRate;
+    
     
     % Flag invalid trials
     if (MyData(thisTrialIdx(1),1) < sessionstart) || (MyData(thisTrialIdx(1),1) > sessionstop)
         trialflag = -1;
     end
     TrialInfo.Valid(thisTrial,1) = trialflag;
+    
     % Which odor
     TrialInfo.Odor(thisTrial,1) = mode(MyData(thisTrialIdx(1):thisTrialIdx(2),TrialCol));
     
@@ -135,10 +144,10 @@ for thisTrial = 1:length(TrialOn)
         -1*thisTrialRewards(thisTrialRewards < TrialInfo.Timestamps(thisTrial,1));
     if ~isempty(thisTrialRewards)
         TrialInfo.Reward(thisTrial) = { thisTrialRewards };
-        TrialInfo.Success = any(thisTrialRewards>0); % successes and failures
+        TrialInfo.Success(thisTrial,1) = any(thisTrialRewards>0); % successes and failures
     else
         TrialInfo.Reward(thisTrial) = { [] };
-        TrialInfo.Success = 0; % successes and failures
+        TrialInfo.Success(thisTrial,1) = 0; % successes and failures
     end
     
     % Calculate all stay times
@@ -170,7 +179,6 @@ for thisTrial = 1:length(TrialOn)
                     TrialInfo.Perturbation(thisTrial,:) = [4 0];
                 case 500 % location offset I
                     TrialInfo.Perturbation(thisTrial,:) = [WhichPerturbation/100 PerturbationValue];
-                    
                 case {600, 700} % location offset II and III
                     if ~isempty(find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==1))
                         TrialInfo.Perturbation(thisTrial,:) = [WhichPerturbation/100 PerturbationValue];
@@ -220,7 +228,6 @@ for thisTrial = 1:length(TrialOn)
                         TrialInfo.Perturbation(thisTrial,:) = [WhichPerturbation/100 PerturbationValue];
                         TrialInfo.PerturbationStart(thisTrial) = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==1);
                         TrialInfo.FeedbackStart(thisTrial) = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==-1);
-                        
 %                         % get targetzone stay times for this trial
 %                         tempstays = cell2mat(TrialInfo.StayTimeStart(thisTrial));
 %                         tempstaytimes = cell2mat(TrialInfo.StayTime(thisTrial));
@@ -246,12 +253,96 @@ for thisTrial = 1:length(TrialOn)
 
 end
 
+%% Mark Open Loop Replay trials (if any)
+% find the stretch of open loop recording trials
+OL_Blocks  = numel(find(diff(MySettings(:,32))==1));
+OL_Starts  = MySettings(find(diff(MySettings(:,32))== 1)+1,1);
+OL_Stops   = MySettings(find(diff(MySettings(:,32))==-1)+1,1);
+Replay_Starts = MySettings(find(diff(MySettings(:,32))== 2)+1,1);
+%Replay_Starts(5) = 1661.4;
+
+if ~isempty(Replay_Starts)
+    alltargets = [1:0.25:3.75];
+    disp([num2str(OL_Blocks), ' Replay sessions found']);
+    
+    for thisBlock = 1:OL_Blocks
+        % find first trial after open loop recording flag was turned to 1
+        FirstTrial = find(TrialOn>OL_Starts(thisBlock)*SampleRate,1,'first');
+        LastTrial = find(TrialOn<OL_Stops(thisBlock)*SampleRate,1,'last');
+        MyTrials = [FirstTrial:LastTrial];
+        Replay.CloseLoopTrialIDs(thisBlock) = {MyTrials};
+        
+        % get long concatenated vectors for analysis later
+        MyTraces = [];
+        for i = 1:numel(MyTrials)
+            MyTraces = [MyTraces; ...
+                i+0*Traces.Lever{MyTrials(i)} ...
+                Traces.Lever{MyTrials(i)} ...
+                Traces.Motor{MyTrials(i)} ...
+                Traces.Encoder{MyTrials(i)} ...
+                Traces.Sniffs{MyTrials(i)} ...
+                Traces.Licks{MyTrials(i)} ...
+                alltargets(TrialInfo.TargetZoneType(MyTrials(i)))+0*Traces.Lever{MyTrials(i)} ...
+                ];
+        end
+        
+        Replay.CloseLoopTraces(thisBlock) = {MyTraces};
+        
+        % Get all replay trials belonging to this OL strectch
+        if thisBlock<OL_Blocks
+            ReplayTrials = find(Replay_Starts<OL_Starts(thisBlock+1));
+        else
+            ReplayTrials = find(Replay_Starts>OL_Starts(thisBlock));
+        end
+        
+        MyReplayIDs = [];
+        for thisReplay = 1:numel(ReplayTrials)
+            MyTrial = find(TrialOn>(Replay_Starts(ReplayTrials(thisReplay))*SampleRate),1,'first');
+            
+            
+            MyTraces = [0*  Traces.Lever{MyTrial} ...
+                            Traces.Lever{MyTrial} ...
+                            Traces.Motor{MyTrial} ...
+                            Traces.Encoder{MyTrial} ...
+                            Traces.Sniffs{MyTrial} ...
+                            Traces.Licks{MyTrial} ...
+                            ];
+            
+            % parse into trials by marking trial IDs in the first column
+            start_idx = 1 + startoffset*SampleRate;
+            
+            for thisTrial = 1:size(Replay.CloseLoopTrialIDs{thisBlock},2)
+                whichTrial = Replay.CloseLoopTrialIDs{thisBlock}(thisTrial);
+                if thisTrial < size(Replay.CloseLoopTrialIDs{thisBlock},2)
+                    stop_idx = start_idx + length(Traces.Lever{whichTrial}) - 1;
+                else
+                    stop_idx = size(MyTraces,1);
+                end
+                MyTraces(start_idx:stop_idx,1) = thisTrial;
+                start_idx = stop_idx + 1;
+            end
+            
+            Replay.ReplayTraces(thisBlock,thisReplay) = {MyTraces};
+            
+            % calculate scaling factor
+            MyDelay = finddelay(Replay.CloseLoopTraces{1}(:,3),MyTraces(:,3));
+            SF = 1 - 2*MyDelay/size(MyTraces,1);            
+            MyReplayIDs = [MyReplayIDs; [MyTrial SF]];
+        end
+        
+        Replay.ReplayTrialIDs(thisBlock) = {MyReplayIDs};
+    end
+else
+    Replay = [];
+end
+
+%% Extras
 % count trials of each target zone type
 for i = 1:size(TargetZones,1)
     TargetZones(i,4) = numel( find(TrialInfo.TargetZoneType == i));
 end
 
-% sanity checks for buggy zone definitions - historical
+%% sanity checks for buggy zone definitions - historical
 f = find(TargetZones(:,1)==3); % buggy zone definition
 
 if ~isempty(f)
@@ -260,7 +351,6 @@ if ~isempty(f)
     for i = 1:numel(f)
         todelete = [todelete; find(TrialInfo.TargetZoneType==f(i))];
     end
-    
     
     Traces.Lever(todelete,:) = [];
     Traces.Motor(todelete,:) = [];
