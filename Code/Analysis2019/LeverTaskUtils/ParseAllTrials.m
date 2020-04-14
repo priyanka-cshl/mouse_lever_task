@@ -3,6 +3,7 @@ function [Traces, TrialInfo, TargetZones, TrialTimeStamps, Replay] = ParseAllTri
 
 global SampleRate; % = 500; % samples/second
 global startoffset; % = 1; % seconds
+global MyFileName;
 
 if nargin < 4
     sessionstart = 0;
@@ -58,6 +59,7 @@ for thisTrial = 1:length(TrialOn)
     % extract 1s before trial ON, and upto 1s before next trial start
     
     start_idx = TrialOn(thisTrial) - startoffset*SampleRate;
+    start_idx = max(1,start_idx);
         
     if thisTrial > 1 % all except first trial
         trialflag = -1; % ignore this trial
@@ -69,6 +71,8 @@ for thisTrial = 1:length(TrialOn)
         stop_idx = TrialOff(thisTrial) + startoffset*SampleRate;
         trialflag = -1; % ignore this trial
     end
+    
+    stop_idx = min(stop_idx,size(MyData,1));
         
     % Extract traces
     Traces.Lever(thisTrial) = { MyData(start_idx:stop_idx, LeverCol) };
@@ -76,6 +80,8 @@ for thisTrial = 1:length(TrialOn)
     Traces.Encoder(thisTrial) = { MyData(start_idx:stop_idx, EncoderCol) };
     Traces.Sniffs(thisTrial) = { MyData(start_idx:stop_idx, RespCol) };
     Traces.Licks(thisTrial) = { MyData(start_idx:stop_idx, LickCol) };
+    Traces.Trial(thisTrial) = { MyData(start_idx:stop_idx, TrialCol) };
+    Traces.Rewards(thisTrial) = { MyData(start_idx:stop_idx, RewardCol) };
     
     % Extract Events
     TrialInfo.TrialID(thisTrial) = thisTrial; % original trial ID - some trials may get deleted because of weird target zones
@@ -180,29 +186,29 @@ for thisTrial = 1:length(TrialOn)
                 case 500 % location offset I
                     TrialInfo.Perturbation(thisTrial,:) = [WhichPerturbation/100 PerturbationValue];
                 case {600, 700} % location offset II and III
-                    if ~isempty(find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==1))
-                        TrialInfo.Perturbation(thisTrial,:) = [WhichPerturbation/100 PerturbationValue];
-                        TrialInfo.PerturbationStart(thisTrial) = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==1);
-                        TrialInfo.FeedbackStart(thisTrial) = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==-1);
-                        % convert to seconds w.r.t. trial start
-                        TrialInfo.PerturbationStart(thisTrial) = TrialInfo.PerturbationStart(thisTrial)/SampleRate;
-                        TrialInfo.FeedbackStart(thisTrial) = TrialInfo.FeedbackStart(thisTrial)/SampleRate;
-                        % convert to seconds w.r.t. trace start
-                        TrialInfo.PerturbationStart(thisTrial) = TrialInfo.PerturbationStart(thisTrial) + TrialInfo.Timestamps(thisTrial,1);
-                        TrialInfo.FeedbackStart(thisTrial) = TrialInfo.FeedbackStart(thisTrial) + TrialInfo.Timestamps(thisTrial,1);
-%                         % get targetzone stay times for this trial
-%                         tempstays = cell2mat(TrialInfo.StayTimeStart(thisTrial));
-%                         tempstaytimes = cell2mat(TrialInfo.StayTime(thisTrial));
-%                         % find tzone stays after odor offset
-%                         foo = find(tempstays>TrialInfo.PerturbationStart(thisTrial));
-%                         if ~isempty(foo)
-%                             TrialInfo.OffsetStays = {tempstaytimes(foo)};
-%                             tempstays(foo,:) = [];
-%                             tempstaytimes(foo,:) = [];
-%                             TrialInfo.StayTime(thisTrial) = {tempstays};
-%                             TrialInfo.StayTimeStart(thisTrial) = {tempstaytimes};
-%                         end
-                    end
+%                     if ~isempty(find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==1))
+%                         TrialInfo.Perturbation(thisTrial,:) = [WhichPerturbation/100 PerturbationValue];
+%                         TrialInfo.PerturbationStart(thisTrial) = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==1);
+%                         TrialInfo.FeedbackStart(thisTrial) = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==-1);
+%                         % convert to seconds w.r.t. trial start
+%                         TrialInfo.PerturbationStart(thisTrial) = TrialInfo.PerturbationStart(thisTrial)/SampleRate;
+%                         TrialInfo.FeedbackStart(thisTrial) = TrialInfo.FeedbackStart(thisTrial)/SampleRate;
+%                         % convert to seconds w.r.t. trace start
+%                         TrialInfo.PerturbationStart(thisTrial) = TrialInfo.PerturbationStart(thisTrial) + TrialInfo.Timestamps(thisTrial,1);
+%                         TrialInfo.FeedbackStart(thisTrial) = TrialInfo.FeedbackStart(thisTrial) + TrialInfo.Timestamps(thisTrial,1);
+% %                         % get targetzone stay times for this trial
+% %                         tempstays = cell2mat(TrialInfo.StayTimeStart(thisTrial));
+% %                         tempstaytimes = cell2mat(TrialInfo.StayTime(thisTrial));
+% %                         % find tzone stays after odor offset
+% %                         foo = find(tempstays>TrialInfo.PerturbationStart(thisTrial));
+% %                         if ~isempty(foo)
+% %                             TrialInfo.OffsetStays = {tempstaytimes(foo)};
+% %                             tempstays(foo,:) = [];
+% %                             tempstaytimes(foo,:) = [];
+% %                             TrialInfo.StayTime(thisTrial) = {tempstays};
+% %                             TrialInfo.StayTimeStart(thisTrial) = {tempstaytimes};
+% %                         end
+%                     end
                 case 800 % gain change
                     TrialInfo.Perturbation(thisTrial,:) = [WhichPerturbation/100 PerturbationValue];
                 case 900 % halts
@@ -261,6 +267,14 @@ OL_Stops   = MySettings(find(diff(MySettings(:,32))==-1)+1,1);
 Replay_Starts = MySettings(find(diff(MySettings(:,32))== 2)+1,1);
 %Replay_Starts(5) = 1661.4;
 
+if strcmp (MyFileName,'K4_20200103_r0.mat')
+    Replay_Starts(2,:) = [];
+end
+
+if strcmp (MyFileName,'K1_20191219_r0.mat')
+    Replay_Starts(5) = 1661.4;
+end
+
 if ~isempty(Replay_Starts)
     alltargets = [1:0.25:3.75];
     disp([num2str(OL_Blocks), ' Replay sessions found']);
@@ -282,6 +296,8 @@ if ~isempty(Replay_Starts)
                 Traces.Encoder{MyTrials(i)} ...
                 Traces.Sniffs{MyTrials(i)} ...
                 Traces.Licks{MyTrials(i)} ...
+                Traces.Trial{MyTrials(i)} ...
+                Traces.Rewards{MyTrials(i)} ...
                 alltargets(TrialInfo.TargetZoneType(MyTrials(i)))+0*Traces.Lever{MyTrials(i)} ...
                 ];
         end
@@ -306,6 +322,7 @@ if ~isempty(Replay_Starts)
                             Traces.Encoder{MyTrial} ...
                             Traces.Sniffs{MyTrial} ...
                             Traces.Licks{MyTrial} ...
+                            Traces.Rewards{MyTrial} ...
                             ];
             
             % parse into trials by marking trial IDs in the first column

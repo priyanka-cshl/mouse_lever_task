@@ -102,7 +102,7 @@ for i = 1:size(FileNames,2) % For each file
         if ~isempty(EphysTuningTrials)
             PlotTuning(SingleUnits, EphysTuningTrials, MyTuningTrials);
         end
-        PlotReplay(Traces, TrialInfo, Replay, SingleUnits);
+        %PlotReplay(Traces, TrialInfo, TargetZones, Replay, SingleUnits);
         
         
 %         savepath = fullfile(FilePaths,'processed',filesep,MyFileName);

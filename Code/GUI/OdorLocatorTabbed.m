@@ -1477,4 +1477,3 @@ end
 close_gui_Callback(hObject, eventdata, handles);
 delete (handles.mycam);
 OpenLoopOdorLocator(AnimalName);
-

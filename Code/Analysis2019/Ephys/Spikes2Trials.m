@@ -3,8 +3,8 @@ if nargin<2
     TS = [];
     TrialInfo = [];
     TuningTrials = [];
-    EphysTuningTrials = [];
 end
+EphysTuningTrials = [];
 
 global startoffset; % = 1; % seconds
 
@@ -49,6 +49,23 @@ if strcmp(myKsDir,'/mnt/data/Priyanka/K4/2019-12-19_15-42-09')
     TTLs.Trial(1,:) = [];
     TTLs.Trial([181,217],:) = []; % delete trials that didn't match
 end
+
+if strcmp(myKsDir,'/mnt/data/Priyanka/K4/2019-12-19_16-06-24')
+    TTLs.Trial([82,116,147,166],:) = []; % delete trials that didn't match
+end
+
+if strcmp(myKsDir,'/mnt/data/Priyanka/K4/2020-01-03_13-33-16')
+    TTLs.Trial([2,257,336,375],:) = []; % delete trials that didn't match
+end
+
+if strcmp(myKsDir,'/mnt/data/Priyanka/K1/2019-12-19_16-40-05')
+    TTLs.Trial([1,115,136,156,226,252,294],:) = []; % delete trials that didn't match
+end
+
+if strcmp(myKsDir,'/mnt/data/Priyanka/K1/2020-01-03_14-15-05')
+    TTLs.Trial([1,95,114,132],:) = []; % delete trials that didn't match
+end
+
 if strcmp(myKsDir,'/mnt/data/Priyanka/K1/2020-01-31_11-59-46')
     TTLs.Trial([68,83,96,99],:) = []; % delete trials that didn't match
 end
@@ -64,7 +81,6 @@ if ~isempty(TuningTrials)
         % duration
         foo = find(EphysTuningTrials(:,3)<floor(min(TuningTrials(:,7))));
         EphysTuningTrials(foo,:) = [];
-        EphysTuningTrials(size(TuningTrials,1)+1:end,:) = [];
         
         % Assign odor identities
         for i = 1:size(EphysTuningTrials,1)
@@ -87,6 +103,11 @@ if ~isempty(TuningTrials)
             end
         end
         
+        % Align the ephys and behavior trial lists 
+        idx = strfind(EphysTuningTrials(:,4)',TuningTrials(2:end,2)');
+        EphysTuningTrials(1:idx-2,:) = [];
+        EphysTuningTrials(size(TuningTrials,1)+1:end,:) = [];
+
         if ~any(EphysTuningTrials(2:end,4)-TuningTrials(2:end,2))
             display('odor sequences match');
             do_tuning = 1;

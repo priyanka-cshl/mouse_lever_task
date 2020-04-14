@@ -17,7 +17,6 @@ handles.trial_on_3.EdgeColor = 'none';
 handles.trial_on_4 = fill(NaN,NaN,[0.93    0.84    0.84]);
 handles.trial_on_4.EdgeColor = 'none';
 
-
 handles.in_target_zone_plot = fill(NaN,NaN,Plot_Colors('r'));
 handles.in_target_zone_plot.EdgeColor = 'none';
 handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
