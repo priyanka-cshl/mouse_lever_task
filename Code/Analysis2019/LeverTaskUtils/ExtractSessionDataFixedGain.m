@@ -111,6 +111,8 @@ for thisTrial = 1:size(MyParams,1)
                 MyData(f,11) = 100*MyParams(thisTrial,26);
             case 10
                 MyData(f,11) = 100*MyParams(thisTrial,26);
+            case 13
+                MyData(f,11) = 100*MyParams(thisTrial,26);
         end
     end
     
@@ -129,6 +131,7 @@ for odor = 1:4
 end
 
 %% cheat: to compensate for code bug for No odor trials
+if isempty(strfind(FileName,'LR'))
 if any(MyParams(:,2)==0) && ~any(MyData(:,6)>=4^2)
     % cheat to prevent last trial from being NoOdor Trial
     if MyParams(end,2) == 0
@@ -160,6 +163,7 @@ if any(MyParams(:,2)==0) && ~any(MyData(:,6)>=4^2)
             end
         end
     end
+end
 end
 
 %% get list of target zones used
