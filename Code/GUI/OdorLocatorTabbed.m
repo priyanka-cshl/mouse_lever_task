@@ -1471,7 +1471,7 @@ function TuningCurves_Callback(hObject, eventdata, handles)
 
 AnimalName = char(handles.file_names.Data(1));
 % Save the current session
-if isfield(handles, 'file_final_name')
+if ~handles.was_last_file_saved
     SaveFile_Callback(hObject, eventdata, handles);
 end
 close_gui_Callback(hObject, eventdata, handles);

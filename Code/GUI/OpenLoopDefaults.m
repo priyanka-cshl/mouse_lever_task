@@ -57,7 +57,7 @@ switch char(handles.computername)
         
         % Photometry 
         handles.Photometry.Value = 0;
-        handles.PhotometryParams.Data = [211 531]';
+        handles.PhotometryParams.Data = [5000 211 531 0.6 0.6];
         
     case {'PRIYANKA-HP'}
         handles.useserver = 1; % change to zero if there's a network issue
@@ -78,7 +78,7 @@ switch char(handles.computername)
         
         % Photometry 
         handles.Photometry.Value = 0;
-        handles.PhotometryParams.Data = [211 531]';
+        handles.PhotometryParams.Data = [5000 211 531 0.6 0.6];
 
 end
 end

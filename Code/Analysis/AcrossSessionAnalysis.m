@@ -1,4 +1,4 @@
-DataPath = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior/N4/processed';
+DataPath = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior/LR6/processed';
 cd (DataPath)
 AllSessions = dir(DataPath);
 sessioncount = 0;
@@ -7,7 +7,7 @@ sessioncount = 0;
 LearningCurve = 1;
 
 % FakeZoneTrials
-FakeZoneControls = 0;
+FakeZoneControls = 1;
 if FakeZoneControls
     DistanceAxis = [-2.75:0.25:2.75];
     MyDist = [];
@@ -107,9 +107,15 @@ for i = 1:size(AllSessions,1)
                     MyDist = horzcat(MyDist, nanmean(ZoneWeights,2));
                     targetzonesuccess = numel(find((~isnan(TrajectoryStats(:,5)))&(TrajectoryStats(:,7)==0)));
                     targetzonesuccess = targetzonesuccess/numel(find(TrajectoryStats(:,7)==0));
-                    SuccessRates = vertcat(SuccessRates, ...
-                        [ targetzonesuccess numel(find(fakezonesuccess))/numel(idx)]);
+%                     SuccessRates = vertcat(SuccessRates, ...
+%                         [ targetzonesuccess numel(find(fakezonesuccess))/numel(idx)]);
                     TrialCounts = vertcat(TrialCounts, [numel(find(TrajectoryStats(:,7)==0)) numel(idx)]);
+                    
+                    % bootstrapped success rate distribution
+                    f = find(TrajectoryStats(:,7)==0);
+                    [BootStrapDist] = BootStrappedSuccessRates(TrajectoryStats(f,5:6),TrajectoryStats(idx,6));
+                    SuccessRates = vertcat(SuccessRates, ...
+                        [ BootStrapDist targetzonesuccess numel(find(fakezonesuccess))/numel(idx)]);
                 end
             end
         end
@@ -184,9 +190,16 @@ if FakeZoneControls
     figure('Name',AllSessions(i).name);
     for i = 1:size(SuccessRates,1)
         subplot(2,1,1); hold on
-        plot(i-0.25,SuccessRates(i,1),'ok','MarkerFaceColor','k','MarkerSize',4);
-        plot(i+0.25,  SuccessRates(i,2),'or','MarkerFaceColor','r','MarkerSize',4);
-        line(i+[-0.25 0.25],SuccessRates(i,:),'color','k');
+%         plot(i-0.25,SuccessRates(i,1),'ok','MarkerFaceColor','k','MarkerSize',4);
+%         plot(i+0.25,  SuccessRates(i,2),'or','MarkerFaceColor','r','MarkerSize',4);
+%         line(i+[-0.25 0.25],SuccessRates(i,:),'color','k');
+        
+        plot(i-0.25+(randperm(20,20)/80),...
+            SuccessRates(i,1:20),'ok','MarkerSize',3);
+        plot(i-0.125,SuccessRates(i,21),'ok','MarkerFaceColor','k','MarkerSize',6);
+        plot(i+0.25,  SuccessRates(i,end),'or','MarkerFaceColor','r','MarkerSize',4);
+        line(i+[-0.125 0.25],SuccessRates(i,end-1:end),'color','k');
+        
         
         subplot(2,1,2); hold on
         temp = MyDist(:,i);

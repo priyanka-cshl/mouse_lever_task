@@ -46,8 +46,10 @@ for i = 1:size(FileNames,2)
         if ReplotSession
             RecreateSession(Data.(['session',num2str(i)]).data);
         end
-        sessionstart = str2double(input('Enter start timestamp:','s'));
-        sessionstop = str2double(input('Enter stop timestamp:','s'));
+%         sessionstart = str2double(input('Enter start timestamp:','s'));
+%         sessionstop = str2double(input('Enter stop timestamp:','s'));
+        sessionstart = 0;
+        sessionstop = Inf;
     end
     
     if sessionstop

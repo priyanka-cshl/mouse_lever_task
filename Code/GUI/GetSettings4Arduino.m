@@ -96,13 +96,25 @@ else
 end
 
 %% override odors for visual only trials
-if h.current_trial_block.Data(3) ~= 1 % only if they aren't already perturbation trials
+if h.current_trial_block.Data(3) ~= 1
+        % only if they aren't already perturbation trials 
+        % (except fake target zone type perturbation)
     if h.VisualAirTrials.Value
         param(1) = 4;
         h.current_trial_block.Data(3) = 2;
     elseif h.VisualOnlyTrials.Value
         param(1) = 5;
         h.current_trial_block.Data(3) = 2;
+    end
+    
+elseif h.current_trial_block.Data(3) == 1 && h.which_perturbation.Value == 2
+    
+    if h.VisualAirTrials.Value
+        param(1) = 4;
+        %h.current_trial_block.Data(3) = 2;
+    elseif h.VisualOnlyTrials.Value
+        param(1) = 5;
+        %h.current_trial_block.Data(3) = 2;
     end
 end
 
