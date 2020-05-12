@@ -1,7 +1,7 @@
 % test script to extract behavior data and replot session
 % for animals trained on the fixed gain version of the task (post 08.2018)
 
-function [MyData, MyParams, TargetZones, FakeTargetZones, DataTags] = ExtractSessionDataFixedGain(FileName, PIDflag)
+function [MyData, MyParams, DataTags] = ReadSessionData(FileName, PIDflag)
 if nargin<2
     PIDflag = 0;
 end
@@ -176,14 +176,5 @@ if isempty(strfind(FileName,'LR')) % skip this step for visual version
         end
     end
 end
-
-%% get list of target zones used
-TargetZones = unique(MyParams(:,18:20),'rows');
-FakeTargetZones = unique(MyParams(:,26:28),'rows');
-
-%% Sanity checks
-foo = FakeTargetZones;
-foo(:,2) = foo(:,2) - foo(:,1);
-FakeTargetZones(find((foo(:,2)==0)&(foo(:,1)<20)&(foo(:,1)>0)),:) = [];
 
 end

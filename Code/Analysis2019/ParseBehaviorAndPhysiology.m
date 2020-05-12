@@ -2,95 +2,81 @@
 % into trials, with relevant continuous (lever, motor, respiration, lickpiezo)
 % and event data (licks, target zone flags, odor ON-OFF, etc) for each trial
 
-function [Traces, TrialInfo, TargetZones, spiketimes] = ParseBehaviorNSpikes(MouseName, ReplotSession, do_spikes)
-if nargin < 2
-    ReplotSession = 0;
-    do_spikes = 0;
-elseif nargin < 3
-    do_spikes = 0;
-end
+function [Traces, TrialInfo, TargetZones, spiketimes] = ParseBehaviorAndPhysiology(MyFilePath, varargin)
 
-do_tuning = 1;
+%% parse input arguments
+narginchk(1,inf)
+params = inputParser;
+params.CaseSensitive = false;
+params.addParameter('plotsession', false, @(x) islogical(x) || x==0 || x==1);
+params.addParameter('respiration', false, @(x) islogical(x) || x==0 || x==1);
+params.addParameter('tuning', false, @(x) islogical(x) || x==0 || x==1);
+params.addParameter('replay', false, @(x) islogical(x) || x==0 || x==1);
+params.addParameter('spikes', false, @(x) islogical(x) || x==0 || x==1);
+params.addParameter('photometry', false, @(x) islogical(x) || x==0 || x==1);
 
-% global timewindow;
+% extract values from the inputParser
+params.parse(varargin{:});
+ReplotSession = params.Results.plotsession;
+do_tuning = params.Results.tuning;
+do_replay = params.Results.replay;
+do_sniffs = params.Results.respiration;
+do_spikes = params.Results.spikes;
+do_photometry = params.Results.photometry;
+
+%% globals
 global MyFileName;
 global subplotcol;
-% timewindow = 100; % sampling rate of 500 Hz, 50 points = 100ms
 global SampleRate;
 SampleRate = 500; % Samples/second
 global startoffset;
 startoffset = 1; % in seconds
 
-[DataRoot] = WhichComputer(); % load rig specific paths etc
+%% core data extraction (and settings)
+[MyData, MySettings, DataTags] = ReadSessionData(MyFilePath);
+[FilePaths, MyFileName] = fileparts(MyFilePath);
+disp(MyFileName);
 
-%% File selection
-% Let the user select one or more behavioral files for analysis
-if contains(MouseName,'.mat') % generally unused condition
-    foo = strsplit(MouseName,'_');
-    FileNames{1} = MouseName;
-    MouseName = char(foo(1));
-    FilePaths = fullfile(DataRoot,MouseName);
-else
-    DataRoot = fullfile(DataRoot,MouseName);
-    % get session files for analysis
-    [FileNames,FilePaths] = uigetfile('.mat','choose one or more session files','MultiSelect','on',DataRoot);
-    if ~iscell(FileNames)
-        temp = FileNames;
-        clear FileNames
-        FileNames{1} = temp;
-        clear temp
-    end
+%% replot the behavior session - GUI style
+if ReplotSession
+    RecreateSession(MyData);
 end
 
-for i = 1:size(FileNames,2) % For each file
+%% load previously saved session params
+clear sessionstart sessionstop respthresh
+if exist(fullfile(FilePaths,'processed',strrep(MyFileName,'.mat','_processed.mat')))
+    disp('loading previously defined session flags');
+    load(fullfile(FilePaths,'processed',strrep(MyFileName,'.mat','_processed.mat')),...
+        'sessionstart','sessionstop','respthresh');
+
+else
+    % define session start and stop flags
+    prompt = ['Enter start and stop timestamps: [',num2str(MyData(1,1)),' ',num2str(round(MyData(end,1))),']\n'];
+    userans = input(prompt);
+    sessionstart = userans(1);
+    sessionstop = userans(2);
+end
+
+%% Process sniff data
+if do_sniffs
+    RespData = MyData(:,15);
+    %[sniff_stamps] = GetRespirationTimeStamps(RespData, 0.2, 1);
+end        
     
-    %% core data extraction (and settings)
-    MyFileName = FileNames{i};
-    MyFilePath = fullfile(FilePaths,MyFileName);
-    [MyData, MySettings, TargetZones, FakeTargetZones, DataTags] = ExtractSessionDataFixedGain(MyFilePath);
-    disp(MyFileName);
-    
-    %% manually assess the session
-    % flag early and late session periods which contains 'un-motivated trials'
-    if exist(fullfile(FilePaths,'processed',strrep(MyFileName,'.mat','_processed.mat')))
-        
-        % If the raw file has already been proceesed
-        % User has already defined start and stop flags and respiration threshold
-        % Reload saved values from (filename)_processed.mat
-        load(fullfile(FilePaths,'processed',strrep(MyFileName,'.mat','_processed.mat')),...
-            'sessionstart','sessionstop','respthresh');
-        
-        if ReplotSession
-            RecreateSession(MyData);
-        end
-        
-        % Analyze Sniff data
-        % RespData = MyData(:,15);
-        % [sniff_stamps] = GetRespirationTimeStamps(RespData, 0.2, 1);
-        
-    else
-        
-        % ask the user to define start and stop flags
-        sessionstart = 0;
-        sessionstop = -1;
-        if ReplotSession
-            RecreateSession(MyData);
-        end
-        % sessionstart = str2double(input('Enter start timestamp:','s'));
-        % sessionstop = str2double(input('Enter stop timestamp:','s'));
-        if sessionstart<0
-            sessionstart = 0;
-        end
-        if sessionstop<0
-            sessionstop = MyData(end,1);
-        end
-    end
-    
-    %% Parse trials
-    %[Traces, TrialInfo, Replay, ReplayInfo, TargetZones] = ParseReplayTrials(MyData, MySettings, TargetZones, sessionstart, sessionstop);
-    %[Traces, TrialInfo, TargetZones] = ParseTrials(MyData, MySettings, TargetZones, sessionstart, sessionstop);
-    [Traces, TrialInfo, TargetZones, TS, Replay] = ParseAllTrials(MyData, MySettings, TargetZones, sessionstart, sessionstop);
-    
+%% Parse into trials
+[Traces, TrialInfo, TargetZones, TS] = ParseBehaviorTrials(MyData, MySettings, DataTags, sessionstart, sessionstop);
+
+%% Align replay and close loop trials using openephys triggers
+if any(diff(MySettings(:,32))== 2) && ~isempty(WhereSpikeFile(MyFileName))
+    [myephysdir] = WhereSpikeFile(MyFileName);
+    % get all TTLs for the open ephys session
+    [TTLs] = GetOepsTTLs(myephysdir, TS);
+    % Split the long replay trial in the behavior file
+    % into individual trials using the Odor TTls in the Oeps file
+    [Replay] = ParseReplayTrials(MyData, MySettings, DataTags, TrialInfo, TTLs);
+    AlignBehaviorToOeps(MyData, myephysdir, TS, TrialInfo, Traces, Replay, []);
+end
+
     if do_tuning
         [TuningFile] = WhereTuningFile(FilePaths,MyFileName);
         if ~isempty(TuningFile)
@@ -189,5 +175,5 @@ for i = 1:size(FileNames,2) % For each file
     %             clf
     %         end
     %     end
-end
+%end
 end
