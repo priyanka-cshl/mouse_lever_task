@@ -37,6 +37,17 @@ startoffset = 1; % in seconds
 [FilePaths, MyFileName] = fileparts(MyFilePath);
 disp(MyFileName);
 
+% find timestamp of first trialON in the behavior file
+TrialCol = find(cellfun(@isempty,regexp(DataTags,'TrialON'))==0);
+TrialStart = MyData(find(diff([0; MyData(:,TrialCol)])>1,2,'first'),1); % timestamp of second trial start
+    
+%% Compare with Oeps aux signals if available
+if ~isempty(WhereSpikeFile(MyFileName))
+    [myephysdir] = WhereSpikeFile(MyFileName);
+    [Aux,TTLs,AcqOffset] = GetOepsAuxChannels(myephysdir, TrialStart(end));
+    
+end
+
 %% replot the behavior session - GUI style
 if ReplotSession
     RecreateSession(MyData);
