@@ -131,18 +131,25 @@ for thisTrial = 1:length(TrialOn)
     end
     % Odor ON timestamp (recompute from the raw lever trace and trigger hold time)
     LeverTemp = MyData(start_idx:thisTrialIdx(1), LeverCol);
-    LeverTemp(LeverTemp<4.8) = 0;
+    LeverTemp(LeverTemp<4.79) = 0;
     LeverTemp(LeverTemp>0) = 1;
     Initiations = [find(diff([0; LeverTemp; 0])==1) find(diff([0; LeverTemp; 0])==-1)-1];
     TriggerHold = MySettings(thisTrial,13); % in msec
     TriggerHold = floor(TriggerHold*SampleRate/1000); % in samples
-    OdorStart = find((Initiations(:,2)-Initiations(:,1))>=TriggerHold,1,'first');
+    OdorStart = find(diff(Initiations,1,2)>=TriggerHold,1,'first');
     if isempty(OdorStart)
         OdorStart = 1;
     end
     TrialInfo.OdorStart(thisTrial,2) = Initiations(OdorStart,1) + TriggerHold - 1;
     % convert both to seconds
     TrialInfo.OdorStart(thisTrial,:) = TrialInfo.OdorStart(thisTrial,:)/SampleRate; 
+    
+    % Also compute trial start using the same strategy
+    TrialInfo.TrialStart(thisTrial,1) = Initiations(end,2)/SampleRate;
+    
+%     if TrialInfo.TrialStart(thisTrial,1) < 0.9
+%         keyboard;
+%     end
     
     %% Which TargetZone
     if ~isempty(find(TargetZones(:,1) == mode(MyData(thisTrialIdx(1):thisTrialIdx(2),2)),1))
@@ -209,7 +216,7 @@ for thisTrial = 1:length(TrialOn)
                         TrialInfo.PerturbationStart(thisTrial) = ...
                             find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==1);
                         TrialInfo.FeedbackStart(thisTrial) = ...
-                            find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==-1);
+                            find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==-1,1,'last');
                         % convert to seconds w.r.t. trial start
                         TrialInfo.PerturbationStart(thisTrial) = TrialInfo.PerturbationStart(thisTrial)/SampleRate;
                         TrialInfo.FeedbackStart(thisTrial) = TrialInfo.FeedbackStart(thisTrial)/SampleRate;
