@@ -48,6 +48,17 @@ if ~isempty(WhereSpikeFile(MyFileName))
     [myephysdir] = WhereSpikeFile(MyFileName);
     [Aux,TTLs,AcqOffset] = GetOepsAuxChannels(myephysdir, TrialStart(end));
     
+    % calculate the drift between OEPS and Behavior computer clocks
+    Trace_Behavior(:,1) = 0:1/SampleRate:MyData(end,1); % resample the time-series to have constant sample rate
+    Trace_Behavior(:,2) = interp1q(MyData(:,1),MyData(:,15),Trace_Behavior(:,1)); % pressure sensor
+    Trace_Oeps = Aux(:,[1 2]);
+    
+    % take a 5 second snippet from end of the behavior trace
+    snippet = Trace_Behavior(end-SampleRate*5:end,2);
+    % and find its corresponding matching samples in the oeps trace
+    Oeps_idx = finddelay(snippet,Trace_Oeps(:,2)) + SampleRate*5 + 1;
+    ClockRatio = Oeps_idx/size(Trace_Behavior,1); % Oeps/Behavior
+    
 end
 
 %% replot the behavior session - GUI style

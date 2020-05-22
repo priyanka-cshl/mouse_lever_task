@@ -61,7 +61,7 @@ timestamps = timestamps + BehaviorOffset;
 
 % downsample to behavior resolution
 AuxData = [];
-AuxData(:,1) = 1/SampleRate:1/SampleRate:max(timestamps);
+AuxData(:,1) = 0:1/SampleRate:max(timestamps);
 AuxData(:,2) = interp1q(timestamps,Auxdata1,AuxData(:,1)); % pressure sensor
 AuxData(:,3) = interp1q(timestamps,Auxdata2,AuxData(:,1)); % thermistor
 % create a continuous TrialOn vector
