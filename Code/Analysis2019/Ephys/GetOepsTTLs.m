@@ -10,6 +10,7 @@ addpath(genpath('/opt/open-ephys-analysis-tools'))
 %% defaults
 sampleRate = 30000; % Open Ephys acquisition rate
 
+
 %% Filepaths
 % myKsDir = '/mnt/analysis/N8/2019-01-26_19-24-28'; % directory with kilosort output
 

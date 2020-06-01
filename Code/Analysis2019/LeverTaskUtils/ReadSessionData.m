@@ -143,7 +143,7 @@ end
 
 %% HACK: to compensate for code bug for No odor trials
 if isempty(strfind(FileName,'LR')) % skip this step for visual version
-    if any(MyParams(:,2)==0) && ~any(MyData(:,6)>=4^2)
+    if any(MyParams(:,2)==0) && ~any(MyData(:,6)>=4)
         % cheat to prevent last trial from being NoOdor Trial
         if MyParams(end,2) == 0
             MyParams(end,:) = [];

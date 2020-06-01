@@ -33,33 +33,13 @@ global SampleRate;
 SampleRate = 500; % Samples/second
 global startoffset;
 startoffset = 1; % in seconds
+global OepsTrials
+OepsTrials = []; % Trial timestamps from OEPS - use to correct digital signal drift on rig-II
 
 %% core data extraction (and settings)
 [MyData, MySettings, DataTags] = ReadSessionData(MyFilePath);
 [FilePaths, MyFileName] = fileparts(MyFilePath);
 disp(MyFileName);
-
-% find timestamp of first trialON in the behavior file
-TrialCol = find(cellfun(@isempty,regexp(DataTags,'TrialON'))==0);
-TrialStart = MyData(find(diff([0; MyData(:,TrialCol)])>1,2,'first'),1); % timestamp of second trial start
-    
-%% Compare with Oeps aux signals if available
-if ~isempty(WhereSpikeFile(MyFileName))
-    [myephysdir] = WhereSpikeFile(MyFileName);
-    [Aux,TTLs,AcqOffset] = GetOepsAuxChannels(myephysdir, TrialStart(end));
-    
-    % calculate the drift between OEPS and Behavior computer clocks
-    Trace_Behavior(:,1) = 0:1/SampleRate:MyData(end,1); % resample the time-series to have constant sample rate
-    Trace_Behavior(:,2) = interp1q(MyData(:,1),MyData(:,15),Trace_Behavior(:,1)); % pressure sensor
-    Trace_Oeps = Aux(:,[1 2]);
-    
-    % take a 5 second snippet from end of the behavior trace
-    snippet = Trace_Behavior(end-SampleRate*5:end,2);
-    % and find its corresponding matching samples in the oeps trace
-    Oeps_idx = finddelay(snippet,Trace_Oeps(:,2)) + SampleRate*5 + 1;
-    ClockRatio = Oeps_idx/size(Trace_Behavior,1); % Oeps/Behavior
-    
-end
 
 %% replot the behavior session - GUI style
 if ReplotSession
@@ -93,13 +73,14 @@ if do_sniffs
 end
 
 %% Parse into trials
-[Traces, TrialInfo, TargetZones, TS] = ParseBehaviorTrials(MyData, MySettings, DataTags, sessionstart, sessionstop);
+[Trials] = CorrectMatlabSampleDrops(MyData, MySettings, DataTags);
+[Traces, TrialInfo, TargetZones] = ParseBehaviorTrials(MyData, MySettings, DataTags, Trials, sessionstart, sessionstop);
 
 %% Align replay and close loop trials using openephys triggers
 if any(diff(MySettings(:,32))== 2) && ~isempty(WhereSpikeFile(MyFileName))
     [myephysdir] = WhereSpikeFile(MyFileName);
     % get all TTLs for the open ephys session
-    [TTLs] = GetOepsTTLs(myephysdir, TS);
+    [~,TTLs] = GetOepsAuxChannels(myephysdir, Trials.TimeStamps, 'ADC', 0);
     % Split the long replay trial in the behavior file
     % into individual trials using the Odor TTls in the Oeps file
     [Replay] = ParseReplayTrials(MyData, MySettings, DataTags, TrialInfo, TTLs);

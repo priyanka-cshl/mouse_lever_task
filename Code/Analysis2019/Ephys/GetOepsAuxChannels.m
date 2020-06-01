@@ -1,8 +1,14 @@
-function [AuxData,TTLs,BehaviorOffset] = GetOepsAuxChannels(myKsDir, trialstart)
+function [AuxData,TTLs] = GetOepsAuxChannels(myKsDir, BehaviorTrials, varargin)
 
-if nargin<2
-    trialstart = 0; % timestamp at which first trial starts in the behavior file
-end
+%% parse input arguments
+narginchk(1,inf)
+params = inputParser;
+params.CaseSensitive = false;
+params.addParameter('ADC', false, @(x) islogical(x) || x==0 || x==1);
+
+% extract values from the inputParser
+params.parse(varargin{:});
+GetAux = params.Results.ADC;
 
 %% add the relevant repositories to path
 addpath(genpath('/opt/open-ephys-analysis-tools'))
@@ -33,42 +39,47 @@ for i = 1:numel(TTLTypes)
     Off(Off<On(1)) = [];
     On(On>Off(end)) = [];
     temp = [On Off Off-On];
-    % ignore any transitions faster than 0.5 ms - behavior resolution is 2 ms
-    temp(temp(:,3)<0.0005,:) = [];
+    % ignore any transitions faster than 1 ms - behavior resolution is 2 ms
+    temp(temp(:,3)<0.001,:) = [];
     TTLs.(char(Tags(i))) = temp;
 end
 
-% match timestamps to behavior acquisition start
-OepsTrialStart = TTLs.Trial(2,1); % second trial
-% make this the same value as TrialStart in Behvaior
-BehaviorOffset = trialstart - OepsTrialStart;
-for i = 1:numel(TTLTypes)
-    TTLs.(char(Tags(i)))(:,1:2) = TTLs.(char(Tags(i)))(:,1:2) + BehaviorOffset;
+%% mismatch between behavior and oeps trials
+if any(abs(BehaviorTrials(1:5,3)-TTLs.Trial(1:5,3))>=0.01)
+    % case 1 : behavior file has an extra trial
+    if ~any(abs(BehaviorTrials(2:6,3)-TTLs.Trial(1:5,3))>=0.01)
+        % append an extra NaN trial on the Oeps side
+        TTLs.Trial = [NaN*TTLs.Trial(1,:); TTLs.Trial];
+
+    % case 2 : behavior acq started mid-trial, first trial might be a bit shorter 
+    elseif ~any(abs(BehaviorTrials(2:6,3)-TTLs.Trial(2:6,3))>=0.01)
+        % do nothing
+    end
 end
 
-%% Get analog/digital AuxData from Oeps files - for comparison with behavior data
-foo = dir(fullfile(myKsDir,'*_ADC1.continuous')); % pressure sensor
-filename = fullfile(myKsDir,foo.name);
-[Auxdata1, timestamps, ~] = load_open_ephys_data(filename); % data has channel IDs
-foo = dir(fullfile(myKsDir,'*_ADC2.continuous')); % thermistor
-filename = fullfile(myKsDir,foo.name);
-[Auxdata2, ~, ~] = load_open_ephys_data(filename); % data has channel IDs
-
-% adjust for clock offset between open ephys and kilosort
-timestamps = timestamps - offset;
-% adjust for behavior offset
-timestamps = timestamps + BehaviorOffset;
-
-% downsample to behavior resolution
 AuxData = [];
-AuxData(:,1) = 0:1/SampleRate:max(timestamps);
-AuxData(:,2) = interp1q(timestamps,Auxdata1,AuxData(:,1)); % pressure sensor
-AuxData(:,3) = interp1q(timestamps,Auxdata2,AuxData(:,1)); % thermistor
-% create a continuous TrialOn vector
-for MyTrial = 1:size(TTLs.Trial,1)
-    [~,start_idx] = min(abs(AuxData(:,1)-TTLs.Trial(MyTrial,1)));  
-    [~,stop_idx]  = min(abs(AuxData(:,1)-TTLs.Trial(MyTrial,2)));
-    AuxData(start_idx:stop_idx,4) = 1;
+if GetAux
+    %% Get analog/digital AuxData from Oeps files - for comparison with behavior data
+    foo = dir(fullfile(myKsDir,'*_ADC1.continuous')); % pressure sensor
+    filename = fullfile(myKsDir,foo.name);
+    [Auxdata1, timestamps, ~] = load_open_ephys_data(filename); % data has channel IDs
+    foo = dir(fullfile(myKsDir,'*_ADC2.continuous')); % thermistor
+    filename = fullfile(myKsDir,foo.name);
+    [Auxdata2, ~, ~] = load_open_ephys_data(filename); % data has channel IDs
+    
+    % adjust for clock offset between open ephys and kilosort
+    timestamps = timestamps - offset;
+    
+    % downsample to behavior resolution
+    
+    AuxData(:,1) = 0:1/SampleRate:max(timestamps);
+    AuxData(:,2) = interp1q(timestamps,Auxdata1,AuxData(:,1)); % pressure sensor
+    AuxData(:,3) = interp1q(timestamps,Auxdata2,AuxData(:,1)); % thermistor
+    % create a continuous TrialOn vector
+    for MyTrial = 1:size(TTLs.Trial,1)
+        [~,start_idx] = min(abs(AuxData(:,1)-TTLs.Trial(MyTrial,1)));
+        [~,stop_idx]  = min(abs(AuxData(:,1)-TTLs.Trial(MyTrial,2)));
+        AuxData(start_idx:stop_idx,4) = 1;
+    end
 end
-
 end
