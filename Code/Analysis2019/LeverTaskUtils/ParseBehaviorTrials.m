@@ -61,7 +61,7 @@ for thisTrial = 1:length(TrialOn)
     trialflag = 0; % pull down all flags - default it to use all trials
     thisTrialOffset = TrialOffsets(thisTrial);
     
-    if TrialOn(thisTrial)
+    if TrialOn(thisTrial) && ~isnan(thisTrialOffset)
         % extract continuous traces for lever, motor position, licks and sniffs
         % extract 1s before trial ON, and upto 1s before next trial start
         
@@ -110,7 +110,7 @@ for thisTrial = 1:length(TrialOn)
         %% Extract Trial Timestamps
         % w.r.t SessionStart (to go back to raw data if needed)
         thisTrialIdx = [TrialOn(thisTrial) TrialOff(thisTrial)]; %uncorrected
-        thisTrialIdxCorrected = thisTrialIdx + thisTrialOffset;
+        thisTrialIdxCorrected = thisTrialIdx + thisTrialOffset;        
         TrialInfo.SessionIndices(thisTrial,:) = [thisTrialIdx thisTrialIdxCorrected]; % actual session indices - to go back to raw data
         TrialInfo.SessionTimestamps(thisTrial,:) = MyData([thisTrialIdx thisTrialIdxCorrected],1); % actual timestamps of trial start and end
         % w.r.t TrialStart

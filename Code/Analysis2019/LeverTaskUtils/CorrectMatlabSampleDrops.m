@@ -84,7 +84,7 @@ for thisTrial = 1:length(TrialOn)
                 % take the initiation bout thats available
                 OdorStart = 1;
             end
-            disp(['Trial ',num2str(thisTrial),': No valid Initiations found!']);
+            %disp(['Trial ',num2str(thisTrial),': No valid Initiations found!']);
             trialflag(thisTrial) = -1;
         end
         
@@ -92,6 +92,9 @@ for thisTrial = 1:length(TrialOn)
         TrialStartOffsets(thisTrial,1) = Initiations(OdorStart,2) - numel(LeverSnippet);
         OdorStartOffsets(thisTrial,1) = Initiations(OdorStart,1) + TriggerHold - numel(LeverSnippet);
         
+%         if TrialStartOffsets(thisTrial,1) < -1000
+%             keyboard;
+%         end
     else
         TrialStartOffsets(thisTrial,1) = NaN;
         OdorStartOffsets(thisTrial,1) = NaN;
@@ -125,9 +128,31 @@ if numel(find(TrialStartOffsets<-5))>=5
     end
 end
 
+% ignore any very large offsets
+TrialStartOffsets(TrialStartOffsets<-200) = NaN;
+
 plot(TrialStartOffsets,'k');
-Trial.Offsets = [TrialStartOffsets OdorStartOffsets];
+set(gca,'YLim',[-100 0]);
+
+% check if there's just one or two offsets - Rig I
+% in that case, its just due to noise in the lever signal
+% ignore all offsets
+foo = TrialStartOffsets;
+% threshold
+foo(foo>-5) = 0;
+foo(foo<0) = 1;
+% any contiguous stretch of 5 offsets?
+x = [find(diff([0; foo; 0])==1) find(diff([0; foo; 0])==-1)-1];
+Trial.Offsets = any(abs(diff(x,1,2))>5)*[TrialStartOffsets OdorStartOffsets];
+
+if ~any(abs(diff(x,1,2))>5)
+    disp('No Sample drops - Rig 1?');
+else
+    disp('Warning: Sample drops - Rig 2?');
+end
+
 % ValidTrials = ones(thisTrial,1);
 % ValidTrials(find(trialflag)) = trialflag(find(trialflag));
+
 
 end

@@ -27,14 +27,11 @@ do_spikes = params.Results.spikes;
 do_photometry = params.Results.photometry;
 
 %% globals
-global MyFileName;
-global subplotcol;
+% global MyFileName;
 global SampleRate;
 SampleRate = 500; % Samples/second
 global startoffset;
 startoffset = 1; % in seconds
-global OepsTrials
-OepsTrials = []; % Trial timestamps from OEPS - use to correct digital signal drift on rig-II
 
 %% core data extraction (and settings)
 [MyData, MySettings, DataTags] = ReadSessionData(MyFilePath);
@@ -77,7 +74,7 @@ end
 [Traces, TrialInfo, TargetZones] = ParseBehaviorTrials(MyData, MySettings, DataTags, Trials, sessionstart, sessionstop);
 
 %% Align replay and close loop trials using openephys triggers
-if any(diff(MySettings(:,32))== 2) && ~isempty(WhereSpikeFile(MyFileName))
+if do_replay && any(diff(MySettings(:,32))== 2) && ~isempty(WhereSpikeFile(MyFileName))
     [myephysdir] = WhereSpikeFile(MyFileName);
     % get all TTLs for the open ephys session
     [~,TTLs] = GetOepsAuxChannels(myephysdir, Trials.TimeStamps, 'ADC', 0);

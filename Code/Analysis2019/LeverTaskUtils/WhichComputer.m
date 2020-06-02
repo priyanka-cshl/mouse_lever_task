@@ -7,7 +7,7 @@ computername = deblank(computername);
 switch computername
     case 'priyanka-gupta.cshl.edu'
         DataRoot = '/Volumes/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
-    case {'priyanka-gupta.home', 'priyanka-gupta.local'}
+    case {'priyanka-gupta.home', 'priyanka-gupta.local','priyanka-gupta.fios-router.home'}
         if exist('/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior','dir')
             DataRoot = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior'; % local copy
         else
