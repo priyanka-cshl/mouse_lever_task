@@ -1,7 +1,7 @@
 
 %% Script for running behavior related analysis on multiple sessions in a loop
 
-MouseName = 'K4';
+MouseName = 'J4';
 %Options = ['plotsession',0,'chunksession',0,'respiration',0,...
 %           'tuning',0,'replay',0,'spikes',0,'photometry',0]; 
 
@@ -16,7 +16,7 @@ if contains(MouseName,'.mat') % generally unused condition
 else
     DataRoot = fullfile(DataRoot,MouseName);
     % get session files for analysis
-    [FileNames,FilePaths] = uigetfile('.mat','choose one or more session files','MultiSelect','on',DataRoot);
+    [FileNames,FilePaths] = uigetfile('*_r*.mat','choose one or more session files','MultiSelect','on',DataRoot);
     if ~iscell(FileNames)
         temp = FileNames;
         clear FileNames

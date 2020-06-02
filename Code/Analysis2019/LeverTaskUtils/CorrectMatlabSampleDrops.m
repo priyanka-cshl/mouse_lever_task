@@ -116,7 +116,12 @@ if numel(find(TrialStartOffsets<-5))>=5
         f = find(TrialStartOffsets==0,1,'last');
         % check if the offsets in the trial before and after are
         % significantly different from 0
-        if abs(TrialStartOffsets(f-1))>5 && abs(TrialStartOffsets(f+1))
+        if f == numel(TrialStartOffsets) && abs(TrialStartOffsets(f-1))>5
+            % force it to be the same as the trial before
+            TrialStartOffsets(f) = TrialStartOffsets(f-1);
+            OdorStartOffsets(f) = NaN;
+            trialflag(f) = -2;
+        elseif abs(TrialStartOffsets(f-1))>5 && abs(TrialStartOffsets(f+1))
             % force it to be the same as the trial before
             TrialStartOffsets(f) = TrialStartOffsets(f-1);
             OdorStartOffsets(f) = NaN;
@@ -138,6 +143,7 @@ set(gca,'YLim',[-100 0]);
 % in that case, its just due to noise in the lever signal
 % ignore all offsets
 foo = TrialStartOffsets;
+foo(isnan(foo)) = 0;
 % threshold
 foo(foo>-5) = 0;
 foo(foo<0) = 1;
