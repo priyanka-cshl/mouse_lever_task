@@ -6,7 +6,9 @@ MouseName = 'DH1';
 %           'tuning',0,'replay',0,'spikes',0,'photometry',0]; 
 
 %% File selection
-[DataRoot] = WhichComputer(); % load rig specific paths etc
+[Paths] = WhichComputer(); % load rig specific paths etc
+DataRoot = Paths.Behavior;
+
 % Let the user select one or more behavioral files for analysis
 if contains(MouseName,'.mat') % generally unused condition
     foo = strsplit(MouseName,'_');

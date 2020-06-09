@@ -1,4 +1,4 @@
-function [DataRoot,EphysRoot] = WhichComputer()
+function [Paths] = WhichComputer()
 
 % read computer name
 [~,computername] = system('hostname');
@@ -6,21 +6,23 @@ computername = deblank(computername);
 
 switch computername
     case 'priyanka-gupta.cshl.edu'
-        DataRoot = '/Volumes/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
+        Paths.Behavior = '/Volumes/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
     case {'priyanka-gupta.home', 'priyanka-gupta.local','priyanka-gupta.fios-router.home'}
         if exist('/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior','dir')
-            DataRoot = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior'; % local copy
-            EphysRoot = '/Users/Priyanka/Desktop/LABWORK_II/Data/Ephys';
+            Paths.Behavior = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior'; % local copy
+            Paths.Ephys = '/Users/Priyanka/Desktop/LABWORK_II/Data/Ephys';
+            Paths.Code = '/Users/Priyanka/Desktop/github_local';
         else
-            DataRoot = '/Volumes/Albeanu-Norepl/pgupta/Behavior';
+            Paths.Behavior = '/Volumes/Albeanu-Norepl/pgupta/Behavior';
         end
     case 'Priyanka-PC'
-        DataRoot = 'C:\Data\Behavior'; % location on rig computer
+        Paths.Behavior = 'C:\Data\Behavior'; % location on rig computer
     case 'andaman'
-        DataRoot = '/mnt/data/Priyanka/behavior'; % location on rig computer
-        EphysRoot = '/mnt/data/Priyanka';
+        Paths.Behavior = '/mnt/data/Priyanka/behavior'; % location on rig computer
+        Paths.Ephys = '/mnt/data/Priyanka';
+        Paths.Code = '/opt';
     otherwise
-        DataRoot = '//sonas-hs.cshl.edu/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
+        Paths.Behavior = '//sonas-hs.cshl.edu/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
 end
 
 end

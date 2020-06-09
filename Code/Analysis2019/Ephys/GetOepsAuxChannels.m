@@ -11,7 +11,10 @@ params.parse(varargin{:});
 GetAux = params.Results.ADC;
 
 %% add the relevant repositories to path
-addpath(genpath('/opt/open-ephys-analysis-tools'))
+Paths = WhichComputer();
+addpath(genpath([Paths.Code,filesep,'open-ephys-analysis-tools']));
+addpath(genpath([Paths.Code,filesep,'afterphy']));
+
 
 %% defaults
 OepsSampleRate = 30000; % Open Ephys acquisition rate
