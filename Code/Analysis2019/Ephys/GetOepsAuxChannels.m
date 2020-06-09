@@ -42,6 +42,7 @@ for i = 1:numel(TTLTypes)
     Off(Off<On(1)) = [];
     On(On>Off(end)) = [];
     temp = [On Off Off-On];
+    
     % ignore any transitions faster than 1 ms - behavior resolution is 2 ms
     temp(temp(:,3)<0.001,:) = [];
     TTLs.(char(Tags(i))) = temp;
