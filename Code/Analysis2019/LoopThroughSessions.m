@@ -1,7 +1,7 @@
 
 %% Script for running behavior related analysis on multiple sessions in a loop
 
-MouseName = 'J4';
+MouseName = 'DH1';
 %Options = ['plotsession',0,'chunksession',0,'respiration',0,...
 %           'tuning',0,'replay',0,'spikes',0,'photometry',0]; 
 

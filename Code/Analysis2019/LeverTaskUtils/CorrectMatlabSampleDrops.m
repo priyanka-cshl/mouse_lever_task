@@ -121,6 +121,11 @@ if numel(find(TrialStartOffsets<-5))>=5
             TrialStartOffsets(f) = TrialStartOffsets(f-1);
             OdorStartOffsets(f) = NaN;
             trialflag(f) = -2;
+        elseif f == 1
+            % makes no sense to have sample drops on the first trial itself
+            % ignore this offset
+            TrialStartOffsets(f) = 0;
+            OdorStartOffsets(f) = 0;
         elseif abs(TrialStartOffsets(f-1))>5 && abs(TrialStartOffsets(f+1))
             % force it to be the same as the trial before
             TrialStartOffsets(f) = TrialStartOffsets(f-1);

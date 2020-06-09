@@ -3,7 +3,8 @@ foo = strsplit(BehaviorFile,'_');
 mousename = char(foo(1));
 date = char(foo(2));
 datetoken = [date(1:4),'-',date(5:6),'-',date(7:8)];
-root = ['/mnt/data/Priyanka/',mousename,'/'];
+[~,EphysPath] = WhichComputer();
+root = fullfile(EphysPath,mousename);
 myfolders = dir ([root,'/',datetoken,'*']);
 
 if size(myfolders,1) == 0

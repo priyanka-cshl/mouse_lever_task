@@ -1,4 +1,4 @@
-function [DataRoot] = WhichComputer()
+function [DataRoot,EphysRoot] = WhichComputer()
 
 % read computer name
 [~,computername] = system('hostname');
@@ -10,6 +10,7 @@ switch computername
     case {'priyanka-gupta.home', 'priyanka-gupta.local','priyanka-gupta.fios-router.home'}
         if exist('/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior','dir')
             DataRoot = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior'; % local copy
+            EphysRoot = '/Users/Priyanka/Desktop/LABWORK_II/Data/Ephys';
         else
             DataRoot = '/Volumes/Albeanu-Norepl/pgupta/Behavior';
         end
@@ -17,6 +18,7 @@ switch computername
         DataRoot = 'C:\Data\Behavior'; % location on rig computer
     case 'andaman'
         DataRoot = '/mnt/data/Priyanka/behavior'; % location on rig computer
+        EphysRoot = '/mnt/data/Priyanka';
     otherwise
         DataRoot = '//sonas-hs.cshl.edu/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
 end

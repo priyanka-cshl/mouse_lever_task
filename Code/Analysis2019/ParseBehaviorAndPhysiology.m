@@ -81,7 +81,6 @@ if do_replay && any(diff(MySettings(:,32))== 2) && ~isempty(WhereSpikeFile(MyFil
     % Split the long replay trial in the behavior file
     % into individual trials using the Odor TTls in the Oeps file
     [Replay] = ParseReplayTrials(MyData, MySettings, DataTags, TrialInfo, TTLs);
-    AlignBehaviorToOeps(MyData, myephysdir, TS, TrialInfo, Traces, Replay, []);
 end
 
 if do_tuning
