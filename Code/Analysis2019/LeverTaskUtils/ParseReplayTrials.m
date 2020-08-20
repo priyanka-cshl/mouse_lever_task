@@ -1,4 +1,4 @@
-function [Replay] = ParseReplayTrials(MyData, MySettings, DataTags, TrialInfo, TTLs)
+function [Replay, TTLs] = ParseReplayTrials(MyData, MySettings, DataTags, TrialInfo, TTLs)
 
 %% globals
 global SampleRate; % = 500; % samples/second
@@ -34,6 +34,7 @@ if ~isempty(Replay_Starts)
         'TrialON'; ...
         'Rewards'; ...
         'TargetZone'; ...
+        'OdorON';...
         'TimeStamps'};
     
     Replay.ReplayTraceTags       = {'PutativeTrialIdx'; ...
@@ -42,6 +43,7 @@ if ~isempty(Replay_Starts)
         'Encoder'; ...
         'Sniffs'; ...
         'Licks'; ...
+        'SampleNumber';...
         'Rewards'; ...
         'TimeStamps'};
     
@@ -59,9 +61,17 @@ if ~isempty(Replay_Starts)
             
             % trace markers
             start_idx = TrialInfo.SessionIndices(thisTrial,1) - startoffset*SampleRate; % w.r.t. trial ON
-            stop_idx  = TrialInfo.SessionIndices(thisTrial+1,1) - startoffset*SampleRate;
+            stop_idx  = TrialInfo.SessionIndices(thisTrial+1,1) - startoffset*SampleRate - 1;
             offset    = TrialInfo.Offset(thisTrial);
             
+            % get the OdorOn trace using the OdorON info from OEPS
+            OdorOnTrace = MyData(start_idx:stop_idx, TrialCol);
+            OdorOnTrace(OdorOnTrace>0) = 1;
+            OnIdx = find(OdorOnTrace,1,'first');
+            OdorOnIdx = OnIdx - round(TTLs.Trial(thisTrial,4)*SampleRate);
+            OdorOnTrace(OdorOnIdx:OnIdx,:) = 1;
+            OdorOnTrace(find(OdorOnTrace)) = TTLs.Trial(thisTrial,5);
+
             MyTraces = [MyTraces; ...
             i+0*MyData(offset + (start_idx:stop_idx), LeverCol) ...
                 MyData(offset + (start_idx:stop_idx), LeverCol) ...
@@ -72,6 +82,7 @@ if ~isempty(Replay_Starts)
                 MyData(start_idx:stop_idx, TrialCol) ...
                 MyData(start_idx:stop_idx, RewardCol) ...
                 alltargets(TrialInfo.TargetZoneType(thisTrial))+0*MyData(start_idx:stop_idx, LeverCol) ...
+                OdorOnTrace ...
                 MyData(start_idx:stop_idx, 1) ...
                 ];
         end
@@ -118,8 +129,11 @@ if ~isempty(Replay_Starts)
             [~,I] = sort(ValveEvents(:,1));
             ValveEvents = ValveEvents(I,:);
             
+            % store for future analysis of spikes etc
+            TTLs.Replay(thisBlock,thisReplay) = {[[TS(1,1) - startoffset; ValveEvents(1:end-1,2)] ValveEvents(:,2)]};
+
             % define Trial Off times w.r.t. to replay start in OEPS base
-            TrialOff = ValveEvents(:,2) - TS(:,1); % w.r.t. trial start
+            TrialOff = ValveEvents(:,2) - TS(1,1); % w.r.t. trial start
             
             if size(TrialOff,1)>1 % otherwise it was not a replay trial 
                 whichreplay = whichreplay + 1;
@@ -128,7 +142,7 @@ if ~isempty(Replay_Starts)
                 
                 % Get the actual replay trace recorded by MATLAB
                 start_idx = TrialInfo.SessionIndices(trialIdx,1) - startoffset*SampleRate; % w.r.t. trial ON
-                stop_idx  = TrialInfo.SessionIndices(trialIdx+1,1) - startoffset*SampleRate;
+                stop_idx  = TrialInfo.SessionIndices(trialIdx+1,1) - startoffset*SampleRate - 1;
                 offset    = TrialInfo.Offset(trialIdx);
                 
                 MyReplayTrace = [ ...
@@ -138,18 +152,18 @@ if ~isempty(Replay_Starts)
                     MyData(offset + (start_idx:stop_idx), EncoderCol) ...
                     MyData(offset + (start_idx:stop_idx), RespCol) ...
                     MyData(start_idx:stop_idx, LickCol) ...
-                    MyData(start_idx:stop_idx, TrialCol) ...
+                    (start_idx:stop_idx)' - start_idx + 1 ...
                     MyData(start_idx:stop_idx, RewardCol) ...
                     MyData(start_idx:stop_idx, 1) ...
                     ];
                 
-                % initialize a new trace the same size as the closed-loop trace
-                MyAdjustedReplayTrace = NaN*Replay.CloseLoopTraces{thisBlock};
-                MyAdjustedReplayTrace(:,9) = [];
+                % initialize a new trace the same length as the closed-loop trace
+                MyAdjustedReplayTrace = NaN*Replay.CloseLoopTraces{thisBlock}(:,1:9);
                 
                 % patch in samples into this NaN trace by aligning to TrialOFF
                 % time points
                 start_idx = 0;
+                chunking_indices = [];
                 for chunkedTrial = 1:size(Replay.CloseLoopTrialIDs{thisBlock},2)
                     % get the trace to be patched in
                     [~,stop_idx] = min(abs(MyReplayTrace(:,end) - TrialOff(chunkedTrial)));
@@ -168,9 +182,12 @@ if ~isempty(Replay_Starts)
                         patch_start = patch_start + 1;
                     end
                     MyAdjustedReplayTrace(patch_start:trial_off_idx,:) = trace_snippet;
+                    chunking_indices = [chunking_indices; trial_off_idx];
                 end
                 
                 Replay.ReplayTraces(thisBlock,whichreplay) = {MyAdjustedReplayTrace};
+                Replay.ReplayChunks(thisBlock,whichreplay) = {chunking_indices/SampleRate};
+%                 Replay.ReplayTracesOriginal(thisBlock,whichreplay) = {MyReplayTrace};
                 
                 MyReplayIDs = [MyReplayIDs; trialIdx];
             end

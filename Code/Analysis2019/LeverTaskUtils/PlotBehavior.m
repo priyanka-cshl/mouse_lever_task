@@ -1,8 +1,4 @@
-function [] = PlotBehavior(timestamps,Lever,Sniffs,Licks,Rewards,Trial,TZ,timestampsReplay)
-
-if nargin<8
-    timestampsReplay = [];
-end
+function [] = PlotBehavior(timestamps,Lever,Sniffs,Licks,Rewards,Trial,TZ)
 
 %% Plots
 % Trials
@@ -38,31 +34,19 @@ end
 % Lever
 if ~isempty(Lever)
     handles.lever_plot = plot(NaN, NaN,'k');
-    if isempty(timestampsReplay)
-        set(handles.lever_plot,'XData',timestamps,'YData',Lever);
-    else
-        set(handles.lever_plot,'XData',timestampsReplay,'YData',Lever);
-    end
+    set(handles.lever_plot,'XData',timestamps,'YData',Lever);
 end
 
 % Sniffs
 if ~isempty(Sniffs)
     handles.respiration_plot = plot(NaN, NaN,'color',Plot_Colors('r'));
-    if isempty(timestampsReplay)
-        set(handles.respiration_plot,'XData',timestamps,'YData',6.5+ 2*(Sniffs/max(Sniffs)));
-    else
-        set(handles.respiration_plot,'XData',timestampsReplay,'YData',6.5+ 2*(Sniffs/max(Sniffs)));
-    end
+    set(handles.respiration_plot,'XData',timestamps,'YData',6.5+ 2*(Sniffs/max(Sniffs)));
 end
 
 % Rewards
 if ~isempty(Rewards)
     handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.25);
-    if isempty(timestampsReplay)
-        tick_timestamps =  timestamps(Rewards==1);
-    else
-        tick_timestamps =  timestampsReplay(Rewards==1);
-    end
+    tick_timestamps =  timestamps(Rewards==1);
     tick_x = [tick_timestamps'; tick_timestamps'; ...
         NaN(1,numel(tick_timestamps))]; % creates timestamp1 timestamp1 NaN timestamp2 timestamp2..
     tick_x = tick_x(:);
@@ -74,11 +58,7 @@ end
 % Licks
 if ~isempty(Licks)
     handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1); %licks
-    if isempty(timestampsReplay)
-        tick_timestamps =  timestamps(Licks==1);
-    else
-        tick_timestamps =  timestampsReplay(Licks==1);
-    end
+    tick_timestamps =  timestamps(Licks==1);
     tick_x = [tick_timestamps'; tick_timestamps'; ...
         NaN(1,numel(tick_timestamps))]; % creates timestamp1 timestamp1 NaN timestamp2 timestamp2..
     tick_x = tick_x(:);

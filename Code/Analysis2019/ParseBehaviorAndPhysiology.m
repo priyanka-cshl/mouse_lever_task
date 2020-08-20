@@ -4,6 +4,13 @@
 
 function [Traces, TrialInfo] = ParseBehaviorAndPhysiology(MyFilePath, varargin)
 
+%% add the relevant repositories to path
+Paths = WhichComputer();
+addpath(genpath([Paths.Code,filesep,'open-ephys-analysis-tools']));
+addpath(genpath([Paths.Code,filesep,'afterphy']));
+addpath(genpath([Paths.Code,filesep,'spikes']));
+addpath(genpath([Paths.Code,filesep,'npy-matlab']));
+
 %% parse input arguments
 narginchk(1,inf)
 params = inputParser;
@@ -32,6 +39,9 @@ global SampleRate;
 SampleRate = 500; % Samples/second
 global startoffset;
 startoffset = 1; % in seconds
+global savereplayfigs;
+savereplayfigs = 0;
+global whichreplay;
 
 %% core data extraction (and settings)
 [MyData, MySettings, DataTags] = ReadSessionData(MyFilePath);
@@ -73,14 +83,33 @@ end
 [Trials] = CorrectMatlabSampleDrops(MyData, MySettings, DataTags);
 [Traces, TrialInfo, TargetZones] = ParseBehaviorTrials(MyData, MySettings, DataTags, Trials, sessionstart, sessionstop);
 
+%% Get info from the OEPS files if available
+[myephysdir] = WhereSpikeFile(MyFileName);
+% get all TTLs for the open ephys session
+[~,TTLs] = GetOepsAuxChannels(myephysdir, Trials.TimeStamps, 'ADC', 0);
+
+%% Get spikes - label spikes by trials
+if do_spikes
+    SingleUnits = GetSingleUnits(myephysdir);
+    [SingleUnits] = Spikes2Trials(TTLs, SingleUnits);
+    %[SingleUnits, EphysTuningTrials] = Spikes2Trials_Tuning(myephysdir, TS, TrialInfo, MyTuningTrials);
+else
+    SingleUnits = [];
+end
+
 %% Align replay and close loop trials using openephys triggers
 if do_replay && any(diff(MySettings(:,32))== 2) && ~isempty(WhereSpikeFile(MyFileName))
-    [myephysdir] = WhereSpikeFile(MyFileName);
-    % get all TTLs for the open ephys session
-    [~,TTLs] = GetOepsAuxChannels(myephysdir, Trials.TimeStamps, 'ADC', 0);
     % Split the long replay trial in the behavior file
     % into individual trials using the Odor TTls in the Oeps file
-    [Replay] = ParseReplayTrials(MyData, MySettings, DataTags, TrialInfo, TTLs);
+    if ~isempty(TTLs)
+    [Replay, TTLs] = ParseReplayTrials(MyData, MySettings, DataTags, TrialInfo, TTLs);
+    whichreplay = 1;
+    %PlotReplayTrials(Replay, TrialInfo, TargetZones, SingleUnits, TTLs);
+    ProcessReplayTrials(Replay, TrialInfo, TargetZones, SingleUnits, TTLs, 'plotfigures',0,'whichunits', [6:10]);
+    else
+        disp('No Oeps File found: Cannot process replay sessions!');
+    end
+    
 end
 
 if do_tuning
@@ -94,13 +123,12 @@ if do_tuning
 end
 
 if do_spikes
-    %% get Spikes
-    [myephysdir] = WhereSpikeFile(MyFileName);
-    [SingleUnits, EphysTuningTrials] = Spikes2Trials(myephysdir, TS, TrialInfo, MyTuningTrials);
-    
-    if ~isempty(EphysTuningTrials)
-        PlotTuning(SingleUnits, EphysTuningTrials, MyTuningTrials);
-    end
+%     %% get Spikes
+%     [SingleUnits, EphysTuningTrials] = Spikes2Trials(myephysdir, TS, TrialInfo, MyTuningTrials);
+%     
+%     if ~isempty(EphysTuningTrials)
+%         PlotTuning(SingleUnits, EphysTuningTrials, MyTuningTrials);
+%     end
     %PlotReplay(Traces, TrialInfo, TargetZones, Replay, SingleUnits);
     
     

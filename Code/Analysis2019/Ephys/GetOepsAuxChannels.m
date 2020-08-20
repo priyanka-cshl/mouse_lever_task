@@ -10,12 +10,6 @@ params.addParameter('ADC', false, @(x) islogical(x) || x==0 || x==1);
 params.parse(varargin{:});
 GetAux = params.Results.ADC;
 
-%% add the relevant repositories to path
-Paths = WhichComputer();
-addpath(genpath([Paths.Code,filesep,'open-ephys-analysis-tools']));
-addpath(genpath([Paths.Code,filesep,'afterphy']));
-
-
 %% defaults
 OepsSampleRate = 30000; % Open Ephys acquisition rate
 global SampleRate; % Behavior Acquisition rate
@@ -59,6 +53,32 @@ if any(abs(BehaviorTrials(1:5,3)-TTLs.Trial(1:5,3))>=0.01)
     elseif ~any(abs(BehaviorTrials(2:6,3)-TTLs.Trial(2:6,3))>=0.01)
         % do nothing
     end
+end
+
+%% find the odor ON time 
+for i = 1:size(TTLs.Trial,1) % every trial
+     % find the last odor valve ON transition just before this trial start
+     if i > 1
+         t1 = TTLs.Trial(i-1,2);
+     else
+         t1 = 0;
+     end
+     t2 = TTLs.Trial(i,1);
+     
+     ValveEvents = [];
+     for thisOdor = 1:3
+         myEvents = intersect(find(TTLs.(['Odor',num2str(thisOdor)])(:,1)>t1),...
+             find(TTLs.(['Odor',num2str(thisOdor)])(:,1)<t2));
+         myTimeStamps = TTLs.(['Odor',num2str(thisOdor)])(myEvents,:);
+         ValveEvents = vertcat(ValveEvents,...
+             [myTimeStamps thisOdor*ones(numel(myEvents),1)]);
+     end
+     if ~isempty(ValveEvents)
+         [t3,x] = max(ValveEvents(:,1));
+         TTLs.Trial(i,4:5) = [t2-t3 ValveEvents(x,4)];
+     else
+         TTLs.Trial(i,4:5) = [NaN 0];
+     end
 end
 
 AuxData = [];
