@@ -8,6 +8,7 @@ addpath(genpath([Paths.Code,filesep,'open-ephys-analysis-tools']));
 addpath(genpath([Paths.Code,filesep,'afterphy']));
 addpath(genpath([Paths.Code,filesep,'spikes']));
 addpath(genpath([Paths.Code,filesep,'npy-matlab']));
+addpath(genpath([Paths.Code,filesep,'MatlabUtils']));
 
 if nargin<2
     getwaveforms = 0;
