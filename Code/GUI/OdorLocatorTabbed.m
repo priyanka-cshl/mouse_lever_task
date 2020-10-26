@@ -467,10 +467,16 @@ if get(handles.startAcquisition,'value')
             end
             if(handles.Arduino.Port.BytesAvailable == 0)
                 error('arduino: Motor Timer Start did not send confirmation byte')
-            elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==2
-                disp('arduino: Motor Timer Started; SD active');
-            elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==6
-                disp('arduino: Motor Timer Started');
+            else
+                switch handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')
+                    case 2
+                        disp('arduino: Motor Timer Started; SD active');
+                    case 6
+                        disp('arduino: Motor Timer Started');
+                    otherwise
+                        error('arduino sent invalid handshake');
+                end
+                        
             end
         end
 
