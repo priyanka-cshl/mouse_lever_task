@@ -17,12 +17,20 @@ switch computername
         else
             Paths.Behavior = '/Volumes/Albeanu-Norepl/pgupta/Behavior';
         end
+    case 'maddalena'
+        Paths.Behavior = '/mnt/data/Priyanka/Behavior'; % local copy
+        Paths.Ephys = '/mnt/data/Priyanka/Ephys';
+        Paths.Code = '/opt';
     case 'Priyanka-PC'
         Paths.Behavior = 'C:\Data\Behavior'; % location on rig computer
     case 'andaman'
         Paths.Behavior = '/mnt/data/Priyanka/behavior'; % location on rig computer
         Paths.Ephys = '/mnt/data/Priyanka';
         Paths.Code = '/opt';
+    case 'Justine'
+        Paths.Behavior = 'C:\Data\Behavior';
+        Paths.Ephys = '/mnt/data/Priyanka';
+        Paths.Code = 'C:\Users\Rig\Desktop\Code';
     otherwise
         Paths.Behavior = '/Users/Priyanka/Desktop/LABWORK_II/Data/Behavior'; % local copy
             Paths.Ephys = '/Users/Priyanka/Desktop/LABWORK_II/Data/Ephys';
