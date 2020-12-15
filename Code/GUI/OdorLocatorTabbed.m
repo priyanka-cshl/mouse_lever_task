@@ -45,12 +45,20 @@ end
 
 % --- Executes just before OdorLocatorTabbed is made visible.
 function OdorLocatorTabbed_OpeningFcn(hObject, eventdata, handles, varargin)
+% rig specific settings
+handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
+handles.useserver = 1;
+[handles] = RigDefaultParams(handles);
 
 %% GUI Tabs
 %Create tab groupA - motor and odors
 handles.tgroupA = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
     'Position', [0 0 0.14300 0.4500] );
-handles.tabA1 = uitab('Parent', handles.tgroupA, 'Title', 'ClearPathMotor');
+if ~handles.VisualVersion.Value
+    handles.tabA1 = uitab('Parent', handles.tgroupA, 'Title', 'ClearPathMotor');
+else
+    handles.tabA1 = uitab('Parent', handles.tgroupA, 'Title', 'Bar');
+end
 handles.tabA2 = uitab('Parent', handles.tgroupA, 'Title', 'Odors');
 %Place panels into each tab
 set(handles.A1,'Parent',handles.tabA1)
@@ -93,11 +101,6 @@ set(handles.C2,'position',get(handles.C1,'position'));
 handles.output = hObject;
 handles.mfilename = mfilename;
 handles.startAcquisition.Enable = 'off';
-
-% rig specific settings
-handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
-handles.useserver = 1;
-[handles] = RigDefaultParams(handles);
 
 % load mouse specific settings
 handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
@@ -289,26 +292,29 @@ UpdateAllPlots(hObject,eventdata,handles)
 calibrate_DAC_Callback(hObject,eventdata,handles);
 ZoneLimitSettings_CellEditCallback(hObject,eventdata,handles); % auto calls Send2Arduino
 
-% Zero MFCs
-if ~isempty(handles.MFC)
-    Zero_MFC_Callback(hObject, eventdata, handles);
-end
-
-% set up odors
-handles.Odor_list.Value = 1; % only blank vial
-handles.odor_vial.Value = 1;
-odor_vial_Callback(hObject, eventdata, handles);
-handles.odor_to_manifold.Value = 1;
-handles.air_to_manifold.Value = 0;
-handles.Vial0.Value = 1;
-handles.Vial1.Value = 0;
-handles.Vial2.Value = 0;
-handles.Vial3.Value = 0;
-Vial2Manifold_Callback(hObject, eventdata, handles);
+if ~handles.VisualVersion.Value
+    % Zero MFCs
+    if ~isempty(handles.MFC)
+        Zero_MFC_Callback(hObject, eventdata, handles);
+    end
+    
+    % set up odors
+    handles.Odor_list.Value = 1; % only blank vial
+    handles.odor_vial.Value = 1;
+    odor_vial_Callback(hObject, eventdata, handles);
+    handles.odor_to_manifold.Value = 1;
+    handles.air_to_manifold.Value = 0;
+    handles.Vial0.Value = 1;
+    handles.Vial1.Value = 0;
+    handles.Vial2.Value = 0;
+    handles.Vial3.Value = 0;
+    Vial2Manifold_Callback(hObject, eventdata, handles);
+end  
 
 % disable motor override
 handles.motor_override.Value = 0;
 motor_override_Callback(hObject, eventdata, handles);
+
 handles.startAcquisition.Enable = 'on';
 warning('off','MATLAB:callback:error');
 
@@ -418,24 +424,26 @@ if get(handles.startAcquisition,'value')
         set(handles.lickpiezo_plot,'XData',NaN,'YData',NaN);
         set(handles.lick_plot,'XData',NaN,'YData',NaN);
         
-        % turn ON MFCs
-        if ~isempty(handles.MFC)
-            handles.Zero_MFC.Value = 1;
-            handles.Zero_MFC.String = 'MFCs OFF';
-            Zero_MFC_Callback(hObject, eventdata, handles);
+        if ~handles.VisualVersion.Value
+            % turn ON MFCs
+            if ~isempty(handles.MFC)
+                handles.Zero_MFC.Value = 1;
+                handles.Zero_MFC.String = 'MFCs OFF';
+                Zero_MFC_Callback(hObject, eventdata, handles);
+            end
+            
+            % open odor vials
+            handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
+            handles.odor_vial.Value = 1;
+            odor_vial_Callback(hObject, eventdata, handles);
+            handles.odor_to_manifold.Value = 1;
+            handles.air_to_manifold.Value = 0;
+            handles.Vial0.Value = 1;
+            handles.Vial1.Value = 0;
+            handles.Vial2.Value = 0;
+            handles.Vial3.Value = 0;
+            Vial2Manifold_Callback(hObject, eventdata, handles);
         end
-        
-        % open odor vials
-        handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
-        handles.odor_vial.Value = 1;
-        odor_vial_Callback(hObject, eventdata, handles);
-        handles.odor_to_manifold.Value = 1;
-        handles.air_to_manifold.Value = 0;
-        handles.Vial0.Value = 1;
-        handles.Vial1.Value = 0;
-        handles.Vial2.Value = 0;
-        handles.Vial3.Value = 0;
-        Vial2Manifold_Callback(hObject, eventdata, handles);
         
         % disable/enable controls
         handles.calibrate_transfer_function.Enable = 'on';
@@ -445,13 +453,15 @@ if get(handles.startAcquisition,'value')
         handles.CleaningRoutine.Enable = 'off';
         handles.TFtype.Enable = 'off';
         
-        % update motor stepsize 
-        % different for fixgain (stepsize = 2) vs. variable gain (stepsize = 1)
-        handles.Arduino.write(73 + handles.TFtype.Value,'uint16');
-        %handles.Arduino.write(73);
-        
+        if ~handles.VisualVersion.Value
+            % update motor stepsize
+            % different for fixgain (stepsize = 2) vs. variable gain (stepsize = 1)
+            handles.Arduino.write(73 + handles.TFtype.Value,'uint16');
+            %handles.Arduino.write(73);
+        end
         % Calibrate Rotary encoder
         handles = CalibrateRotaryEncoder(handles);
+        
         % disable motor override
         handles.motor_override.Value = 0;
         motor_override_Callback(hObject, eventdata, handles);

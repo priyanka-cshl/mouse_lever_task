@@ -117,6 +117,9 @@ switch char(handles.computername)
         % HomeSensor type
         handles.fliphome = 1;
         
+        % visual version
+        handles.VisualVersion.Value = 0;
+        
         % Photometry 
         handles.Photometry.Value = 0;
         handles.PhotometryParams.Data = [5000 211 531 0.6 0.6];
@@ -140,6 +143,9 @@ switch char(handles.computername)
         
         % HomeSensor type
         handles.fliphome = 1;
+        
+        % visual trials
+        handles.VisualVersion.Value = 1;
         
         % Photometry 
         handles.Photometry.Value = 0;

@@ -2,7 +2,7 @@ function [Arduino_Serial]=configure_ArduinoMain(handles)
 
 % rig specific settings
 switch char(handles.computername)
-    case {'PRIYANKA-HP','JUSTINE'}
+    case {'PRIYANKA-HP','JUSTINE','LAWRENCE'}
         DueCOMPort = 3;
         
     case 'PRIYANKA-PC'
