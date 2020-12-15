@@ -29,6 +29,10 @@ switch computername
         Paths.Behavior = 'C:\Data\Behavior';
         Paths.Ephys = '/mnt/data/Priyanka';
         Paths.Code = 'C:\Users\Rig\Desktop\Code';
+    case 'PRIYANKA-HP'
+        Paths.Behavior = 'C:\Data\Behavior';
+        Paths.Ephys = '/mnt/data/Priyanka';
+        Paths.Code = 'C:\Users\pgupta\Desktop\Git_Local';
     otherwise
         Paths.Behavior = '//sonas-hs.cshl.edu/Albeanu-Norepl/pgupta/Behavior'; % location on sonas server
 end
