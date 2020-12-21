@@ -298,13 +298,7 @@ void loop()
     SPIWriter(dac_spi_pin, map(motor_location, 0, 255, 0, 65534));
     stimulus_state[1] = motor_location;
   }
-  
-  // if visual version, force stimulus state to 0
-  if (param_array[0] == 5)
-  {
-    stimulus_state[1] = air_valve_state*stimulus_state[1] - 10;
-  }
-  
+    
   if (close_loop_mode)
   {
 
@@ -1111,7 +1105,8 @@ void MoveMotor()
       }
       else
       {
-        I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
+        
+        I2Cwriter(motor1_i2c_address, air_valve_state*(10 + stimulus_state[1]));
         if (replay_flag == 2)
         {
           // write to SD file
