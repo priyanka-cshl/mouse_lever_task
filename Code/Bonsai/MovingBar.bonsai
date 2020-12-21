@@ -18,7 +18,7 @@
           <io:StopBits>One</io:StopBits>
           <io:Handshake>None</io:Handshake>
           <io:DiscardNull>false</io:DiscardNull>
-          <io:DtrEnable>false</io:DtrEnable>
+          <io:DtrEnable>true</io:DtrEnable>
           <io:RtsEnable>false</io:RtsEnable>
           <io:ReadBufferSize>4096</io:ReadBufferSize>
           <io:WriteBufferSize>2048</io:WriteBufferSize>

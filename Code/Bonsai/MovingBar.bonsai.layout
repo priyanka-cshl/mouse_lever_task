@@ -15,10 +15,10 @@
     <WindowState>Normal</WindowState>
   </DialogSettings>
   <DialogSettings>
-    <Visible>false</Visible>
+    <Visible>true</Visible>
     <Location>
-      <X>78</X>
-      <Y>78</Y>
+      <X>1136</X>
+      <Y>475</Y>
     </Location>
     <Size>
       <Width>336</Width>
