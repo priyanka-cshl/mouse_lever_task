@@ -59,7 +59,7 @@ end
 
 % hack plot colors
 % defaults
-if h.VisualAirTrials.Value || h.VisualOnlyTrials.Value
+if h.VisualVersion.Value
     h.trial_on_1.FaceColor = [0.9900 0.9200 0.8000];
     h.trial_on_2.FaceColor = [0.9900 0.9200 0.8000];
     h.trial_on_3.FaceColor = [0.9900 0.9200 0.8000];
@@ -102,7 +102,7 @@ if h.current_trial_block.Data(3) ~= 1
     if h.VisualAirTrials.Value
         param(1) = 4;
         h.current_trial_block.Data(3) = 2;
-    elseif h.VisualOnlyTrials.Value
+    elseif h.VisualVersion.Value
         param(1) = 5;
         h.current_trial_block.Data(3) = 2;
     end
@@ -112,7 +112,7 @@ elseif h.current_trial_block.Data(3) == 1 && h.which_perturbation.Value == 2
     if h.VisualAirTrials.Value
         param(1) = 4;
         %h.current_trial_block.Data(3) = 2;
-    elseif h.VisualOnlyTrials.Value
+    elseif h.VisualVersion.Value
         param(1) = 5;
         %h.current_trial_block.Data(3) = 2;
     end

@@ -5,6 +5,9 @@ switch char(handles.computername)
     case {'PRIYANKA-HP','JUSTINE','BALTHAZAR'}
         DueCOMPort = 3;
         
+    case {'LAWRENCE'}
+        DueCOMPort = 7;
+        
     case 'PRIYANKA-PC'
         DueCOMPort = 4;
         
