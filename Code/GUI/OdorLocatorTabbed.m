@@ -95,7 +95,8 @@ handles.mfilename = mfilename;
 handles.startAcquisition.Enable = 'off';
 
 % rig specific settings
-handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
+%handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
+handles.computername = getenv('COMPUTERNAME');
 handles.useserver = 1;
 [handles] = RigDefaultParams(handles);
 
