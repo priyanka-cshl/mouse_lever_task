@@ -157,10 +157,9 @@ void FindHome(bool which_direction)
 
 void loop ()
 {
-//Serial.println(motor_positions);
+  Serial.println(motor_positions);
   if (Wire_received > 0) //edited
   {
-    Serial.println(motor_positions);
     //value_received = motor_positions[readpointer];
     value_received = motor_positions;
     //Serial.println(value_received);
