@@ -5,7 +5,12 @@
 #include <DueTimer.h> // Import the ArCOM library
 #include "ArCOM.h"
 #include "openlooptrialstates.h" // function to process open loop trial states 13.02.18
+#include <SD.h> // for open loop
 // ----------------------------------------------------------------------------
+
+// set up variables using the SD utility library functions:
+const int SDSelect = 24; // SS pin for the SD card
+File mySDFile;
 
 // ---- initialize function calls ---------------------------------------------
 trialstates trialstates;
@@ -30,7 +35,7 @@ int odor_valves_3way[] = {33, 27, 29, 31}; // {29, 23, 25, 27} on rig1
 int dac_spi_pin = 22;
 const byte SDA_pin = 20;
 const byte SCL_pin = 21;
-int motor1_i2c_address = 7;
+int motor1_i2c_address = 0x13;
 
 //variables : lever related
 long lever_position = 0L;
@@ -973,7 +978,14 @@ void MoveMotor()
     }
     else
     {
-      I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
+      if (param_array[0]==5)
+      {
+        I2Cwriter(motor1_i2c_address, air_valve_state*(10 + stimulus_state[1]));
+      }
+      else
+      {
+        I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
+      }
     }
   }
 
