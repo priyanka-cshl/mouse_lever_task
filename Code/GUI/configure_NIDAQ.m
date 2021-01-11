@@ -2,7 +2,7 @@ function [NI_session, MFC_session, Channels, NIchannels, Photometry_session]=con
 
 % rig specific settings
 switch char(handles.computername)
-    case {'marbprec', 'PRIYANKA-HP','JUSTINE','LAWRENCE'}
+    case {'marbprec', 'PRIYANKA-HP','JUSTINE','BALTHAZAR','LAWRENCE'}
         DeviceName = 'Dev2';
         if handles.PIDMode.Value
             Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','Thermistor','Respiration','PID'};
