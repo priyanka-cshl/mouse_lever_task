@@ -86,8 +86,8 @@ plot(zero_crossings, respData_filtered(zero_crossings),'og');
 % filter the thermistor data
 sr = 500;   % sampling rate
 nqf = sr/2; % Nyquist freq.
-[b,a] = butter(3,[1 30]/nqf,'bandpass');   % Butterworth filter
-ThermistorFiltered = filter(b,a,Thermistor);  % filter
+[b,a] = butter(3,[0.1 30]/nqf,'bandpass');   % Butterworth filter
+ThermistorFiltered = filter(b,a,Thermistor);  % filtez
 
 figure;
 plot(ThermistorFiltered);
@@ -143,18 +143,47 @@ figure;
 histogram(closest_neighbor);
 % 16 is the median offset
 
+%% plot the other way
+figure;
+plot(respData_filtered);
+hold on;
+plot(therm_locs_1,respData_filtered(therm_locs_1),'+r');
+plot(therm_locs_2,respData_filtered(therm_locs_2),'+b');
+plot(locs_1,respData_filtered(locs_1),'or');
+plot(locs_2,respData_filtered(locs_2),'ob');
+plot(therm_locs_2-16,respData_filtered(therm_locs_2-16),'*b');
+plot(zero_crossings, respData_filtered(zero_crossings),'og');
+
 %% look at the inhalation start
-% 
-% therm_smoothed = smoothdata(ThermistorFiltered);
-% 
-% zci2 = @(v) find(diff(v) < -0.0005);
-% therm_diff_zci = zci2(diff(therm_smoothed));
-% 
-% figure;
-% plot(ThermistorFiltered);
-% hold on;
-% plot(diff(therm_smoothed));
-% plot(therm_diff_zci, ThermistorFiltered(therm_diff_zci), '+g');
-% plot(therm_locs_1,therm_pks_1,'+r');
-% plot(therm_locs_2,-therm_pks_2,'+b');
-% plot(zero_crossings, ThermistorFiltered(zero_crossings),'og');
+
+% filter the thermistor data
+sr = 500;   % sampling rate
+nqf = sr/2; % Nyquist freq.
+[b,a] = butter(3,[0.1 30]/nqf,'bandpass');   % Butterworth filter
+ThermistorFiltered = filter(b,a,Thermistor);  % filtez
+
+% zci_therm = @(v) find(diff(v) < -0.001);
+% therm_locs_3 = zci_therm(ThermistorFiltered);
+
+[therm_pks_3,therm_locs_3,therm_w_3,therm_p_3] = findpeaks(ThermistorFiltered, 'MinPeakProminence', 0.02, 'MinPeakDistance', 20);
+
+figure;
+plot(ThermistorFiltered);
+hold on;
+plot(diff(ThermistorFiltered));
+plot(therm_locs_3, ThermistorFiltered(therm_locs_3), '+k');
+plot(therm_locs_1,therm_pks_1,'+r');
+plot(therm_locs_2,-therm_pks_2,'+b');
+plot(zero_crossings, ThermistorFiltered(zero_crossings),'og');
+
+closest_neighbor = zeros(1, length(zero_crossings));
+for i = 1:length(zero_crossings)
+    dist = zeros(1, length(therm_locs_3));
+    for j = 1:length(therm_locs_3)
+        dist(j) = abs(zero_crossings(i)-therm_locs_3(j));
+    end
+    closest_neighbor(i) = min(dist);
+end
+
+figure;
+histogram(closest_neighbor, 100);
