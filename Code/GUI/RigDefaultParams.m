@@ -107,7 +107,7 @@ switch char(handles.computername)
         % Plots
         handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.1 NaN NaN]; % gains
         handles.PlotSettings.Data(:,2) = [NaN 0 6.5 3 7.0 NaN NaN]; % gains
-        handles.PlotToggles.Data(:,1) = logical([0 1 1 1 1 1 1]);
+        handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
         
         % Rewards
         handles.watercoeffs = [0.0009982 0.1313 0.3161]; % water per drop
@@ -123,42 +123,18 @@ switch char(handles.computername)
         % Photometry 
         handles.Photometry.Value = 0;
         handles.PhotometryParams.Data = [5000 211 531 0.6 0.6];
-    
-    case {'JUSTINE'} % Rig2
-        
-        handles.useserver = 1; % change to zero if there's a network issue
-        
-        % sensors and scaling
-        handles.DAC_settings.Data = [2.0 2.15]';
-        
-        % Plots
-        handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.1 NaN NaN]; % gains
-        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 3 7.0 NaN NaN]; % gains
-        handles.PlotToggles.Data(:,1) = logical([0 1 1 1 1 1 1]);
-        
-        % Rewards
-        handles.watercoeffs = [0.0009982 0.1313 0.3161]; % water per drop
-        handles.RewardControls.Data = [35 5 50 100 200]'; % reward: time-I, time-II, IRI, hold-II, trial-off-lag
-        handles.MultiRewards.Value = 1;
-        
-        % HomeSensor type
-        handles.fliphome = 1;
-        
-        % Photometry 
-        handles.Photometry.Value = 0;
-        handles.PhotometryParams.Data = [5000 211 531 0.6 0.6];
-        
+          
     case {'BALTHAZAR'} % Rig 3 - visual
         
         handles.useserver = 1; % change to zero if there's a network issue
         
         % sensors and scaling
-        handles.DAC_settings.Data = [2.0 2.15]';
+        handles.DAC_settings.Data = [2.05 2.05]';
         
         % Plots
         handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.1 NaN NaN]; % gains
         handles.PlotSettings.Data(:,2) = [NaN 0 6.5 3 7.0 NaN NaN]; % gains
-        handles.PlotToggles.Data(:,1) = logical([0 1 1 1 1 1 1]);
+        handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
         
         % Rewards
         handles.watercoeffs = [0.0009982 0.1313 0.3161]; % water per drop
@@ -169,7 +145,7 @@ switch char(handles.computername)
         handles.fliphome = 1;
         
         % visual trials
-        handles.VisualVersion.Value = 1;
+        handles.VisualVersion.Value = 0;
         
         % Photometry 
         handles.Photometry.Value = 0;
