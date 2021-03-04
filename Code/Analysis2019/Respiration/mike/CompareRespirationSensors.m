@@ -1,4 +1,4 @@
-FileName = '/Users/xizheng/Documents/florin/Therm3/Therm3_20190928_r0.mat';
+FileName = '/Users/xizheng/Documents/florin/respiration/Therm3/Therm3_20190928_r0.mat';
 
 %% load the file
 Temp = load(FileName,'session_data');
@@ -113,6 +113,8 @@ plot(zero_crossings, ThermistorFiltered(zero_crossings),'og');
 % title("valleys");
 % % 0.04 seems like a good choice
 
+ThermistorFiltered = smoothdata(ThermistorFiltered, 'movmean', 13);
+
 [therm_pks_1,therm_locs_1,therm_w_1,therm_p_1] = findpeaks(ThermistorFiltered, 'MinPeakProminence', 0.04, 'MinPeakDistance', 20);
 
 ThermistorFiltered_inv = -ThermistorFiltered;
@@ -165,13 +167,15 @@ ThermistorFiltered = filter(b,a,Thermistor);  % filtez
 % zci_therm = @(v) find(diff(v) < -0.001);
 % therm_locs_3 = zci_therm(ThermistorFiltered);
 
+ThermistorFiltered = smoothdata(ThermistorFiltered, 'movmean', 13);
+
 [therm_pks_3,therm_locs_3,therm_w_3,therm_p_3] = findpeaks(ThermistorFiltered, 'MinPeakProminence', 0.02, 'MinPeakDistance', 20);
 
 figure;
 plot(ThermistorFiltered);
 hold on;
 plot(diff(ThermistorFiltered));
-plot(therm_locs_3, ThermistorFiltered(therm_locs_3), '+k');
+plot(therm_locs_3, ThermistorFiltered(therm_locs_3), '+g');
 plot(therm_locs_1,therm_pks_1,'+r');
 plot(therm_locs_2,-therm_pks_2,'+b');
 plot(zero_crossings, ThermistorFiltered(zero_crossings),'og');
