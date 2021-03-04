@@ -187,7 +187,7 @@ handles.trial_on_4.EdgeColor = 'none';
 handles.lever_DAC_plot = plot(NaN, NaN,'k','linewidth',1); %lever rescaled
 handles.lever_raw_plot = plot(NaN, NaN, 'color',Plot_Colors('b')); %lever raw
 handles.stimulus_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor location (rotary encoder)
-handles.thermistor_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor location (rotary encoder)
+handles.thermistor_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % target odor location (rotary encoder)
 handles.in_target_zone_plot = fill(NaN,NaN,Plot_Colors('r'));
 handles.in_target_zone_plot.EdgeColor = 'none';
 handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
@@ -201,6 +201,7 @@ handles.targetzone = fill(NaN,NaN,[1 1 0],'FaceAlpha',0.2);
 handles.targetzone.EdgeColor = 'none';
 handles.fake_target_plot = plot(NaN, NaN, 'color',[.7 .7 .7]);
 handles.minlim = plot(NaN, NaN, 'k','LineStyle',':'); % lower limit of lever range (trigger Off)
+handles.maxlim = plot(NaN, NaN, 'k','LineStyle',':'); % lower limit of lever range (trigger Off)
 
 % currently unused plots
 handles.respiration_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % respiration sensor 1
@@ -241,7 +242,7 @@ handles.camera_available = 0;
 if ~isempty(webcamlist)
     
     switch char(handles.computername)
-       case {'JUSTINE'}
+       case {'JUSTINE','BALTHAZAR'}
             handles.mycam = webcam(1);% {'logitech'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
             handles.camera_available = 1;
