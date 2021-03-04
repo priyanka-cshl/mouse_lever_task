@@ -1,4 +1,16 @@
-FileName = '/Users/xizheng/Documents/florin/Therm3/Therm3_20190927_r0.mat';
+FileName = '/Users/xizheng/Documents/florin/respiration/Therm2/Therm2_20190905_r0.mat';
+
+disp(FileName);
+
+% Therm3/Therm3_20190929_r0.mat
+% Therm3/Therm3_20190928_r0.mat
+% Therm3/Therm3_20190927_r0.mat
+% Therm2/Therm2_20190908_r0.mat
+% Therm2/Therm2_20190906_r0.mat
+% Therm2/Therm2_20190907_r0.mat
+% Therm2/Therm2_20190904_r2.mat
+% Therm2/Therm2_20190905_r0.mat
+
 
 %% load the file
 Temp = load(FileName,'session_data');
@@ -50,6 +62,8 @@ nqf = sr/2; % Nyquist freq.
 [b,a] = butter(3,[0.1 30]/nqf,'bandpass');   % Butterworth filter
 ThermistorFiltered = filter(b,a,Thermistor);  % filtez
 
+ThermistorFiltered = smoothdata(ThermistorFiltered, 'movmean', 13);
+
 [therm_pks_1,therm_locs_1,therm_w_1,therm_p_1] = findpeaks(ThermistorFiltered, 'MinPeakProminence', 0.04, 'MinPeakDistance', 20);
 [therm_pks_2,therm_locs_2,therm_w_2,therm_p_2] = findpeaks(-ThermistorFiltered, 'MinPeakProminence', 0.04, 'MinPeakDistance', 20);
 
@@ -61,7 +75,7 @@ plot(locs_1,respData_filtered(locs_1),'or', 'DisplayName','peak pressure');
 plot(locs_2,respData_filtered(locs_2),'ob', 'DisplayName','valley pressure');
 plot(zero_crossings, respData_filtered(zero_crossings),'og', 'DisplayName','zci pressure');
 plot(therm_locs_2-21, respData_filtered(therm_locs_2-21),'*b', 'DisplayName','valley therm infer');
-plot(therm_locs_1-6, respData_filtered(therm_locs_1-6),'*g', 'DisplayName','zci therm infer');
+plot(therm_locs_1-5, respData_filtered(therm_locs_1-5),'*g', 'DisplayName','zci therm infer');
 legend;
 
 
@@ -79,21 +93,25 @@ for i = 1:length(locs_2)
 end
 
 figure;
-title('valley pressure vs. therm infer');
 histogram(closest_neighbor_valley, 100);
+title(sprintf('valley pressure vs. therm infer (mean:%.2f, median:%.2f, sd:%.2f)', mean(closest_neighbor_valley), median(closest_neighbor_valley), std(closest_neighbor_valley)));
+
+fprintf('valley pressure vs. therm infer (mean:%.2f, median:%.2f, sd:%.2f)\n', mean(closest_neighbor_valley), median(closest_neighbor_valley), std(closest_neighbor_valley));
+
 
 closest_neighbor_zci = zeros(1, length(zero_crossings));
 for i = 1:length(zero_crossings)
     dist = zeros(1, length(therm_locs_1));
     for j = 1:length(therm_locs_1)
-        dist(j) = abs(zero_crossings(i)-(therm_locs_1(j)-6));
+        dist(j) = abs(zero_crossings(i)-(therm_locs_1(j)-5));
     end
     [minval, argmin] = min(dist);
-    closest_neighbor_zci(i) = zero_crossings(i)-(therm_locs_1(argmin)-6);
+    closest_neighbor_zci(i) = zero_crossings(i)-(therm_locs_1(argmin)-5);
 end
 
 figure;
-title('zci pressure vs. therm infer');
 histogram(closest_neighbor_zci, 100);
+title(sprintf('zci pressure vs. therm infer (mean:%.2f, median:%.2f, sd:%.2f)\n', mean(closest_neighbor_zci), median(closest_neighbor_zci), std(closest_neighbor_zci)));
 
+fprintf('zci pressure vs. therm infer (mean:%.2f, median:%.2f, sd:%.2f)\n', mean(closest_neighbor_zci), median(closest_neighbor_zci), std(closest_neighbor_zci));
 
