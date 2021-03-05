@@ -284,7 +284,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="StringProperty">
-                <Value>/CamB.avi</Value>
+                <Value>_camB.avi</Value>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
@@ -341,7 +341,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="StringProperty">
-                <Value>/CamA.avi</Value>
+                <Value>_camA.avi</Value>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
@@ -399,7 +399,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="StringProperty">
-                <Value>K4</Value>
+                <Value>Test</Value>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
