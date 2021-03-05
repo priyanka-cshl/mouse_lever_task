@@ -347,9 +347,9 @@ h.motor_location.YData = MapRotaryEncoderToTFColorMap(h,mean(event.Data(:,3)));
 
 % respiration sensors
 set(h.thermistor_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    h.PlotSettings.Data(4,1)*TotalData(indices_to_plot,4) + h.PlotSettings.Data(4,2) );
-set(h.respiration_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    h.PlotSettings.Data(3,1)*TotalData(indices_to_plot,5) + h.PlotSettings.Data(3,2) );
+    h.PlotSettings.Data(4,1)*TotalData(indices_to_plot,5) + h.PlotSettings.Data(4,2) );
+% set(h.respiration_plot,'XData',TotalTime(indices_to_plot),'YData',...
+%     h.PlotSettings.Data(3,1)*TotalData(indices_to_plot,5) + h.PlotSettings.Data(3,2) );
 set(h.lickpiezo_plot,'XData',TotalTime(indices_to_plot),'YData',...
     h.PlotSettings.Data(5,1)*TotalData(indices_to_plot,6) + h.PlotSettings.Data(5,2) );
 set(h.homesensor_plot,'XData',TotalTime(indices_to_plot),'YData', 5 + 0.5*TotalData(indices_to_plot,h.Channels.homesensor_channel));
@@ -416,7 +416,7 @@ end
 %% write data to disk
 data = [TotalTime(end-num_new_samples+1:end) TotalData(end-num_new_samples+1:end,:)]';
 data(h.Channels.trial_channel+1,:) = odorID*data(h.Channels.trial_channel+1,:);
-% rescale stimulus position plot (save it in distractor location column)
+% rescale stimulus position plot (save it in stimulus_location_scaled column)
 data(5,:) = MapRotaryEncoderToTFColorMap(h,data(4,:),1);
 fwrite(fid1,data,'double');
 

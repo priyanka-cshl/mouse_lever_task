@@ -561,10 +561,10 @@ else
        disp('arduino: Motor Timer Stopped');
    end
    
-   % close odor vials
-   handles.Odor_list.Value = 1;
-   handles.odor_vial.Value = 1;
-   odor_vial_Callback(hObject, eventdata, handles);
+   % leave odor vials ON - to prevent odor backflow
+%    handles.Odor_list.Value = 1;
+%    handles.odor_vial.Value = 1;
+%    odor_vial_Callback(hObject, eventdata, handles);
    handles.odor_to_manifold.Value = 1;
    handles.air_to_manifold.Value = 0;
    handles.Vial0.Value = 1;

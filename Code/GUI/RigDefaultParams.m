@@ -18,10 +18,13 @@ handles.TrialSettings.Data = [4.8 0.2 200 100 5000 500]'; % trial highlim, trial
 handles.adaptive_holds.Value = 1;
 handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
 handles.odor_priors.Value = 0;
+handles.odor_priors.Enable = 'off';
 handles.which_perturbation.Value = 1; % no perturbations
 handles.openloop = 0; % Run in close-loop mode
 handles.AdaptiveTrigger.Value = 1;
+handles.AdaptiveTrigger.Enable = 'off';
 handles.OdorSequence.Value = 1;
+handles.OdorSequence.Enable = 'off';
 handles.OpenLoopSettings.Value = 1; % normal close loop mode
 
 % start by default in normal close loop mode
@@ -39,13 +42,14 @@ handles.target_level_array.Data = handles.all_targets(find(handles.TargetsActive
 handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
 handles.ZoneLimitSettings.Data(3) = min(handles.target_level_array.Data);
 handles.PseudoRandomZones.Value = 1;
+handles.PseudoRandomZones.Enable = 'off';
 
 % Transfer function
 handles.calibrate_transfer_function.Enable = 'off'; % disable transfer function calibrator
 handles.locations_per_zone.Data = [20 0 60]'; % TF - locations per zone
 handles.TFtype.Value = 1; % 1 = fix speed, 0 = fixed start
-handles.TFtype.Enable = 'on';
 handles.TFgain.Data = 1;
+handles.TFtype.Enable = 'off';
 
 % manifold and motor
 handles.MotorLocations = 115; % currently used for variable gain
@@ -119,6 +123,8 @@ switch char(handles.computername)
         
         % visual version
         handles.VisualVersion.Value = 0;
+        handles.VisualAirTrials.Visible = 'off';
+        handles.VisualOnlyTrials.Visible = 'off';
         
         % Photometry 
         handles.Photometry.Value = 0;
@@ -146,6 +152,8 @@ switch char(handles.computername)
         
         % visual trials
         handles.VisualVersion.Value = 0;
+        handles.VisualAirTrials.Visible = 'off';
+        handles.VisualOnlyTrials.Visible = 'off';
         
         % Photometry 
         handles.Photometry.Value = 0;
