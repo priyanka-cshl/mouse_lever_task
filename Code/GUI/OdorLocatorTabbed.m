@@ -297,7 +297,7 @@ if ~isempty(handles.MFC)
 end
 
 % set up odors
-handles.Odor_list.Value = 1; % only blank vial
+handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors %1; % only blank vial
 handles.odor_vial.Value = 1;
 odor_vial_Callback(hObject, eventdata, handles);
 handles.odor_to_manifold.Value = 1;

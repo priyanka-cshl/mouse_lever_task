@@ -384,7 +384,7 @@ else
    motor_toggle_Callback(hObject, eventdata, handles);
    
    % close odor vials
-   handles.odor_vial.Value = 0;
+   handles.odor_vial.Value = 1;
    odor_vial_Callback(hObject, eventdata, handles);
    
    % stop the Arduino timer

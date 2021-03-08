@@ -26,6 +26,7 @@ handles.AdaptiveTrigger.Enable = 'off';
 handles.OdorSequence.Value = 1;
 handles.OdorSequence.Enable = 'off';
 handles.OpenLoopSettings.Value = 1; % normal close loop mode
+handles.TuningCurves.String = '<html>Tuning<br />Curves</html>';
 
 % start by default in normal close loop mode
 handles.OpenLoopSettings.Value = 1;
@@ -135,7 +136,7 @@ switch char(handles.computername)
         handles.useserver = 1; % change to zero if there's a network issue
         
         % sensors and scaling
-        handles.DAC_settings.Data = [2.05 2.05]';
+        handles.DAC_settings.Data = [2.00 2.15]';
         
         % Plots
         handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.1 NaN NaN]; % gains
