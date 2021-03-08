@@ -111,7 +111,7 @@ switch char(handles.computername)
         
         % Plots
         handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.1 NaN NaN]; % gains
-        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 3 7.0 NaN NaN]; % gains
+        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 3 7.0 NaN NaN]; % offsets
         handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
         
         % Rewards
@@ -144,7 +144,7 @@ switch char(handles.computername)
         handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
         
         % Rewards
-        handles.watercoeffs = [0.0009982 0.1313 0.3161]; % water per drop
+        handles.watercoeffs = [0.001357 0.08917 0.4286]; % water per drop
         handles.RewardControls.Data = [35 5 50 100 200]'; % reward: time-I, time-II, IRI, hold-II, trial-off-lag
         handles.MultiRewards.Value = 1;
         

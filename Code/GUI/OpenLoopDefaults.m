@@ -21,7 +21,7 @@ handles.SessionSettings.Data = [5 90 15]'; % #repeats, max location, location st
 
 % Transfer function
 handles.TFtype.Value = 1; % 1 = fix speed, 0 = fixed start
-handles.TFtype.Enable = 'on';
+handles.TFtype.Enable = 'off';
         
 % manifold and motor
 handles.MotorLocations = 115; % currently used for variable gain
@@ -47,13 +47,45 @@ switch char(handles.computername)
         % Plots
         handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.2 NaN NaN]; % gains
         handles.PlotSettings.Data(:,2) = [NaN 0 6.5 3 7.0 NaN NaN]; % offsets
-        handles.PlotToggles.Data(:,1) = logical([0 1 1 1 1 1 0]);
+        handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
         
         % Rewards
-        handles.watercoeffs = [0.0006286 0.09254 0.918]; % water per drop
+        handles.watercoeffs = [0.0009982 0.1313 0.3161]; % water per drop
         
         % HomeSensor type
         handles.fliphome = 1;
+        
+        % visual version
+        handles.VisualVersion.Value = 0;
+        handles.VisualAirTrials.Visible = 'off';
+        handles.VisualOnlyTrials.Visible = 'off';
+        
+        % Photometry 
+        handles.Photometry.Value = 0;
+        handles.PhotometryParams.Data = [5000 211 531 0.6 0.6];
+        
+    case {'BALTHAZAR'} % Rig 2
+        
+        handles.useserver = 1; % change to zero if there's a network issue
+        
+        % sensors and scaling
+        handles.DAC_settings.Data = [2.0 2.15]';
+        
+        % Plots
+        handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.2 NaN NaN]; % gains
+        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 3 7.0 NaN NaN]; % offsets
+        handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
+        
+        % Rewards
+        handles.watercoeffs = [0.001357 0.08917 0.4286]; % water per drop
+        
+        % HomeSensor type
+        handles.fliphome = 1;
+        
+        % visual version
+        handles.VisualVersion.Value = 0;
+        handles.VisualAirTrials.Visible = 'off';
+        handles.VisualOnlyTrials.Visible = 'off';
         
         % Photometry 
         handles.Photometry.Value = 0;

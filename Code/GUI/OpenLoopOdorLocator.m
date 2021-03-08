@@ -53,7 +53,7 @@ handles.mfilename = mfilename;
 handles.startAcquisition.Enable = 'off';
 
 % rig specific settings
-handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
+handles.computername = getenv('COMPUTERNAME');
 [handles] = OpenLoopDefaults(handles);
 
 % clear indicators
@@ -148,7 +148,7 @@ GetCurrentDepth(hObject, eventdata, handles);
 handles.camera_available = 0;
 if ~isempty(webcamlist)    
     switch char(handles.computername)
-        case {'JUSTINE'}
+        case {'JUSTINE','BALTHAZAR'}
             handles.mycam = webcam(1);% {'logitech'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
             handles.camera_available = 1;
