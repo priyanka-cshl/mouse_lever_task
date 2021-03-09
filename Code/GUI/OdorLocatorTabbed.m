@@ -89,6 +89,19 @@ set(handles.C2,'Parent',handles.tabC2)
 handles.C1.Position = [1.0000    0.1000   82.0000   25.6154];
 set(handles.C2,'position',get(handles.C1,'position'));
 
+%Create tab groupA - motor and odors
+handles.tgroupD = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
+    'Position', [0.645 0.485 0.35 0.365] );
+handles.tabD1 = uitab('Parent', handles.tgroupD, 'Title', 'Webcam');
+handles.tabD2 = uitab('Parent', handles.tgroupD, 'Title', 'DepthLog');
+%Place panels into each tab
+set(handles.D1,'Parent',handles.tabD1)
+set(handles.D2,'Parent',handles.tabD2)
+%Reposition each panel to same location as panel 1
+handles.D1.Position = [1.000    0.1   68   19];
+set(handles.D2,'position',get(handles.D1,'position'));
+
+
 %% Load Settings
 handles.output = hObject;
 handles.mfilename = mfilename;
@@ -1391,25 +1404,30 @@ while ~FileExistChecker
     
     if ~exist(filename) %#ok<*EXIST>
         % get current depth, and coordinates of interest
-        prompt = {'minimum depth:', 'maximum depth:', 'turn pitch:', 'current depth:'};
-        dlg_title = 'Enter depth parameters (um from surface)';
-        num_lines = 4;
-        defaultans = {num2str(2200), num2str(3500), num2str(150), num2str(1500)};
+        prompt = {'#TTs', 'minimum depth:', 'maximum depth:', 'turn pitch:', 'current depth:'};
+        dlg_title = 'Enter drive parameters (um from surface)';
+        num_lines = 5;
+        defaultans = {num2str(8), num2str(2200), num2str(3500), num2str(150), num2str(1500)};
         userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
         if ~isempty(userans)
             % save params (minimum depth, max depth, turn pitch and current
             % depth
-            for i = 1:4
+            for i = 1:5
                 depth.params(i) = str2double(userans(i));
             end
             
             % make the first entry
-            depth.log(1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(4))};
+            depth.log(1,1:2) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS')};
+            allTTs = NaN*ones(1,9);
+            allTTs(1,1:depth.params(1)) = depth.params(5);
+            depth.log(1,3) = {allTTs};
+            handles.DepthLog_Depth.Data = depth.log{3}';
+            handles.DepthLog_Depth.Enable = 'on';
             
             % update graph
             handles.axes16.Visible = 'on';
-            handles.depthofinterest.YData = depth.params(1:2)/1000;
-            handles.drivedepth.YData = str2double(char(userans(4)))/1000; 
+            handles.depthofinterest.YData = depth.params(2:3)/1000;
+            handles.drivedepth.YData = str2double(char(userans(5)))/1000; 
             save(filename,'depth*');
             if handles.useserver
                 save(server_file_name,'depth*');
@@ -1423,33 +1441,65 @@ while ~FileExistChecker
 end
 
 if ~MadeNewFile && FileExistChecker
-    clear depth;
-    load(filename);
-    if ~isempty(strmatch(datestr(now, 'yyyymmdd'),depth.log(:,1)))
-        % check with the use if he/she wants to make a repeat entry
-        dlg_title = 'A depth entry for today already exists. You can still add more turns or cancel';
-    else
-        dlg_title = 'Drive depth Log';
-    end
-    prompt = {'current depth:', 'turns to add:'}; %, 'turns to subtract:'};
-    num_lines = 2;
-    currentdepth = depth.log(end,3);
-    defaultans = {char(currentdepth), '+0.25'};
-    userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+%     if ~isempty(strmatch(datestr(now, 'yyyymmdd'),depth.log(:,1)))
+%         % check with the use if he/she wants to make a repeat entry
+%         dlg_title = 'A depth entry for today already exists. You can still add more turns or cancel';
+%     else
+%         dlg_title = 'Drive depth Log';
+%     end
+%     prompt = {'current depth:', 'turns to add:'}; %, 'turns to subtract:'};
+%     num_lines = 2;
+%     currentdepth = depth.log(end,3);
+%     defaultans = {char(currentdepth), '+0.25'};
+%     userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+    handles.DepthLog_Turns.Enable = 'on';
+    handles.UpdateDepth.Enable = 'on';
+    handles.UpdateDrive.Enable = 'on';
+    set(handles.DepthLog_Turns,'BackgroundColor',[0.5 0.94 0.94]);
+    handles.UpdateDepth.Value = 1;
     
-    if ~isempty(userans) % user wants to update
-        newdepth = str2double(char(currentdepth)) + depth.params(3)*str2double(userans(2));
-        depth.log(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(num2str(newdepth))};
-        handles.drivedepth.YData = newdepth/1000;
+end
+
+% --- Executes on button press in UpdateDrive.
+function UpdateDrive_Callback(hObject, eventdata, handles)
+% hObject    handle to UpdateDrive (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of UpdateDrive
+animal_name = char(handles.file_names.Data(1));
+foldername_local = char(handles.file_names.Data(2));
+foldername_server = char(handles.file_names.Data(3));
+filename = [foldername_local, filesep, animal_name, '_DepthLog.mat'];
+[~,justname] = fileparts(filename);
+server_file_name = [foldername_server,filesep,justname,'.mat'];
+clear depth;
+load(filename);
+
+    % update depths
+    if any(handles.DepthLog_Turns.Data)
+        for i = 1:9
+            handles.DepthLog_Depth.Data(i) = handles.DepthLog_Depth.Data(i) + depth.params(4)*handles.DepthLog_Turns.Data(i);
+        end
+    
+        allTTs = handles.DepthLog_Depth.Data';
+        depth.log(1,1:2) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS')};
+        depth.log(1,3) = {allTTs};
+
         save(filename,'depth*');
         if handles.useserver
             save(server_file_name,'depth*');
         end
-    else % user pressed cancel
     end
     
-end
-
+    handles.DepthLog_Turns.Enable = 'off';
+    handles.UpdateDepth.Enable = 'off';
+    handles.DepthLog_Turns.Data = 0*handles.DepthLog_Turns.Data;
+    set(handles.DepthLog_Turns,'BackgroundColor',[0.94 0.94 0.94]);
+    
+    handles.UpdateDrive.Enable = 'off';
+    
+    
 function GetCurrentDepth(hObject, eventdata, handles)
 animal_name = char(handles.file_names.Data(1));
 foldername_local = char(handles.file_names.Data(2));
@@ -1461,13 +1511,14 @@ if  exist(filename) %#ok<*EXIST>
     clear depth;
     load(filename);
     handles.axes16.Visible = 'on';
-    handles.depthofinterest.YData = depth.params(1:2)/1000;
-    handles.drivedepth.YData = str2double(char(depth.log(end,3)))/1000; 
+    handles.depthofinterest.YData = depth.params(2:3)/1000;
+    handles.drivedepth.YData = mean(depth.log{end,3},'omitnan')/1000; 
+    handles.DepthLog_Depth.Data = depth.log{end,3}';
 else
     handles.axes16.Visible = 'off';
     handles.depthofinterest.YData = NaN*handles.depthofinterest.YData;
     handles.drivedepth.YData = NaN*handles.drivedepth.YData;
-    
+    handles.DepthLog_Depth.Data = NaN*ones(9,1);
 end
     
 % --- Executes on button press in TuningCurves.
@@ -1485,3 +1536,5 @@ end
 close_gui_Callback(hObject, eventdata, handles);
 delete (handles.mycam);
 OpenLoopOdorLocator(AnimalName);
+
+
