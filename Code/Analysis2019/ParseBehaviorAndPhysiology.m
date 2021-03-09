@@ -86,7 +86,9 @@ end
 %% Get info from the OEPS files if available
 [myephysdir] = WhereSpikeFile(MyFileName);
 % get all TTLs for the open ephys session
-[~,TTLs] = GetOepsAuxChannels(myephysdir, Trials.TimeStamps, 'ADC', 0);
+if do_spikes || do_replay
+    [~,TTLs] = GetOepsAuxChannels(myephysdir, Trials.TimeStamps, 'ADC', 0);
+end
 
 %% Get spikes - label spikes by trials
 if do_spikes
