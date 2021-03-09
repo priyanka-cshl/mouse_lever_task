@@ -1404,10 +1404,10 @@ while ~FileExistChecker
     
     if ~exist(filename) %#ok<*EXIST>
         % get current depth, and coordinates of interest
-        prompt = {'#TTs', 'minimum depth:', 'maximum depth:', 'turn pitch:', 'current depth:'};
+        prompt = {'#TTs', 'minimum depth:', 'maximum depth:', 'turn pitch:', 'current depth:', 'notes'};
         dlg_title = 'Enter drive parameters (um from surface)';
         num_lines = 5;
-        defaultans = {num2str(8), num2str(2200), num2str(3500), num2str(150), num2str(1500)};
+        defaultans = {num2str(8), num2str(2200), num2str(3500), num2str(150), num2str(1500), 'APC; AP 1.945, ML 2.25, DV 3.0'};
         userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
         if ~isempty(userans)
             % save params (minimum depth, max depth, turn pitch and current
@@ -1415,6 +1415,7 @@ while ~FileExistChecker
             for i = 1:5
                 depth.params(i) = str2double(userans(i));
             end
+            depth.notes = userans(end);
             
             % make the first entry
             depth.log(1,1:2) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS')};
@@ -1423,6 +1424,9 @@ while ~FileExistChecker
             depth.log(1,3) = {allTTs};
             handles.DepthLog_Depth.Data = depth.log{3}';
             handles.DepthLog_Depth.Enable = 'on';
+            
+            % update drive notes
+            handles.DriveNotes.String = depth.notes;
             
             % update graph
             handles.axes16.Visible = 'on';
@@ -1514,11 +1518,13 @@ if  exist(filename) %#ok<*EXIST>
     handles.depthofinterest.YData = depth.params(2:3)/1000;
     handles.drivedepth.YData = mean(depth.log{end,3},'omitnan')/1000; 
     handles.DepthLog_Depth.Data = depth.log{end,3}';
+    handles.DriveNotes.String = depth.notes;
 else
     handles.axes16.Visible = 'off';
     handles.depthofinterest.YData = NaN*handles.depthofinterest.YData;
     handles.drivedepth.YData = NaN*handles.drivedepth.YData;
     handles.DepthLog_Depth.Data = NaN*ones(9,1);
+    handles.DriveNotes.String = 'Drive details unavailable';
 end
     
 % --- Executes on button press in TuningCurves.
