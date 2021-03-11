@@ -9,7 +9,7 @@ move_intervals_null = [];
 
 for idx = 1:length(Traces.Lever)
     RespData = Traces.Sniffs{idx};
-    if(length(RespData) == 0)
+    if(isempty(RespData))
         continue
     end
     
@@ -37,23 +37,22 @@ for idx = 1:length(Traces.Lever)
     % smooth lever
     lever_smooth = smoothdata(lever, 'sgolay', 25, 'degree', 4);
 
-    velocity = gradient(lever_smooth);
-    velocity_smooth = smoothdata(velocity, 'sgolay', 25, 'degree', 4);
+    % find peaks
+    [mov_pks_1,mov_locs_1,mov_w_1,mov_p_1] = findpeaks(lever_smooth, 'MinPeakProminence', 0.03, 'MinPeakDistance', 5);
+    [mov_pks_2,mov_locs_2,mov_w_2,mov_p_2] = findpeaks(-lever_smooth, 'MinPeakProminence', 0.03, 'MinPeakDistance', 5);
 
-    accel = gradient(velocity_smooth);
-
-    [accel_pks_1,accel_locs_1,accel_w_1,accel_p_1] = findpeaks(abs(accel), 'MinPeakProminence', 0.0005, 'MinPeakDistance', 10);
+    mov_locs = sort(cat(1, mov_locs_1,mov_locs_2));
 
     
-    accel_locs_1_trial = accel_locs_1(ismember(accel_locs_1, find(trial_on~=0)));
+    mov_locs_trial = mov_locs(ismember(mov_locs, find(trial_on~=0)));
     zero_crossings_trial = zero_crossings(ismember(zero_crossings, find(trial_on~=0)));
 
     null_sniff = sort(randsample(find(trial_on~=0),length(zero_crossings_trial)));
-    null_move = sort(randsample(find(trial_on~=0),length(accel_locs_1_trial)));
+    null_move = sort(randsample(find(trial_on~=0),length(mov_locs_trial)));
     
     sniff_interval = diff(zero_crossings_trial);
     sniff_intervals(end+1:end+length(sniff_interval)) = sniff_interval;
-    move_interval = diff(accel_locs_1_trial);
+    move_interval = diff(mov_locs_trial);
     move_intervals(end+1:end+length(move_interval)) = move_interval;
     
     sniff_interval_null = diff(null_sniff);
