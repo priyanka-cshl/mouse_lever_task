@@ -34,6 +34,8 @@ respData_filtered = smoothdata(RespData);
 zci = @(v) find(diff(sign(v))<0 & diff(v) < -0.001);
 zero_crossings = zci(respData_filtered);
 
+% locs_2 = zero_crossings;
+
 valley_interval_length = diff(locs_2);
 % figure;
 % histogram(valley_interval_length, 100);
