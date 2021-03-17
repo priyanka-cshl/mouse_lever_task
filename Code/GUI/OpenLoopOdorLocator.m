@@ -905,15 +905,15 @@ foldername_server = char(handles.file_names.Data(3));
 
 filename = [foldername_local, filesep, animal_name, '_DepthLog.mat'];
 
-if  exist(filename) %#ok<*EXIST>
-    clear depth;
-    load(filename);
-    handles.axes16.Visible = 'on';
-    handles.depthofinterest.YData = depth.params(1:2)/1000;
-    handles.drivedepth.YData = str2double(char(depth.log(end,3)))/1000; 
-else
-    handles.axes16.Visible = 'off';
-    handles.depthofinterest.YData = NaN*handles.depthofinterest.YData;
-    handles.drivedepth.YData = NaN*handles.drivedepth.YData;
-    
-end
+% if  exist(filename) %#ok<*EXIST>
+%     clear depth;
+%     load(filename);
+%     handles.axes16.Visible = 'on';
+%     handles.depthofinterest.YData = depth.params(1:2)/1000;
+%     handles.drivedepth.YData = str2double(char(depth.log(end,3)))/1000; 
+% else
+%     handles.axes16.Visible = 'off';
+%     handles.depthofinterest.YData = NaN*handles.depthofinterest.YData;
+%     handles.drivedepth.YData = NaN*handles.drivedepth.YData;
+%     
+% end
