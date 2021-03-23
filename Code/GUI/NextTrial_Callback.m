@@ -19,6 +19,17 @@ h.LastTrialSettings.Data(1) = h.which_target.Data;
 h.ProgressReport.Data(:,3) = round(100*(h.ProgressReport.Data(:,2)./h.ProgressReport.Data(:,1)),0,'decimals');
 h.ProgressReportPerturbed.Data(:,3) = round(100*(h.ProgressReportPerturbed.Data(:,2)./h.ProgressReportPerturbed.Data(:,1)),0,'decimals');
 
+if ~mod(h.current_trial_block.Data(2)-1,10)
+    h.rollingsucess.XData = [floor((h.current_trial_block.Data(2) + 1)/10) h.rollingsucess.XData];
+    x1 = max(1,h.current_trial_block.Data(2)-10);
+    x2 = h.current_trial_block.Data(2)-1;
+    rollrate = sum(h.hold_times.Data(x1:x2,2))/10;
+    h.rollingsucess.YData = [rollrate h.rollingsucess.YData];
+    if floor((h.current_trial_block.Data(2) + 1)/10) > h.SuccessRate.XLim(1,2)
+        h.SuccessRate.XLim = [1 (h.SuccessRate.XLim(1,2) + 25)];
+    end
+end
+
 % reset TF gain
 h.TFgain.Data = 1;
 
