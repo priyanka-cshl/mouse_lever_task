@@ -132,3 +132,22 @@ plot(accel_locs_2, lever_smooth(accel_locs_2), 'ob');
 for i = 1:length(zero_crossings)
     xline(zero_crossings(i));
 end
+
+%%
+
+figure;
+plot(lever_smooth);
+yline(0);
+hold on;
+for i = 1:length(zero_crossings)
+    xline(zero_crossings(i));
+end
+plot(100*velocity_smooth, 'linewidth', 1);
+% plot(1000*smoothdata(accel, 'sgolay', 25, 'degree', 4), 'linewidth', 1);
+
+%%
+
+figure;
+plot(respData_filtered, 'linewidth', 1);
+hold on;
+plot(50*abs(velocity_smooth), 'linewidth', 1);

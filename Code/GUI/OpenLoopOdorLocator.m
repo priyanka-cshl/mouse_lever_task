@@ -906,6 +906,7 @@ foldername_server = char(handles.file_names.Data(3));
 
 filename = [foldername_local, filesep, animal_name, '_DepthLog.mat'];
 
+
 if  exist(filename) %#ok<*EXIST>
     clear depth;
     load(filename);
