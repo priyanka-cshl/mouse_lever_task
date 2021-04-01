@@ -39,7 +39,7 @@ for idx = 1:length(Traces.Lever)
 
     sr = 500;
 
-    frequency = zeros(1, length(RespData));
+    frequency = NaN(1, length(RespData));
     for i = 1:length(locs_2)-1
         frequency(locs_2(i):locs_2(i+1)) = 500/zci_interval_length(i);
     end
@@ -76,12 +76,17 @@ end
 
 amean1 = nanmean(frequency_start, 1);
 astd1 = nanstd(frequency_start,[],1);
-F1 = 1:size(frequency_start,2);
+first_not_nan = find(~isnan(amean1), 1);
+amean1_notnan = amean1(first_not_nan:end);
+astd1_notnan = astd1(first_not_nan:end);
+F1 = first_not_nan:size(frequency_start,2);
+
 figure;
-plot(amean1, 'color', 'k','linewidth', 1.5);
+plot(amean1_notnan, 'color', 'k','linewidth', 1.5);
 hold on;
-fill([F1 fliplr(F1)],[amean1+astd1 fliplr(amean1-astd1)], 'k', 'FaceAlpha', 0.5,'linestyle','none');
+fill([F1 fliplr(F1)],[amean1_notnan+astd1_notnan fliplr(amean1_notnan-astd1_notnan)], 'k', 'FaceAlpha', 0.5,'linestyle','none');
 xline(501, 'linewidth', 2);
+ylim([0,10]);
 title("aligned to trial start");
 
 %% sniff raster plot aligned to trial start
@@ -91,12 +96,20 @@ trial_lengths = sum(~isnan(sniff_start), 2);
 sniff_start_sorted = sniff_start(a_order,:);
 sniff_start_sorted_valid = sniff_start_sorted(~all(isnan(sniff_start_sorted),2),:);
 
+a_order_valid = a_order(~all(isnan(sniff_start_sorted),2));
+
 figure;
 hold on;
 for i = 1:size(sniff_start_sorted_valid, 1)
+%     trial_idx = a_order_valid(i);
+%     inzone = TrialInfo.InZone{trial_idx}*500;
+%     for j = 1:size(inzone, 1)
+%         rectangle('Position',[inzone(j, 1) i-1 inzone(j, 2)-inzone(j, 1) 1] ,'FaceColor',[1. 1. 0. .3], 'EdgeColor', [1. 1. 0. .3]);
+%     end
+%     
     sniff = find(sniff_start_sorted_valid(i,:) == 1);
     for j = 1:length(sniff)
-        line([sniff(j) sniff(j)], [i-1 i],'Color','k', 'linewidth', 1);
+        line([sniff(j) sniff(j)], [i-1 i],'Color','k', 'linewidth', 2);
     end
 end
 xline(501, 'linewidth', 2);
@@ -115,6 +128,7 @@ plot(amean2, 'color', 'k','linewidth', 1.5);
 hold on;
 fill([F2 fliplr(F2)],[amean2_notnan+astd2_notnan fliplr(amean2_notnan-astd2_notnan)], 'k', 'FaceAlpha', 0.5,'linestyle','none');
 xline(2501, 'linewidth', 2);
+ylim([0,10]);
 title("aligned to reward");
 
 %% sniff raster plot aligned to reward
@@ -129,8 +143,21 @@ hold on;
 for i = 1:size(sniff_reward_sorted_valid, 1)
     sniff = find(sniff_reward_sorted_valid(i,:) == 1);
     for j = 1:length(sniff)
-        line([sniff(j) sniff(j)], [i-1 i],'Color','k', 'linewidth', 1);
+        line([sniff(j) sniff(j)], [i-1 i],'Color','k', 'linewidth', 2);
     end
 end
 xline(2501, 'linewidth', 2);
 title("aligned to reward");
+
+%%
+% 
+% idx = 226;
+% 
+% figure; hold on;
+% plot(Traces.Lever{idx})
+% plot(Traces.Trial{idx})
+%  
+% inzone = TrialInfo.InZone{idx}*500;
+% for j = 1:size(inzone, 1)
+%     rectangle('Position',[inzone(j, 1) 0 inzone(j, 2)-inzone(j, 1) 5] ,'FaceColor',[1. 1. 0. .3], 'EdgeColor', [1. 1. 0. .3]);
+% end
