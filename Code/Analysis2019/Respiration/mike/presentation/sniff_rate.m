@@ -1,11 +1,29 @@
-% filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191226_r0.mat";
-% name = "K1_20191226_r0";
-% 
+clear all;
+
+%%
+% K1
+filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191215_r0.mat";
+name = "K1_20191215_r0";
+
 % filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191217_r0.mat";
 % name = "K1_20191217_r0";
 % 
-filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20200120_r0.mat";
-name = "K4_20200120_r0";
+% filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191226_r0.mat";
+% name = "K1_20191226_r0";
+% 
+% filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191227_r0.mat";
+% name = "K1_20191227_r0";
+% 
+% % K4
+% filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20191217_r0.mat";
+% name = "K4_20191217_r0";
+% 
+% filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20191229_r1.mat";
+% name = "K4_20191229_r1";
+% 
+% filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20200120_r0.mat";
+% name = "K4_20200120_r0";
+
 
 save = 0;
 
@@ -28,8 +46,19 @@ for idx = 1:length(Traces.Lever)
     if(isempty(RespData))
         continue
     end
+    if(isnan(TrialInfo.OdorStart(idx,2)))
+        continue
+    end
 
     trial_on = Traces.Trial{idx};
+    
+    trial_start = find(diff(trial_on~=0) == 1, 1);
+    trial_end = find(diff(trial_on~=0) == -1, 1, 'last');
+    trial_duration = trial_end-trial_start+1;
+    if trial_duration > 2500
+        continue
+    end
+    
     rewards = Traces.Rewards{idx};
 
     % rescale the data
@@ -62,9 +91,6 @@ for idx = 1:length(Traces.Lever)
     sniffs(locs_2) = 1;
     
     % align to trial start and rewards
-    trial_start = find(diff(trial_on~=0) == 1, 1);
-    trial_end = find(diff(trial_on~=0) == -1, 1, 'last');
-    trial_duration = trial_end-trial_start+1;
     
     frequency_start(idx, 1:trial_end) = frequency(1:trial_end);
     sniff_start(idx, 1:trial_end) = sniffs(1:trial_end);
@@ -89,6 +115,7 @@ for idx = 1:length(Traces.Lever)
             sniff_reward_end(idx, 2501:2500+length(sniffs)-trial_end) = sniffs(trial_end+1:end);
         end
     end
+    
 end
 
 %% sniff rate aligned to trial start
@@ -106,7 +133,8 @@ plot(2*first_not_nan:2:2*last_not_nan, amean_notnan, 'color', 'k','linewidth', 1
 hold on;
 fill([F1 fliplr(F1)],[amean_notnan+astd_notnan fliplr(amean_notnan-astd_notnan)], 'k', 'FaceAlpha', 0.5,'linestyle','none');
 xline(1001, 'linewidth', 2);
-ylim([0,10]);
+xlim([0, 6000]);
+ylim([0,15]);
 xlabel('time (ms)');
 ylabel('frequency (hz)');
 title("sniffs aligned to trial start");
@@ -139,6 +167,7 @@ for i = 1:size(sniff_start_sorted_valid, 1)
     end
 end
 xline(1001, 'linewidth', 2);
+xlim([0, 6000]);
 xlabel('time (ms)');
 ylabel('trial');
 title("sniffs aligned to trial start");
@@ -160,6 +189,7 @@ plot(2*first_not_nan:2:2*last_not_nan, smoothdata(amean_notnan, 'movmean', 11), 
 hold on;
 xline(1001, 'linewidth', 2);
 ylim([0,0.03]);
+xlim([0, 6000]);
 xlabel('time (ms)');
 ylabel('smoothed sniff probability');
 title("sniffs aligned to trial start");
@@ -183,7 +213,8 @@ plot(2*first_not_nan:2:2*last_not_nan, amean_notnan, 'color', 'k','linewidth', 1
 hold on;
 fill([F1 fliplr(F1)],[amean_notnan+astd_notnan fliplr(amean_notnan-astd_notnan)], 'k', 'FaceAlpha', 0.5,'linestyle','none');
 xline(5001, 'linewidth', 2);
-ylim([0,10]);
+xlim([0, 6000]);
+ylim([0,15]);
 xlabel('time (ms)');
 ylabel('frequency (hz)');
 title("sniffs aligned to reward");
@@ -210,6 +241,7 @@ for i = 1:size(sniff_reward_sorted_valid, 1)
     end
 end
 xline(5001, 'linewidth', 2);
+xlim([0, 6000]);
 xlabel('time (ms)');
 ylabel('trial');
 title("sniffs aligned to reward");
@@ -232,7 +264,8 @@ plot(2*first_not_nan:2:2*last_not_nan, amean_notnan, 'color', 'k','linewidth', 1
 hold on;
 fill([F1 fliplr(F1)],[amean_notnan+astd_notnan fliplr(amean_notnan-astd_notnan)], 'k', 'FaceAlpha', 0.5,'linestyle','none');
 xline(1001, 'linewidth', 2);
-ylim([0,10]);
+xlim([0, 7000]);
+ylim([0,15]);
 xlabel('time (ms)');
 ylabel('frequency (hz)');
 title("sniffs aligned to odor start");
@@ -258,6 +291,7 @@ end
 xline(1001, 'linewidth', 2);
 xlabel('time (ms)');
 ylabel('trial');
+xlim([0, 7000]);
 title("sniffs aligned to odor start");
 if save > 0
     f = gcf;
@@ -276,6 +310,7 @@ figure;
 plot(2*first_not_nan:2:2*last_not_nan, smoothdata(amean_notnan, 'movmean', 11), 'color', 'k','linewidth', 1.5);
 hold on;
 xline(1001, 'linewidth', 2);
+xlim([0, 7000]);
 ylim([0,0.03]);
 xlabel('time (ms)');
 ylabel('smoothed sniff probability');

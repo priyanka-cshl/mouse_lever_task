@@ -1,13 +1,30 @@
-filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191226_r0.mat";
-name = "K1_20191226_r0";
+clear all;
+
+%%
+% K1
+filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191215_r0.mat";
+name = "K1_20191215_r0";
 % 
 % filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191217_r0.mat";
 % name = "K1_20191217_r0";
 % 
+% filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191226_r0.mat";
+% name = "K1_20191226_r0";
+% 
+% filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191227_r0.mat";
+% name = "K1_20191227_r0";
+% 
+% % K4
+% filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20191217_r0.mat";
+% name = "K4_20191217_r0";
+% 
+% filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20191229_r1.mat";
+% name = "K4_20191229_r1";
+% 
 % filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20200120_r0.mat";
 % name = "K4_20200120_r0";
-
-save = 0;
+% 
+save=0;
 
 [Traces, TrialInfo] = ParseBehaviorAndPhysiology(filepath);
 
@@ -28,8 +45,19 @@ for idx = 1:length(Traces.Lever)
     if(isempty(licks))
         continue
     end
+    if(isnan(TrialInfo.OdorStart(idx,2)))
+        continue
+    end
 
     trial_on = Traces.Trial{idx};
+    
+    trial_start = find(diff(trial_on~=0) == 1, 1);
+    trial_end = find(diff(trial_on~=0) == -1, 1, 'last');
+    trial_duration = trial_end-trial_start+1;
+    if trial_duration > 2500
+        continue
+    end
+    
     rewards = Traces.Rewards{idx};
 
     locs_2 = find(licks ~= 0);
@@ -44,9 +72,6 @@ for idx = 1:length(Traces.Lever)
     end
     
     % align to trial start and rewards
-    trial_start = find(diff(trial_on~=0) == 1, 1);
-    trial_end = find(diff(trial_on~=0) == -1, 1, 'last');
-    trial_duration = trial_end-trial_start+1;
     
     frequency_start(idx, 1:trial_end) = frequency(1:trial_end);
     lick_start(idx, 1:trial_end) = licks(1:trial_end);
@@ -96,6 +121,7 @@ plot(2*first_not_nan:2:2*last_not_nan, smoothdata(amean_notnan, 'movmean', 15), 
 % fill([F1 fliplr(F1)],[amean_notnan+astd_notnan fliplr(amean_notnan-astd_notnan)], 'k', 'FaceAlpha', 0.5,'linestyle','none');
 xline(1001, 'linewidth', 2);
 ylim([0,0.05]);
+xlim([0, 6000]);
 xlabel('time (ms)');
 ylabel('smoothed lick probability');
 title("licks aligned to trial start");
@@ -128,6 +154,7 @@ for i = 1:size(lick_start_sorted_valid, 1)
     end
 end
 xline(1001, 'linewidth', 2);
+xlim([0, 6000]);
 xlabel('time (ms)');
 ylabel('trial');
 title("licks aligned to trial start");
@@ -150,6 +177,7 @@ plot(2*first_not_nan:2:2*last_not_nan, smoothdata(amean_notnan, 'movmean', 15), 
 hold on;
 % fill([F1 fliplr(F1)],[amean_notnan+astd_notnan fliplr(amean_notnan-astd_notnan)], 'k', 'FaceAlpha', 0.5,'linestyle','none');
 xline(5001, 'linewidth', 2);
+xlim([0, 6000]);
 ylim([0,0.05]);
 xlabel('time (ms)');
 ylabel('smoothed lick probability');
@@ -175,6 +203,7 @@ for i = 1:size(lick_reward_sorted_valid, 1)
     end
 end
 xline(5001, 'linewidth', 2);
+xlim([0, 6000]);
 xlabel('time (ms)');
 ylabel('trial');
 title("licks aligned to reward");
@@ -197,6 +226,7 @@ plot(2*first_not_nan:2:2*last_not_nan, smoothdata(amean_notnan, 'movmean', 15), 
 hold on;
 % fill([F1 fliplr(F1)],[amean_notnan+astd_notnan fliplr(amean_notnan-astd_notnan)], 'k', 'FaceAlpha', 0.5,'linestyle','none');
 xline(1001, 'linewidth', 2);
+xlim([0, 7000]);
 ylim([0,0.05]);
 xlabel('time (ms)');
 ylabel('smoothed lick probability');
@@ -221,6 +251,7 @@ for i = 1:size(lick_start_sorted_valid, 1)
     end
 end
 xline(1001, 'linewidth', 2);
+xlim([0, 7000]);
 xlabel('time (ms)');
 ylabel('trial');
 title("licks aligned to odor start");
