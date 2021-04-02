@@ -404,6 +404,9 @@ end
 % set axes limits
 set(h.axes1,'XLim',[TotalTime(indices_to_plot(1)) TotalTime(indices_to_plot(end))]);
 
+% successrate plot
+
+
 %% call trial/block updates, stop acquisition if required
 if get(h.startAcquisition,'value') == 0
     src.stop();

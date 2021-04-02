@@ -41,12 +41,12 @@ for idx = 1:length(Traces.Lever)
     end
 
     frequency_trial = frequency(1:find(diff(trial_on~=0)==-1));
-    % figure;
-    % plot(respData_filtered);
-    % hold on;
-    % plot(locs_2, respData_filtered(locs_2),'ob');
-    % plot(frequency_trial);
-    % plot(trial_on ~= 0);
+%     figure;
+%     plot(respData_filtered);
+%     hold on;
+%     plot(locs_2, respData_filtered(locs_2),'ob');
+%     plot(frequency_trial);
+%     plot(trial_on ~= 0);
     
 %     frequency_trial = smoothdata(frequency_trial);
     
@@ -56,7 +56,6 @@ for idx = 1:length(Traces.Lever)
     if ~isempty(rewards_idx)
         rewards_trials(idx) = rewards_idx(1);
     end
-    
 end
 
 %%

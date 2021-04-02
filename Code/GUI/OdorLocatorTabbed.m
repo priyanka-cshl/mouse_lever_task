@@ -94,13 +94,15 @@ handles.tgroupD = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
     'Position', [0.645 0.485 0.35 0.365] );
 handles.tabD1 = uitab('Parent', handles.tgroupD, 'Title', 'Webcam');
 handles.tabD2 = uitab('Parent', handles.tgroupD, 'Title', 'DepthLog');
+handles.tabD3 = uitab('Parent', handles.tgroupD, 'Title', 'HitRate');
 %Place panels into each tab
 set(handles.D1,'Parent',handles.tabD1)
 set(handles.D2,'Parent',handles.tabD2)
+set(handles.D3,'Parent',handles.tabD3)
 %Reposition each panel to same location as panel 1
 handles.D1.Position = [1.000    0.1   68   19];
 set(handles.D2,'position',get(handles.D1,'position'));
-
+set(handles.D3,'position',get(handles.D1,'position'));
 
 %% Load Settings
 handles.output = hObject;
@@ -249,6 +251,14 @@ set(handles.axes16, 'XLim', [0 1], 'XTick',[],'XColor',[0.94 0.94 0.94], 'YLim',
 axis manual
 
 GetCurrentDepth(hObject, eventdata, handles);
+
+axes(handles.SuccessRate); % rolling success rate plot
+set(handles.SuccessRate, 'Fontsize', 5); 
+handles.rollingsucess = plot(NaN, NaN, '-ok'); 
+grid on
+grid minor
+set(handles.SuccessRate,'YLim', [-0.1 1.1],'YTick',[0 1]);
+set(handles.SuccessRate,'YLimMode','manual');
 
 %% webcam
 handles.camera_available = 0;
@@ -432,6 +442,8 @@ if get(handles.startAcquisition,'value')
         set(handles.respiration_plot,'XData',NaN,'YData',NaN);
         set(handles.lickpiezo_plot,'XData',NaN,'YData',NaN);
         set(handles.lick_plot,'XData',NaN,'YData',NaN);
+        set(handles.rollingsucess,'XData',NaN,'YData',NaN);
+        RollRateLims_CellEditCallback(hObject, eventdata, handles);
         
         % turn ON MFCs
         if ~isempty(handles.MFC)
@@ -743,8 +755,12 @@ if usrans == 1
             print(gcf,['C:\Users\Rig\Desktop\','GUI_',animal_name],'-dpng','-r0');
             display(['saved GUI screen shot at ' ('C:\Users\Rig\Desktop')])
     end
-    disp(['median hold = ',num2str(median(handles.MeanHoldTimes.Data)),' ms']);
-    disp(['median trigger hold = ',num2str(median_trigger_hold),' ms']);
+    trialsdone = handles.ProgressReport.Data(end,1);
+    hitrate = handles.ProgressReport.Data(end,3);
+    meanhold = median(handles.MeanHoldTimes.Data);
+    disp(['trials = ',num2str(trialsdone), '; %correct = ', num2str(hitrate),...
+        '; median hold = ',num2str(meanhold),' ms']);
+    %disp(['median trigger hold = ',num2str(median_trigger_hold),' ms']);
     guidata(hObject, handles);
 end
 
@@ -1422,7 +1438,7 @@ while ~FileExistChecker
             allTTs = NaN*ones(1,9);
             allTTs(1,1:depth.params(1)) = depth.params(5);
             depth.log(1,3) = {allTTs};
-            handles.DepthLog_Depth.Data = depth.log{3}';
+            handles.DepthLog_Depth.Data = round(depth.log{3}');
             handles.DepthLog_Depth.Enable = 'on';
             
             % update drive notes
@@ -1483,7 +1499,7 @@ load(filename);
     % update depths
     if any(handles.DepthLog_Turns.Data)
         for i = 1:9
-            handles.DepthLog_Depth.Data(i) = handles.DepthLog_Depth.Data(i) + depth.params(4)*handles.DepthLog_Turns.Data(i);
+            handles.DepthLog_Depth.Data(i) = round(handles.DepthLog_Depth.Data(i) + depth.params(4)*handles.DepthLog_Turns.Data(i));
         end
     
         allTTs = handles.DepthLog_Depth.Data';
@@ -1517,7 +1533,7 @@ if  exist(filename) %#ok<*EXIST>
     handles.axes16.Visible = 'on';
     handles.depthofinterest.YData = depth.params(2:3)/1000;
     handles.drivedepth.YData = mean(depth.log{end,3},'omitnan')/1000; 
-    handles.DepthLog_Depth.Data = depth.log{end,3}';
+    handles.DepthLog_Depth.Data = round(depth.log{end,3}');
     handles.DriveNotes.String = depth.notes;
 else
     handles.axes16.Visible = 'off';
@@ -1544,3 +1560,16 @@ delete (handles.mycam);
 OpenLoopOdorLocator(AnimalName);
 
 
+% --- Executes when entered data in editable cell(s) in RollRateLims.
+function RollRateLims_CellEditCallback(hObject, eventdata, handles)
+% hObject    handle to RollRateLims (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
+%	Indices: row and column indices of the cell(s) edited
+%	PreviousData: previous data for the cell(s) edited
+%	EditData: string(s) entered by the user
+%	NewData: EditData or its converted form set on the Data property. Empty if Data was not changed
+%	Error: error string when failed to convert EditData to appropriate value for Data
+% handles    structure with handles and user data (see GUIDATA)
+set(handles.SuccessRate,'XLim',handles.RollRateLims.Data);
+set(handles.SuccessRate,'YLim', [-0.1 1.1],'YTick',[0 1]);
+set(handles.SuccessRate,'YLimMode','manual');

@@ -126,6 +126,7 @@ figure;
 histogram(closest_neighbor_move_large, 'binwidth', 2, 'normalization', 'probability', 'facecolor', 'r');
 hold on;
 histogram(closest_neighbor_move_small, 'binwidth', 2, 'normalization', 'probability', 'facecolor', 'b');
+xline(0, 'linewidth', 2);
 title(sprintf('DATA\nfor each large move, closest sniff (mean:%.2f, median:%.2f, sd:%.2f)\nfor each small move, closest sniff (mean:%.2f, median:%.2f, sd:%.2f)\n', mean(closest_neighbor_move_large), median(closest_neighbor_move_large), std(closest_neighbor_move_large), mean(closest_neighbor_move_small), median(closest_neighbor_move_small), std(closest_neighbor_move_small)));
 
 
