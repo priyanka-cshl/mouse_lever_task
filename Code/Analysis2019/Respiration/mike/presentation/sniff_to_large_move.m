@@ -1,11 +1,29 @@
-filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191226_r0.mat";
-name = "K1_20191226_r0";
+clear all;
+
+%%
+% K1
+filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191215_r0.mat";
+name = "K1_20191215_r0";
 % 
 % filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191217_r0.mat";
 % name = "K1_20191217_r0";
 % 
-filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20200120_r0.mat";
-name = "K4_20200120_r0";
+% filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191226_r0.mat";
+% name = "K1_20191226_r0";
+% 
+% filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191227_r0.mat";
+% name = "K1_20191227_r0";
+% 
+% % K4
+% filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20191217_r0.mat";
+% name = "K4_20191217_r0";
+% 
+% filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20191229_r1.mat";
+% name = "K4_20191229_r1";
+% 
+% filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20200120_r0.mat";
+% name = "K4_20200120_r0";
+% used this session, idx 31 for an example
 
 save = 0;
 
@@ -16,12 +34,24 @@ save = 0;
 peri_move_sniffs = zeros(1,201);
 
 for idx = 1:length(Traces.Lever)
+
     RespData = Traces.Sniffs{idx};
     if(isempty(RespData))
         continue
     end
+    if(isnan(TrialInfo.OdorStart(idx,2)))
+        continue
+    end
 
     trial_on = Traces.Trial{idx};
+    
+    trial_start = find(diff(trial_on~=0) == 1, 1);
+    trial_end = find(diff(trial_on~=0) == -1, 1, 'last');
+    trial_duration = trial_end-trial_start+1;
+    if trial_duration > 2500
+        continue
+    end
+    
     rewards = Traces.Rewards{idx};
     
     % sniffs
@@ -76,12 +106,24 @@ for idx = 1:length(Traces.Lever)
     end
     
 %     figure; hold on;
-%     plot(respData_filtered);
-%     plot(lever_smooth);
-%     plot(locs_2, 0, 'or')
-% %     plot(mov_locs, lever_smooth(mov_locs), 'or');
-%     plot(movement_signal*5)
-%     plot(trial_on)
+%     plot(lever_smooth, 'linewidth', 1);
+%     plot(5*(trial_on~=0), 'linewidth', 1)
+%     plot(Traces.Licks{idx}, 'linewidth', 1)
+%     plot(mov_locs, lever_smooth(mov_locs), 'or');
+%     set(gcf,'position',[0,0,1200,400])
+%     
+%     figure; hold on;
+% % %     plot(respData_filtered);
+%     plot(lever_smooth, 'linewidth', 1);
+%     plot(5*(trial_on~=0), 'linewidth', 1)
+%     plot(Traces.Licks{idx}, 'linewidth', 1)
+%     for i = 1:length(locs_2)
+%         xline(locs_2(i), 'linewidth', 1)
+%     end
+%     plot(501, lever_smooth(501), 'ob', 'linewidth', 1)
+%     plot(mov_locs_2(find(mov_locs_2 > 501, 1)), lever_smooth(mov_locs_2(find(mov_locs_2 > 501, 1))), 'oc', 'linewidth', 1)
+%     plot(intersect(find(movement_signal > 0), find(trial_on ~= 0)), lever_smooth(intersect(find(movement_signal > 0), find(trial_on ~= 0))), '+r', 'linewidth', 1);
+%     set(gcf,'position',[0,0,1200,400])
 %     break
     
 end

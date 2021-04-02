@@ -1,11 +1,28 @@
-% filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191226_r0.mat";
-% name = "K1_20191226_r0";
+clear all;
+
+%%
+% K1
+filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191215_r0.mat";
+name = "K1_20191215_r0";
 % 
 % filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191217_r0.mat";
 % name = "K1_20191217_r0";
 % 
-filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20200120_r0.mat";
-name = "K4_20200120_r0";
+% filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191226_r0.mat";
+% name = "K1_20191226_r0";
+% 
+% filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191227_r0.mat";
+% name = "K1_20191227_r0";
+% % 
+% % K4
+% filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20191217_r0.mat";
+% name = "K4_20191217_r0";
+% 
+% filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20191229_r1.mat";
+% name = "K4_20191229_r1";
+% 
+% filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20200120_r0.mat";
+% name = "K4_20200120_r0";
 
 save = 0;
 
@@ -23,8 +40,19 @@ for idx = 1:length(Traces.Lever)
     if(isempty(RespData))
         continue
     end
+    if(isnan(TrialInfo.OdorStart(idx,2)))
+        continue
+    end
 
     trial_on = Traces.Trial{idx};
+    
+    trial_start = find(diff(trial_on~=0) == 1, 1);
+    trial_end = find(diff(trial_on~=0) == -1, 1, 'last');
+    trial_duration = trial_end-trial_start+1;
+    if trial_duration > 2500
+        continue
+    end
+    
     rewards = Traces.Rewards{idx};
     
     % sniffs
