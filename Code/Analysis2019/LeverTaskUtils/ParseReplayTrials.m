@@ -9,7 +9,11 @@ global startoffset; % = 1; % seconds
 LeverCol = find(cellfun(@isempty,regexp(DataTags,'Lever'))==0);
 MotorCol = find(cellfun(@isempty,regexp(DataTags,'Motor'))==0);
 EncoderCol = find(cellfun(@isempty,regexp(DataTags,'Encoder'))==0);
-RespCol = find(cellfun(@isempty,regexp(DataTags,'respiration'))==0);
+if ~isempty(find(cellfun(@isempty,regexp(DataTags,'thermistor'))==0))
+    RespCol = find(cellfun(@isempty,regexp(DataTags,'thermistor'))==0);
+else
+    RespCol = find(cellfun(@isempty,regexp(DataTags,'respiration'))==0);
+end
 LickCol = find(cellfun(@isempty,regexp(DataTags,'Licks'))==0);
 TrialCol = find(cellfun(@isempty,regexp(DataTags,'TrialON'))==0);
 RewardCol = find(cellfun(@isempty,regexp(DataTags,'Rewards'))==0);
@@ -46,6 +50,8 @@ if ~isempty(Replay_Starts)
         'SampleNumber';...
         'Rewards'; ...
         'TimeStamps'};
+    
+    
     
     for thisBlock = 1:OL_Blocks
         FirstTrial = find(TrialInfo.SessionTimestamps(:,1)>=OL_Starts(thisBlock),1,'first');

@@ -16,12 +16,14 @@ narginchk(1,inf)
 params = inputParser;
 params.CaseSensitive = false;
 params.addParameter('plotsession', false, @(x) islogical(x) || x==0 || x==1);
-params.addParameter('chunksession', false, @(x) islogical(x) || x==0 || x==1);
 params.addParameter('respiration', false, @(x) islogical(x) || x==0 || x==1);
 params.addParameter('tuning', false, @(x) islogical(x) || x==0 || x==1);
 params.addParameter('replay', false, @(x) islogical(x) || x==0 || x==1);
 params.addParameter('spikes', false, @(x) islogical(x) || x==0 || x==1);
 params.addParameter('photometry', false, @(x) islogical(x) || x==0 || x==1);
+
+params.addParameter('chunksession', false, @(x) islogical(x) || x==0 || x==1);
+
 
 % extract values from the inputParser
 params.parse(varargin{:});
@@ -95,6 +97,14 @@ if do_spikes
     SingleUnits = GetSingleUnits(myephysdir);
     [SingleUnits] = Spikes2Trials(TTLs, SingleUnits);
     %[SingleUnits, EphysTuningTrials] = Spikes2Trials_Tuning(myephysdir, TS, TrialInfo, MyTuningTrials);
+    
+    % keep only good units
+    GoodUnits = [];
+    for i = 1:size(SingleUnits,2)
+        if SingleUnits(i).quality == 1
+            GoodUnits = [GoodUnits i];
+        end
+    end
 else
     SingleUnits = [];
 end
@@ -107,7 +117,7 @@ if do_replay && any(diff(MySettings(:,32))== 2) && ~isempty(WhereSpikeFile(MyFil
     [Replay, TTLs] = ParseReplayTrials(MyData, MySettings, DataTags, TrialInfo, TTLs);
     whichreplay = 1;
     %PlotReplayTrials(Replay, TrialInfo, TargetZones, SingleUnits, TTLs);
-    ProcessReplayTrials(Replay, TrialInfo, TargetZones, SingleUnits, TTLs, 'plotfigures',0,'whichunits', [6:10]);
+    ProcessReplayTrials(Replay, TrialInfo, TargetZones, SingleUnits, TTLs, 'plotfigures',0,'whichunits', GoodUnits);
     else
         disp('No Oeps File found: Cannot process replay sessions!');
     end
@@ -125,7 +135,7 @@ if do_tuning
 end
 
 if do_spikes
-%     %% get Spikes
+    %% get Spikes
 %     [SingleUnits, EphysTuningTrials] = Spikes2Trials(myephysdir, TS, TrialInfo, MyTuningTrials);
 %     
 %     if ~isempty(EphysTuningTrials)
