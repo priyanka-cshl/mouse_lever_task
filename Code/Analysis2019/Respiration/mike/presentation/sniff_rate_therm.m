@@ -1,31 +1,17 @@
 clear all;
 
 %%
-% K1
-% filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191215_r0.mat";
-% name = "K1_20191215_r0";
 
-% filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191217_r0.mat";
-% name = "K1_20191217_r0";
+% PCX3
 % 
-% filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191226_r0.mat";
-% name = "K1_20191226_r0";
-% 
-% filepath = "/Users/xizheng/Documents/florin/respiration/K1/K1_20191227_r0.mat";
-% name = "K1_20191227_r0";
-% 
-% % K4
-% filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20191217_r0.mat";
-% name = "K4_20191217_r0";
-% 
-% filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20191229_r1.mat";
-% name = "K4_20191229_r1";
-% 
-filepath = "/Users/xizheng/Documents/florin/respiration/K4/K4_20200120_r0.mat";
-name = "K4_20200120_r0";
+filepath = "/Users/xizheng/Documents/florin/respiration/PCX3/PCX3_20210309_r0.mat";
+name = "PCX3_20210309_r0";
 
 % filepath = "/Users/xizheng/Documents/florin/respiration/PCX3/PCX3_20210316_r0.mat";
 % name = "PCX3_20210316_r0";
+% 
+% filepath = "/Users/xizheng/Documents/florin/respiration/PCX3/PCX3_20210323_r0.mat";
+% name = "PCX3_20210323_r0";
 
 save = 0;
 
@@ -44,8 +30,9 @@ frequency_odor_start = NaN(length(Traces.Lever), 3501);
 sniff_odor_start = NaN(length(Traces.Lever), 3501);
 
 for idx = 1:length(Traces.Lever)
-    RespData = Traces.Sniffs{idx};
-    if(isempty(RespData))
+%     idx = 110;
+    Thermistor = Traces.Sniffs{idx};
+    if(isempty(Thermistor))
         continue
     end
     if(isnan(TrialInfo.OdorStart(idx,2)))
@@ -63,33 +50,34 @@ for idx = 1:length(Traces.Lever)
     
     rewards = Traces.Rewards{idx};
 
-    % rescale the data
-    RespData = RespData - median(RespData);
+    % filter the thermistor data
+    sr = 500;   % sampling rate
+    nqf = sr/2; % Nyquist freq.
+    [b,a] = butter(3,[1.5 30]/nqf,'bandpass');   % Butterworth filter
+    ThermistorFiltered = filter(b,a,Thermistor);  % filtez
 
-    % invert: inhalations should be negative
-    RespData = -RespData;
+    ThermistorFiltered = smoothdata(Thermistor, 'movmean', 13);
 
-    % smooth pressure data by moving mean filter
-    respData_filtered = smoothdata(RespData);
-
-    % find peak, valley, zci for pressure data
-
-    [pks_1,locs_1,w_1,p_1] = findpeaks(respData_filtered, 'MinPeakProminence', 0.3, 'MinPeakDistance', 20);
-    [pks_2,locs_2,w_2,p_2] = findpeaks(-respData_filtered, 'MinPeakProminence', 0.3, 'MinPeakDistance', 20, 'MinPeakHeight', 0.1);
-
-    zci = @(v) find(diff(sign(v))<0 & diff(v) < -0.001);
-    zero_crossings = zci(respData_filtered);
+    [therm_pks_2,therm_locs_2,therm_w_2,therm_p_2] = findpeaks(-ThermistorFiltered, 'MinPeakProminence', 0.04, 'MinPeakDistance', 20);
+    locs_2 = therm_locs_2-21;
+    locs_2 = locs_2(locs_2 > 0);
+    
+%     figure; hold on;
+%     plot(Thermistor);
+%     plot(ThermistorFiltered);
+%     plot(therm_locs_2, ThermistorFiltered(therm_locs_2), 'or');  
+%     break
 
     zci_interval_length = diff(locs_2);
 
     sr = 500;
 
-    frequency = NaN(1, length(RespData));
+    frequency = NaN(1, length(Thermistor));
     for i = 1:length(locs_2)-1
         frequency(locs_2(i):locs_2(i+1)-1) = 500/zci_interval_length(i);
     end
     
-    sniffs = zeros(1, length(RespData));
+    sniffs = zeros(1, length(Thermistor));
     sniffs(locs_2) = 1;
     
     % align to trial start and rewards
@@ -98,6 +86,9 @@ for idx = 1:length(Traces.Lever)
     sniff_start(idx, 1:trial_end) = sniffs(1:trial_end);
     
     odor_start_offset = TrialInfo.OdorStart(idx,2)*sr;
+    if odor_start_offset > 0
+        odor_start_offset = 0;
+    end
     
     frequency_odor_start(idx, -odor_start_offset+1:-odor_start_offset+trial_end) = frequency(1:trial_end);
     sniff_odor_start(idx, -odor_start_offset+1:-odor_start_offset+trial_end) = sniffs(1:trial_end);
