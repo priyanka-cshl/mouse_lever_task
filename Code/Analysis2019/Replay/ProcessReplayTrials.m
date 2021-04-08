@@ -124,8 +124,8 @@ for x = 1:numel(allreplays) % for every unique replay stretch
             MyUnit = whichUnits(i);
             
             if plotreplayfigs || savereplayfigs
-                if mod(MyUnit,units_per_fig)
-                    FRplot = 2*mod(MyUnit,units_per_fig);
+                if mod(i,units_per_fig)
+                    FRplot = 2*mod(i,units_per_fig);
                 else
                     FRplot = 2*units_per_fig;
                 end

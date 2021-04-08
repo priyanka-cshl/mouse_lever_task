@@ -117,7 +117,7 @@ if do_replay && any(diff(MySettings(:,32))== 2) && ~isempty(WhereSpikeFile(MyFil
     [Replay, TTLs] = ParseReplayTrials(MyData, MySettings, DataTags, TrialInfo, TTLs);
     whichreplay = 1;
     %PlotReplayTrials(Replay, TrialInfo, TargetZones, SingleUnits, TTLs);
-    ProcessReplayTrials(Replay, TrialInfo, TargetZones, SingleUnits, TTLs, 'plotfigures',0,'whichunits', GoodUnits);
+    ProcessReplayTrials(Replay, TrialInfo, TargetZones, SingleUnits, TTLs, 'plotfigures',1,'whichunits', [13 15]);
     else
         disp('No Oeps File found: Cannot process replay sessions!');
     end
@@ -136,11 +136,11 @@ end
 
 if do_spikes
     %% get Spikes
-%     [SingleUnits, EphysTuningTrials] = Spikes2Trials(myephysdir, TS, TrialInfo, MyTuningTrials);
-%     
-%     if ~isempty(EphysTuningTrials)
-%         PlotTuning(SingleUnits, EphysTuningTrials, MyTuningTrials);
-%     end
+    [EphysTuningTrials] = AlightPassiveTuningTrials(MyTuningTrials, TTLs, size(Trials.Indices,1));
+    
+    if ~isempty(EphysTuningTrials)
+        PlotPassiveTuning(SingleUnits, EphysTuningTrials, MyTuningTrials, 'plotfigures',1,'whichunits', [13 15]);
+    end
     %PlotReplay(Traces, TrialInfo, TargetZones, Replay, SingleUnits);
     
     
