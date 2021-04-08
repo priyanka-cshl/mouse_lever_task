@@ -5,15 +5,17 @@ global MyFileName;
 narginchk(1,inf)
 params = inputParser;
 params.CaseSensitive = false;
-params.addParameter('plotfigures', false, @(x) islogical(x) || x==0 || x==1);
 params.addParameter('savefigures', false, @(x) islogical(x) || x==0 || x==1);
 params.addParameter('whichunits', [], @(x) isnumeric(x));
+params.addParameter('rasters', false, @(x) islogical(x) || x==0 || x==1);
+params.addParameter('psth', false, @(x) islogical(x) || x==0 || x==1);
 
 % extract values from the inputParser
 params.parse(varargin{:});
-plotfigs = params.Results.plotfigures;
 savefigs = params.Results.savefigures;
 whichUnits = params.Results.whichunits;
+plotraster = params.Results.rasters;
+plotpsth = params.Results.psth;
 
 Locations = unique(MyTuningTrials(:,1));
 Odors = unique(EphysTuningTrials(:,4));
@@ -37,7 +39,7 @@ for x = 1:numel(whichUnits) % for every cell
         thisOdor = Odors(MyOdor);
         for MyLocation = 1:numel(Locations(:,1))
             
-            if plotfigs
+            if plotraster
                 if mod(x,nrows)
                     whichsubplot = ncols*(mod(x,nrows)-1) + MyLocation;
                     %whichsubplot = mod(MyUnit,20);
@@ -69,7 +71,7 @@ for x = 1:numel(whichUnits) % for every cell
             for i = 1:numel(MyTrials)
                 thisTrialSpikeTimes = allspikes(SingleUnits(MyUnit).trialtags == MyTrials(i));
                 
-                if plotfigs
+                if plotraster
                     % plot the spike raster
                     row_idx = 5*(MyOdor-1) + i;
                     for eachspike = 1:numel(thisTrialSpikeTimes) % plot raster line
@@ -91,7 +93,7 @@ for x = 1:numel(whichUnits) % for every cell
         end
     end
     
-    if plotfigs
+    if plotraster
         % Plot settings
         for MyPlot = whichsubplot-ncols+1:whichsubplot
             subplot(nrows,ncols,MyPlot);
@@ -130,7 +132,7 @@ for x = 1:numel(whichUnits) % for every cell
        end
     end
     
-    if plotfigs
+    if plotpsth
         if mod(x,20)
             subplot(4,5,mod(x,20));
         else
@@ -143,15 +145,17 @@ for x = 1:numel(whichUnits) % for every cell
         plot(Locations,TuningCurve(4,:),'color',Plot_Colors('t'));
         title(['Unit# ',num2str(MyUnit)]);
         
-        if savefigs
+        
             if mod(x,20) == 0
-                saveas(gcf,[MyFileName,'_TuningCurve_',num2str(MyUnit/nrows),'.fig']);
-                set(gcf,'renderer','Painters');
-                print([MyFileName,'_TuningCurve_',num2str(MyUnit/nrows),'.eps'],'-depsc','-tiff','-r300','-painters');
-                close(gcf);
+                if savefigs
+                    saveas(gcf,[MyFileName,'_TuningCurve_',num2str(MyUnit/nrows),'.fig']);
+                    set(gcf,'renderer','Painters');
+                    print([MyFileName,'_TuningCurve_',num2str(MyUnit/nrows),'.eps'],'-depsc','-tiff','-r300','-painters');
+                    close(gcf);
+                end
                 figure;
             end
-        end
+        
     end
 end
 

@@ -233,7 +233,7 @@ for x = 1:numel(allreplays) % for every unique replay stretch
             
                 title(['Unit# ',num2str(MyUnit)]);
                 
-                if mod(MyUnit,units_per_fig) == 0
+                if mod(i,units_per_fig) == 0
                     if savereplayfigs
                         saveas(gcf,[MyFileName,'_MyUnits_',num2str(MyUnit/units_per_fig),'.fig']);
                         close(gcf);
@@ -262,6 +262,9 @@ for x = 1:numel(allreplays) % for every unique replay stretch
     Behavior(whichreplay).Odor = Odor;
     
     Physiology(whichreplay).PSTH = PSTH;
+    
+    Physiology(whichreplay).Correlation = PSTHCorr(PSTH,whichUnits);
+
 
 end
 
