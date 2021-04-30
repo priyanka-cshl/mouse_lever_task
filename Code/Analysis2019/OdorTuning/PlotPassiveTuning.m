@@ -100,14 +100,15 @@ for x = 1:numel(whichUnits) % for every cell
             set(gca,'XTick',[],'YTick',[],'TickDir','out');
         end
         
-        if savefigs
-            if mod(x,nrows) == 0
+        
+        if mod(x,nrows) == 0
+            if savefigs
                 saveas(gcf,[MyFileName,'_TuningRaster_',num2str(MyUnit/nrows),'.fig']);
                 set(gcf,'renderer','Painters');
                 print([MyFileName,'_TuningRaster_',num2str(MyUnit/nrows),'.eps'],'-depsc','-tiff','-r300','-painters');
                 close(gcf);
-                figure;
             end
+            figure;
         end
     end
 end

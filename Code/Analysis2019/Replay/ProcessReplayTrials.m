@@ -161,7 +161,7 @@ for x = 1:numel(allreplays) % for every unique replay stretch
             end
             
             myPSTH = MakePSTH(MySpikeTimes',0,[0 ceil(offset*1000)],'downsample',SampleRate);
-            PSTH(1,:,i) = myPSTH;
+            PSTH(1,1:numel(myPSTH),i) = myPSTH;
             
             if plotreplayfigs || savereplayfigs
                 % plot raster
@@ -208,7 +208,7 @@ for x = 1:numel(allreplays) % for every unique replay stretch
                     end
                 end
                 
-                PSTH(1+thisTrial,:,i) = myPSTH';
+                PSTH(1+thisTrial,1:numel(myPSTH),i) = myPSTH';
                 
                 if plotreplayfigs || savereplayfigs
                     % plot raster
