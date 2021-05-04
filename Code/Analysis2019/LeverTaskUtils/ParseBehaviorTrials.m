@@ -41,7 +41,11 @@ LickCol = find(cellfun(@isempty,regexp(DataTags,'Licks'))==0);
 RewardCol = find(cellfun(@isempty,regexp(DataTags,'Rewards'))==0);
 TZoneCol = find(cellfun(@isempty,regexp(DataTags,'InTargetZone'))==0);
 RZoneCol = find(cellfun(@isempty,regexp(DataTags,'InRewardZone'))==0);
-RespCol = find(cellfun(@isempty,regexp(DataTags,'respiration'))==0);
+if ~isempty(find(cellfun(@isempty,regexp(DataTags,'thermistor'))==0))
+    RespCol = find(cellfun(@isempty,regexp(DataTags,'thermistor'))==0);
+else
+    RespCol = find(cellfun(@isempty,regexp(DataTags,'respiration'))==0);
+end
 HomeCol = find(cellfun(@isempty,regexp(DataTags,'HomeSensor'))==0);
 PerturbationCol(1) = find(cellfun(@isempty,regexp(DataTags,'WhichPerturbation'))==0);
 PerturbationCol(2) = find(cellfun(@isempty,regexp(DataTags,'PerturbationValue'))==0);
