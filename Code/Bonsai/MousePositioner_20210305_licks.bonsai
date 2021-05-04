@@ -98,7 +98,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="cv:LoadImage">
-                <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camA.png</cv:FileName>
+                <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX1\PCX1_camA.png</cv:FileName>
                 <cv:Mode>Grayscale</cv:Mode>
               </Combinator>
             </Expression>
@@ -159,7 +159,7 @@
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="cv:SaveImage">
-          <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camA.png</cv:FileName>
+          <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX1\PCX1_camA.png</cv:FileName>
           <cv:Suffix>None</cv:Suffix>
         </Combinator>
       </Expression>
@@ -191,7 +191,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="cv:LoadImage">
-                <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camB.png</cv:FileName>
+                <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX1\PCX1_camB.png</cv:FileName>
                 <cv:Mode>Grayscale</cv:Mode>
               </Combinator>
             </Expression>
@@ -228,6 +228,77 @@
         <Combinator xsi:type="cv:Normalize" />
       </Expression>
       <Expression xsi:type="Combinator">
+        <Combinator xsi:type="cv:RangeThreshold">
+          <cv:Lower>
+            <cv:Val0>0.3</cv:Val0>
+            <cv:Val1>0</cv:Val1>
+            <cv:Val2>0</cv:Val2>
+            <cv:Val3>0</cv:Val3>
+          </cv:Lower>
+          <cv:Upper>
+            <cv:Val0>1</cv:Val0>
+            <cv:Val1>1</cv:Val1>
+            <cv:Val2>1</cv:Val2>
+            <cv:Val3>1</cv:Val3>
+          </cv:Upper>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="cv:RoiActivity">
+          <cv:Regions>
+            <cv:ArrayOfPoint>
+              <cv:Point>
+                <cv:X>450</cv:X>
+                <cv:Y>395</cv:Y>
+              </cv:Point>
+            </cv:ArrayOfPoint>
+            <cv:ArrayOfPoint>
+              <cv:Point>
+                <cv:X>384</cv:X>
+                <cv:Y>375</cv:Y>
+              </cv:Point>
+              <cv:Point>
+                <cv:X>418</cv:X>
+                <cv:Y>375</cv:Y>
+              </cv:Point>
+              <cv:Point>
+                <cv:X>418</cv:X>
+                <cv:Y>400</cv:Y>
+              </cv:Point>
+              <cv:Point>
+                <cv:X>384</cv:X>
+                <cv:Y>400</cv:Y>
+              </cv:Point>
+            </cv:ArrayOfPoint>
+            <cv:ArrayOfPoint>
+              <cv:Point>
+                <cv:X>454</cv:X>
+                <cv:Y>404</cv:Y>
+              </cv:Point>
+              <cv:Point>
+                <cv:X>455</cv:X>
+                <cv:Y>404</cv:Y>
+              </cv:Point>
+              <cv:Point>
+                <cv:X>455</cv:X>
+                <cv:Y>404</cv:Y>
+              </cv:Point>
+              <cv:Point>
+                <cv:X>454</cv:X>
+                <cv:Y>404</cv:Y>
+              </cv:Point>
+            </cv:ArrayOfPoint>
+          </cv:Regions>
+          <cv:Operation>Sum</cv:Operation>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="cv:RoiActivityDetected">
+          <cv:Index>1</cv:Index>
+          <cv:Threshold>30000</cv:Threshold>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="Combinator">
         <Combinator xsi:type="rx:CombineLatest" />
       </Expression>
       <Expression xsi:type="Condition">
@@ -252,7 +323,7 @@
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="cv:SaveImage">
-          <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camB.png</cv:FileName>
+          <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX1\PCX1_camB.png</cv:FileName>
           <cv:Suffix>None</cv:Suffix>
         </Combinator>
       </Expression>
@@ -413,7 +484,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="StringProperty">
-                <Value>PCX3</Value>
+                <Value>PCX1</Value>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
@@ -509,22 +580,22 @@
     </Nodes>
     <Edges>
       <Edge From="0" To="1" Label="Source1" />
-      <Edge From="0" To="36" Label="Source1" />
+      <Edge From="0" To="39" Label="Source1" />
       <Edge From="1" To="2" Label="Source1" />
-      <Edge From="1" To="32" Label="Source1" />
-      <Edge From="1" To="39" Label="Source1" />
+      <Edge From="1" To="35" Label="Source1" />
+      <Edge From="1" To="42" Label="Source1" />
       <Edge From="2" To="3" Label="Source1" />
       <Edge From="3" To="29" Label="Source2" />
       <Edge From="4" To="25" Label="Source1" />
       <Edge From="5" To="6" Label="Source1" />
       <Edge From="6" To="7" Label="Source1" />
       <Edge From="6" To="20" Label="Source1" />
-      <Edge From="6" To="41" Label="Source1" />
+      <Edge From="6" To="44" Label="Source1" />
       <Edge From="7" To="8" Label="Source1" />
       <Edge From="8" To="17" Label="Source2" />
       <Edge From="9" To="13" Label="Source1" />
       <Edge From="10" To="11" Label="Source1" />
-      <Edge From="11" To="32" Label="Source2" />
+      <Edge From="11" To="35" Label="Source2" />
       <Edge From="11" To="20" Label="Source2" />
       <Edge From="12" To="13" Label="Source2" />
       <Edge From="13" To="14" Label="Source1" />
@@ -541,23 +612,26 @@
       <Edge From="25" To="26" Label="Source1" />
       <Edge From="26" To="27" Label="Source1" />
       <Edge From="26" To="28" Label="Source1" />
-      <Edge From="27" To="35" Label="Source2" />
+      <Edge From="27" To="38" Label="Source2" />
       <Edge From="28" To="29" Label="Source1" />
       <Edge From="29" To="30" Label="Source1" />
       <Edge From="30" To="31" Label="Source1" />
+      <Edge From="31" To="32" Label="Source1" />
       <Edge From="32" To="33" Label="Source1" />
       <Edge From="33" To="34" Label="Source1" />
-      <Edge From="34" To="35" Label="Source1" />
+      <Edge From="35" To="36" Label="Source1" />
       <Edge From="36" To="37" Label="Source1" />
       <Edge From="37" To="38" Label="Source1" />
-      <Edge From="38" To="39" Label="Source2" />
-      <Edge From="38" To="41" Label="Source2" />
       <Edge From="39" To="40" Label="Source1" />
-      <Edge From="41" To="42" Label="Source1" />
-      <Edge From="43" To="44" Label="Source1" />
-      <Edge From="43" To="46" Label="Source1" />
+      <Edge From="40" To="41" Label="Source1" />
+      <Edge From="41" To="42" Label="Source2" />
+      <Edge From="41" To="44" Label="Source2" />
+      <Edge From="42" To="43" Label="Source1" />
       <Edge From="44" To="45" Label="Source1" />
       <Edge From="46" To="47" Label="Source1" />
+      <Edge From="46" To="49" Label="Source1" />
+      <Edge From="47" To="48" Label="Source1" />
+      <Edge From="49" To="50" Label="Source1" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>

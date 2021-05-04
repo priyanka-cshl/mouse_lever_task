@@ -136,11 +136,11 @@ switch char(handles.computername)
         handles.useserver = 1; % change to zero if there's a network issue
         
         % sensors and scaling
-        handles.DAC_settings.Data = [2.00 2.15]';
+        handles.DAC_settings.Data = [2.0 2.15]'; %[2.08 2.1]';
         
         % Plots
-        handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.1 NaN NaN]; % gains
-        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 5 7.0 NaN NaN]; % gains
+        handles.PlotSettings.Data(:,1) = [NaN 1 0.5 1 0.1 NaN NaN]; % gains
+        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 4 7.0 NaN NaN]; % gains
         handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
         
         % Rewards

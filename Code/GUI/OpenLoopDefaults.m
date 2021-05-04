@@ -66,6 +66,8 @@ switch char(handles.computername)
         
     case {'BALTHAZAR'} % Rig 2
         
+        handles.TrialSettings.Data = [500 500 500 100 400 500]';
+        
         handles.useserver = 1; % change to zero if there's a network issue
         
         % sensors and scaling
