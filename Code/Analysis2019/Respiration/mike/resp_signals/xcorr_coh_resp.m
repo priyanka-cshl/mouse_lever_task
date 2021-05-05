@@ -52,12 +52,12 @@ figure;
 plot(lags, r);
 title("cross correlation");
 
-%%
-
-figure; hold on;
-plot(respData_filtered);
-plot(circshift(ThermistorFiltered, -21));
-title("shifted");
+% %%
+% 
+% figure; hold on;
+% plot(respData_filtered);
+% plot(circshift(ThermistorFiltered, -21));
+% title("shifted");
 
 %% coherence
 

@@ -61,7 +61,7 @@
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="wie:KeyDown">
-          <wie:Filter>S</wie:Filter>
+          <wie:Filter>LButton RButton Cancel ShiftKey ControlKey Menu Pause A B C P Q R S Alt</wie:Filter>
           <wie:SuppressRepetitions>false</wie:SuppressRepetitions>
         </Combinator>
       </Expression>
@@ -98,7 +98,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="cv:LoadImage">
-                <cv:FileName>C:\Users\Rig\Desktop\MouseImages\M04\M04_camA.png</cv:FileName>
+                <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camA.png</cv:FileName>
                 <cv:Mode>Grayscale</cv:Mode>
               </Combinator>
             </Expression>
@@ -159,7 +159,7 @@
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="cv:SaveImage">
-          <cv:FileName>C:\Users\Rig\Desktop\MouseImages\M04\M04_camA.png</cv:FileName>
+          <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camA.png</cv:FileName>
           <cv:Suffix>None</cv:Suffix>
         </Combinator>
       </Expression>
@@ -191,7 +191,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="cv:LoadImage">
-                <cv:FileName>C:\Users\Rig\Desktop\MouseImages\M04\M04_camB.png</cv:FileName>
+                <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camB.png</cv:FileName>
                 <cv:Mode>Grayscale</cv:Mode>
               </Combinator>
             </Expression>
@@ -252,7 +252,7 @@
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="cv:SaveImage">
-          <cv:FileName>C:\Users\Rig\Desktop\MouseImages\M04\M04_camB.png</cv:FileName>
+          <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camB.png</cv:FileName>
           <cv:Suffix>None</cv:Suffix>
         </Combinator>
       </Expression>
@@ -307,7 +307,7 @@
               </Expression>
               <Expression xsi:type="Combinator">
                 <Combinator xsi:type="cv:VideoWriter">
-                  <cv:FileName>C:\Users\Rig\Desktop\MouseVideos\M04\20210317\M04_camB.avi</cv:FileName>
+                  <cv:FileName>C:\Users\Rig\Desktop\MouseVideos\PCX2\20210318\PCX2_camB.avi</cv:FileName>
                   <cv:Suffix>FileCount</cv:Suffix>
                   <cv:Buffered>true</cv:Buffered>
                   <cv:Overwrite>false</cv:Overwrite>
@@ -368,7 +368,7 @@
               </Expression>
               <Expression xsi:type="Combinator">
                 <Combinator xsi:type="cv:VideoWriter">
-                  <cv:FileName>C:\Users\Rig\Desktop\MouseVideos\M04\20210317\M04_camA.avi</cv:FileName>
+                  <cv:FileName>C:\Users\Rig\Desktop\MouseVideos\PCX2\20210318\PCX2_camA.avi</cv:FileName>
                   <cv:Suffix>FileCount</cv:Suffix>
                   <cv:Buffered>true</cv:Buffered>
                   <cv:Overwrite>false</cv:Overwrite>
@@ -413,7 +413,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="StringProperty">
-                <Value>M04</Value>
+                <Value>PCX3</Value>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
@@ -442,7 +442,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="StringProperty">
-                <Value>20210317</Value>
+                <Value>20210318</Value>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">

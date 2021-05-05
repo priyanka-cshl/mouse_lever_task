@@ -751,9 +751,10 @@ if usrans == 1
         case {'PRIYANKA-HP'}
             print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name],'-dpng','-r0');
             display(['saved GUI screen shot at ' ('C:\Users\pgupta\Desktop')])
-        case {'JUSTINE'}
+        case {'JUSTINE','BALTHAZAR'}
             print(gcf,['C:\Users\Rig\Desktop\','GUI_',animal_name],'-dpng','-r0');
             display(['saved GUI screen shot at ' ('C:\Users\Rig\Desktop')])
+            
     end
     trialsdone = handles.ProgressReport.Data(end,1);
     hitrate = handles.ProgressReport.Data(end,3);

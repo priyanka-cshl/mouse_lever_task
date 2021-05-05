@@ -1,4 +1,4 @@
-FileName = '/Users/xizheng/Documents/florin/respiration/Therm2/Therm2_20190905_r0.mat';
+FileName = '/Users/xizheng/Documents/florin/respiration/Therm3/Therm3_20190928_r0.mat';
 
 disp(FileName);
 
@@ -115,3 +115,10 @@ title(sprintf('zci pressure vs. therm infer (mean:%.2f, median:%.2f, sd:%.2f)\n'
 
 fprintf('zci pressure vs. therm infer (mean:%.2f, median:%.2f, sd:%.2f)\n', mean(closest_neighbor_zci), median(closest_neighbor_zci), std(closest_neighbor_zci));
 
+%%
+
+figure; hold on;
+plot(respData_filtered);
+plot(ThermistorFiltered);
+plot(locs_2,respData_filtered(locs_2),'ob');
+plot(therm_locs_2, ThermistorFiltered(therm_locs_2),'or');

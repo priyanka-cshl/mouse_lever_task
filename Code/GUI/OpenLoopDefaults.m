@@ -34,7 +34,8 @@ handles.motor_params = 4; % motor step size
 handles.MFC_table.Data = [1.6 0.64]'; %[1.6 0.4]';
 handles.Zero_MFC.Value = 0;
 handles.which_stage.Value = 3; % training stage
-handles.TransferFunction.Data(2) = 100; % block size (1 = no blocks)
+handles.TransferFunction.Data(2) = 100; % block size (1 = no blocks)'
+handles.DoSequence.Value = 0;
         
 switch char(handles.computername)
     
@@ -65,6 +66,8 @@ switch char(handles.computername)
         handles.PhotometryParams.Data = [5000 211 531 0.6 0.6];
         
     case {'BALTHAZAR'} % Rig 2
+        
+        handles.TrialSettings.Data = [500 500 500 100 400 500]';
         
         handles.useserver = 1; % change to zero if there's a network issue
         
