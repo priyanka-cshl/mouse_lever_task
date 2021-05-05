@@ -151,6 +151,7 @@ unsigned short sequence_array[9] = {0}; // ArCOM aray needs unsigned shorts {121
 int sequence_timing[] = {500, 500, 500, 500}; //pre-odor, odor, post-odor, iti in ms
 int sequence_location = 0;
 int sequence_odors[] = {500, 500, 500, 500};
+int stimcount = 0;
 
 // variables - camera sync
 int camera_pin = 49;
@@ -478,6 +479,13 @@ void loop()
     digitalWrite(trial_reporter_pin, ((trialstate[0] > 0) && (trialstate[0] < 5))); // active trial?
     digitalWrite(in_reward_zone_reporter_pin, (which_odor > 0)); // is Odor valve ON?
   }
+  else if (Sequence_mode)
+  {
+    //send_odor_to_manifold();
+    digitalWrite(trial_reporter_pin, ((trialstate[0] > 0) && (trialstate[0] < 5))); // active trial?
+    digitalWrite(in_reward_zone_reporter_pin, (which_odor > 0)); // is Odor valve ON?
+  }
+  
 
   //----------------------------------------------------------------------------
 
@@ -506,6 +514,10 @@ void loop()
     else if (PID_mode)
     {
       trialstate[1] = openlooptrialstates.WhichState(trialstate[0], (micros() - trial_timestamp));
+    }
+    else if (Sequence_mode)
+    {
+      trialstate[1] = sequencetrialstates.WhichState(trialstate[0], (micros() - trial_timestamp), stimcount);
     }
   }
   else
@@ -650,6 +662,55 @@ void loop()
     }
     trialstate[0] = trialstate[1];
   }
+
+  if ((trialstate[1] != trialstate[0]) && Sequence_mode) // trial state changes
+  {
+    trial_timestamp = micros();
+    if (timer_override)
+    {
+      switch (trialstate[1])
+      {
+        case 0: // move motor to desired location and give it time to settle
+          stimulus_state[1] = sequence_location;
+          odor_valve_state = false; // keep odor valve closed (blank vial is Onand going to exhaust)
+          air_valve_state = false;
+          send_odor_to_manifold();
+          stimcount = 0;
+          break;
+        case 1: // pre-odor, no-flow
+          which_odor = 0;
+          odor_valve_state = true; // blank vial on
+          air_valve_state = true;
+          send_odor_to_manifold();
+          break;
+        case 4: // odor, switch odor vial to odor, turn on flow
+          which_odor = sequence_odors[stimcount]; // odor vial number
+          odor_valve_state = true;
+          air_valve_state = true;
+          send_odor_to_manifold();
+          stimcount = stimcount + 1;
+          break;
+        case 2: // in-between odors
+          which_odor = 0;
+          odor_valve_state = true; // blank vial on
+          air_valve_state = true;
+          send_odor_to_manifold();
+          break;
+        case 3: // post-odor, switch to air vial
+          which_odor = 0;
+          odor_valve_state = true; // keep odor valve closed (blank vial is On and going to mouse)
+          air_valve_state = true;
+          send_odor_to_manifold();
+          break;
+        case 5: // iti - no flow, clean air to exhaust
+          odor_valve_state = false; // keep odor valve closed (blank vial is Onand going to exhaust)
+          air_valve_state = false;
+          send_odor_to_manifold();
+          break;
+      }
+    }
+    trialstate[0] = trialstate[1];
+  }
   //----------------------------------------------------------------------------
 
   if (replay_flag == 4)
@@ -710,6 +771,7 @@ void loop()
             session_just_started = true;
             close_loop_mode = 1;
             PID_mode = 0;
+            Sequence_mode = 0;
             // fill stimulus position array
             stimulus_state[0] = 20;
             stimulus_state[1] = 20;
@@ -725,6 +787,7 @@ void loop()
             myUSB.writeUint16(7);
             close_loop_mode = 0;
             PID_mode = 0;
+            Sequence_mode = 0;
             timer_override = false;
             odor_valve_state = false;
             air_valve_state = false;
@@ -735,6 +798,7 @@ void loop()
             myUSB.writeUint16(3);
             close_loop_mode = 0;
             PID_mode = 0;
+            Sequence_mode = 0;
             cleaningON = true;
             odorON = false;
             timer_override = false;
@@ -745,6 +809,7 @@ void loop()
             myUSB.writeUint16(4);
             close_loop_mode = 0;
             PID_mode = 0;
+            Sequence_mode = 0;
             cleaningON = false;
             timer_override = false;
             camera_on = 1;
@@ -754,6 +819,7 @@ void loop()
             myUSB.writeUint16(8);
             PID_mode = 1;
             close_loop_mode = 0;
+            Sequence_mode = 0;
             // fill stimulus position array
             stimulus_state[0] = 121;
             stimulus_state[1] = 121;
@@ -769,6 +835,7 @@ void loop()
           case 6: // open loop stop
             myUSB.writeUint16(9);
             PID_mode = 0;
+            Sequence_mode = 0;
             close_loop_mode = 0;
             odor_valve_state = false;
             air_valve_state = false;
