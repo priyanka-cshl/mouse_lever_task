@@ -11,10 +11,10 @@ sequencetrialstates::sequencetrialstates()
 
 void sequencetrialstates::UpdateSequenceTrialParams(int trial_time[])
 {
-  _pre_odor_duration = 1000 * (trial_time[1] - 100);
-  _odor_duration = 1000 * trial_time[2];
-  _post_odor_duration = 1000 * trial_time[4]; 
-  _iti_duration = 1000 * trial_time[5];
+  _pre_odor_duration = 1000 * trial_time[0];
+  _odor_duration = 1000 * trial_time[1];
+  _post_odor_duration = 1000 * trial_time[2]; 
+  _iti_duration = 1000 * trial_time[3];
 }
 
 int sequencetrialstates::WhichState(int sequencetrialstate, long time_since_last_change, int stimcount)

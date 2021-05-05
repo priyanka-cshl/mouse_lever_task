@@ -5,6 +5,7 @@
 #include <DueTimer.h> // Import the ArCOM library
 #include "ArCOM.h"
 #include "openlooptrialstates.h" // function to process open loop trial states 13.02.18
+#include "sequencetrialstates.h"
 #include <SD.h> // for open loop
 // ----------------------------------------------------------------------------
 
@@ -150,7 +151,7 @@ unsigned int sequence_params = 9;
 unsigned short sequence_array[9] = {0}; // ArCOM aray needs unsigned shorts {121, 1, 2, 1, 2, 1, 500, 500, 500, 500}; //location, odor1-5, pre-odor, odor, post-odor, iti in ms
 int sequence_timing[] = {500, 500, 500, 500}; //pre-odor, odor, post-odor, iti in ms
 int sequence_location = 0;
-int sequence_odors[] = {500, 500, 500, 500};
+int sequence_odors[] = {1, 2, 1, 2, 1};
 int stimcount = 0;
 
 // variables - camera sync
@@ -293,6 +294,12 @@ void loop()
   {
     //lever_position = 0;
     motor_location = map(PID_location, 0, 255, 0, 65534); // max location is 256 - 8 bit
+    SPIWriter(dac_spi_pin, lever_position);
+  }
+  else if (Sequence_mode) // 13.02.18
+  {
+    //lever_position = 0;
+    motor_location = map(sequence_location, 0, 255, 0, 65534); // max location is 256 - 8 bit
     SPIWriter(dac_spi_pin, lever_position);
   }
   else if (replay_flag == 4)
@@ -481,7 +488,7 @@ void loop()
   }
   else if (Sequence_mode)
   {
-    //send_odor_to_manifold();
+    send_odor_to_manifold();
     digitalWrite(trial_reporter_pin, ((trialstate[0] > 0) && (trialstate[0] < 5))); // active trial?
     digitalWrite(in_reward_zone_reporter_pin, (which_odor > 0)); // is Odor valve ON?
   }
@@ -517,6 +524,7 @@ void loop()
     }
     else if (Sequence_mode)
     {
+      //trialstate[1] = 4;
       trialstate[1] = sequencetrialstates.WhichState(trialstate[0], (micros() - trial_timestamp), stimcount);
     }
   }
@@ -870,6 +878,8 @@ void loop()
             send_odor_to_manifold();
             timer_override = true;
             camera_on = 0;
+            camera = 0;
+            trial_timestamp = micros();
             break;
         }
         break;
@@ -896,9 +906,9 @@ void loop()
             UpdateOpenLoopParams(); // parse param array to variable names and update motor params
             break;
           case 2:            
-            sequence_params = myUSB.readUint16(); // get number of params to be updated
-            myUSB.readUint16Array(sequence_array, sequence_params);
-            myUSB.writeUint16Array(sequence_array, sequence_params);
+            num_of_params = myUSB.readUint16(); // get number of params to be updated
+            myUSB.readUint16Array(sequence_array, num_of_params);
+            myUSB.writeUint16Array(sequence_array, num_of_params);
             UpdateSequenceParams(); // parse param array to variable names and update motor params
             break;
         }
@@ -1164,12 +1174,14 @@ void UpdateSequenceParams() // 05.05.2021
   trialstate[0] = 5;
   // parse param array to variable names
   sequence_location = sequence_array[0]; // desired location
+  stimulus_state[1] = sequence_array[0];
   for (i = 1; i < 6; i++)
   {
-    sequence_odors[i] = sequence_array[i]; 
+    sequence_odors[i-1] = sequence_array[i]; 
+  }
   for (i = 6; i < 10; i++)
   {
-    sequence_timing[i] = seqeunce_array[i]; // pre-odor, odor, post-odor, iti in ms
+    sequence_timing[i-6] = sequence_array[i]; // pre-odor, odor, post-odor, iti in ms
   }
   sequencetrialstates.UpdateSequenceTrialParams(sequence_timing);
 }

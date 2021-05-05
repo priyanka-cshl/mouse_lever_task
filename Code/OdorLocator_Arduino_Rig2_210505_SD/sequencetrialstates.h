@@ -20,7 +20,7 @@ class sequencetrialstates
     int _iti_duration; // in ms
     long _time_since_last_change;
     int _sequencetrialstate;
-    int _stimcount
+    int _stimcount;
 };
 
 #endif

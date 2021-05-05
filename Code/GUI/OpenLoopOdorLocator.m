@@ -23,7 +23,7 @@ function varargout = OpenLoopOdorLocator(varargin)
 
 % Edit the above text to modify the response to help OpenLoopOdorLocator
 
-% Last Modified by GUIDE v2.5 14-Feb-2020 17:02:49
+% Last Modified by GUIDE v2.5 05-May-2021 10:25:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -185,7 +185,7 @@ guidata(hObject, handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
 SessionSettings_CellEditCallback(hObject, eventdata, handles);
 UpdateAllPlots(hObject,eventdata,handles);
-Update_Callback(hObject,eventdata,handles); % auto calls Update_Params
+%Update_Callback(hObject,eventdata,handles); % auto calls Update_Params
 
 % set up odors
 handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
@@ -236,11 +236,19 @@ if get(handles.startAcquisition,'value')
         fid2 = fopen('C:\temp_data_files\settings_log.bin','w');
         
         % set up trial sequence
-        [handles] = SetUpOpenLoopTrials(handles);
+        if ~handles.DoSequence.Value
+            [handles] = SetUpOpenLoopTrials(handles);
+        else
+            [handles] = SetUpSequenceTrials(handles);
+        end
         %guidata(hObject,handles);
         mysettings.TrialSequence = handles.TrialSequence;
         % main settings - only change in the beginning of each session
-        [mysettings.legends, mysettings.params] = OpenLoop_Settings(handles);
+        if ~handles.DoSequence.Value
+            [mysettings.legends, mysettings.params] = OpenLoop_Settings(handles);
+        else
+            [mysettings.legends, mysettings.params] = Sequence_Settings(handles);
+        end
         save('C:\temp_data_files\session_settings.mat','mysettings*');
         
         % dynamic settings - change within a session
@@ -311,14 +319,26 @@ if get(handles.startAcquisition,'value')
         end
         
         % start the Arduino timer
-        handles.Arduino.write(15, 'uint16'); 
-        tic
-        while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
-        end
-        if(handles.Arduino.Port.BytesAvailable == 0)
-            error('arduino: Motor Timer Start did not send confirmation byte')
-        elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==8
-            disp('arduino: Motor Timer Started');
+        if ~handles.DoSequence.Value
+            handles.Arduino.write(15, 'uint16');
+            tic
+            while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
+            end
+            if(handles.Arduino.Port.BytesAvailable == 0)
+                error('arduino: Motor Timer Start did not send confirmation byte')
+            elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==8
+                disp('arduino: Motor Timer Started');
+            end
+        else
+            handles.Arduino.write(19, 'uint16');
+            tic
+            while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
+            end
+            if(handles.Arduino.Port.BytesAvailable == 0)
+                error('arduino: Motor Timer Start did not send confirmation byte')
+            elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==9
+                disp('arduino: Sequence Motor Timer Started');
+            end
         end
         
         guidata(hObject,handles);
@@ -343,8 +363,11 @@ if get(handles.startAcquisition,'value')
         handles.axes4.Position(2) = Y_position;
         handles.axes4.Position(4) = Height;
         
-        NewOpenLoopTrial_Callback(handles);
-        
+        if ~handles.DoSequence.Value
+            NewOpenLoopTrial_Callback(handles);
+        else
+            NewSequenceTrial_Callback(handles);
+        end
         % update pointer to match motor location
         handles.axes4.YLim = [0 size(handles.all_locations.String,1)];
         handles.motor_location.YData = MapRotaryEncoderToTFColorMapOpenLoop(handles, handles.Rotary.Limits(3));
@@ -359,8 +382,11 @@ if get(handles.startAcquisition,'value')
             queueOutputData(handles.PhotometrySession,[LED1', LED2']);
             startBackground(handles.PhotometrySession);
         end
-        
-        handles.lis = handles.NI.addlistener('DataAvailable', @(src,evt) OpenLoopNI_Callback(src,evt,handles,hObject,fid1));
+        if ~handles.DoSequence.Value
+            handles.lis = handles.NI.addlistener('DataAvailable', @(src,evt) OpenLoopNI_Callback(src,evt,handles,hObject,fid1));
+        else
+            handles.lis = handles.NI.addlistener('DataAvailable', @(src,evt) Sequence_Callback(src,evt,handles,hObject,fid1));
+        end
         handles.NI.startBackground();
         wait(handles.NI);
         guidata(hObject,handles);
@@ -493,8 +519,12 @@ if usrans == 1
 end
 
 % --- Executes when entered data in editable cell(s) in ZoneLimitSettings.
-function Update_Callback(hObject, eventdata, handles)        
-Update_OpenLoopParams(handles);
+function Update_Callback(hObject, eventdata, handles)   
+if ~handles.DoSequence.Value
+    Update_OpenLoopParams(handles);
+else
+    Update_SequenceParams(handles);
+end
 
 % --- Executes when entered data in editable cell(s) in DAC_settings.
 function DAC_settings_CellEditCallback(hObject, eventdata, handles)
@@ -922,3 +952,12 @@ else
     handles.DepthLog_Depth.Data = NaN*ones(9,1);
     handles.DriveNotes.String = 'Drive details unavailable';
 end
+
+
+% --- Executes on button press in DoSequence.
+function DoSequence_Callback(hObject, eventdata, handles)
+% hObject    handle to DoSequence (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of DoSequence

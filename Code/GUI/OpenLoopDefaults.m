@@ -34,7 +34,8 @@ handles.motor_params = 4; % motor step size
 handles.MFC_table.Data = [1.6 0.64]'; %[1.6 0.4]';
 handles.Zero_MFC.Value = 0;
 handles.which_stage.Value = 3; % training stage
-handles.TransferFunction.Data(2) = 100; % block size (1 = no blocks)
+handles.TransferFunction.Data(2) = 100; % block size (1 = no blocks)'
+handles.DoSequence.Value = 0;
         
 switch char(handles.computername)
     
