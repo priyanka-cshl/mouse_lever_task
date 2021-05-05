@@ -1,6 +1,6 @@
 function [h] = SetUpSequenceTrials(h)
 
-h.SessionSettings.Data(1) = 50; % repeats
+h.SessionSettings.Data(1) = 150; % repeats
 num_repeats = h.SessionSettings.Data(1);
 
 % trials/repeat
