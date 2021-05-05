@@ -33,7 +33,7 @@ void setup() {
 
   SerialUSB.print("Initializing SD card...");
 
-  if (!SD.begin(24)) {
+  if (!SD.begin(53)) {
     SerialUSB.println("initialization failed!");
     return;
   }
@@ -75,5 +75,3 @@ void setup() {
 void loop() {
   // nothing happens after setup
 }
-
-
