@@ -18,7 +18,8 @@ function [legend,param] = Sequence_Settings(h)
 legend(1:10) = {'location' 'odor1' 'odor2' 'odor3' 'odor4' 'odor 5' ...
     'pre-odor' 'odor' 'post-odor' 'iti'};
 param(1) = h.MotorLocationArduinoMax + 1; % get rid of negative values
-param(2:6) = [1 2 1 2 1];
+param(2:5) = [1 2 1 2];
+param(6) = h.current_trial_block.Data(6);
 param(7:10) = [400 500 500 500];
 
 end
