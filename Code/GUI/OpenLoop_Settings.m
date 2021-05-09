@@ -15,7 +15,4 @@ param(param>2^16-1) = 2^16-1;
 legend(11) = {'water time'};
 param(11) = h.reward_time.Data(1);
 
-
-param(1) = h.current_trial_block.Data(7) + h.MotorLocationArduinoMax + 1; % get rid of negative values
-
 end
