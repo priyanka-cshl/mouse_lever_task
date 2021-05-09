@@ -7,8 +7,8 @@
                  xmlns:p2="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"
                  xmlns:rx="clr-namespace:Bonsai.Reactive;assembly=Bonsai.Core"
                  xmlns:dsp="clr-namespace:Bonsai.Dsp;assembly=Bonsai.Dsp"
-                 xmlns:sys="clr-namespace:System;assembly=mscorlib"
                  xmlns:ard="clr-namespace:Bonsai.Arduino;assembly=Bonsai.Arduino"
+                 xmlns:sys="clr-namespace:System;assembly=mscorlib"
                  xmlns="https://bonsai-rx.org/2018/workflow">
   <Workflow>
     <Nodes>
@@ -320,13 +320,9 @@
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="rx:DistinctUntilChanged" />
       </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="Combinator">
-          <Combinator xsi:type="ard:DigitalOutput">
-            <ard:PortName>COM7</ard:PortName>
-            <ard:Pin>13</ard:Pin>
-          </Combinator>
-        </Builder>
+      <Expression xsi:type="ReplaySubject">
+        <Name>LickState</Name>
+        <BufferSize xsi:nil="true" />
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="rx:CombineLatest" />
@@ -496,6 +492,15 @@
           </Workflow>
         </Builder>
       </Expression>
+      <Expression xsi:type="SubscribeSubject">
+        <Name>LickState</Name>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="ard:DigitalOutput">
+          <ard:PortName>COM7</ard:PortName>
+          <ard:Pin>13</ard:Pin>
+        </Combinator>
+      </Expression>
       <Expression xsi:type="NestedWorkflow">
         <Workflow>
           <Nodes>
@@ -661,9 +666,10 @@
       <Edge From="44" To="45" Label="Source1" />
       <Edge From="46" To="47" Label="Source1" />
       <Edge From="48" To="49" Label="Source1" />
-      <Edge From="48" To="51" Label="Source1" />
-      <Edge From="49" To="50" Label="Source1" />
+      <Edge From="50" To="51" Label="Source1" />
+      <Edge From="50" To="53" Label="Source1" />
       <Edge From="51" To="52" Label="Source1" />
+      <Edge From="53" To="54" Label="Source1" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>
