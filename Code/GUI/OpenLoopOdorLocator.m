@@ -64,6 +64,7 @@ handles.StopTime.Visible = 'off';
 
 % load mouse specific settings
 handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
+handles.PassiveReplay.Value varargin{2};
 % create the data directories if they don't already exist
 animal_name = char(handles.file_names.Data(1));
 foldername_local = char(handles.file_names.Data(2));

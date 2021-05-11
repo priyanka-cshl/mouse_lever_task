@@ -85,13 +85,19 @@ if get(h.startAcquisition,'value') && (sent == 1)
     
     % Update Open loop flags
     % Open Loop Recording is about to start on next trial
-    if h.OpenLoopSettings.Value==2 && strcmp(h.ReplayState.String,'Close loop') && params_returned(31) == 1
+    if h.OpenLoopSettings.Value==2 && (strcmp(h.ReplayState.String,'Close loop')||strcmp(h.ReplayState.String,'Passive replay Recorded')) && params_returned(31) == 1
         h.ReplayState.String = 'Recording Open Loop';
     end
     
     % Open Loop Recording is about to stop on next trial
     if h.OpenLoopSettings.Value == 1 && strcmp(h.ReplayState.String,'Recording Open Loop') && params_returned(31) == 0
-        h.ReplayState.String = 'Open Loop Recorded';
+        if h.AutoReplay.Value
+            h.ReplayState.String = 'Open Loop Recorded';
+        else
+            h.ReplayState.String = 'Passive replay Recorded';
+            h.OpenLoopProgress.Data(:,1) = [NaN 0 0 0]';
+            h.OpenLoopProgress.Data(:,2) = [0 0 0 0];
+        end
     end
     
     % Replay is about to start on next trial
