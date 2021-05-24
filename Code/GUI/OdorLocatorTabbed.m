@@ -140,9 +140,11 @@ end
 [handles] = MouseDefaults(handles);
 
 if handles.UseBonsai
-    mycommand = ['C:\Users\Rig\AppData\Local\Bonsai\Bonsai.EXE C:\Users\Rig\Desktop\Code\mouse_lever_task\Code\Bonsai\MousePositioner_', ...
-        animal_name, '_licks.bonsai --start &'];
-    system(mycommand);
+    mybonsaiscript = ['C:\Users\Rig\Desktop\Code\mouse_lever_task\Code\Bonsai\MousePositioner_',animal_name, '_licks.bonsai'];
+    if exist(mybonsaiscript,'file')
+        mycommand = ['C:\Users\Rig\AppData\Local\Bonsai\Bonsai.EXE ',mybonsaiscript,' --start &'];
+        system(mycommand);
+    end
 end
 % update targets accordingly
 handles.target_level_array.Data = handles.all_targets(find(handles.TargetsActive.Data));
