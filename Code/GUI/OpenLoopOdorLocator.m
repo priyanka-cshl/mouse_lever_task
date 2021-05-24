@@ -64,7 +64,7 @@ handles.StopTime.Visible = 'off';
 
 % load mouse specific settings
 handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
-handles.PassiveReplay.Value varargin{2};
+handles.PassiveReplay.Value = varargin{2};
 % create the data directories if they don't already exist
 animal_name = char(handles.file_names.Data(1));
 foldername_local = char(handles.file_names.Data(2));
@@ -325,10 +325,13 @@ if get(handles.startAcquisition,'value')
             tic
             while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
             end
-            if(handles.Arduino.Port.BytesAvailable == 0)
-                error('arduino: Motor Timer Start did not send confirmation byte')
-            elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==8
-                disp('arduino: Motor Timer Started');
+            switch handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')
+                case 2
+                    disp('arduino: Motor Timer Started; SD active');
+                case 8
+                    disp('arduino: Motor Timer Started');
+                otherwise
+                    error('arduino sent invalid handshake');
             end
         else
             handles.Arduino.write(19, 'uint16');

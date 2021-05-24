@@ -146,7 +146,6 @@ unsigned int num_of_params = 35;
 unsigned short param_array[35] = {0}; // ArCOM aray needs unsigned shorts
 
 // odor sequence
-int Sequence_mode = 0; 
 unsigned int sequence_params = 9;
 unsigned short sequence_array[9] = {0}; // ArCOM aray needs unsigned shorts {121, 1, 2, 1, 2, 1, 500, 500, 500, 500}; //location, odor1-5, pre-odor, odor, post-odor, iti in ms
 int sequence_timing[] = {500, 500, 500, 500}; //pre-odor, odor, post-odor, iti in ms
@@ -804,7 +803,16 @@ void loop()
             Timer5.stop();
             break;
           case 5: // open loop start
-            myUSB.writeUint16(8);
+            // check if a file can be opened on the SD card
+            mySDFile = SD.open("openloop.txt", FILE_READ);
+            if (mySDFile)
+            {
+              myUSB.writeUint16(2);
+            }
+            else
+            {
+              myUSB.writeUint16(8);
+            }
             session_mode = 2;
             // fill stimulus position array
             stimulus_state[0] = 121;
@@ -819,6 +827,7 @@ void loop()
             camera = 0;
             break;
           case 6: // open loop stop
+            mySDFile.close(); // close open loop file on SD card
             myUSB.writeUint16(9);
             session_mode = -1;
             odor_valve_state = false;
@@ -1126,6 +1135,10 @@ void UpdateAllParams()
 
 void UpdateOpenLoopParams() // 23.01.2018
 {
+  if (PassiveTuning_param_array[1] == 999)
+  {
+    session_mode = -1;
+  }
   myUSB.writeUint16(98);
   trialstate[0] = 5;
   // parse param array to variable names
@@ -1135,8 +1148,7 @@ void UpdateOpenLoopParams() // 23.01.2018
   if (PassiveTuning_location == 999)
   {
     mySDFile = SD.open("openloop.txt");
-    current_session_mode = session_mode;
-    session_mode = 4;
+    current_session_mode = 2;
     replay_flag = 4;
   }
   else

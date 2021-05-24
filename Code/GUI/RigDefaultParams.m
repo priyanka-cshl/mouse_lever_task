@@ -72,6 +72,9 @@ handles.blockshiftfactor.Data(1) = 2;
 handles.trialsequence = [8 11 5 10 3];% 8 4 1 6 2 8 2 11 2 11 3 8 4 7 1];
 handles.holdtimes = [310 262 239 203 350];
 
+handles.UseBonsai = 0;
+handles.PassiveRecorded = 0;
+
 switch char(handles.computername)
     
     case {'PRIYANKA-HP'} % Rig1
@@ -134,6 +137,7 @@ switch char(handles.computername)
     case {'BALTHAZAR'} % Rig 3 - visual
         
         handles.useserver = 1; % change to zero if there's a network issue
+        handles.UseBonsai = 1;
         
         % sensors and scaling
         handles.DAC_settings.Data = [2.0 2.15]'; %[2.08 2.1]';

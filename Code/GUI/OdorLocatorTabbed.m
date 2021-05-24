@@ -138,6 +138,12 @@ end
 
 % mouse specific settings
 [handles] = MouseDefaults(handles);
+
+if handles.UseBonsai
+    mycommand = ['C:\Users\Rig\AppData\Local\Bonsai\Bonsai.EXE C:\Users\Rig\Desktop\Code\mouse_lever_task\Code\Bonsai\MousePositioner_', ...
+        animal_name, '_licks.bonsai --start &'];
+    system(mycommand);
+end
 % update targets accordingly
 handles.target_level_array.Data = handles.all_targets(find(handles.TargetsActive.Data));
 handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
@@ -422,6 +428,7 @@ if get(handles.startAcquisition,'value')
         handles.update_call = 1;
         handles.timestamp.Data = 0;
         handles.lastrewardtime = 0;
+        handles.PassiveRecorded = 0;
         
         % start by default in normal close loop mode
         handles.OpenLoopSettings.Value = 1;
@@ -1552,7 +1559,8 @@ function TuningCurves_Callback(hObject, eventdata, handles)
 
 
 AnimalName = char(handles.file_names.Data(1));
-PassiveReplay = strcmp(handles.ReplayState.String,'Passive replay Recorded');
+%PassiveReplay = strcmp(handles.ReplayState.String,'Passive replay Recorded');
+PassiveReplay = handles.PassiveRecorded;
 % Save the current session
 if ~handles.was_last_file_saved
     SaveFile_Callback(hObject, eventdata, handles);
