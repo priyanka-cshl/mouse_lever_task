@@ -36,39 +36,29 @@
       <Expression xsi:type="SubscribeSubject">
         <Name>FilePath</Name>
       </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="Combinator">
-          <Combinator xsi:type="p1:FlyCapture">
-            <p1:Index>1</p1:Index>
-            <p1:ColorProcessing>NoColorProcessing</p1:ColorProcessing>
-          </Combinator>
-        </Builder>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="p1:FlyCapture">
+          <p1:Index>1</p1:Index>
+          <p1:ColorProcessing>NoColorProcessing</p1:ColorProcessing>
+        </Combinator>
       </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="MemberSelector">
-          <Selector>Image</Selector>
-        </Builder>
+      <Expression xsi:type="MemberSelector">
+        <Selector>Image</Selector>
       </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="Combinator">
-          <Combinator xsi:type="cv:Resize">
-            <cv:Size>
-              <cv:Width>664</cv:Width>
-              <cv:Height>524</cv:Height>
-            </cv:Size>
-            <cv:Interpolation>Linear</cv:Interpolation>
-          </Combinator>
-        </Builder>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="cv:Resize">
+          <cv:Size>
+            <cv:Width>664</cv:Width>
+            <cv:Height>524</cv:Height>
+          </cv:Size>
+          <cv:Interpolation>Linear</cv:Interpolation>
+        </Combinator>
       </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="Combinator">
-          <Combinator xsi:type="cv:Grayscale" />
-        </Builder>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="cv:Grayscale" />
       </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="SubscribeSubject">
-          <Name>FilePath</Name>
-        </Builder>
+      <Expression xsi:type="SubscribeSubject">
+        <Name>FilePath</Name>
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="wie:KeyDown">
@@ -81,122 +71,98 @@
           <Value>S</Value>
         </Operand>
       </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="Combinator">
-          <Combinator xsi:type="StringProperty">
-            <Value>_camA.png</Value>
-          </Combinator>
-        </Builder>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="StringProperty">
+          <Value>_camA.png</Value>
+        </Combinator>
       </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="Combinator">
-          <Combinator xsi:type="rx:Zip" />
-        </Builder>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="rx:Zip" />
       </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="Add" />
+      <Expression xsi:type="Add" />
+      <Expression xsi:type="PropertyMapping">
+        <PropertyMappings>
+          <Property Name="FileName" />
+        </PropertyMappings>
       </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="PropertyMapping">
-          <PropertyMappings>
-            <Property Name="FileName" />
-          </PropertyMappings>
-        </Builder>
+      <Expression xsi:type="SelectMany">
+        <Name>LoadCamA</Name>
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="WorkflowInput">
+              <Name>Source1</Name>
+            </Expression>
+            <Expression xsi:type="PropertyMapping">
+              <PropertyMappings>
+                <Property Name="FileName" />
+              </PropertyMappings>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="cv:LoadImage">
+                <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX1\PCX1_camA.png</cv:FileName>
+                <cv:Mode>Grayscale</cv:Mode>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="cv:Resize">
+                <cv:Size>
+                  <cv:Width>664</cv:Width>
+                  <cv:Height>524</cv:Height>
+                </cv:Size>
+                <cv:Interpolation>Linear</cv:Interpolation>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="cv:Grayscale" />
+            </Expression>
+            <Expression xsi:type="WorkflowOutput" />
+          </Nodes>
+          <Edges>
+            <Edge From="0" To="1" Label="Source1" />
+            <Edge From="1" To="2" Label="Source1" />
+            <Edge From="2" To="3" Label="Source1" />
+            <Edge From="3" To="4" Label="Source1" />
+            <Edge From="4" To="5" Label="Source1" />
+          </Edges>
+        </Workflow>
       </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="SelectMany">
-          <Name>LoadCamA</Name>
-          <Workflow>
-            <Nodes>
-              <Expression xsi:type="WorkflowInput">
-                <Name>Source1</Name>
-              </Expression>
-              <Expression xsi:type="PropertyMapping">
-                <PropertyMappings>
-                  <Property Name="FileName" />
-                </PropertyMappings>
-              </Expression>
-              <Expression xsi:type="Combinator">
-                <Combinator xsi:type="cv:LoadImage">
-                  <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camA.png</cv:FileName>
-                  <cv:Mode>Grayscale</cv:Mode>
-                </Combinator>
-              </Expression>
-              <Expression xsi:type="Combinator">
-                <Combinator xsi:type="cv:Resize">
-                  <cv:Size>
-                    <cv:Width>664</cv:Width>
-                    <cv:Height>524</cv:Height>
-                  </cv:Size>
-                  <cv:Interpolation>Linear</cv:Interpolation>
-                </Combinator>
-              </Expression>
-              <Expression xsi:type="Combinator">
-                <Combinator xsi:type="cv:Grayscale" />
-              </Expression>
-              <Expression xsi:type="WorkflowOutput" />
-            </Nodes>
-            <Edges>
-              <Edge From="0" To="1" Label="Source1" />
-              <Edge From="1" To="2" Label="Source1" />
-              <Edge From="2" To="3" Label="Source1" />
-              <Edge From="3" To="4" Label="Source1" />
-              <Edge From="4" To="5" Label="Source1" />
-            </Edges>
-          </Workflow>
-        </Builder>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="rx:CombineLatest" />
       </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="Combinator">
-          <Combinator xsi:type="rx:CombineLatest" />
-        </Builder>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="dsp:AbsoluteDifference" />
       </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="Combinator">
-          <Combinator xsi:type="dsp:AbsoluteDifference" />
-        </Builder>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="cv:Normalize" />
       </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="Combinator">
-          <Combinator xsi:type="cv:Normalize" />
-        </Builder>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="rx:CombineLatest" />
       </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="Combinator">
-          <Combinator xsi:type="rx:CombineLatest" />
-        </Builder>
+      <Expression xsi:type="Condition">
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="WorkflowInput">
+              <Name>Source1</Name>
+            </Expression>
+            <Expression xsi:type="MemberSelector">
+              <Selector>Item2</Selector>
+            </Expression>
+            <Expression xsi:type="WorkflowOutput" />
+          </Nodes>
+          <Edges>
+            <Edge From="0" To="1" Label="Source1" />
+            <Edge From="1" To="2" Label="Source1" />
+          </Edges>
+        </Workflow>
       </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="Condition">
-          <Workflow>
-            <Nodes>
-              <Expression xsi:type="WorkflowInput">
-                <Name>Source1</Name>
-              </Expression>
-              <Expression xsi:type="MemberSelector">
-                <Selector>Item2</Selector>
-              </Expression>
-              <Expression xsi:type="WorkflowOutput" />
-            </Nodes>
-            <Edges>
-              <Edge From="0" To="1" Label="Source1" />
-              <Edge From="1" To="2" Label="Source1" />
-            </Edges>
-          </Workflow>
-        </Builder>
+      <Expression xsi:type="MemberSelector">
+        <Selector>Item1</Selector>
       </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="MemberSelector">
-          <Selector>Item1</Selector>
-        </Builder>
-      </Expression>
-      <Expression xsi:type="Disable">
-        <Builder xsi:type="Combinator">
-          <Combinator xsi:type="cv:SaveImage">
-            <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camA.png</cv:FileName>
-            <cv:Suffix>None</cv:Suffix>
-          </Combinator>
-        </Builder>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="cv:SaveImage">
+          <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX1\PCX1_camA.png</cv:FileName>
+          <cv:Suffix>None</cv:Suffix>
+        </Combinator>
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="StringProperty">
@@ -226,7 +192,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="cv:LoadImage">
-                <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camB.png</cv:FileName>
+                <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX1\PCX1_camB.png</cv:FileName>
                 <cv:Mode>Grayscale</cv:Mode>
               </Combinator>
             </Expression>
@@ -265,7 +231,7 @@
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="cv:RangeThreshold">
           <cv:Lower>
-            <cv:Val0>0.2</cv:Val0>
+            <cv:Val0>0.3</cv:Val0>
             <cv:Val1>0</cv:Val1>
             <cv:Val2>0</cv:Val2>
             <cv:Val3>0</cv:Val3>
@@ -283,28 +249,20 @@
           <cv:Regions>
             <cv:ArrayOfPoint>
               <cv:Point>
-                <cv:X>405</cv:X>
-                <cv:Y>393</cv:Y>
+                <cv:X>384</cv:X>
+                <cv:Y>375</cv:Y>
               </cv:Point>
               <cv:Point>
-                <cv:X>379</cv:X>
-                <cv:Y>393</cv:Y>
+                <cv:X>418</cv:X>
+                <cv:Y>375</cv:Y>
               </cv:Point>
               <cv:Point>
-                <cv:X>379</cv:X>
-                <cv:Y>378</cv:Y>
+                <cv:X>418</cv:X>
+                <cv:Y>400</cv:Y>
               </cv:Point>
               <cv:Point>
-                <cv:X>379</cv:X>
-                <cv:Y>364</cv:Y>
-              </cv:Point>
-              <cv:Point>
-                <cv:X>395</cv:X>
-                <cv:Y>364</cv:Y>
-              </cv:Point>
-              <cv:Point>
-                <cv:X>405</cv:X>
-                <cv:Y>364</cv:Y>
+                <cv:X>389</cv:X>
+                <cv:Y>400</cv:Y>
               </cv:Point>
             </cv:ArrayOfPoint>
           </cv:Regions>
@@ -313,8 +271,8 @@
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="cv:RoiActivityDetected">
-          <cv:Index xsi:nil="true" />
-          <cv:Threshold>25000</cv:Threshold>
+          <cv:Index>1</cv:Index>
+          <cv:Threshold>30000</cv:Threshold>
         </Combinator>
       </Expression>
       <Expression xsi:type="Combinator">
@@ -349,7 +307,7 @@
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="cv:SaveImage">
-          <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camB.png</cv:FileName>
+          <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX1\PCX1_camB.png</cv:FileName>
           <cv:Suffix>None</cv:Suffix>
         </Combinator>
       </Expression>
@@ -492,15 +450,6 @@
           </Workflow>
         </Builder>
       </Expression>
-      <Expression xsi:type="SubscribeSubject">
-        <Name>LickState</Name>
-      </Expression>
-      <Expression xsi:type="Combinator">
-        <Combinator xsi:type="ard:DigitalOutput">
-          <ard:PortName>COM7</ard:PortName>
-          <ard:Pin>12</ard:Pin>
-        </Combinator>
-      </Expression>
       <Expression xsi:type="NestedWorkflow">
         <Workflow>
           <Nodes>
@@ -519,7 +468,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="StringProperty">
-                <Value>PCX3</Value>
+                <Value>PCX4</Value>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
@@ -548,7 +497,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="StringProperty">
-                <Value>20210506</Value>
+                <Value>20210318</Value>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
@@ -612,6 +561,15 @@
         <Name>VideoPath</Name>
         <BufferSize xsi:nil="true" />
       </Expression>
+      <Expression xsi:type="SubscribeSubject">
+        <Name>LickState</Name>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="ard:DigitalOutput">
+          <ard:PortName>COM7</ard:PortName>
+          <ard:Pin>12</ard:Pin>
+        </Combinator>
+      </Expression>
     </Nodes>
     <Edges>
       <Edge From="0" To="1" Label="Source1" />
@@ -666,8 +624,8 @@
       <Edge From="44" To="45" Label="Source1" />
       <Edge From="46" To="47" Label="Source1" />
       <Edge From="48" To="49" Label="Source1" />
-      <Edge From="50" To="51" Label="Source1" />
-      <Edge From="50" To="53" Label="Source1" />
+      <Edge From="48" To="51" Label="Source1" />
+      <Edge From="49" To="50" Label="Source1" />
       <Edge From="51" To="52" Label="Source1" />
       <Edge From="53" To="54" Label="Source1" />
     </Edges>

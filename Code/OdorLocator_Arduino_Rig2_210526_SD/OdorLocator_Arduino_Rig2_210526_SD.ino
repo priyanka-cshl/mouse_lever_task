@@ -99,8 +99,7 @@ int offset_perturbation_trial = 0;
 int offset_perturbation_trial_typeII = 0;
 bool out_of_target_zone = false;
 int feedback_halt = 0;
-bool feedback_halt_flip_trial = false;
-bool feedback_pause_trial = false;
+bool feedback_halt_trial = false;
 int feedback_halt_duration = 500;
 long feedback_halt_timestamp = micros();
 long feedback_halt_lever_position = 0L;
@@ -289,27 +288,7 @@ void loop()
     switch (use_offset_perturbation)
     {
       case 0:
-        if (feedback_halt == 1) 
-        {
-          if (feedback_halt_offset == 0)
-          {
-            stimulus_state[1] = transfer_function[motor_location];
-          }
-          else
-          {
-            stimulus_state[1] = feedback_halt_offset;
-          }
-          feedback_halt = 2;
-          feedback_halt_timestamp = micros();
-        }
-        else if (feedback_halt == 2)
-        {
-          // fgeeback is paused - don't update stimulus state
-        }
-        else
-        {
-          stimulus_state[1] = transfer_function[motor_location];
-        }
+        stimulus_state[1] = transfer_function[motor_location];
         break;
       case 1:
         //stimulus_state[1] = transfer_function[motor_location];
@@ -472,9 +451,9 @@ void loop()
           digitalWrite(in_reward_zone_reporter_pin, use_offset_perturbation == 2); // in_reward_zone?
         }
       }
-      else if ((feedback_halt_flip_trial) || (feedback_pause_trial))
+      else if (feedback_halt_trial)
       {
-        digitalWrite(in_reward_zone_reporter_pin, (feedback_halt == 2)); // in_reward_zone?
+        digitalWrite(in_reward_zone_reporter_pin, (feedback_halt == 1)); // in_reward_zone?
       }
       else
       {
@@ -607,14 +586,22 @@ void loop()
       send_odor_to_manifold();
     }
 
-    if ((feedback_halt == 2) && (micros() - feedback_halt_timestamp) > 1000 * feedback_halt_duration)
+    if ((feedback_halt == 1) && (micros() - feedback_halt_timestamp) > 1000 * feedback_halt_duration)
     {
-      feedback_halt = 3;
+      feedback_halt = 2;
     }
 
-    if (trialstate[1] == 4 && feedback_halt == 0 && feedback_pause_trial == 1 && lever_position < feedback_halt_lever_position)
+    if (trialstate[1] == 4 && feedback_halt == 0 && feedback_halt_trial == 1 && lever_position < feedback_halt_lever_position)
     {
-      feedback_halt = 1;
+      if (feedback_halt_offset == 0)
+      {
+        feedback_halt_timestamp = micros();
+        feedback_halt = 1;
+      }
+      else
+      {
+        feedback_halt = -1;
+      }
     }
 
   }
@@ -1079,8 +1066,8 @@ void UpdateAllParams()
   flip_lever_trial = (param_array[24] == 4);
   offset_perturbation_trial = (param_array[24] == 5);
   offset_perturbation_trial_typeII = (param_array[24] == 6);
-  feedback_halt_flip_trial = (param_array[24] == 10);
-  feedback_pause_trial = (param_array[24] == 9);
+  feedback_halt_trial = ((param_array[24] == 9) || (param_array[24] == 10));
+
   if (offset_perturbation_trial)
   {
     perturbation_offset = param_array[25] - param_array[21];
@@ -1104,25 +1091,22 @@ void UpdateAllParams()
 
   decouple_reward_and_stimulus = (fake_target_params[2] > 0);
 
-  if ((feedback_halt_flip_trial) || (feedback_pause_trial))
+  if (feedback_halt_trial)
   {
     feedback_halt_duration = param_array[25];
     feedback_halt_lever_position = param_array[27];
+    if (param_array[24] == 10)
+    {
+      feedback_halt_offset = param_array[26] - param_array[21];
+    }
+    else
+    {
+      feedback_halt_offset = 0;
+    }
   }
   else
   {
     feedback_halt_duration = 0;
-    //fake_target_params[1] = 0;
-    //decouple_reward_and_stimulus = false;
-  }
-
-  if (feedback_halt_flip_trial)
-  {
-    feedback_halt_offset = param_array[26];
-  }
-  else
-  {
-    feedback_halt_offset = 0;
   }
   
   //delay_feedback_by = param_array[29];
@@ -1213,9 +1197,15 @@ void MoveMotor()
   //digitalWrite(camera_pin, camera_on);
   if (!motor_override)// && (trialstate[1] == 4))
   {
-    if (feedback_halt == 2)
+    if (feedback_halt == 1)
     {
-      
+
+    }
+    else if (feedback_halt == -1)
+    {
+      I2Cwriter(motor1_i2c_address, 10 + feedback_halt_offset);
+      feedback_halt = 1;
+      feedback_halt_timestamp = micros();
     }
     else
     {

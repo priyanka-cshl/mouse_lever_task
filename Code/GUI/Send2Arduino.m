@@ -98,7 +98,7 @@ if get(h.startAcquisition,'value') && (sent == 1)
             h.OpenLoopProgress.Data(:,1) = [NaN 0 0 0]';
             h.OpenLoopProgress.Data(:,2) = [0 0 0 0];
         end
-        h.PassiveRecorded = 1;
+        h.PassiveRecorded.Value = 1;
     end
     
     % Replay is about to start on next trial

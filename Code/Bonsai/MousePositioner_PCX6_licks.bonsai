@@ -226,7 +226,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="cv:LoadImage">
-                <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camB.png</cv:FileName>
+                <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX5\PCX5_camB.png</cv:FileName>
                 <cv:Mode>Grayscale</cv:Mode>
               </Combinator>
             </Expression>
@@ -349,7 +349,7 @@
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="cv:SaveImage">
-          <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camB.png</cv:FileName>
+          <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX5\PCX5_camB.png</cv:FileName>
           <cv:Suffix>None</cv:Suffix>
         </Combinator>
       </Expression>
@@ -519,7 +519,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="StringProperty">
-                <Value>PCX3</Value>
+                <Value>PCX5</Value>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
