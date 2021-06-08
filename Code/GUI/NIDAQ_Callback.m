@@ -126,7 +126,7 @@ if TotalTime(end)>=2
                     h.ProgressReportPerturbed.Data(which_target,2) = h.ProgressReportPerturbed.Data(which_target,2) + 1;
                     h.ProgressReportPerturbed.Data(end,2) = h.ProgressReportPerturbed.Data(end,2) + 1;
                     h.hold_times.Data(h.current_trial_block.Data(2)-1,2) = 1;
-                elseif h.which_perturbation.Value == 11 && h.current_trial_block.Data(3) == -1
+                elseif h.which_perturbation.Value == 14 && h.current_trial_block.Data(3) == -1
                     h.ProgressReportPerturbed.Data(which_target,2) = h.ProgressReportPerturbed.Data(which_target,2) + 1;
                     h.ProgressReportPerturbed.Data(end,2) = h.ProgressReportPerturbed.Data(end,2) + 1;
                     h.hold_times.Data(h.current_trial_block.Data(2)-1,2) = 1;
@@ -260,7 +260,7 @@ if TotalTime(end)>=2
             if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.PerturbationSettings.Data(2)),2)
                 h.ProgressReportPerturbed.Data(which_target,1) = h.ProgressReportPerturbed.Data(which_target,1) + 1;
                 h.ProgressReportPerturbed.Data(end,1) = h.ProgressReportPerturbed.Data(end,1) + 1;
-            elseif h.which_perturbation.Value == 11 && h.current_trial_block.Data(3) == -1
+            elseif h.which_perturbation.Value == 14 && h.current_trial_block.Data(3) == -1
                 h.ProgressReportPerturbed.Data(which_target,1) = h.ProgressReportPerturbed.Data(which_target,1) + 1;
                 h.ProgressReportPerturbed.Data(end,1) = h.ProgressReportPerturbed.Data(end,1) + 1;
             else

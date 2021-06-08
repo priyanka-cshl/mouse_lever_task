@@ -20,15 +20,19 @@ h.ProgressReport.Data(:,3) = round(100*(h.ProgressReport.Data(:,2)./h.ProgressRe
 h.ProgressReportPerturbed.Data(:,3) = round(100*(h.ProgressReportPerturbed.Data(:,2)./h.ProgressReportPerturbed.Data(:,1)),0,'decimals');
 
 if ~mod(h.current_trial_block.Data(2)-1,10)
-    rollrate_x = floor((h.current_trial_block.Data(2) + 1)/10);
-    h.rollingsucess.XData = [rollrate_x(1) h.rollingsucess.XData];
+    h.rollingsucess.XData = [floor((h.current_trial_block.Data(2) + 1)/10) h.rollingsucess.XData];
     x1 = max(1,h.current_trial_block.Data(2)-10);
     x2 = h.current_trial_block.Data(2)-1;
-    rollrate_y = sum(h.hold_times.Data(x1:x2,2))/10;
-    if ~isreal(rollrate_y(1))
-        rollrate_y(1) = NaN;
+    rollrate = sum(h.hold_times.Data(x1:x2,2))/10;
+    if ~isempty(rollrate)
+        h.rollingsucess.YData = [rollrate h.rollingsucess.YData];
+    else
+        disp('gotcha');
+        h.rollingsucess.YData = [NaN h.rollingsucess.YData];
     end
-    h.rollingsucess.YData = [rollrate_y(1) h.rollingsucess.YData];
+    if size(h.rollingsucess.XData,1) ~= size(h.rollingsucess.XData,1)
+        keyboard;
+    end
     if floor((h.current_trial_block.Data(2) + 1)/10) > h.SuccessRate.XLim(1,2)
         h.SuccessRate.XLim = [1 (h.SuccessRate.XLim(1,2) + 25)];
     end
@@ -48,9 +52,13 @@ end
 %% invert TF if needed
 %h.current_trial_block.Data(1) = (rand(1)<h.TFLeftprobability.Data(1)); % 50% chance of inverting TF
 h.current_trial_block.Data(1) = h.TFLeftprobability.Data(1);
-if h.which_perturbation.Value == 14 && mod(floor(h.current_trial_block.Data(2)/h.PerturbationSettings.Data(2)),2)
-    h.current_trial_block.Data(1) = ~h.current_trial_block.Data(1);
-    h.current_trial_block.Data(3) = -1;
+if h.which_perturbation.Value == 14 
+    if mod(floor(h.current_trial_block.Data(2)/h.PerturbationSettings.Data(2)),2)
+        h.current_trial_block.Data(1) = ~h.current_trial_block.Data(1);
+        h.current_trial_block.Data(3) = -1;
+    else
+        h.current_trial_block.Data(3) = 0;
+    end
 end
 
 %% update target level
