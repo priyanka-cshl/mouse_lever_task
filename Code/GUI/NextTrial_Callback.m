@@ -20,19 +20,18 @@ h.ProgressReport.Data(:,3) = round(100*(h.ProgressReport.Data(:,2)./h.ProgressRe
 h.ProgressReportPerturbed.Data(:,3) = round(100*(h.ProgressReportPerturbed.Data(:,2)./h.ProgressReportPerturbed.Data(:,1)),0,'decimals');
 
 if ~mod(h.current_trial_block.Data(2)-1,10)
-    h.rollingsucess.XData = [floor((h.current_trial_block.Data(2) + 1)/10) h.rollingsucess.XData];
+    myidx = floor((h.current_trial_block.Data(2) + 1)/10);
+    h.RollingRateTable.Data(myidx+1,1) = myidx;
     x1 = max(1,h.current_trial_block.Data(2)-10);
     x2 = h.current_trial_block.Data(2)-1;
     rollrate = sum(h.hold_times.Data(x1:x2,2))/10;
-    if ~isempty(rollrate)
-        h.rollingsucess.YData = [rollrate h.rollingsucess.YData];
-    else
-        disp('gotcha');
-        h.rollingsucess.YData = [NaN h.rollingsucess.YData];
+    if (rollrate>=0) && (rollrate<=1)
+        h.RollingRateTable.Data(myidx+1,2) = rollrate;
     end
-    if size(h.rollingsucess.XData,1) ~= size(h.rollingsucess.XData,1)
-        keyboard;
-    end
+%     h.rollingsucess.YData = [rollrate h.rollingsucess.YData];
+%     h.rollingsucess.XData = [floor((h.current_trial_block.Data(2) + 1)/10) h.rollingsucess.XData];
+    h.rollingsucess.YData = h.RollingRateTable.Data(:,2);
+    h.rollingsucess.XData = h.RollingRateTable.Data(:,1);
     if floor((h.current_trial_block.Data(2) + 1)/10) > h.SuccessRate.XLim(1,2)
         h.SuccessRate.XLim = [1 (h.SuccessRate.XLim(1,2) + 25)];
     end

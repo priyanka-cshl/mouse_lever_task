@@ -289,7 +289,7 @@ if ~isempty(webcamlist)
             handles.exposure_mode.Value = 1;                                                                      
             handles.mycam.Focus = 250;
             handles.exposure_value.Data = handles.mycam.Exposure;
-            handles.mycam.Zoom = 250;
+            handles.mycam.Zoom = 175;
        case {'PRIYANKA-HP'}
             handles.mycam = webcam(1);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
@@ -429,6 +429,7 @@ if get(handles.startAcquisition,'value')
         handles.ProgressReportPerturbed.Data = zeros(size(handles.ProgressReportPerturbed.Data));
         handles.hold_times.Data = zeros(size(handles.hold_times.Data));
         handles.MeanHoldTimes.Data = zeros(size(handles.MeanHoldTimes.Data));
+        handles.RollingRateTable.Data = [(1:1000)' NaN*(1:1000)'];
         handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
         handles.update_call = 1;
         handles.timestamp.Data = 0;
@@ -1588,3 +1589,17 @@ function RollRateLims_CellEditCallback(hObject, eventdata, handles)
 set(handles.SuccessRate,'XLim',handles.RollRateLims.Data);
 set(handles.SuccessRate,'YLim', [-0.1 1.1],'YTick',[0 1]);
 set(handles.SuccessRate,'YLimMode','manual');
+
+
+% --- Executes on selection change in which_perturbation.
+function which_perturbation_Callback(hObject, eventdata, handles)
+% hObject    handle to which_perturbation (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns which_perturbation contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from which_perturbation
+if get(hObject,'Value') == 14
+    handles.adaptive_holds.Value = 0;
+    handles.TargetHold.Data = [300 400 500]';
+end

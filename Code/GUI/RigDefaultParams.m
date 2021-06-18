@@ -148,7 +148,7 @@ switch char(handles.computername)
         handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
         
         % Rewards
-        handles.watercoeffs = [0.001357 0.08917 0.4286]; % water per drop
+        handles.watercoeffs = [0.0006071 0.0747 0.6009]; %[0.001357 0.08917 0.4286]; % water per drop
         handles.RewardControls.Data = [35 5 50 100 200]'; % reward: time-I, time-II, IRI, hold-II, trial-off-lag
         handles.MultiRewards.Value = 1;
         
