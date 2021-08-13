@@ -9,7 +9,11 @@ global startoffset; % = 1; % seconds
 LeverCol = find(cellfun(@isempty,regexp(DataTags,'Lever'))==0);
 MotorCol = find(cellfun(@isempty,regexp(DataTags,'Motor'))==0);
 EncoderCol = find(cellfun(@isempty,regexp(DataTags,'Encoder'))==0);
-RespCol = find(cellfun(@isempty,regexp(DataTags,'respiration'))==0);
+if ~isempty(find(cellfun(@isempty,regexp(DataTags,'thermistor'))==0))
+    RespCol = find(cellfun(@isempty,regexp(DataTags,'thermistor'))==0);
+else
+    RespCol = find(cellfun(@isempty,regexp(DataTags,'respiration'))==0);
+end
 LickCol = find(cellfun(@isempty,regexp(DataTags,'Licks'))==0);
 TrialCol = find(cellfun(@isempty,regexp(DataTags,'TrialON'))==0);
 RewardCol = find(cellfun(@isempty,regexp(DataTags,'Rewards'))==0);
@@ -47,6 +51,8 @@ if ~isempty(Replay_Starts)
         'Rewards'; ...
         'TimeStamps'};
     
+    
+    
     for thisBlock = 1:OL_Blocks
         FirstTrial = find(TrialInfo.SessionTimestamps(:,1)>=OL_Starts(thisBlock),1,'first');
         LastTrial = find(TrialInfo.SessionTimestamps(:,1)<OL_Stops(thisBlock),1,'last');
@@ -58,17 +64,26 @@ if ~isempty(Replay_Starts)
         MyTraces = [];
         for i = 1:numel(MyTrials)
             thisTrial = MyTrials(i);
-            
             % trace markers
             start_idx = TrialInfo.SessionIndices(thisTrial,1) - startoffset*SampleRate; % w.r.t. trial ON
             stop_idx  = TrialInfo.SessionIndices(thisTrial+1,1) - startoffset*SampleRate - 1;
+            % sanity check to make sure trace includes trial off -
+            % sometimes next trial is triggered too fast
+            off_idx = TrialInfo.SessionIndices(thisTrial,2);
+            if (i == numel(MyTrials)) && (off_idx > stop_idx)
+                stop_idx = off_idx;
+            end
             offset    = TrialInfo.Offset(thisTrial);
             
             % get the OdorOn trace using the OdorON info from OEPS
             OdorOnTrace = MyData(start_idx:stop_idx, TrialCol);
             OdorOnTrace(OdorOnTrace>0) = 1;
-            OnIdx = find(OdorOnTrace,1,'first');
+            % OnIdx = find(OdorOnTrace,1,'first'); % hack to ignore 1st element being 1 - from previous trial
+            OnIdx = find(diff(OdorOnTrace)==1,1,'first');
             OdorOnIdx = OnIdx - round(TTLs.Trial(thisTrial,4)*SampleRate);
+            if OdorOnIdx < 0
+                OdorOnIdx = 1;
+            end
             OdorOnTrace(OdorOnIdx:OnIdx,:) = 1;
             OdorOnTrace(find(OdorOnTrace)) = TTLs.Trial(thisTrial,5);
 
@@ -104,8 +119,8 @@ if ~isempty(Replay_Starts)
 %             if thisBlock == 1 && thisReplay == 2
 %                 keyboard;
 %             end
-% %             thisBlock
-% %             thisReplay
+%             thisBlock
+%             thisReplay
 
             % find the corresponding behavior trial 
             trialIdx = find(TrialInfo.SessionTimestamps(:,1)>=Replay_Starts(ReplayTrials(thisReplay)),1,'first');

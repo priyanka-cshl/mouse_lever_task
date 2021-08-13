@@ -23,12 +23,12 @@ filename = fullfile(myKsDir,'all_channels.events');
 
 % adjust for clock offset between open ephys and kilosort
 [offset] = AdjustClockOffset(myKsDir);
-offset = offset/OepsSampleRate;
+% offset = offset/OepsSampleRate;
 timestamps = timestamps - offset;
 
 % Get various events
 TTLTypes = unique(data);
-Tags = {'Air', 'Odor1', 'Odor2', 'Odor3', 'Trial', 'Reward'};
+Tags = {'Air', 'Odor1', 'Odor2', 'Odor3', 'Trial', 'Reward', 'AirManifold', 'Licks'};
 for i = 1:numel(TTLTypes)
     On = timestamps(intersect(find(info.eventId),find(data==TTLTypes(i))));
     Off = timestamps(intersect(find(~info.eventId),find(data==TTLTypes(i))));

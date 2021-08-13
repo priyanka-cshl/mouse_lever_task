@@ -23,7 +23,7 @@ function varargout = OpenLoopOdorLocator(varargin)
 
 % Edit the above text to modify the response to help OpenLoopOdorLocator
 
-% Last Modified by GUIDE v2.5 14-Feb-2020 17:02:49
+% Last Modified by GUIDE v2.5 05-May-2021 10:25:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -53,7 +53,7 @@ handles.mfilename = mfilename;
 handles.startAcquisition.Enable = 'off';
 
 % rig specific settings
-handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
+handles.computername = getenv('COMPUTERNAME');
 [handles] = OpenLoopDefaults(handles);
 
 % clear indicators
@@ -64,6 +64,7 @@ handles.StopTime.Visible = 'off';
 
 % load mouse specific settings
 handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
+handles.PassiveReplay.Value = varargin{2};
 % create the data directories if they don't already exist
 animal_name = char(handles.file_names.Data(1));
 foldername_local = char(handles.file_names.Data(2));
@@ -148,7 +149,7 @@ GetCurrentDepth(hObject, eventdata, handles);
 handles.camera_available = 0;
 if ~isempty(webcamlist)    
     switch char(handles.computername)
-        case {'JUSTINE'}
+        case {'JUSTINE','BALTHAZAR'}
             handles.mycam = webcam(1);% {'logitech'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
             handles.camera_available = 1;
@@ -185,7 +186,7 @@ guidata(hObject, handles);
 calibrate_DAC_Callback(hObject,eventdata,handles);
 SessionSettings_CellEditCallback(hObject, eventdata, handles);
 UpdateAllPlots(hObject,eventdata,handles);
-Update_Callback(hObject,eventdata,handles); % auto calls Update_Params
+%Update_Callback(hObject,eventdata,handles); % auto calls Update_Params
 
 % set up odors
 handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
@@ -236,11 +237,19 @@ if get(handles.startAcquisition,'value')
         fid2 = fopen('C:\temp_data_files\settings_log.bin','w');
         
         % set up trial sequence
-        [handles] = SetUpOpenLoopTrials(handles);
+        if ~handles.DoSequence.Value
+            [handles] = SetUpOpenLoopTrials(handles);
+        else
+            [handles] = SetUpSequenceTrials(handles);
+        end
         %guidata(hObject,handles);
         mysettings.TrialSequence = handles.TrialSequence;
         % main settings - only change in the beginning of each session
-        [mysettings.legends, mysettings.params] = OpenLoop_Settings(handles);
+        if ~handles.DoSequence.Value
+            [mysettings.legends, mysettings.params] = OpenLoop_Settings(handles);
+        else
+            [mysettings.legends, mysettings.params] = Sequence_Settings(handles);
+        end
         save('C:\temp_data_files\session_settings.mat','mysettings*');
         
         % dynamic settings - change within a session
@@ -311,14 +320,29 @@ if get(handles.startAcquisition,'value')
         end
         
         % start the Arduino timer
-        handles.Arduino.write(15, 'uint16'); 
-        tic
-        while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
-        end
-        if(handles.Arduino.Port.BytesAvailable == 0)
-            error('arduino: Motor Timer Start did not send confirmation byte')
-        elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==8
-            disp('arduino: Motor Timer Started');
+        if ~handles.DoSequence.Value
+            handles.Arduino.write(15, 'uint16');
+            tic
+            while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
+            end
+            switch handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')
+                case 2
+                    disp('arduino: Motor Timer Started; SD active');
+                case 8
+                    disp('arduino: Motor Timer Started');
+                otherwise
+                    error('arduino sent invalid handshake');
+            end
+        else
+            handles.Arduino.write(19, 'uint16');
+            tic
+            while (handles.Arduino.Port.BytesAvailable == 0 && toc < 2)
+            end
+            if(handles.Arduino.Port.BytesAvailable == 0)
+                error('arduino: Motor Timer Start did not send confirmation byte')
+            elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==9
+                disp('arduino: Sequence Motor Timer Started');
+            end
         end
         
         guidata(hObject,handles);
@@ -343,8 +367,11 @@ if get(handles.startAcquisition,'value')
         handles.axes4.Position(2) = Y_position;
         handles.axes4.Position(4) = Height;
         
-        NewOpenLoopTrial_Callback(handles);
-        
+        if ~handles.DoSequence.Value
+            NewOpenLoopTrial_Callback(handles);
+        else
+            NewSequenceTrial_Callback(handles);
+        end
         % update pointer to match motor location
         handles.axes4.YLim = [0 size(handles.all_locations.String,1)];
         handles.motor_location.YData = MapRotaryEncoderToTFColorMapOpenLoop(handles, handles.Rotary.Limits(3));
@@ -359,8 +386,11 @@ if get(handles.startAcquisition,'value')
             queueOutputData(handles.PhotometrySession,[LED1', LED2']);
             startBackground(handles.PhotometrySession);
         end
-        
-        handles.lis = handles.NI.addlistener('DataAvailable', @(src,evt) OpenLoopNI_Callback(src,evt,handles,hObject,fid1));
+        if ~handles.DoSequence.Value
+            handles.lis = handles.NI.addlistener('DataAvailable', @(src,evt) OpenLoopNI_Callback(src,evt,handles,hObject,fid1));
+        else
+            handles.lis = handles.NI.addlistener('DataAvailable', @(src,evt) Sequence_Callback(src,evt,handles,hObject,fid1));
+        end
         handles.NI.startBackground();
         wait(handles.NI);
         guidata(hObject,handles);
@@ -384,7 +414,7 @@ else
    motor_toggle_Callback(hObject, eventdata, handles);
    
    % close odor vials
-   handles.odor_vial.Value = 0;
+   handles.odor_vial.Value = 1;
    odor_vial_Callback(hObject, eventdata, handles);
    
    % stop the Arduino timer
@@ -493,8 +523,12 @@ if usrans == 1
 end
 
 % --- Executes when entered data in editable cell(s) in ZoneLimitSettings.
-function Update_Callback(hObject, eventdata, handles)        
-Update_OpenLoopParams(handles);
+function Update_Callback(hObject, eventdata, handles)   
+if ~handles.DoSequence.Value
+    Update_OpenLoopParams(handles);
+else
+    Update_SequenceParams(handles);
+end
 
 % --- Executes when entered data in editable cell(s) in DAC_settings.
 function DAC_settings_CellEditCallback(hObject, eventdata, handles)
@@ -839,25 +873,34 @@ while ~FileExistChecker
     
     if ~exist(filename) %#ok<*EXIST>
         % get current depth, and coordinates of interest
-        prompt = {'minimum depth:', 'maximum depth:', 'turn pitch:', 'current depth:'};
-        dlg_title = 'Enter depth parameters (um from surface)';
-        num_lines = 4;
-        defaultans = {num2str(2200), num2str(3500), num2str(150), num2str(1500)};
+        prompt = {'#TTs', 'minimum depth:', 'maximum depth:', 'turn pitch:', 'current depth:', 'notes'};
+        dlg_title = 'Enter drive parameters (um from surface)';
+        num_lines = 5;
+        defaultans = {num2str(8), num2str(2200), num2str(3500), num2str(150), num2str(1500), 'APC; AP 1.945, ML 2.25, DV 3.0'};
         userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
         if ~isempty(userans)
             % save params (minimum depth, max depth, turn pitch and current
             % depth
-            for i = 1:4
+            for i = 1:5
                 depth.params(i) = str2double(userans(i));
             end
+            depth.notes = userans(end);
             
             % make the first entry
-            depth.log(1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(4))};
+            depth.log(1,1:2) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS')};
+            allTTs = NaN*ones(1,9);
+            allTTs(1,1:depth.params(1)) = depth.params(5);
+            depth.log(1,3) = {allTTs};
+            handles.DepthLog_Depth.Data = depth.log{3}';
+            handles.DepthLog_Depth.Enable = 'on';
+            
+            % update drive notes
+            handles.DriveNotes.String = depth.notes;
             
             % update graph
             handles.axes16.Visible = 'on';
-            handles.depthofinterest.YData = depth.params(1:2)/1000;
-            handles.drivedepth.YData = str2double(char(userans(4)))/1000; 
+            handles.depthofinterest.YData = depth.params(2:3)/1000;
+            handles.drivedepth.YData = str2double(char(userans(5)))/1000; 
             save(filename,'depth*');
             if handles.useserver
                 save(server_file_name,'depth*');
@@ -871,30 +914,22 @@ while ~FileExistChecker
 end
 
 if ~MadeNewFile && FileExistChecker
-    clear depth;
-    load(filename);
-    if ~isempty(strmatch(datestr(now, 'yyyymmdd'),depth.log(:,1)))
-        % check with the use if he/she wants to make a repeat entry
-        dlg_title = 'A depth entry for today already exists. You can still add more turns or cancel';
-    else
-        dlg_title = 'Drive depth Log';
-    end
-    prompt = {'current depth:', 'turns to add:'}; %, 'turns to subtract:'};
-    num_lines = 2;
-    currentdepth = depth.log(end,3);
-    defaultans = {char(currentdepth), '+0.25'};
-    userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
-    
-    if ~isempty(userans) % user wants to update
-        newdepth = str2double(char(currentdepth)) + depth.params(3)*str2double(userans(2));
-        depth.log(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(num2str(newdepth))};
-        handles.drivedepth.YData = newdepth/1000;
-        save(filename,'depth*');
-        if handles.useserver
-            save(server_file_name,'depth*');
-        end
-    else % user pressed cancel
-    end
+%     if ~isempty(strmatch(datestr(now, 'yyyymmdd'),depth.log(:,1)))
+%         % check with the use if he/she wants to make a repeat entry
+%         dlg_title = 'A depth entry for today already exists. You can still add more turns or cancel';
+%     else
+%         dlg_title = 'Drive depth Log';
+%     end
+%     prompt = {'current depth:', 'turns to add:'}; %, 'turns to subtract:'};
+%     num_lines = 2;
+%     currentdepth = depth.log(end,3);
+%     defaultans = {char(currentdepth), '+0.25'};
+%     userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+    handles.DepthLog_Turns.Enable = 'on';
+    handles.UpdateDepth.Enable = 'on';
+    handles.UpdateDrive.Enable = 'on';
+    set(handles.DepthLog_Turns,'BackgroundColor',[0.5 0.94 0.94]);
+    handles.UpdateDepth.Value = 1;
     
 end
 
@@ -905,15 +940,28 @@ foldername_server = char(handles.file_names.Data(3));
 
 filename = [foldername_local, filesep, animal_name, '_DepthLog.mat'];
 
+
 if  exist(filename) %#ok<*EXIST>
     clear depth;
     load(filename);
     handles.axes16.Visible = 'on';
-    handles.depthofinterest.YData = depth.params(1:2)/1000;
-    handles.drivedepth.YData = str2double(char(depth.log(end,3)))/1000; 
+    handles.depthofinterest.YData = depth.params(2:3)/1000;
+    handles.drivedepth.YData = mean(depth.log{end,3},'omitnan')/1000; 
+    handles.DepthLog_Depth.Data = depth.log{end,3}';
+    handles.DriveNotes.String = depth.notes;
 else
     handles.axes16.Visible = 'off';
     handles.depthofinterest.YData = NaN*handles.depthofinterest.YData;
     handles.drivedepth.YData = NaN*handles.drivedepth.YData;
-    
+    handles.DepthLog_Depth.Data = NaN*ones(9,1);
+    handles.DriveNotes.String = 'Drive details unavailable';
 end
+
+
+% --- Executes on button press in DoSequence.
+function DoSequence_Callback(hObject, eventdata, handles)
+% hObject    handle to DoSequence (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of DoSequence

@@ -48,6 +48,12 @@ else
         DataTags = cat(1, DataTags(:), {'respiration'});
     end
     
+    if find(ismember(Temp.session_data.trace_legend,'thermistor'))
+        whichcol = find(ismember(Temp.session_data.trace_legend,'thermistor'));
+        MyData(:,15) = MyTraces(:,whichcol);
+        DataTags = cat(1, DataTags(:), {'thermistor'});
+    end
+    
     if find(ismember(Temp.session_data.trace_legend,'camerasync'))
         whichcol = find(ismember(Temp.session_data.trace_legend,'camerasync'));
         MyData(:,16) = MyTraces(:,whichcol);

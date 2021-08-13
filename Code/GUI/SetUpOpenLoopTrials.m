@@ -15,6 +15,12 @@ h.current_trial_block.Data(3) = numel(all_locations)*numel(all_odors);
 Trial_list = [repmat(all_locations',numel(all_odors),1) ...
     reshape(repmat(all_odors,numel(all_locations),1), numel(all_locations)*numel(all_odors),1)];
 
+% append a passive replay trial
+if h.PassiveReplay.Value
+    Trial_list(end+1,:) = [999 0];
+    h.current_trial_block.Data(3) = h.current_trial_block.Data(3) + 1;
+end
+
 AllTrials = [];
 for i = 1:num_repeats
     AllTrials = [AllTrials; Trial_list(randperm(size(Trial_list,1)),:)];

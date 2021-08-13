@@ -30,7 +30,7 @@ param(17:19) = h.TargetDefinition.Data;
 not_ints = [not_ints 17:19]; % convert to integers for Arduino communication purpose
 legend(20) = {'TFsize'}; param(20) = h.TransferFunction.Data(1);
 
-if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.TransferFunction.Data(2)),2)
+if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.PerturbationSettings.Data(2)),2)
     legend(21) = {'HalfZoneSize'}; param(21) = h.locations_per_zone.Data(1);
     if h.TFLeftprobability.Data(1)
         legend(22) = {'MotorZero'}; param(22) = h.MotorLocationArduinoMax + 1 + h.blockshiftfactor.Data(1)*h.locations_per_zone.Data(1);
@@ -78,11 +78,11 @@ if h.current_trial_block.Data(3) == 1
         case 4
             param(26) = 1;
         case {5,6,7}
-            param(26) = h.PerturbationSettings.Data(3) + h.MotorLocationArduinoMax + 1;
+            param(26) = h.OffsetParams.Data(3) + h.MotorLocationArduinoMax + 1;
         case 8
             param(26) = ceil(h.TFgain.Data(1));
         case {9, 10}
-            param(26) = h.feedback_halt.Data(1);
+            param(26) = h.FeedbackHaltParams.Data(1);
         case 12 % LED+air
             param(1) = 4;
             h.trial_on_4.FaceColor = [0.9300 0.8400 0.8400];
@@ -96,7 +96,7 @@ else
 end
 
 %% override odors for visual only trials
-if h.current_trial_block.Data(3) ~= 1
+if h.current_trial_block.Data(3) == 0
         % only if they aren't already perturbation trials 
         % (except fake target zone type perturbation)
     if h.VisualAirTrials.Value
@@ -122,9 +122,18 @@ legend(27:29) = {'FakeHighLim' 'FakeTarget' 'FakeLowLim'};
 if h.which_perturbation.Value == 2 && h.current_trial_block.Data(3) == 1
     param(27:29) = h.fake_target_zone.Data(1:3);
     not_ints = [not_ints 27:29]; % convert to integers for Arduino communication purpose
-elseif h.which_perturbation.Value == 10
-    param(28) = h.feedback_pause_location.Data(1);
+elseif (h.which_perturbation.Value == 9) || (h.which_perturbation.Value == 10) && h.current_trial_block.Data(3) == 1
+    param(28) = h.FeedbackHaltParams.Data(2);
     not_ints = [not_ints 28];
+    if h.which_perturbation.Value == 10
+        if h.TFLeftprobability.Data == 0
+            param(27) = h.FeedbackHaltParams.Data(3);
+        else
+            param(27) = -h.FeedbackHaltParams.Data(3);
+        end
+        param(27) = param(27) + h.MotorLocationArduinoMax + 1;
+    end
+    param(29) = 0;
 else
     param(27:29) = [0 0 0];
 end
