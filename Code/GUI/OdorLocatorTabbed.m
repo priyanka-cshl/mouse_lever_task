@@ -66,16 +66,19 @@ handles.tabB1 = uitab('Parent', handles.tgroupB, 'Title', 'Session controls');
 handles.tabB2 = uitab('Parent', handles.tgroupB, 'Title', 'Extra');
 handles.tabB3 = uitab('Parent', handles.tgroupB, 'Title', 'Plots');
 handles.tabB4 = uitab('Parent', handles.tgroupB, 'Title', 'OpenLoop');
+handles.tabB5 = uitab('Parent', handles.tgroupB, 'Title', 'Perturbations');
 %Place panels into each tab
 set(handles.B1,'Parent',handles.tabB1)
 set(handles.B2,'Parent',handles.tabB2)
 set(handles.B3,'Parent',handles.tabB3)
 set(handles.B4,'Parent',handles.tabB4)
+set(handles.B5,'Parent',handles.tabB5)
 %Reposition each panel to same location as panel 1
 handles.B1.Position = [1    0.1   84.6000   24.0000];
 set(handles.B2,'position',get(handles.B1,'position'));
 set(handles.B3,'position',get(handles.B2,'position'));
 set(handles.B4,'position',get(handles.B2,'position'));
+set(handles.B5,'position',get(handles.B2,'position'));
 
 %Create tab groupC - Session controls, Extra controls
 handles.tgroupC = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
@@ -286,7 +289,7 @@ if ~isempty(webcamlist)
             handles.exposure_mode.Value = 1;                                                                      
             handles.mycam.Focus = 250;
             handles.exposure_value.Data = handles.mycam.Exposure;
-            handles.mycam.Zoom = 250;
+            handles.mycam.Zoom = 175;
        case {'PRIYANKA-HP'}
             handles.mycam = webcam(1);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
@@ -426,11 +429,12 @@ if get(handles.startAcquisition,'value')
         handles.ProgressReportPerturbed.Data = zeros(size(handles.ProgressReportPerturbed.Data));
         handles.hold_times.Data = zeros(size(handles.hold_times.Data));
         handles.MeanHoldTimes.Data = zeros(size(handles.MeanHoldTimes.Data));
+        handles.RollingRateTable.Data = [(1:1000)' NaN*(1:1000)'];
         handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
         handles.update_call = 1;
         handles.timestamp.Data = 0;
         handles.lastrewardtime = 0;
-        handles.PassiveRecorded = 0;
+        handles.PassiveRecorded.Value = 0;
         
         % start by default in normal close loop mode
         handles.OpenLoopSettings.Value = 1;
@@ -1562,7 +1566,7 @@ function TuningCurves_Callback(hObject, eventdata, handles)
 
 AnimalName = char(handles.file_names.Data(1));
 %PassiveReplay = strcmp(handles.ReplayState.String,'Passive replay Recorded');
-PassiveReplay = handles.PassiveRecorded;
+PassiveReplay = handles.PassiveRecorded.Value;
 % Save the current session
 if ~handles.was_last_file_saved
     SaveFile_Callback(hObject, eventdata, handles);
@@ -1585,3 +1589,17 @@ function RollRateLims_CellEditCallback(hObject, eventdata, handles)
 set(handles.SuccessRate,'XLim',handles.RollRateLims.Data);
 set(handles.SuccessRate,'YLim', [-0.1 1.1],'YTick',[0 1]);
 set(handles.SuccessRate,'YLimMode','manual');
+
+
+% --- Executes on selection change in which_perturbation.
+function which_perturbation_Callback(hObject, eventdata, handles)
+% hObject    handle to which_perturbation (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns which_perturbation contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from which_perturbation
+if get(hObject,'Value') == 14
+    handles.adaptive_holds.Value = 0;
+    handles.TargetHold.Data = [300 400 500]';
+end

@@ -137,7 +137,7 @@ unsigned short PassiveTuning_param_array[6] = {0}; // ArCOM aray needs unsigned 
 int i = 0;
 int check = 0;
 bool session_just_started = false;
-int session_mode = -1; // -1 = idle, 1 = close loop, 2 = open loop (passive tuning), 3 = sequence mode (passive). 4 = replay  
+int session_mode = -1; // -1 = idle, 1 = close loop, 2 = open loop (passive tuning), 3 = sequence mode (passive). 4 = replay
 int current_session_mode = -1;
 
 //variables : serial communication
@@ -268,7 +268,7 @@ void loop()
   lever_position = constrain(lever_rescaled, 0, 65534);
 
   // write lever position to DAC
-  if (session_mode>0)
+  if (session_mode > 0)
   {
     SPIWriter(dac_spi_pin, lever_position);
   }
@@ -278,7 +278,7 @@ void loop()
   // 2) convert lever position to stimuli given current target zone definition
   //----------------------------------------------------------------------------
   if (session_mode == 1)
-  {  
+  {
     motor_location = map(lever_position, 0, 65534, 0, num_of_locations - 1);
     motor_location = constrain(motor_location, 0, 98); // otherwise weird stuff happens on the trial after an offset trial
     if (flip_lever)
@@ -289,22 +289,9 @@ void loop()
     switch (use_offset_perturbation)
     {
       case 0:
-        if (feedback_halt == 1) 
+        if (feedback_halt == 1)
         {
-          if (feedback_halt_offset == 0)
-          {
-            stimulus_state[1] = transfer_function[motor_location];
-          }
-          else
-          {
-            stimulus_state[1] = feedback_halt_offset;
-          }
-          feedback_halt = 2;
-          feedback_halt_timestamp = micros();
-        }
-        else if (feedback_halt == 2)
-        {
-          // fgeeback is paused - don't update stimulus state
+          // feedback is paused - don't update stimulus state
         }
         else
         {
@@ -436,7 +423,7 @@ void loop()
       reward_state = 6; // flag reward valve opening
       Timer4.start(1000 * multi_reward_params[1]); // call reward timer
     }
-  //----------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
   }
 
   //----------------------------------------------------------------------------
@@ -474,7 +461,7 @@ void loop()
       }
       else if ((feedback_halt_flip_trial) || (feedback_pause_trial))
       {
-        digitalWrite(in_reward_zone_reporter_pin, (feedback_halt == 2)); // in_reward_zone?
+        digitalWrite(in_reward_zone_reporter_pin, (feedback_halt == 1)); // in_reward_zone?
       }
       else
       {
@@ -482,7 +469,7 @@ void loop()
       }
     }
   }
-  else if ((session_mode==2)||(session_mode==3)) // passive tuning or sequences
+  else if ((session_mode == 2) || (session_mode == 3)) // passive tuning or sequences
   {
     //send_odor_to_manifold();
     digitalWrite(trial_reporter_pin, ((trialstate[0] > 0) && (trialstate[0] < 5))); // active trial?
@@ -607,14 +594,22 @@ void loop()
       send_odor_to_manifold();
     }
 
-    if ((feedback_halt == 2) && (micros() - feedback_halt_timestamp) > 1000 * feedback_halt_duration)
+    if ((feedback_halt == 1) && (micros() - feedback_halt_timestamp) > 1000 * feedback_halt_duration)
     {
-      feedback_halt = 3;
+      feedback_halt = 2;
     }
 
     if (trialstate[1] == 4 && feedback_halt == 0 && feedback_pause_trial == 1 && lever_position < feedback_halt_lever_position)
     {
       feedback_halt = 1;
+      feedback_halt_timestamp = micros();
+    }
+
+    if (trialstate[1] == 4 && feedback_halt == 0 && feedback_halt_flip_trial == 1 && lever_position < feedback_halt_lever_position)
+    {
+      stimulus_state[1] = feedback_halt_offset;
+      feedback_halt = 1;
+      feedback_halt_timestamp = micros();
     }
 
   }
@@ -732,7 +727,7 @@ void loop()
       digitalWrite(reward_reporter_pin, replay_reward_valve_state[1]);
       replay_reward_valve_state[0] = replay_reward_valve_state[1];
     }
-    // air 
+    // air
     if (replay_air_valve_state[1] != replay_air_valve_state[0])
     {
       digitalWrite(air_valve, replay_air_valve_state[1]);
@@ -743,12 +738,12 @@ void loop()
     {
       for (i = 1; i < 5; i++)
       {
-        digitalWrite(odor_valves_3way[i-1], (i == replay_odor_valve_state[1]));
+        digitalWrite(odor_valves_3way[i - 1], (i == replay_odor_valve_state[1]));
       }
       replay_odor_valve_state[0] = replay_odor_valve_state[1];
     }
   }
-  
+
   //----------------------------------------------------------------------------
   // 8) Serial handshakes to check for parameter updates etc
   //----------------------------------------------------------------------------
@@ -776,7 +771,7 @@ void loop()
             {
               myUSB.writeUint16(6);
             }
-            replay_state = 0; 
+            replay_state = 0;
             replay_flag = 0;
             session_just_started = true;
             session_mode = 1;
@@ -787,7 +782,7 @@ void loop()
             air_valve_state = false;
             send_odor_to_manifold();
             timer_override = true;
-            camera_on = 0; 
+            camera_on = 0;
             camera = 0;
             break;
           case 2: // Acquisition stop handshake
@@ -903,7 +898,7 @@ void loop()
             myUSB.writeUint16Array(PassiveTuning_param_array, num_of_params);
             UpdateOpenLoopParams(); // parse param array to variable names and update motor params
             break;
-          case 2:            
+          case 2:
             num_of_params = myUSB.readUint16(); // get number of params to be updated
             myUSB.readUint16Array(sequence_array, num_of_params);
             myUSB.writeUint16Array(sequence_array, num_of_params);
@@ -1124,7 +1119,7 @@ void UpdateAllParams()
   {
     feedback_halt_offset = 0;
   }
-  
+
   //delay_feedback_by = param_array[29];
   // training_stage = param_array[30];
 
@@ -1152,7 +1147,7 @@ void UpdateAllParams()
         break;
     }
   }
-  
+
   // update trial state params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
 }
@@ -1199,11 +1194,11 @@ void UpdateSequenceParams() // 05.05.2021
   stimulus_state[1] = sequence_array[0];
   for (i = 1; i < 6; i++)
   {
-    sequence_odors[i-1] = sequence_array[i]; 
+    sequence_odors[i - 1] = sequence_array[i];
   }
   for (i = 6; i < 10; i++)
   {
-    sequence_timing[i-6] = sequence_array[i]; // pre-odor, odor, post-odor, iti in ms
+    sequence_timing[i - 6] = sequence_array[i]; // pre-odor, odor, post-odor, iti in ms
   }
   sequencetrialstates.UpdateSequenceTrialParams(sequence_timing);
 }
@@ -1213,56 +1208,50 @@ void MoveMotor()
   //digitalWrite(camera_pin, camera_on);
   if (!motor_override)// && (trialstate[1] == 4))
   {
-    if (feedback_halt == 2)
+    if (replay_flag == 4)
     {
-      
-    }
-    else
-    {
-      if (replay_flag == 4)
+      // read stim state
+      if (mySDFile.available())
       {
-        // read stim state
-        if (mySDFile.available())
+        byteHIGH = mySDFile.read();
+        byteLOW = mySDFile.read();
+        ReplayVal = byteHIGH * 256 + byteLOW;
+
+        replay_reward_valve_state[1] = (ReplayVal >= 20000);
+        ReplayVal = ReplayVal - 10000 * (1 + replay_reward_valve_state[1]);
+        stimulus_state[1] = ReplayVal % 1000;
+        ReplayVal = (ReplayVal - stimulus_state[1]) / 1000;
+        if (ReplayVal >= 5)
         {
-          byteHIGH = mySDFile.read();
-          byteLOW = mySDFile.read();
-          ReplayVal = byteHIGH * 256 + byteLOW;
-
-          replay_reward_valve_state[1] = (ReplayVal >= 20000);
-          ReplayVal = ReplayVal - 10000 * (1 + replay_reward_valve_state[1]);
-          stimulus_state[1] = ReplayVal % 1000;
-          ReplayVal = (ReplayVal - stimulus_state[1]) / 1000;
-          if (ReplayVal >= 5)
-          {
-            replay_air_valve_state[1] = true;
-            replay_odor_valve_state[1] = ReplayVal - 4;
-          }
-          else
-          {
-            replay_air_valve_state[1] = false;
-          }
-
-          I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
+          replay_air_valve_state[1] = true;
+          replay_odor_valve_state[1] = ReplayVal - 4;
         }
         else
         {
-          replay_flag = 5;
-          session_mode = current_session_mode;
-          digitalWrite(trial_reporter_pin, LOW);
+          replay_air_valve_state[1] = false;
         }
+
+        I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
       }
       else
       {
-        I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
-        if (replay_flag == 2)
-        {
-          // write to SD file
-          ReplayVal = 10000 * (current_reward_state + 1) + 1000 * (current_odor_state) + stimulus_state[1];
-          mySDFile.write(highByte(ReplayVal));
-          mySDFile.write(lowByte(ReplayVal));
-        }
+        replay_flag = 5;
+        session_mode = current_session_mode;
+        digitalWrite(trial_reporter_pin, LOW);
       }
     }
+    else
+    {
+      I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
+      if (replay_flag == 2)
+      {
+        // write to SD file
+        ReplayVal = 10000 * (current_reward_state + 1) + 1000 * (current_odor_state) + stimulus_state[1];
+        mySDFile.write(highByte(ReplayVal));
+        mySDFile.write(lowByte(ReplayVal));
+      }
+    }
+
   }
 
   if (session_mode == 0)

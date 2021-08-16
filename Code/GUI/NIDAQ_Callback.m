@@ -26,7 +26,7 @@ UpdateOpenLoop = 0;
 
 %% populate TotalTime with newly available timestamps
 TotalTime = [ TotalTime(num_new_samples+1:end); event.TimeStamps ];
-if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.TransferFunction.Data(2)),2)
+if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.PerturbationSettings.Data(2)),2)
     if h.TFtype.Value
         TargetLevel = [TargetLevel(num_new_samples+1:end,:); ...
             h.blockshiftfactor.Data(1)*h.ZoneLimitSettings.Data(1) + h.TargetDefinition.Data(3) + 0*event.Data(:,1) ...
@@ -46,7 +46,7 @@ which_fake_target = h.which_fake_target.Data;
 
 % hack for changing trial ON plot colors
 switch h.current_trial_block.Data(3)
-    case 0
+    case {0, -1}
         odorID = h.current_trial_block.Data(4);
     case 1 % perturbation trials
         if (h.which_perturbation.Value == 3) || ...
@@ -122,7 +122,11 @@ if TotalTime(end)>=2
             %h.Reward_Report.Data(1) = (h.Reward_Report.Data(1) + WaterPerDrop(h));
             % Update # correct trials in performance plots
             if h.current_trial_block.Data(3) ~= 1 % not a perturbed trial
-                if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.TransferFunction.Data(2)),2)
+                if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.PerturbationSettings.Data(2)),2)
+                    h.ProgressReportPerturbed.Data(which_target,2) = h.ProgressReportPerturbed.Data(which_target,2) + 1;
+                    h.ProgressReportPerturbed.Data(end,2) = h.ProgressReportPerturbed.Data(end,2) + 1;
+                    h.hold_times.Data(h.current_trial_block.Data(2)-1,2) = 1;
+                elseif h.which_perturbation.Value == 14 && h.current_trial_block.Data(3) == -1
                     h.ProgressReportPerturbed.Data(which_target,2) = h.ProgressReportPerturbed.Data(which_target,2) + 1;
                     h.ProgressReportPerturbed.Data(end,2) = h.ProgressReportPerturbed.Data(end,2) + 1;
                     h.hold_times.Data(h.current_trial_block.Data(2)-1,2) = 1;
@@ -138,12 +142,12 @@ if TotalTime(end)>=2
                     case 3
                         foo = which_target;
                     case {5,6,7}
-                        foo = 5 - (h.PerturbationSettings.Data(3)/abs(h.PerturbationSettings.Data(3)));
+                        foo = 5 - (h.OffsetParams.Data(3)/abs(h.OffsetParams.Data(3)));
 %                         if abs(h.PerturbationSettings.Data(3))>40
 %                             foo = foo - (h.PerturbationSettings.Data(3)>abs(h.PerturbationSettings.Data(3)));
 %                         end
                     case 8
-                        foo = 5 + h.PerturbationSettings.Data(3);
+                        foo = 5 + h.OffsetParams.Data(3);
                     case {9,10}
                         foo = which_target;
                     otherwise
@@ -228,6 +232,7 @@ if TotalTime(end)>=2
                     h.OpenLoopProgress.Data(1:2,2) = h.OpenLoopProgress.Data(1:2,1);
                     h.OpenLoopProgress.Data(1:2,1) = [0 0]'; % reset for Recovery period
                     TimeSinceOL = tic; % reset clock
+                    h.PassiveRecorded.Value = 1;
                 else
                     % update time and trials elapsed
                     h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
@@ -252,7 +257,10 @@ if TotalTime(end)>=2
         
         % increment trials done in the progress report
         if h.current_trial_block.Data(3) ~= 1 % not a perturbed trial
-            if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.TransferFunction.Data(2)),2)
+            if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.PerturbationSettings.Data(2)),2)
+                h.ProgressReportPerturbed.Data(which_target,1) = h.ProgressReportPerturbed.Data(which_target,1) + 1;
+                h.ProgressReportPerturbed.Data(end,1) = h.ProgressReportPerturbed.Data(end,1) + 1;
+            elseif h.which_perturbation.Value == 14 && h.current_trial_block.Data(3) == -1
                 h.ProgressReportPerturbed.Data(which_target,1) = h.ProgressReportPerturbed.Data(which_target,1) + 1;
                 h.ProgressReportPerturbed.Data(end,1) = h.ProgressReportPerturbed.Data(end,1) + 1;
             else
@@ -266,12 +274,12 @@ if TotalTime(end)>=2
                 case 3
                     foo = which_target;
                 case {5,6,7}
-                    foo = 5 - (h.PerturbationSettings.Data(3)/abs(h.PerturbationSettings.Data(3)));
+                    foo = 5 - (h.OffsetParams.Data(3)/abs(h.OffsetParams.Data(3)));
 %                     if abs(h.PerturbationSettings.Data(3))>40
 %                         foo = foo - 2*(h.PerturbationSettings.Data(3)>abs(h.PerturbationSettings.Data(3)));
 %                     end
                 case 8
-                    foo = 5 + h.PerturbationSettings.Data(3);
+                    foo = 5 + h.OffsetParams.Data(3);
                 case {9,10}
                     foo = which_target;
                 otherwise
@@ -403,9 +411,6 @@ end
 
 % set axes limits
 set(h.axes1,'XLim',[TotalTime(indices_to_plot(1)) TotalTime(indices_to_plot(end))]);
-
-% successrate plot
-
 
 %% call trial/block updates, stop acquisition if required
 if get(h.startAcquisition,'value') == 0

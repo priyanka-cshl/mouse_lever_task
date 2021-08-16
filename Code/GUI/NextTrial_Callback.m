@@ -20,11 +20,18 @@ h.ProgressReport.Data(:,3) = round(100*(h.ProgressReport.Data(:,2)./h.ProgressRe
 h.ProgressReportPerturbed.Data(:,3) = round(100*(h.ProgressReportPerturbed.Data(:,2)./h.ProgressReportPerturbed.Data(:,1)),0,'decimals');
 
 if ~mod(h.current_trial_block.Data(2)-1,10)
-    h.rollingsucess.XData = [floor((h.current_trial_block.Data(2) + 1)/10) h.rollingsucess.XData];
+    myidx = floor((h.current_trial_block.Data(2) + 1)/10);
+    h.RollingRateTable.Data(myidx+1,1) = myidx;
     x1 = max(1,h.current_trial_block.Data(2)-10);
     x2 = h.current_trial_block.Data(2)-1;
     rollrate = sum(h.hold_times.Data(x1:x2,2))/10;
-    h.rollingsucess.YData = [rollrate h.rollingsucess.YData];
+    if (rollrate>=0) && (rollrate<=1)
+        h.RollingRateTable.Data(myidx+1,2) = rollrate;
+    end
+%     h.rollingsucess.YData = [rollrate h.rollingsucess.YData];
+%     h.rollingsucess.XData = [floor((h.current_trial_block.Data(2) + 1)/10) h.rollingsucess.XData];
+    h.rollingsucess.YData = h.RollingRateTable.Data(:,2);
+    h.rollingsucess.XData = h.RollingRateTable.Data(:,1);
     if floor((h.current_trial_block.Data(2) + 1)/10) > h.SuccessRate.XLim(1,2)
         h.SuccessRate.XLim = [1 (h.SuccessRate.XLim(1,2) + 25)];
     end
@@ -41,9 +48,17 @@ if h.which_target.Data
     end
 end
 
-
 %% invert TF if needed
-h.current_trial_block.Data(1) = (rand(1)<h.TFLeftprobability.Data(1)); % 50% chance of inverting TF
+%h.current_trial_block.Data(1) = (rand(1)<h.TFLeftprobability.Data(1)); % 50% chance of inverting TF
+h.current_trial_block.Data(1) = h.TFLeftprobability.Data(1);
+if h.which_perturbation.Value == 14 
+    if mod(floor(h.current_trial_block.Data(2)/h.PerturbationSettings.Data(2)),2)
+        h.current_trial_block.Data(1) = ~h.current_trial_block.Data(1);
+        h.current_trial_block.Data(3) = -1;
+    else
+        h.current_trial_block.Data(3) = 0;
+    end
+end
 
 %% update target level
 % shuffle arrays of targets
@@ -51,7 +66,7 @@ h.target_level_array.Data = h.target_level_array.Data(randperm(length(h.target_l
 
 % check if antibias needs to be implemented and if previous trial was a failure
 NoAntiBias = 1;
-if (h.AntiBias.Value && ~IsRewardedTrial && (h.current_trial_block.Data(3) ~= 1))
+if (h.AntiBias.Value && ~IsRewardedTrial && (h.current_trial_block.Data(3) == 0))
     find(h.all_targets == h.TargetDefinition.Data(2));
     % find next closest targets
     similar_targets = h.target_level_array.Data(find(abs(h.target_level_array.Data - h.TargetDefinition.Data(2))<=0.25));
@@ -145,10 +160,14 @@ if (h.which_perturbation.Value>1) && ~mod(h.current_trial_block.Data(2),numel(Tr
             floor(numel(TrialsToPerturb)/2)+(1:floor(numel(TrialsToPerturb)/2))]);
 end
 
-if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11)
+if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11) && (h.which_perturbation.Value~=14) 
     % bsed on the user set probability: check if the trial is to be perturbed or not
     h.current_trial_block.Data(3) = TrialsToPerturb(mod(h.current_trial_block.Data(2),numel(TrialsToPerturb)) + 1);
     
+%     if (h.which_perturbation.Value==14) 
+%         h.current_trial_block.Data(3) = h.current_trial_block.Data(3)*-1;
+%     end
+        
     % if perturbation trial
     if h.current_trial_block.Data(3) == 1 %&& h.which_perturbation.Value>1
         h.hold_times.Data(h.current_trial_block.Data(2)-1,2) = NaN;
@@ -177,7 +196,7 @@ if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11)
                 % if using odor biased TFs
                 if h.odor_priors.Value
                     if rand(1)<0.5
-                        h.TargetDefinition.Data(2) = h.PerturbationSettings.Data(4) - 0.25; % 2.25
+                        h.TargetDefinition.Data(2) = h.OffsetParams.Data(2) - 0.25; % 2.25
                         % since its on of the lower TZs - pick from odor 1 or 3
                         if rand(1)<0.5
                             h.current_trial_block.Data(4) = 1; % odor 3
@@ -185,7 +204,7 @@ if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11)
                             h.current_trial_block.Data(4) = 3; % odor 3
                         end
                     else
-                        h.TargetDefinition.Data(2) = h.PerturbationSettings.Data(4); % 2.5
+                        h.TargetDefinition.Data(2) = h.OffsetParams.Data(2); % 2.5
                         % since its on of the upper TZs - pick from odor 2 or 3
                         if rand(1)<0.5
                             h.current_trial_block.Data(4) = 2; % odor 3
@@ -194,7 +213,7 @@ if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11)
                         end
                     end
                 else
-                    h.TargetDefinition.Data(2) = h.PerturbationSettings.Data(4);
+                    h.TargetDefinition.Data(2) = h.OffsetParams.Data(2);
                 end
                     
 %                 % so force current zone to TZ of choice and odor
@@ -202,33 +221,33 @@ if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11)
 %                 h.current_trial_block.Data(4) = 3; % odor 3
                 
                 % randomly choose if its an upward or a downward shift
-                myoffset = h.myoffset.Data(1);
+                myoffset = h.OffsetParams.Data(1);
                 if rand(1)<0.5
-                    h.PerturbationSettings.Data(3) = -abs(myoffset);
+                    h.OffsetParams.Data(3) = -abs(myoffset);
                 else
-                    h.PerturbationSettings.Data(3) = abs(myoffset);
+                    h.OffsetParams.Data(3) = abs(myoffset);
                 end
                 % sanity check to make sure there are not too many trials
                 % of same type
                 if abs(h.ProgressReportPerturbed.Data(4,1) - h.ProgressReportPerturbed.Data(6,1))>=2
                     if (h.ProgressReportPerturbed.Data(4,1) - h.ProgressReportPerturbed.Data(6,1)) > 0
                         % more +ve offsets done
-                        h.PerturbationSettings.Data(3) = -abs(myoffset);
+                        h.OffsetParams.Data(3) = -abs(myoffset);
                     else
-                        h.PerturbationSettings.Data(3) = abs(myoffset);
+                        h.OffsetParams.Data(3) = abs(myoffset);
                     end
                 end
                 
                 % only for offset III
                 if rand(1)<0.5 && h.which_perturbation.Value == 7
-                    h.PerturbationSettings.Data(3) = h.PerturbationSettings.Data(3) + round(h.PerturbationSettings.Data(3)/2);
+                    h.OffsetParams.Data(3) = h.OffsetParams.Data(3) + round(h.OffsetParams.Data(3)/2);
                 end
                 
             case 8 % gain change
                 if rand(1)<0.5
                     h.TFgain.Data = 0.37;
                     h.TargetDefinition.Data(2) = 3.5; % normally 1.25
-                    h.PerturbationSettings.Data(3) = -1;
+                    h.OffsetParams.Data(3) = -1;
                 else
                     %h.TFgain.Data = 2.5;
                     %h.TargetDefinition.Data(2) = 1.5;
@@ -236,7 +255,7 @@ if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11)
                     h.TargetDefinition.Data(2) = 1;
 %                     h.TFgain.Data = 2.5;
 %                     h.TargetDefinition.Data(2) = 1.5; % normally 3.5
-                    h.PerturbationSettings.Data(3) = 1;
+                    h.OffsetParams.Data(3) = 1;
                 end
                 % sanity check to make sure there are not too many trials
                 % of same type
@@ -244,11 +263,11 @@ if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11)
                     if (h.ProgressReportPerturbed.Data(4,1) - h.ProgressReportPerturbed.Data(6,1)) > 0
                         h.TFgain.Data = 2.5;
                         h.TargetDefinition.Data(2) = 1.5;
-                        h.PerturbationSettings.Data(3) = 1;
+                        h.OffsetParams.Data(3) = 1;
                     else
                         h.TFgain.Data = 0.37;
                         h.TargetDefinition.Data(2) = 3.5;
-                        h.PerturbationSettings.Data(3) = -1;
+                        h.OffsetParams.Data(3) = -1;
                     end
                 end
                 % assign odor thats opposite of what would normally be
@@ -256,18 +275,19 @@ if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11)
                 h.current_trial_block.Data(4) = 1 + ...
                     (h.TargetDefinition.Data(2)<mean(h.target_level_array.Data)); % 2 if lower 6 zones, 1 if upper six zones
            
-            case {9,10}
+            case {9,10} % feedback halt, feedback halt (9) with flip (10)
                 % one of three target zones
-                % 3.5, 2.5, 1.5
+                % 3, 2, 1
                 h.TargetDefinition.Data(2) = randperm(3,1);
-                switch floor(h.TargetDefinition.Data(2))
-                    case 1
-                        h.current_trial_block.Data(4) = 1;
-                    case 2
-                        h.current_trial_block.Data(4) = 3;
-                    case 3
-                        h.current_trial_block.Data(4) = 2;
-                end
+                h.current_trial_block.Data(4) = h.FeedbackHaltParams.Data(4);
+%                 switch floor(h.TargetDefinition.Data(2))
+%                     case 1
+%                         h.current_trial_block.Data(4) = 1;
+%                     case 2
+%                         h.current_trial_block.Data(4) = 3;
+%                     case 3
+%                         h.current_trial_block.Data(4) = 2;
+%                 end
                 
                 
         end

@@ -58,8 +58,8 @@ handles.MotorLocationArduinoMax = 120;
 handles.MotorLocationsFixSpeed = 100; % for fix speed
 handles.ManifoldOutlets = 24; % 32 in total - out of which only 24 are used
 handles.motor_params = 4; % motor step size
-handles.PerturbationSettings.Data(3) = 30;
-handles.myoffset.Data(1) = 30;
+handles.OffsetParams.Data(3) = 30;
+handles.OffsetParams.Data(1) = 30;
 
 % currently unused settings
 handles.MFC_table.Data = [1.6 0.64]'; %[1.6 0.4]';
@@ -73,7 +73,7 @@ handles.trialsequence = [8 11 5 10 3];% 8 4 1 6 2 8 2 11 2 11 3 8 4 7 1];
 handles.holdtimes = [310 262 239 203 350];
 
 handles.UseBonsai = 0;
-handles.PassiveRecorded = 0;
+handles.PassiveRecorded.Value = 0;
 
 switch char(handles.computername)
     
@@ -148,7 +148,7 @@ switch char(handles.computername)
         handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
         
         % Rewards
-        handles.watercoeffs = [0.001357 0.08917 0.4286]; % water per drop
+        handles.watercoeffs = [0.0006071 0.0747 0.6009]; %[0.001357 0.08917 0.4286]; % water per drop
         handles.RewardControls.Data = [35 5 50 100 200]'; % reward: time-I, time-II, IRI, hold-II, trial-off-lag
         handles.MultiRewards.Value = 1;
         
