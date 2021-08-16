@@ -59,7 +59,7 @@ OdorOffsets = Trial.Offsets(:,2);
 LeverThresh = median(MySettings(:,11));
 
 %% Crunch data trial-by-trial
-for thisTrial = 1:length(TrialOn)
+for thisTrial = 1:size(MySettings,1)
     % store original trial ID - some trials may get deleted later because of weird target zones
     TrialInfo.TrialID(thisTrial) = thisTrial;
     trialflag = 0; % pull down all flags - default it to use all trials
@@ -186,7 +186,7 @@ for thisTrial = 1:length(TrialOn)
         TrialInfo.TransferFunctionLeft(thisTrial,1) = (MyData(TrialOn(thisTrial)-1, MotorCol)>0);
         
         %% Reward timestamps
-        thisTrialRewards = find(diff(MyData(start_idx:stop_idx,RewardCol))==1); % indices w.r.t. to trace start
+        thisTrialRewards = find(diff(MyData(start_idx:TrialOff(thisTrial)+10,RewardCol))==1); % indices w.r.t. to trace start
         thisTrialRewards = thisTrialRewards/SampleRate; % convert to seconds
         % force the reward time stamps that were before trial start to be -ve
         thisTrialRewards(thisTrialRewards < TrialInfo.Timestamps(thisTrial,1)) = ...

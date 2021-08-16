@@ -47,7 +47,7 @@ LeverThresh = median(MySettings(:,11));
 trialflag = [];
 
 %% Process lever snippets trial-by-trial
-for thisTrial = 1:length(TrialOn)
+for thisTrial = 1:size(MySettings,1)
     
     if TrialOn(thisTrial)
     

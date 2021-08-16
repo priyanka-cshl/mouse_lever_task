@@ -33,7 +33,7 @@ end
 
 % Lever
 if ~isempty(Lever)
-    handles.lever_plot = plot(NaN, NaN,'k');
+    handles.lever_plot = plot(NaN, NaN,'k','Linewidth',1);
     set(handles.lever_plot,'XData',timestamps,'YData',Lever);
 end
 
@@ -50,7 +50,7 @@ if ~isempty(Rewards)
     tick_x = [tick_timestamps'; tick_timestamps'; ...
         NaN(1,numel(tick_timestamps))]; % creates timestamp1 timestamp1 NaN timestamp2 timestamp2..
     tick_x = tick_x(:);
-    tick_y = repmat( [0; 6.5; NaN],...
+    tick_y = repmat( [0; 5; NaN],...
         numel(tick_timestamps),1); % creates y1 y2 NaN y1 timestamp2..
     set(handles.reward_plot,'XData',tick_x,'YData',tick_y);
 end

@@ -32,10 +32,10 @@ handles.faketargetzone.EdgeColor = 'none';
 handles.trial_off = fill(NaN,NaN,[1 1 1]);
 handles.trial_off.EdgeColor = 'none';
 
-handles.lever_DAC_plot = plot(NaN, NaN,'k'); %lever rescaled
+handles.lever_DAC_plot = plot(NaN, NaN,'k','Linewidth',0.75); %lever rescaled
 handles.Camera_plot = plot(NaN, NaN,'k');
 handles.respiration_plot = plot(NaN, NaN,'color',Plot_Colors('r')); %lever rescaled
-%handles.stimulus_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor location
+handles.stimulus_plot = plot(NaN, NaN, 'color',Plot_Colors('r'),'Linewidth',1); % target odor location
 handles.reward_plot = plot(NaN, NaN, 'color',Plot_Colors('t'),'Linewidth',1.25); %rewards
 handles.lick_plot = plot(NaN, NaN, 'color',Plot_Colors('o'),'Linewidth',1); %licks
 
@@ -50,8 +50,8 @@ MyHandle = get(gca);
 % set(handles.lever_DAC_plot,'XData',MyData(:,1),'YData',mylever);
 set(handles.lever_DAC_plot,'XData',MyData(:,1),'YData',MyData(:,4));
 
-% set(handles.stimulus_plot,'XData',MyData(:,1),'YData',...
-%    1*(MyData(:,5)- 0) );
+set(handles.stimulus_plot,'XData',MyData(:,1),'YData',...
+   1*(MyData(:,5)- 0) );
 if size(MyData,2)>=15
     set(handles.respiration_plot,'XData',MyData(:,1),'YData',6.5+ 2*(MyData(:,15)/max(MyData(:,15))));
 end
@@ -73,7 +73,7 @@ tick_timestamps =  MyData(MyData(:,9)==1,1);
 tick_x = [tick_timestamps'; tick_timestamps'; ...
     NaN(1,numel(tick_timestamps))]; % creates timestamp1 timestamp1 NaN timestamp2 timestamp2..
 tick_x = tick_x(:);
-tick_y = repmat( [0; 6.5; NaN],...
+tick_y = repmat( [0; 5; NaN],...
     numel(tick_timestamps),1); % creates y1 y2 NaN y1 timestamp2..
 set(handles.reward_plot,'XData',tick_x,'YData',tick_y);
 
