@@ -36,11 +36,13 @@ else
         whichcol = find(ismember(Temp.session_data.trace_legend,'homesensor'));
         MyData(:,14) = MyTraces(:,whichcol);
     end
-    
-    if find(ismember(Temp.session_data.trace_legend,'respiration'))
+        
+    if ~isempty(find(ismember(Temp.session_data.trace_legend,'thermistor')))
+        whichcol = find(ismember(Temp.session_data.trace_legend,'thermistor'));
+    else
         whichcol = find(ismember(Temp.session_data.trace_legend,'respiration'));
-        MyData(:,15) = MyTraces(:,whichcol);
     end
+    MyData(:,15) = MyTraces(:,whichcol);
     
     if find(ismember(Temp.session_data.trace_legend,'camerasync'))
         whichcol = find(ismember(Temp.session_data.trace_legend,'camerasync'));
@@ -92,5 +94,5 @@ end
 
 % looks like there is a mismatch in odor identities
 MyTrials(:,1:2) = circshift(MyTrials(:,1:2),1);
-MyTrials(1,1:2) = NaN;
+MyTrials(1,2) = NaN;
 end

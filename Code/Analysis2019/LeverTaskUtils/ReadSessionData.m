@@ -48,6 +48,12 @@ else
         DataTags = cat(1, DataTags(:), {'respiration'});
     end
     
+    if find(ismember(Temp.session_data.trace_legend,'thermistor'))
+        whichcol = find(ismember(Temp.session_data.trace_legend,'thermistor'));
+        MyData(:,15) = MyTraces(:,whichcol);
+        DataTags = cat(1, DataTags(:), {'thermistor'});
+    end
+    
     if find(ismember(Temp.session_data.trace_legend,'camerasync'))
         whichcol = find(ismember(Temp.session_data.trace_legend,'camerasync'));
         MyData(:,16) = MyTraces(:,whichcol);
@@ -119,11 +125,16 @@ for thisTrial = 1:size(MyParams,1)
                 MyData(f,11) = 100*MyParams(thisTrial,26);
                 MyData(f,12) = MyParams(thisTrial,27); % gain value
             case 9 % feedback halt
-                MyData(f,11) = 100*MyParams(thisTrial,26);
+                %MyData(f,11) = 100*MyParams(thisTrial,26);
+                MyData(f,11) = 6; %FZoneHighLim
+                MyData(f,12) = 5; %FZoneLowLim
             case 10 % feedback pause
-                MyData(f,11) = 100*MyParams(thisTrial,26);
+                %MyData(f,11) = 100*MyParams(thisTrial,26);
+                MyData(f,11) = 6; %FZoneHighLim
+                MyData(f,12) = 5; %FZoneLowLim
             case 13 % LED only trials
                 MyData(f,11) = 100*MyParams(thisTrial,26);
+                
         end
     end
     
@@ -132,6 +143,9 @@ for thisTrial = 1:size(MyParams,1)
         MyData(f,11) = 100*11;
         MyData(f,12) = MyParams(thisTrial,23)-121; % shift size
     end
+    
+    % detect rule reversal trials
+    
 end
 
 %% convert trial_ON column to odor IDs

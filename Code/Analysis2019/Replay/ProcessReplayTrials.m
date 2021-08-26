@@ -124,8 +124,8 @@ for x = 1:numel(allreplays) % for every unique replay stretch
             MyUnit = whichUnits(i);
             
             if plotreplayfigs || savereplayfigs
-                if mod(MyUnit,units_per_fig)
-                    FRplot = 2*mod(MyUnit,units_per_fig);
+                if mod(i,units_per_fig)
+                    FRplot = 2*mod(i,units_per_fig);
                 else
                     FRplot = 2*units_per_fig;
                 end
@@ -161,7 +161,7 @@ for x = 1:numel(allreplays) % for every unique replay stretch
             end
             
             myPSTH = MakePSTH(MySpikeTimes',0,[0 ceil(offset*1000)],'downsample',SampleRate);
-            PSTH(1,:,i) = myPSTH;
+            PSTH(1,1:numel(myPSTH),i) = myPSTH;
             
             if plotreplayfigs || savereplayfigs
                 % plot raster
@@ -208,7 +208,7 @@ for x = 1:numel(allreplays) % for every unique replay stretch
                     end
                 end
                 
-                PSTH(1+thisTrial,:,i) = myPSTH';
+                PSTH(1+thisTrial,1:numel(myPSTH),i) = myPSTH';
                 
                 if plotreplayfigs || savereplayfigs
                     % plot raster
@@ -233,7 +233,7 @@ for x = 1:numel(allreplays) % for every unique replay stretch
             
                 title(['Unit# ',num2str(MyUnit)]);
                 
-                if mod(MyUnit,units_per_fig) == 0
+                if mod(i,units_per_fig) == 0
                     if savereplayfigs
                         saveas(gcf,[MyFileName,'_MyUnits_',num2str(MyUnit/units_per_fig),'.fig']);
                         close(gcf);
@@ -262,6 +262,9 @@ for x = 1:numel(allreplays) % for every unique replay stretch
     Behavior(whichreplay).Odor = Odor;
     
     Physiology(whichreplay).PSTH = PSTH;
+    
+    Physiology(whichreplay).Correlation = PSTHCorr(PSTH,whichUnits);
+
 
 end
 

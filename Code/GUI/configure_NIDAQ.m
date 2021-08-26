@@ -2,13 +2,13 @@ function [NI_session, MFC_session, Channels, NIchannels, Photometry_session]=con
 
 % rig specific settings
 switch char(handles.computername)
-    case {'marbprec', 'PRIYANKA-HP','JUSTINE'}
+    case {'marbprec', 'PRIYANKA-HP','JUSTINE','BALTHAZAR','LAWRENCE'}
         DeviceName = 'Dev2';
         if handles.PIDMode.Value
-            Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','Thermistor','Respiration','PID'};
+            Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','MotorPosition','Thermistor','PID'};
             AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai13'};
         else
-            Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','Thermistor','Respiration','LickPiezo'};
+            Channels.Analog = {'LeverDAC','LeverRaw','EncoderA','MotorPosition','Thermistor','LickPiezo'};
             AnalogChannelIDs = {'ai0','ai1','ai2','ai3','ai11','ai12'};
         end
         Channels.Digital = {'trial_on', 'in_target_zone', 'in_reward_zone', 'rewards', 'licks', 'homesensor', 'camerasync1', 'camerasync2'};

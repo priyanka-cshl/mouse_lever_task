@@ -47,7 +47,7 @@ LeverThresh = median(MySettings(:,11));
 trialflag = [];
 
 %% Process lever snippets trial-by-trial
-for thisTrial = 1:length(TrialOn)
+for thisTrial = 1:size(MySettings,1)
     
     if TrialOn(thisTrial)
     
@@ -71,30 +71,35 @@ for thisTrial = 1:length(TrialOn)
         % get all initiation hold periods
         Initiations = [find(diff([0; LeverTemp; 0])==1) find(diff([0; LeverTemp; 0])==-1)-1];
         
-        % Odor ON timestamp - find the first initiation period > trigger hold
-        TriggerHold = MySettings(thisTrial,13); % in msec
-        TriggerHold = floor(TriggerHold*SampleRate/1000); % in samples
-        OdorStart = find(diff(Initiations,1,2)>=(TriggerHold-1),1,'last');
-        if isempty(OdorStart)
-            if size(Initiations,1) > 1
-                % no initiation bout longer than TriggerHold (bug)
-                % take the largest bout
-                [~,OdorStart] = max(diff(Initiations,1,2));
-            else
-                % take the initiation bout thats available
-                OdorStart = 1;
+        if ~isempty(Initiations)
+            % Odor ON timestamp - find the first initiation period > trigger hold
+            TriggerHold = MySettings(thisTrial,13); % in msec
+            TriggerHold = floor(TriggerHold*SampleRate/1000); % in samples
+            OdorStart = find(diff(Initiations,1,2)>=(TriggerHold-1),1,'last');
+            if isempty(OdorStart)
+                if size(Initiations,1) > 1
+                    % no initiation bout longer than TriggerHold (bug)
+                    % take the largest bout
+                    [~,OdorStart] = max(diff(Initiations,1,2));
+                else
+                    % take the initiation bout thats available
+                    OdorStart = 1;
+                end
+                %disp(['Trial ',num2str(thisTrial),': No valid Initiations found!']);
+                trialflag(thisTrial) = -1;
             end
-            %disp(['Trial ',num2str(thisTrial),': No valid Initiations found!']);
-            trialflag(thisTrial) = -1;
+            
+            % Trial ON timestamp - find the first initiation period > trigger hold
+            TrialStartOffsets(thisTrial,1) = Initiations(OdorStart,2) - numel(LeverSnippet);
+            OdorStartOffsets(thisTrial,1) = Initiations(OdorStart,1) + TriggerHold - numel(LeverSnippet);
+            
+            %         if TrialStartOffsets(thisTrial,1) < -1000
+            %             keyboard;
+            %         end
+        else
+            TrialStartOffsets(thisTrial,1) = NaN;
+            OdorStartOffsets(thisTrial,1) = NaN;
         end
-        
-        % Trial ON timestamp - find the first initiation period > trigger hold
-        TrialStartOffsets(thisTrial,1) = Initiations(OdorStart,2) - numel(LeverSnippet);
-        OdorStartOffsets(thisTrial,1) = Initiations(OdorStart,1) + TriggerHold - numel(LeverSnippet);
-        
-%         if TrialStartOffsets(thisTrial,1) < -1000
-%             keyboard;
-%         end
     else
         TrialStartOffsets(thisTrial,1) = NaN;
         OdorStartOffsets(thisTrial,1) = NaN;
@@ -102,14 +107,14 @@ for thisTrial = 1:length(TrialOn)
     
 end
 
-figure;
-plot(TrialStartOffsets,'r');
-hold on
+% figure;
+% plot(TrialStartOffsets,'r');
+% hold on
 
 % Some offsets are miscalculated - as being zero due to the threshold not
 % being exactly == 4.8V - this HACK is an attempt to eliminate those
 % do this only if there are any sample drops in the first place
-if numel(find(TrialStartOffsets<-5))>=5
+if numel(find(TrialStartOffsets<-5))>=5 && isempty(find(cellfun(@isempty,regexp(DataTags,'thermistor'))==0))
     spurious_offsets = 1;
     while spurious_offsets
         % pick the last offset that's non-zero
@@ -141,8 +146,8 @@ end
 % ignore any very large offsets
 TrialStartOffsets(TrialStartOffsets<-200) = NaN;
 
-plot(TrialStartOffsets,'k');
-set(gca,'YLim',[-100 0]);
+% plot(TrialStartOffsets,'k');
+% set(gca,'YLim',[-100 0]);
 
 % check if there's just one or two offsets - Rig I
 % in that case, its just due to noise in the lever signal
@@ -164,6 +169,5 @@ end
 
 % ValidTrials = ones(thisTrial,1);
 % ValidTrials(find(trialflag)) = trialflag(find(trialflag));
-
 
 end

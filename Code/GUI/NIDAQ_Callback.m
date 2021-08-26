@@ -26,7 +26,7 @@ UpdateOpenLoop = 0;
 
 %% populate TotalTime with newly available timestamps
 TotalTime = [ TotalTime(num_new_samples+1:end); event.TimeStamps ];
-if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.TransferFunction.Data(2)),2)
+if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.PerturbationSettings.Data(2)),2)
     if h.TFtype.Value
         TargetLevel = [TargetLevel(num_new_samples+1:end,:); ...
             h.blockshiftfactor.Data(1)*h.ZoneLimitSettings.Data(1) + h.TargetDefinition.Data(3) + 0*event.Data(:,1) ...
@@ -46,7 +46,7 @@ which_fake_target = h.which_fake_target.Data;
 
 % hack for changing trial ON plot colors
 switch h.current_trial_block.Data(3)
-    case 0
+    case {0, -1}
         odorID = h.current_trial_block.Data(4);
     case 1 % perturbation trials
         if (h.which_perturbation.Value == 3) || ...
@@ -122,7 +122,11 @@ if TotalTime(end)>=2
             %h.Reward_Report.Data(1) = (h.Reward_Report.Data(1) + WaterPerDrop(h));
             % Update # correct trials in performance plots
             if h.current_trial_block.Data(3) ~= 1 % not a perturbed trial
-                if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.TransferFunction.Data(2)),2)
+                if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.PerturbationSettings.Data(2)),2)
+                    h.ProgressReportPerturbed.Data(which_target,2) = h.ProgressReportPerturbed.Data(which_target,2) + 1;
+                    h.ProgressReportPerturbed.Data(end,2) = h.ProgressReportPerturbed.Data(end,2) + 1;
+                    h.hold_times.Data(h.current_trial_block.Data(2)-1,2) = 1;
+                elseif h.which_perturbation.Value == 14 && h.current_trial_block.Data(3) == -1
                     h.ProgressReportPerturbed.Data(which_target,2) = h.ProgressReportPerturbed.Data(which_target,2) + 1;
                     h.ProgressReportPerturbed.Data(end,2) = h.ProgressReportPerturbed.Data(end,2) + 1;
                     h.hold_times.Data(h.current_trial_block.Data(2)-1,2) = 1;
@@ -138,12 +142,12 @@ if TotalTime(end)>=2
                     case 3
                         foo = which_target;
                     case {5,6,7}
-                        foo = 5 - (h.PerturbationSettings.Data(3)/abs(h.PerturbationSettings.Data(3)));
+                        foo = 5 - (h.OffsetParams.Data(3)/abs(h.OffsetParams.Data(3)));
 %                         if abs(h.PerturbationSettings.Data(3))>40
 %                             foo = foo - (h.PerturbationSettings.Data(3)>abs(h.PerturbationSettings.Data(3)));
 %                         end
                     case 8
-                        foo = 5 + h.PerturbationSettings.Data(3);
+                        foo = 5 + h.OffsetParams.Data(3);
                     case {9,10}
                         foo = which_target;
                     otherwise
@@ -228,6 +232,7 @@ if TotalTime(end)>=2
                     h.OpenLoopProgress.Data(1:2,2) = h.OpenLoopProgress.Data(1:2,1);
                     h.OpenLoopProgress.Data(1:2,1) = [0 0]'; % reset for Recovery period
                     TimeSinceOL = tic; % reset clock
+                    h.PassiveRecorded.Value = 1;
                 else
                     % update time and trials elapsed
                     h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
@@ -252,7 +257,10 @@ if TotalTime(end)>=2
         
         % increment trials done in the progress report
         if h.current_trial_block.Data(3) ~= 1 % not a perturbed trial
-            if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.TransferFunction.Data(2)),2)
+            if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.PerturbationSettings.Data(2)),2)
+                h.ProgressReportPerturbed.Data(which_target,1) = h.ProgressReportPerturbed.Data(which_target,1) + 1;
+                h.ProgressReportPerturbed.Data(end,1) = h.ProgressReportPerturbed.Data(end,1) + 1;
+            elseif h.which_perturbation.Value == 14 && h.current_trial_block.Data(3) == -1
                 h.ProgressReportPerturbed.Data(which_target,1) = h.ProgressReportPerturbed.Data(which_target,1) + 1;
                 h.ProgressReportPerturbed.Data(end,1) = h.ProgressReportPerturbed.Data(end,1) + 1;
             else
@@ -266,12 +274,12 @@ if TotalTime(end)>=2
                 case 3
                     foo = which_target;
                 case {5,6,7}
-                    foo = 5 - (h.PerturbationSettings.Data(3)/abs(h.PerturbationSettings.Data(3)));
+                    foo = 5 - (h.OffsetParams.Data(3)/abs(h.OffsetParams.Data(3)));
 %                     if abs(h.PerturbationSettings.Data(3))>40
 %                         foo = foo - 2*(h.PerturbationSettings.Data(3)>abs(h.PerturbationSettings.Data(3)));
 %                     end
                 case 8
-                    foo = 5 + h.PerturbationSettings.Data(3);
+                    foo = 5 + h.OffsetParams.Data(3);
                 case {9,10}
                     foo = which_target;
                 otherwise
@@ -347,9 +355,9 @@ h.motor_location.YData = MapRotaryEncoderToTFColorMap(h,mean(event.Data(:,3)));
 
 % respiration sensors
 set(h.thermistor_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    h.PlotSettings.Data(4,1)*TotalData(indices_to_plot,4) + h.PlotSettings.Data(4,2) );
-set(h.respiration_plot,'XData',TotalTime(indices_to_plot),'YData',...
-    h.PlotSettings.Data(3,1)*TotalData(indices_to_plot,5) + h.PlotSettings.Data(3,2) );
+    h.PlotSettings.Data(4,1)*TotalData(indices_to_plot,5) + h.PlotSettings.Data(4,2) );
+% set(h.respiration_plot,'XData',TotalTime(indices_to_plot),'YData',...
+%     h.PlotSettings.Data(3,1)*TotalData(indices_to_plot,5) + h.PlotSettings.Data(3,2) );
 set(h.lickpiezo_plot,'XData',TotalTime(indices_to_plot),'YData',...
     h.PlotSettings.Data(5,1)*TotalData(indices_to_plot,6) + h.PlotSettings.Data(5,2) );
 set(h.homesensor_plot,'XData',TotalTime(indices_to_plot),'YData', 5 + 0.5*TotalData(indices_to_plot,h.Channels.homesensor_channel));
@@ -391,6 +399,8 @@ end
 % target zone demarcation plots
 set(h.minlim,'XData',TotalTime(indices_to_plot),'YData',...
     h.TrialSettings.Data(2) + 0*TotalTime(indices_to_plot));
+set(h.maxlim,'XData',TotalTime(indices_to_plot),'YData',...
+    h.TrialSettings.Data(1) + 0*TotalTime(indices_to_plot));
 if h.current_trial_block.Data(3) == 1 && h.which_perturbation.Value == 2
     set(h.fake_target_plot,'XData',TotalTime(indices_to_plot),'YData',...
         h.fake_target_zone.Data(2) + 0*TotalTime(indices_to_plot));
@@ -414,7 +424,7 @@ end
 %% write data to disk
 data = [TotalTime(end-num_new_samples+1:end) TotalData(end-num_new_samples+1:end,:)]';
 data(h.Channels.trial_channel+1,:) = odorID*data(h.Channels.trial_channel+1,:);
-% rescale stimulus position plot (save it in distractor location column)
+% rescale stimulus position plot (save it in stimulus_location_scaled column)
 data(5,:) = MapRotaryEncoderToTFColorMap(h,data(4,:),1);
 fwrite(fid1,data,'double');
 

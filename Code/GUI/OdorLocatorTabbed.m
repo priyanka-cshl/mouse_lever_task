@@ -66,16 +66,19 @@ handles.tabB1 = uitab('Parent', handles.tgroupB, 'Title', 'Session controls');
 handles.tabB2 = uitab('Parent', handles.tgroupB, 'Title', 'Extra');
 handles.tabB3 = uitab('Parent', handles.tgroupB, 'Title', 'Plots');
 handles.tabB4 = uitab('Parent', handles.tgroupB, 'Title', 'OpenLoop');
+handles.tabB5 = uitab('Parent', handles.tgroupB, 'Title', 'Perturbations');
 %Place panels into each tab
 set(handles.B1,'Parent',handles.tabB1)
 set(handles.B2,'Parent',handles.tabB2)
 set(handles.B3,'Parent',handles.tabB3)
 set(handles.B4,'Parent',handles.tabB4)
+set(handles.B5,'Parent',handles.tabB5)
 %Reposition each panel to same location as panel 1
 handles.B1.Position = [1    0.1   84.6000   24.0000];
 set(handles.B2,'position',get(handles.B1,'position'));
 set(handles.B3,'position',get(handles.B2,'position'));
 set(handles.B4,'position',get(handles.B2,'position'));
+set(handles.B5,'position',get(handles.B2,'position'));
 
 %Create tab groupC - Session controls, Extra controls
 handles.tgroupC = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
@@ -89,13 +92,29 @@ set(handles.C2,'Parent',handles.tabC2)
 handles.C1.Position = [1.0000    0.1000   82.0000   25.6154];
 set(handles.C2,'position',get(handles.C1,'position'));
 
+%Create tab groupA - motor and odors
+handles.tgroupD = uitabgroup('Parent', handles.figure1,'TabLocation', 'top',...
+    'Position', [0.645 0.485 0.35 0.365] );
+handles.tabD1 = uitab('Parent', handles.tgroupD, 'Title', 'Webcam');
+handles.tabD2 = uitab('Parent', handles.tgroupD, 'Title', 'DepthLog');
+handles.tabD3 = uitab('Parent', handles.tgroupD, 'Title', 'HitRate');
+%Place panels into each tab
+set(handles.D1,'Parent',handles.tabD1)
+set(handles.D2,'Parent',handles.tabD2)
+set(handles.D3,'Parent',handles.tabD3)
+%Reposition each panel to same location as panel 1
+handles.D1.Position = [1.000    0.1   68   19];
+set(handles.D2,'position',get(handles.D1,'position'));
+set(handles.D3,'position',get(handles.D1,'position'));
+
 %% Load Settings
 handles.output = hObject;
 handles.mfilename = mfilename;
 handles.startAcquisition.Enable = 'off';
 
 % rig specific settings
-handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
+%handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
+handles.computername = getenv('COMPUTERNAME');
 handles.useserver = 1;
 [handles] = RigDefaultParams(handles);
 
@@ -122,6 +141,14 @@ end
 
 % mouse specific settings
 [handles] = MouseDefaults(handles);
+
+if handles.UseBonsai
+    mybonsaiscript = ['C:\Users\Rig\Desktop\Code\mouse_lever_task\Code\Bonsai\MousePositioner_',animal_name, '_licks.bonsai'];
+    if exist(mybonsaiscript,'file')
+        mycommand = ['C:\Users\Rig\AppData\Local\Bonsai\Bonsai.EXE ',mybonsaiscript,' --start &'];
+        system(mycommand);
+    end
+end
 % update targets accordingly
 handles.target_level_array.Data = handles.all_targets(find(handles.TargetsActive.Data));
 handles.ZoneLimitSettings.Data(2) = max(handles.target_level_array.Data);
@@ -186,7 +213,7 @@ handles.trial_on_4.EdgeColor = 'none';
 handles.lever_DAC_plot = plot(NaN, NaN,'k','linewidth',1); %lever rescaled
 handles.lever_raw_plot = plot(NaN, NaN, 'color',Plot_Colors('b')); %lever raw
 handles.stimulus_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor location (rotary encoder)
-handles.thermistor_plot = plot(NaN, NaN, 'color',Plot_Colors('r')); % target odor location (rotary encoder)
+handles.thermistor_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % target odor location (rotary encoder)
 handles.in_target_zone_plot = fill(NaN,NaN,Plot_Colors('r'));
 handles.in_target_zone_plot.EdgeColor = 'none';
 handles.in_reward_zone_plot = fill(NaN,NaN,Plot_Colors('o'));
@@ -200,6 +227,7 @@ handles.targetzone = fill(NaN,NaN,[1 1 0],'FaceAlpha',0.2);
 handles.targetzone.EdgeColor = 'none';
 handles.fake_target_plot = plot(NaN, NaN, 'color',[.7 .7 .7]);
 handles.minlim = plot(NaN, NaN, 'k','LineStyle',':'); % lower limit of lever range (trigger Off)
+handles.maxlim = plot(NaN, NaN, 'k','LineStyle',':'); % lower limit of lever range (trigger Off)
 
 % currently unused plots
 handles.respiration_plot = plot(NaN, NaN, 'color',Plot_Colors('t')); % respiration sensor 1
@@ -235,12 +263,20 @@ axis manual
 
 GetCurrentDepth(hObject, eventdata, handles);
 
+axes(handles.SuccessRate); % rolling success rate plot
+set(handles.SuccessRate, 'Fontsize', 5); 
+handles.rollingsucess = plot(NaN, NaN, '-ok'); 
+grid on
+grid minor
+set(handles.SuccessRate,'YLim', [-0.1 1.1],'YTick',[0 1]);
+set(handles.SuccessRate,'YLimMode','manual');
+
 %% webcam
 handles.camera_available = 0;
 if ~isempty(webcamlist)
     
     switch char(handles.computername)
-       case {'JUSTINE'}
+       case {'JUSTINE','BALTHAZAR'}
             handles.mycam = webcam(1);% {'logitech'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
             handles.camera_available = 1;
@@ -253,7 +289,7 @@ if ~isempty(webcamlist)
             handles.exposure_mode.Value = 1;                                                                      
             handles.mycam.Focus = 250;
             handles.exposure_value.Data = handles.mycam.Exposure;
-            handles.mycam.Zoom = 250;
+            handles.mycam.Zoom = 175;
        case {'PRIYANKA-HP'}
             handles.mycam = webcam(1);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
@@ -295,7 +331,7 @@ if ~isempty(handles.MFC)
 end
 
 % set up odors
-handles.Odor_list.Value = 1; % only blank vial
+handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors %1; % only blank vial
 handles.odor_vial.Value = 1;
 odor_vial_Callback(hObject, eventdata, handles);
 handles.odor_to_manifold.Value = 1;
@@ -393,10 +429,12 @@ if get(handles.startAcquisition,'value')
         handles.ProgressReportPerturbed.Data = zeros(size(handles.ProgressReportPerturbed.Data));
         handles.hold_times.Data = zeros(size(handles.hold_times.Data));
         handles.MeanHoldTimes.Data = zeros(size(handles.MeanHoldTimes.Data));
+        handles.RollingRateTable.Data = [(1:1000)' NaN*(1:1000)'];
         handles.current_trial_block.Data(1:4,1) = [1 1 0 1]';
         handles.update_call = 1;
         handles.timestamp.Data = 0;
         handles.lastrewardtime = 0;
+        handles.PassiveRecorded.Value = 0;
         
         % start by default in normal close loop mode
         handles.OpenLoopSettings.Value = 1;
@@ -417,6 +455,8 @@ if get(handles.startAcquisition,'value')
         set(handles.respiration_plot,'XData',NaN,'YData',NaN);
         set(handles.lickpiezo_plot,'XData',NaN,'YData',NaN);
         set(handles.lick_plot,'XData',NaN,'YData',NaN);
+        set(handles.rollingsucess,'XData',NaN,'YData',NaN);
+        RollRateLims_CellEditCallback(hObject, eventdata, handles);
         
         % turn ON MFCs
         if ~isempty(handles.MFC)
@@ -559,10 +599,10 @@ else
        disp('arduino: Motor Timer Stopped');
    end
    
-   % close odor vials
-   handles.Odor_list.Value = 1;
-   handles.odor_vial.Value = 1;
-   odor_vial_Callback(hObject, eventdata, handles);
+   % leave odor vials ON - to prevent odor backflow
+%    handles.Odor_list.Value = 1;
+%    handles.odor_vial.Value = 1;
+%    odor_vial_Callback(hObject, eventdata, handles);
    handles.odor_to_manifold.Value = 1;
    handles.air_to_manifold.Value = 0;
    handles.Vial0.Value = 1;
@@ -724,12 +764,17 @@ if usrans == 1
         case {'PRIYANKA-HP'}
             print(gcf,['C:\Users\pgupta\Desktop\','GUI_',animal_name],'-dpng','-r0');
             display(['saved GUI screen shot at ' ('C:\Users\pgupta\Desktop')])
-        case {'JUSTINE'}
+        case {'JUSTINE','BALTHAZAR'}
             print(gcf,['C:\Users\Rig\Desktop\','GUI_',animal_name],'-dpng','-r0');
             display(['saved GUI screen shot at ' ('C:\Users\Rig\Desktop')])
+            
     end
-    disp(['median hold = ',num2str(median(handles.MeanHoldTimes.Data)),' ms']);
-    disp(['median trigger hold = ',num2str(median_trigger_hold),' ms']);
+    trialsdone = handles.ProgressReport.Data(end,1);
+    hitrate = handles.ProgressReport.Data(end,3);
+    meanhold = median(handles.MeanHoldTimes.Data);
+    disp(['trials = ',num2str(trialsdone), '; %correct = ', num2str(hitrate),...
+        '; median hold = ',num2str(meanhold),' ms']);
+    %disp(['median trigger hold = ',num2str(median_trigger_hold),' ms']);
     guidata(hObject, handles);
 end
 
@@ -1389,25 +1434,34 @@ while ~FileExistChecker
     
     if ~exist(filename) %#ok<*EXIST>
         % get current depth, and coordinates of interest
-        prompt = {'minimum depth:', 'maximum depth:', 'turn pitch:', 'current depth:'};
-        dlg_title = 'Enter depth parameters (um from surface)';
-        num_lines = 4;
-        defaultans = {num2str(2200), num2str(3500), num2str(150), num2str(1500)};
+        prompt = {'#TTs', 'minimum depth:', 'maximum depth:', 'turn pitch:', 'current depth:', 'notes'};
+        dlg_title = 'Enter drive parameters (um from surface)';
+        num_lines = 5;
+        defaultans = {num2str(8), num2str(2200), num2str(3500), num2str(150), num2str(1500), 'APC; AP 1.945, ML 2.25, DV 3.0'};
         userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
         if ~isempty(userans)
             % save params (minimum depth, max depth, turn pitch and current
             % depth
-            for i = 1:4
+            for i = 1:5
                 depth.params(i) = str2double(userans(i));
             end
+            depth.notes = userans(end);
             
             % make the first entry
-            depth.log(1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(userans(4))};
+            depth.log(1,1:2) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS')};
+            allTTs = NaN*ones(1,9);
+            allTTs(1,1:depth.params(1)) = depth.params(5);
+            depth.log(1,3) = {allTTs};
+            handles.DepthLog_Depth.Data = round(depth.log{3}');
+            handles.DepthLog_Depth.Enable = 'on';
+            
+            % update drive notes
+            handles.DriveNotes.String = depth.notes;
             
             % update graph
             handles.axes16.Visible = 'on';
-            handles.depthofinterest.YData = depth.params(1:2)/1000;
-            handles.drivedepth.YData = str2double(char(userans(4)))/1000; 
+            handles.depthofinterest.YData = depth.params(2:3)/1000;
+            handles.drivedepth.YData = str2double(char(userans(5)))/1000; 
             save(filename,'depth*');
             if handles.useserver
                 save(server_file_name,'depth*');
@@ -1421,33 +1475,65 @@ while ~FileExistChecker
 end
 
 if ~MadeNewFile && FileExistChecker
-    clear depth;
-    load(filename);
-    if ~isempty(strmatch(datestr(now, 'yyyymmdd'),depth.log(:,1)))
-        % check with the use if he/she wants to make a repeat entry
-        dlg_title = 'A depth entry for today already exists. You can still add more turns or cancel';
-    else
-        dlg_title = 'Drive depth Log';
-    end
-    prompt = {'current depth:', 'turns to add:'}; %, 'turns to subtract:'};
-    num_lines = 2;
-    currentdepth = depth.log(end,3);
-    defaultans = {char(currentdepth), '+0.25'};
-    userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+%     if ~isempty(strmatch(datestr(now, 'yyyymmdd'),depth.log(:,1)))
+%         % check with the use if he/she wants to make a repeat entry
+%         dlg_title = 'A depth entry for today already exists. You can still add more turns or cancel';
+%     else
+%         dlg_title = 'Drive depth Log';
+%     end
+%     prompt = {'current depth:', 'turns to add:'}; %, 'turns to subtract:'};
+%     num_lines = 2;
+%     currentdepth = depth.log(end,3);
+%     defaultans = {char(currentdepth), '+0.25'};
+%     userans = inputdlg(prompt,dlg_title,num_lines,defaultans);
+    handles.DepthLog_Turns.Enable = 'on';
+    handles.UpdateDepth.Enable = 'on';
+    handles.UpdateDrive.Enable = 'on';
+    set(handles.DepthLog_Turns,'BackgroundColor',[0.5 0.94 0.94]);
+    handles.UpdateDepth.Value = 1;
     
-    if ~isempty(userans) % user wants to update
-        newdepth = str2double(char(currentdepth)) + depth.params(3)*str2double(userans(2));
-        depth.log(end+1,:) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS'), char(num2str(newdepth))};
-        handles.drivedepth.YData = newdepth/1000;
+end
+
+% --- Executes on button press in UpdateDrive.
+function UpdateDrive_Callback(hObject, eventdata, handles)
+% hObject    handle to UpdateDrive (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of UpdateDrive
+animal_name = char(handles.file_names.Data(1));
+foldername_local = char(handles.file_names.Data(2));
+foldername_server = char(handles.file_names.Data(3));
+filename = [foldername_local, filesep, animal_name, '_DepthLog.mat'];
+[~,justname] = fileparts(filename);
+server_file_name = [foldername_server,filesep,justname,'.mat'];
+clear depth;
+load(filename);
+
+    % update depths
+    if any(handles.DepthLog_Turns.Data)
+        for i = 1:9
+            handles.DepthLog_Depth.Data(i) = round(handles.DepthLog_Depth.Data(i) + depth.params(4)*handles.DepthLog_Turns.Data(i));
+        end
+    
+        allTTs = handles.DepthLog_Depth.Data';
+        depth.log(1,1:2) = {datestr(now, 'yyyymmdd'), datestr(now, 'HH:MM:SS')};
+        depth.log(1,3) = {allTTs};
+
         save(filename,'depth*');
         if handles.useserver
             save(server_file_name,'depth*');
         end
-    else % user pressed cancel
     end
     
-end
-
+    handles.DepthLog_Turns.Enable = 'off';
+    handles.UpdateDepth.Enable = 'off';
+    handles.DepthLog_Turns.Data = 0*handles.DepthLog_Turns.Data;
+    set(handles.DepthLog_Turns,'BackgroundColor',[0.94 0.94 0.94]);
+    
+    handles.UpdateDrive.Enable = 'off';
+    
+    
 function GetCurrentDepth(hObject, eventdata, handles)
 animal_name = char(handles.file_names.Data(1));
 foldername_local = char(handles.file_names.Data(2));
@@ -1459,13 +1545,16 @@ if  exist(filename) %#ok<*EXIST>
     clear depth;
     load(filename);
     handles.axes16.Visible = 'on';
-    handles.depthofinterest.YData = depth.params(1:2)/1000;
-    handles.drivedepth.YData = str2double(char(depth.log(end,3)))/1000; 
+    handles.depthofinterest.YData = depth.params(2:3)/1000;
+    handles.drivedepth.YData = mean(depth.log{end,3},'omitnan')/1000; 
+    handles.DepthLog_Depth.Data = round(depth.log{end,3}');
+    handles.DriveNotes.String = depth.notes;
 else
     handles.axes16.Visible = 'off';
     handles.depthofinterest.YData = NaN*handles.depthofinterest.YData;
     handles.drivedepth.YData = NaN*handles.drivedepth.YData;
-    
+    handles.DepthLog_Depth.Data = NaN*ones(9,1);
+    handles.DriveNotes.String = 'Drive details unavailable';
 end
     
 % --- Executes on button press in TuningCurves.
@@ -1476,10 +1565,41 @@ function TuningCurves_Callback(hObject, eventdata, handles)
 
 
 AnimalName = char(handles.file_names.Data(1));
+%PassiveReplay = strcmp(handles.ReplayState.String,'Passive replay Recorded');
+PassiveReplay = handles.PassiveRecorded.Value;
 % Save the current session
 if ~handles.was_last_file_saved
     SaveFile_Callback(hObject, eventdata, handles);
 end
 close_gui_Callback(hObject, eventdata, handles);
 delete (handles.mycam);
-OpenLoopOdorLocator(AnimalName);
+OpenLoopOdorLocator(AnimalName, PassiveReplay);
+
+
+% --- Executes when entered data in editable cell(s) in RollRateLims.
+function RollRateLims_CellEditCallback(hObject, eventdata, handles)
+% hObject    handle to RollRateLims (see GCBO)
+% eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
+%	Indices: row and column indices of the cell(s) edited
+%	PreviousData: previous data for the cell(s) edited
+%	EditData: string(s) entered by the user
+%	NewData: EditData or its converted form set on the Data property. Empty if Data was not changed
+%	Error: error string when failed to convert EditData to appropriate value for Data
+% handles    structure with handles and user data (see GUIDATA)
+set(handles.SuccessRate,'XLim',handles.RollRateLims.Data);
+set(handles.SuccessRate,'YLim', [-0.1 1.1],'YTick',[0 1]);
+set(handles.SuccessRate,'YLimMode','manual');
+
+
+% --- Executes on selection change in which_perturbation.
+function which_perturbation_Callback(hObject, eventdata, handles)
+% hObject    handle to which_perturbation (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns which_perturbation contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from which_perturbation
+if get(hObject,'Value') == 14
+    handles.adaptive_holds.Value = 0;
+    handles.TargetHold.Data = [300 400 500]';
+end
