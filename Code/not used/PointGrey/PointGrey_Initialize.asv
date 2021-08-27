@@ -1,0 +1,2 @@
+info = imaqhwinfo('pointgrey'); % get device ID
+dev_info = imaqhwinfo('poingrey',info.DeviceIDs{1});
