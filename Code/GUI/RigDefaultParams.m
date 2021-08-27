@@ -82,7 +82,7 @@ switch char(handles.computername)
         handles.useserver = 1; % change to zero if there's a network issue
         
         % sensors and scaling
-        handles.DAC_settings.Data = [2.0 2.5]'; % Lever scaling
+        handles.DAC_settings.Data = [2.0 2.15]'; % Lever scaling
         
         % Plots
         handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.2 NaN NaN]; % gains
@@ -97,7 +97,10 @@ switch char(handles.computername)
         % HomeSensor type
         handles.fliphome = 0;
         
-        % visual trials
+        % visual version
+        handles.VisualVersion.Value = 1;
+        handles.VisualAirTrials.Visible = 'off';
+        handles.VisualOnlyTrials.Visible = 'off';
         handles.VisualAirTrials.Value = 0;
         handles.VisualOnlyTrials.Value = 0;
         
