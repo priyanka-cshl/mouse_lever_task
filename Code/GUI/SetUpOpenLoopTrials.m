@@ -1,0 +1,31 @@
+function [h] = SetUpOpenLoopTrials(h)
+
+% motor locations to use
+if h.SessionSettings.Data(3)
+    all_locations = -h.SessionSettings.Data(2):h.SessionSettings.Data(3):h.SessionSettings.Data(2);
+else
+    all_locations = h.SessionSettings.Data(2); % only one location;
+end
+all_odors = h.Odor_list.Value;
+num_repeats = h.SessionSettings.Data(1);
+
+% trials/repeat
+h.current_trial_block.Data(3) = numel(all_locations)*numel(all_odors);
+
+Trial_list = [repmat(all_locations',numel(all_odors),1) ...
+    reshape(repmat(all_odors,numel(all_locations),1), numel(all_locations)*numel(all_odors),1)];
+
+% append a passive replay trial
+if h.PassiveReplay.Value
+    Trial_list(end+1,:) = [999 0];
+    h.current_trial_block.Data(3) = h.current_trial_block.Data(3) + 1;
+end
+
+AllTrials = [];
+for i = 1:num_repeats
+    AllTrials = [AllTrials; Trial_list(randperm(size(Trial_list,1)),:)];
+end
+
+h.TrialSequence = AllTrials;
+h.current_trial_block.Data(1) = size(AllTrials,1);
+%guidata(h.hObject,h);

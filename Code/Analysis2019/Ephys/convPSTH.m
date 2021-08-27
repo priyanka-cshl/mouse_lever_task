@@ -1,0 +1,9 @@
+function conv_psth = convPSTH(psth, sigma)
+    kerneltime = -3*sigma:1:3*sigma;
+    kernel = normpdf(kerneltime, 0, sigma);
+    conv_psth = conv(psth, kernel);
+    steps = length(kernel);                     % the next 4 lines make sure to clip the ends of the convolved array correctly.
+    first = floor(steps/2) + mod(steps,2);        % there is an issue with rounding if dt is too close to sigma
+    last = length(conv_psth) - floor(steps/2);
+    conv_psth = conv_psth(first:last);
+    conv_psth = conv_psth/sum(kernel);

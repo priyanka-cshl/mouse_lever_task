@@ -41,6 +41,7 @@ int trialstates::WhichState(int trialstate, long lever_position, long time_since
       }
       else if ( _time_since_last_change >= _min_trigger_on_duration )
       { // above trial triggerON theshold long enough - can activate trial trigger
+<<<<<<< HEAD
         _trialstate = 2;
       }
       break;
@@ -48,6 +49,22 @@ int trialstates::WhichState(int trialstate, long lever_position, long time_since
       if (_lever_position < _trial_trigger_on )
       {
         _trialstate = 3;
+=======
+        //_trialstate = 2;
+        _trialstate = 4;
+      }
+      break;
+//    case 2: // trial trigger is now armed, waiting for border cross
+//      if (_lever_position < _trial_trigger_on )
+//      {
+//        _trialstate = 3;
+//      }
+//      break;
+    case 2: 
+      if (_lever_position < _trial_trigger_on )
+      {
+        _trialstate = 0;
+>>>>>>> Smellocator
       }
       break;
     case 3: // trial is triggered once trial trigger has been armed for
@@ -60,11 +77,28 @@ int trialstates::WhichState(int trialstate, long lever_position, long time_since
       break;
     case 4: // in active trial mode
       // don't allow a change of state to pre-trial, if min_trial_duration has not elapsed
+<<<<<<< HEAD
       if ( (_lever_position != constrain(_lever_position, _trial_trigger_off, _trial_trigger_on))
+=======
+//      if ( (_lever_position != constrain(_lever_position, _trial_trigger_off, _trial_trigger_on))
+//           & _time_since_last_change > _min_trial_duration )
+//      {
+//        _trialstate = 0;
+//      }
+      if ( (_lever_position < _trial_trigger_off)
+>>>>>>> Smellocator
            & _time_since_last_change > _min_trial_duration )
       {
         _trialstate = 0;
       }
+<<<<<<< HEAD
+=======
+      if ( (_lever_position > _trial_trigger_on)
+           & _time_since_last_change > _max_trial_duration )
+      {
+        _trialstate = 2;
+      }
+>>>>>>> Smellocator
       if ( (_lever_position == constrain(_lever_position, _trial_trigger_off, _trial_trigger_on))
                 & _time_since_last_change > _max_trial_duration )
       {
