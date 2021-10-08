@@ -2,9 +2,10 @@
 function [Traces, TrialInfo, TargetZones] = ...
     ParseBehavior2Trials(MyData, MySettings, DataTags, Trial)
 
-% Extract traces starting from previous trial stop to this trial stop
-% First trial - 1 sec before trial start to this trial stop
-% Last trial - previous trial stop to 1 sec after this trial stop
+% Extract traces starting from 1 sec before trial start to next trial start
+% First trial - 1 sec before trial start (or from session start if smaller)
+% Last trial - 1 sec after this trial stop (or session stop if smaller)
+% traces will overlap by 1 sec
 
 %% globals
 global SampleRate; % = 500; % samples/second
@@ -57,41 +58,31 @@ OdorOffsets = Trial.Offsets(:,2);
 for thisTrial = 1:size(MySettings,1)
     % store original trial ID - some trials may get deleted later because of weird target zones
     TrialInfo.TrialID(thisTrial) = thisTrial;
-    trialflag = 0; % pull down all flags - default it to use all trials
     thisTrialOffset = TrialOffsets(thisTrial); % this will be zero if there were no digital-analog sample drops
     
     if TrialOn(thisTrial) && ~isnan(thisTrialOffset)
         % extract continuous traces for lever, motor position, licks and sniffs
-        % extract from last trial stop, to this trial stop
         
         % correction factor
         TrialInfo.Offset(thisTrial) = thisTrialOffset;
         
-        if thisTrial > 1 % all except first trial
-            start_idx = TrialOff(thisTrial-1) + 1; % 1 sec preceding trial start
-            start_idxCorrected = start_idx + thisTrialOffset;
-        else % exception handler for the first trial
-            start_idx = TrialOn(thisTrial) - startoffset*SampleRate; % 1 sec preceding trial start
-            start_idxCorrected = start_idx + thisTrialOffset;
+        start_idx = TrialOn(thisTrial) - startoffset*SampleRate; % 1 sec preceding trial start
+        start_idxCorrected = start_idx + thisTrialOffset;
+        if thisTrial == 1 % exception handler for the first trial
             start_idx = max(1,start_idx);
             start_idxCorrected = max(1,start_idxCorrected);
-            
-            trialflag = -1; % ignore the very first trial
             LastTrialIdx = start_idx;
         end
         
-        % exception handler for the last trial
         if thisTrial < length(TrialOn)
-            stop_idx = TrialOff(thisTrial); % until the next trial start
+            stop_idx = TrialOn(thisTrial+1) -1;
             stop_idxCorrected = stop_idx + thisTrialOffset;
-        else % last trial
+        else  % exception handler for the last trial
             stop_idx = TrialOff(thisTrial) + startoffset*SampleRate;
             stop_idxCorrected = stop_idx + thisTrialOffset;
             stop_idx = min(stop_idx,size(MyData,1));
             stop_idxCorrected = min(stop_idxCorrected,size(MyData,1));
-            trialflag = -1; % ignore this trial
-        end
-                
+        end                
         
         %% Extract traces
         % Analog - use corrected indices - analog channnel dropped samples
@@ -122,12 +113,7 @@ for thisTrial = 1:size(MySettings,1)
         TrialInfo.TimeIndices(thisTrial,:) = thisTrialIdx - start_idx;
         TrialInfo.Timestamps(thisTrial,:) = MyData(thisTrialIdx,1) - MyData(start_idx,1); % in seconds
         TrialInfo.Duration(thisTrial,1) = (diff(thisTrialIdx) + 1)/SampleRate; % in seconds
-        % ignore trials that were outside the user-defined time period
-        if (MyData(thisTrialIdx(1),1) < sessionstart) || (MyData(thisTrialIdx(1),1) > sessionstop)
-            trialflag = -1;
-        end
-        TrialInfo.Valid(thisTrial,1) = trialflag;
-        
+                
         %% Which odor
         TrialInfo.Odor(thisTrial,1) = mode(MyData(thisTrialIdx(1):thisTrialIdx(2),TrialCol));
         
@@ -141,34 +127,6 @@ for thisTrial = 1:size(MySettings,1)
         
         %% Timestamps for Odor ON and Trial ON - reconstructed from Lever trace
         TrialInfo.OdorStart(thisTrial,2) = OdorOffsets(thisTrial);
-        %     % Odor ON timestamp
-        %     LeverSnippet = MyData(LastTrialIdxCorrected:thisTrialIdxCorrected(1), LeverCol);
-        %     LeverTemp = LeverSnippet;
-        %     % assume a fix threshold of 4.8
-        %     LeverTemp(LeverSnippet<=LeverThresh) = 0;
-        %     LeverTemp(LeverTemp>0) = 1;
-        %     % get all initiation hold periods
-        %     Initiations = [find(diff([0; LeverTemp; 0])==1) find(diff([0; LeverTemp; 0])==-1)-1];
-        %
-        %     % Odor ON timestamp - find the first initiation period > trigger hold
-        %     TriggerHold = MySettings(thisTrial,13); % in msec
-        %     TriggerHold = floor(TriggerHold*SampleRate/1000); % in samples
-        %     OdorStart = find(diff(Initiations,1,2)>=(TriggerHold-1),1,'last');
-        %     while isempty(OdorStart)
-        %         if size(Initiations,1) > 1
-        %             % pool the last two
-        %             Initiations(end-1,2) = Initiations(end,2);
-        %             Initiations(end,:) = [];
-        %             OdorStart = find(diff(Initiations,1,2)>=TriggerHold,1,'first');
-        %         else
-        %             disp(['Trial ',num2str(thisTrial),': No valid Initiations found!']);
-        %             trialflag = -1;
-        %             OdorStart = 1;
-        %         end
-        %     end
-        % %     TrialInfo.OdorStart(thisTrial,2) = Initiations(OdorStart,1) + TriggerHold - 1 + LastTrialIdx - start_idx;
-        %     TrialInfo.OdorStart(thisTrial,2) = Initiations(OdorStart,1) -1 + TriggerHold - numel(LeverSnippet);
-        % convert both to seconds
         TrialInfo.OdorStart(thisTrial,:) = TrialInfo.OdorStart(thisTrial,:)/SampleRate;
         
         %% Which TargetZone
@@ -283,7 +241,6 @@ for thisTrial = 1:size(MySettings,1)
     end
     
     LastTrialIdx = TrialOff(thisTrial); % current trial's end Idx
-    LastTrialIdxCorrected = LastTrialIdx + thisTrialOffset; % current trial's end Idx
 end
 
 
