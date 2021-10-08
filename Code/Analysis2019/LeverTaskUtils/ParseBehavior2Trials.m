@@ -1,16 +1,15 @@
 % organize the session data into a cell array of trials
 function [Traces, TrialInfo, TargetZones] = ...
-    ParseBehaviorTrials(MyData, MySettings, DataTags, Trial, sessionstart, sessionstop)
+    ParseBehavior2Trials(MyData, MySettings, DataTags, Trial)
 
-%% Parse inputs
-if nargin < 4
-    sessionstart = 0;
-    sessionstop = max(MyData(:,1));
-end
+% Extract traces starting from previous trial stop to this trial stop
+% First trial - 1 sec before trial start to this trial stop
+% Last trial - previous trial stop to 1 sec after this trial stop
 
 %% globals
 global SampleRate; % = 500; % samples/second
 global startoffset; % = 1; % seconds
+global errorflags; % [digital-analog sample drops, timestamp drops, RE voltage drift, motor slips]
 
 %% get list of target zones used
 TargetZones = unique(MySettings(:,18:20),'rows');
@@ -63,42 +62,43 @@ for thisTrial = 1:size(MySettings,1)
     
     if TrialOn(thisTrial) && ~isnan(thisTrialOffset)
         % extract continuous traces for lever, motor position, licks and sniffs
-        % extract 1s before trial ON, and upto 1s before next trial start
+        % extract from last trial stop, to this trial stop
         
         % correction factor
         TrialInfo.Offset(thisTrial) = thisTrialOffset;
         
-        start_idx = TrialOn(thisTrial) - startoffset*SampleRate;
-        start_idxCorrected = start_idx + thisTrialOffset;
-        % exception handler for the first trial
-        start_idx = max(1,start_idx);
-        start_idxCorrected = max(1,start_idxCorrected);
-        if thisTrial == 1 % all except first trial
+        if thisTrial > 1 % all except first trial
+            start_idx = TrialOff(thisTrial-1) + 1; % 1 sec preceding trial start
+            start_idxCorrected = start_idx + thisTrialOffset;
+        else % exception handler for the first trial
+            start_idx = TrialOn(thisTrial) - startoffset*SampleRate; % 1 sec preceding trial start
+            start_idxCorrected = start_idx + thisTrialOffset;
+            start_idx = max(1,start_idx);
+            start_idxCorrected = max(1,start_idxCorrected);
+            
             trialflag = -1; % ignore the very first trial
             LastTrialIdx = start_idx;
-            LastTrialIdxCorrected = start_idx;
         end
         
+        % exception handler for the last trial
         if thisTrial < length(TrialOn)
-            stop_idx = TrialOn(thisTrial+1) - startoffset*SampleRate - 1; % until the next trial start
+            stop_idx = TrialOff(thisTrial); % until the next trial start
+            stop_idxCorrected = stop_idx + thisTrialOffset;
         else % last trial
             stop_idx = TrialOff(thisTrial) + startoffset*SampleRate;
+            stop_idxCorrected = stop_idx + thisTrialOffset;
+            stop_idx = min(stop_idx,size(MyData,1));
+            stop_idxCorrected = min(stop_idxCorrected,size(MyData,1));
             trialflag = -1; % ignore this trial
         end
-        stop_idxCorrected = stop_idx + thisTrialOffset;
-        % exception handler for the last trial
-        stop_idx = min(stop_idx,size(MyData,1));
-        stop_idxCorrected = min(stop_idxCorrected,size(MyData,1));
+                
         
         %% Extract traces
         % Analog - use corrected indices - analog channnel dropped samples
-        Traces.Timestamps.Analog(thisTrial) = { MyData(start_idxCorrected:stop_idxCorrected, 1) };
         Traces.Lever(thisTrial) = { MyData(start_idxCorrected:stop_idxCorrected, LeverCol) };
         Traces.Motor(thisTrial) = { MyData(start_idxCorrected:stop_idxCorrected, MotorCol) };
-        Traces.Encoder(thisTrial) = { MyData(start_idxCorrected:stop_idxCorrected, EncoderCol) };
         Traces.Sniffs(thisTrial) = { MyData(start_idxCorrected:stop_idxCorrected, RespCol) };
-        % Digital - use uncorrected indices
-        Traces.Timestamps.Digital(thisTrial) = { MyData(start_idx:stop_idx, 1) };
+        
         Traces.Licks(thisTrial) = { MyData(start_idx:stop_idx, LickCol) };
         Traces.Trial(thisTrial) = { MyData(start_idx:stop_idx, TrialCol) };
         Traces.Rewards(thisTrial) = { MyData(start_idx:stop_idx, RewardCol) };
@@ -106,6 +106,11 @@ for thisTrial = 1:size(MySettings,1)
         % start and stop indices of the extracted trace - w.r.t to the session
         TrialInfo.TraceIndices(thisTrial,:) = [start_idx stop_idx start_idxCorrected stop_idxCorrected];
         TrialInfo.TraceDuration(thisTrial,1) = (diff([start_idx stop_idx]) + 1)/SampleRate;
+        % extract the timestamps if it can't be reconstructed from indices
+        if errorflags(2) % timestamps were dropped
+            Traces.Timestamps.Analog(thisTrial) = { MyData(start_idxCorrected:stop_idxCorrected, 1) };
+            Traces.Timestamps.Digital(thisTrial) = { MyData(start_idx:stop_idx, 1) };
+        end
         
         %% Extract Trial Timestamps
         % w.r.t SessionStart (to go back to raw data if needed)

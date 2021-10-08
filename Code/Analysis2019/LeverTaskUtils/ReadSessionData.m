@@ -11,6 +11,7 @@ Temp = load(FileName,'session_data');
 MyTraces = Temp.session_data.trace; % data
 MyParams = Temp.session_data.params; % settings
 [nrows, ~] = size(MyTraces);
+TFtype = Temp.session_data.ForNextSession(8); % 0 = from left, 1 = from right
 
 DataTags = {'Lever'; ...
             'Encoder'; ...
@@ -19,7 +20,6 @@ DataTags = {'Lever'; ...
             'InRewardZone'; ...
             'Rewards'; ...
             'Licks'};
-
 
 if PIDflag
     DataTags{1} = 'PID';
@@ -93,6 +93,22 @@ if ~isempty(f)
     end
 end
 
+%% open loop and replays
+OL_Blocks  = numel(find(diff(MyParams(:,32))==1)); % in timestamps
+OL_template = []; 
+Replay_Trials = [];
+if any(OL_Blocks)
+    for OL = 1:OL_Blocks
+        foo = [];
+        foo(:,1) = (find(diff(MyParams(:,32))== 1)+1):(find(diff(MyParams(:,32))== -1));
+        foo(:,2) = OL;
+        OL_template = vertcat(foo,OL_template);
+    end
+    
+    % any replays?
+    Replay_Trials = find(diff(MyParams(:,32))== 2) + 1;
+end
+
 %% for each trial
 for thisTrial = 1:size(MyParams,1)
     
@@ -114,10 +130,10 @@ for thisTrial = 1:size(MyParams,1)
                 MyData(f,12) = MyParams(thisTrial,30); %FZoneLowLim
             case 3 % to detect NoOdor trials
                 MyData(f,11) = 100*MyParams(thisTrial,26); %300
-                MyData(f,12) = 0;
+                MyData(f,12) = -1;
             case 4 % flip mapping
                 MyData(f,11) = 100*MyParams(thisTrial,26); %400
-                MyData(f,12) = 0;
+                MyData(f,12) = -1;
             case {5,6,7} % location offset
                 MyData(f,11) = 100*MyParams(thisTrial,26);
                 MyData(f,12) = MyParams(thisTrial,27); % offset size
@@ -128,23 +144,53 @@ for thisTrial = 1:size(MyParams,1)
                 %MyData(f,11) = 100*MyParams(thisTrial,26);
                 MyData(f,11) = 6; %FZoneHighLim
                 MyData(f,12) = 5; %FZoneLowLim
-            case 10 % feedback pause
+            case 10 % feedback pause or feedback halt (2021 or later)
                 %MyData(f,11) = 100*MyParams(thisTrial,26);
-                MyData(f,11) = 6; %FZoneHighLim
-                MyData(f,12) = 5; %FZoneLowLim
+                if str2double(FileName(regexp(FileName,'_','once')+(1:4))) > 2020
+                    % feedback halt perturbation with location flip
+                    MyData(f,11) = 100*MyParams(thisTrial,26); %1000
+                    MyData(f,12) = 1000*MyParams(thisTrial,27) + ...
+                        MyParams(thisTrial,28) - 121; % 1000*halt duration + halted odor location (w.r.t. center)
+                else
+                    % feedback pause perturbation
+                    MyData(f,11) = 6; %FZoneHighLim
+                    MyData(f,12) = 6; %FZoneLowLim
+                end
             case 13 % LED only trials
-                MyData(f,11) = 100*MyParams(thisTrial,26);
+                MyData(f,11) = 100*MyParams(thisTrial,26); % 1300
                 
         end
     end
     
-    % detect block shift trials
+    % flag block shift trials
     if MyParams(thisTrial,23)~=121 % was a perturbed trial
         MyData(f,11) = 100*11;
         MyData(f,12) = MyParams(thisTrial,23)-121; % shift size
     end
     
     % detect rule reversal trials
+    TrialState = MyData(f,find(ismember(DataTags,'TrialON')));
+    MotorState = MyData(f,find(ismember(DataTags,'Motor')));
+    OdorStartState = MotorState(find(diff(TrialState>0),1,'first')+1);
+    if ~isempty(OdorStartState)
+        OdorStartState = (OdorStartState>0); % this is true if TFtype = 1
+        if OdorStartState ~= TFtype
+            MyData(f,11) = 1400;
+            MyData(f,12) = OdorStartState+1;
+        end
+    end
+    
+    % flag open loop template trials
+    if ismember(thisTrial,OL_template(:))
+        MyData(f,11) = 1500;
+        MyData(f,12) = -1;
+    end
+    
+    % flag replay trials
+    if ismember(thisTrial,Replay_Trials)
+        MyData(f,11) = 1600;
+        MyData(f,12) = -2;
+    end
     
 end
 
@@ -155,7 +201,7 @@ for odor = 1:4
     MyData(f,6) = odor;
 end
 
-%% HACK: to compensate for code bug for No odor trials
+%% HACK: to compensate for code bug for No odor trials - old - not currently used I think - PG (2021-10-07)
 if isempty(strfind(FileName,'LR')) % skip this step for visual version
     if any(MyParams(:,2)==0) && ~any(MyData(:,6)>=4)
         % cheat to prevent last trial from being NoOdor Trial

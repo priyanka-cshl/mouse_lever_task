@@ -2,24 +2,21 @@
 function [Trial] = ...
     CorrectMatlabSampleDrops(MyData, MySettings, DataTags)
 
+% Check if there were any sample drop issues between digital and analog data
+% this issue was observed for batch K on rig2
+
+% Outputs: 
+% Trial.Indices = trial start, trial stop and duration (in indices)
+% Trial.TimeStamps = trial start, trial stop and duration (in timestamps)
+% Trial.Offsets = trial start offset and odor start offset, from digital trial start (in indices)
 
 %% globals
 global SampleRate; % = 500; % samples/second
+global errorflags; % [digital-analog sample drops, timestamp drops, RE voltage drift, motor slips]
 
 %% Get Column IDs
 TrialCol = find(cellfun(@isempty,regexp(DataTags,'TrialON'))==0);
 LeverCol = find(cellfun(@isempty,regexp(DataTags,'Lever'))==0);
-RZoneCol = find(cellfun(@isempty,regexp(DataTags,'InRewardZone'))==0);
-
-% MotorCol = find(cellfun(@isempty,regexp(DataTags,'Motor'))==0);
-% EncoderCol = find(cellfun(@isempty,regexp(DataTags,'Encoder'))==0);
-% LickCol = find(cellfun(@isempty,regexp(DataTags,'Licks'))==0);
-% RewardCol = find(cellfun(@isempty,regexp(DataTags,'Rewards'))==0);
-% TZoneCol = find(cellfun(@isempty,regexp(DataTags,'InTargetZone'))==0);
-% RespCol = find(cellfun(@isempty,regexp(DataTags,'respiration'))==0);
-% HomeCol = find(cellfun(@isempty,regexp(DataTags,'HomeSensor'))==0);
-% PerturbationCol(1) = find(cellfun(@isempty,regexp(DataTags,'WhichPerturbation'))==0);
-% PerturbationCol(2) = find(cellfun(@isempty,regexp(DataTags,'PerturbationValue'))==0);
 
 %% Get Trial ON-OFF timestamps
 TrialColumn = MyData(:,TrialCol);
@@ -47,7 +44,7 @@ LeverThresh = median(MySettings(:,11));
 trialflag = [];
 
 %% Process lever snippets trial-by-trial
-for thisTrial = 1:size(MySettings,1)
+for thisTrial = 1:size(Trial.Indices,1)
     
     if TrialOn(thisTrial)
     
@@ -93,9 +90,6 @@ for thisTrial = 1:size(MySettings,1)
             TrialStartOffsets(thisTrial,1) = Initiations(OdorStart,2) - numel(LeverSnippet);
             OdorStartOffsets(thisTrial,1) = Initiations(OdorStart,1) + TriggerHold - numel(LeverSnippet);
             
-            %         if TrialStartOffsets(thisTrial,1) < -1000
-            %             keyboard;
-            %         end
         else
             TrialStartOffsets(thisTrial,1) = NaN;
             OdorStartOffsets(thisTrial,1) = NaN;
@@ -106,10 +100,6 @@ for thisTrial = 1:size(MySettings,1)
     end
     
 end
-
-% figure;
-% plot(TrialStartOffsets,'r');
-% hold on
 
 % Some offsets are miscalculated - as being zero due to the threshold not
 % being exactly == 4.8V - this HACK is an attempt to eliminate those
@@ -146,9 +136,6 @@ end
 % ignore any very large offsets
 TrialStartOffsets(TrialStartOffsets<-200) = NaN;
 
-% plot(TrialStartOffsets,'k');
-% set(gca,'YLim',[-100 0]);
-
 % check if there's just one or two offsets - Rig I
 % in that case, its just due to noise in the lever signal
 % ignore all offsets
@@ -159,15 +146,20 @@ foo(foo>-5) = 0;
 foo(foo<0) = 1;
 % any contiguous stretch of 5 offsets?
 x = [find(diff([0; foo; 0])==1) find(diff([0; foo; 0])==-1)-1];
-Trial.Offsets = any(abs(diff(x,1,2))>5)*[TrialStartOffsets OdorStartOffsets];
+Trial.Offsets = [any(abs(diff(x,1,2))>5)*TrialStartOffsets OdorStartOffsets];
 
 if ~any(abs(diff(x,1,2))>5)
-    disp('No Sample drops - Rig 1?');
+    disp('No Samples dropped between digital and analog');
 else
-    disp('Warning: Sample drops - Rig 2?');
+    disp('Warning: Samples dropped between digital and analog');
+    errorflags(1) = 1;
 end
 
-% ValidTrials = ones(thisTrial,1);
-% ValidTrials(find(trialflag)) = trialflag(find(trialflag));
+if ~any(unique(round(diff(MyData(:,1)),4))~=0.0020)
+     disp('No timestamps dropped');
+else
+    disp('Warning: timestamps dropped');
+    errorflags(2) = 1;
+end
 
 end

@@ -2,20 +2,14 @@
 % into trials, with relevant continuous (lever, motor, respiration, lickpiezo)
 % and event data (licks, target zone flags, odor ON-OFF, etc) for each trial
 
-function [Traces, TrialInfo] = ParseBehaviorAndPhysiology(MyFilePath, varargin)
-
-%% add the relevant repositories to path
-Paths = WhichComputer();
-addpath(genpath([Paths.Code,filesep,'open-ephys-analysis-tools']));
-addpath(genpath([Paths.Code,filesep,'afterphy']));
-addpath(genpath([Paths.Code,filesep,'spikes']));
-addpath(genpath([Paths.Code,filesep,'npy-matlab']));
+function [Traces, TrialInfo] = ParseBehavior(MyFilePath, varargin)
 
 %% parse input arguments
 narginchk(1,inf)
 params = inputParser;
 params.CaseSensitive = false;
 params.addParameter('plotsession', false, @(x) islogical(x) || x==0 || x==1);
+params.addParameter('savesession', true, @(x) islogical(x) || x==0 || x==1);
 params.addParameter('respiration', false, @(x) islogical(x) || x==0 || x==1);
 params.addParameter('tuning', false, @(x) islogical(x) || x==0 || x==1);
 params.addParameter('replay', false, @(x) islogical(x) || x==0 || x==1);
@@ -27,6 +21,7 @@ params.addParameter('chunksession', false, @(x) islogical(x) || x==0 || x==1);
 % extract values from the inputParser
 params.parse(varargin{:});
 ReplotSession = params.Results.plotsession;
+SaveSession = params.Results.savesession;
 ChunkSession = params.Results.chunksession;
 do_tuning = params.Results.tuning;
 do_replay = params.Results.replay;
@@ -43,6 +38,8 @@ startoffset = 1; % in seconds
 global savereplayfigs;
 savereplayfigs = 0;
 global whichreplay;
+global errorflags; % [digital-analog sample drops, timestamp drops, RE voltage drift, motor slips]
+errorflags = [0 0 0 0];
 
 %% core data extraction (and settings)
 [MyData, MySettings, DataTags] = ReadSessionData(MyFilePath);
@@ -54,26 +51,6 @@ if ReplotSession
     RecreateSession(MyData);
 end
 
-%% load previously saved session params
-clear sessionstart sessionstop respthresh
-if exist(fullfile(FilePaths,'processed',strrep(MyFileName,'.mat','_processed.mat')))
-    disp('loading previously defined session flags');
-    load(fullfile(FilePaths,'processed',strrep(MyFileName,'.mat','_processed.mat')),...
-        'sessionstart','sessionstop','respthresh');
-    
-else
-    if ChunkSession
-        % define session start and stop flags
-        prompt = ['Enter start and stop timestamps: [',num2str(MyData(1,1)),' ',num2str(round(MyData(end,1))),']\n'];
-        userans = input(prompt);
-        sessionstart = userans(1);
-        sessionstop = userans(2);
-    else
-        sessionstart = MyData(1,1);
-        sessionstop = MyData(end,1);
-    end
-end
-
 %% Process sniff data
 if do_sniffs
     RespData = MyData(:,15);
@@ -82,7 +59,8 @@ end
 
 %% Parse into trials
 [Trials] = CorrectMatlabSampleDrops(MyData, MySettings, DataTags);
-[Traces, TrialInfo, TargetZones] = ParseBehaviorTrials(MyData, MySettings, DataTags, Trials, sessionstart, sessionstop);
+[MyData, DataTags] = OdorLocationSanityCheck(MyData, DataTags);
+[Traces, TrialInfo, TargetZones] = ParseBehavior2Trials(MyData, MySettings, DataTags, Trials);
 
 %% Get info from the OEPS files if available
 [myephysdir] = WhereSpikeFile(MyFileName);
@@ -150,77 +128,4 @@ if do_spikes && do_tuning
     %             'TargetZones','spiketimes','sessionstart','sessionstop');
 end
 
-
-%     OdorTuningSummary;
-%     figureName = [MyFileName(1:end-4)];
-%     print(figureName,'-dpdf');
-%     close(gcf);
-
-%     for unit = 1:size(spiketimes,2)
-% %         figure;
-% %         PlotPSTH(unit,TrialInfo,spiketimes);
-% %         set(gcf,'Units','inches');
-% %         screenposition = get(gcf,'Position');
-% %         set(gcf,'PaperPosition',[0 0 screenposition(3:4)],...
-% %             'PaperSize',[screenposition(3:4)]);
-% %         figureName = [MyFileName(1:end-4),'_',num2str(unit),'_rasters'];
-% %         print(figureName,'-dpdf','-fillpage');
-% %         close(gcf);
-%
-% %         figure(2);
-% %         clf
-% %         PlotLocationOffsetPSTH(unit,Traces,TrialInfo,spiketimes);
-% %         pause(2);
-% %         %set(gcf,'Position',[274         365        1512         565]);
-% %         set(gcf,'Units','inches');
-% %         screenposition = get(gcf,'Position');
-% %         set(gcf,'PaperPosition',[0 0 screenposition(3:4)],...
-% %             'PaperSize',screenposition(3:4));
-% %         figureName = [MyFileName(1:end-4),'_',num2str(unit),'_offset'];
-% %         print(figureName,'-dpdf');
-% %         pause(5);
-%
-% %         subplotcol = rem(unit,5);
-% %         figure(1);
-% %         LeverSpikeHistograms(unit, Traces, TargetZones, TrialInfo, spiketimes);
-% %         pause(2);
-% %
-% %
-% %         if rem(unit,5) == 0 || unit == size(spiketimes,2)
-% %             figure(1);
-% %             set(gcf,'Units','inches');
-% %             screenposition = get(gcf,'Position');
-% %             set(gcf,'PaperPosition',[0 0 screenposition(3:4)],...
-% %                 'PaperSize',screenposition(3:4));
-% %             figureName = [MyFileName(1:end-4),'_',num2str(unit),'_tuning'];
-% %             print(figureName,'-dpdf');
-% %             pause(5);
-% %             clf
-% %
-% % %             if unit < size(spiketimes,2)
-% % %                 figure(1);
-% % %             end
-% %         end
-%
-%         subplotcol = rem(unit,6);
-%         if subplotcol == 0
-%             subplotcol = 6;
-%         end
-%         figure(1);
-%         PlotOdorArmTuning(unit,Traces,TrialInfo,spiketimes);
-%         pause(2);
-%
-%         if rem(unit,6) == 0 || unit == size(spiketimes,2)
-%             figure(1);
-%             set(gcf,'Units','inches');
-%             screenposition = get(gcf,'Position');
-%             set(gcf,'PaperPosition',[0 0 screenposition(3:4)],...
-%                 'PaperSize',screenposition(3:4));
-%             figureName = [MyFileName(1:end-4),'_',num2str(unit),'_armodortuning'];
-%             print(figureName,'-dpdf');
-%             pause(5);
-%             clf
-%         end
-%     end
-%end
 end
