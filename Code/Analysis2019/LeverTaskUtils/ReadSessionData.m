@@ -149,8 +149,7 @@ for thisTrial = 1:size(MyParams,1)
                 if str2double(FileName(regexp(FileName,'_','once')+(1:4))) > 2020
                     % feedback halt perturbation with location flip
                     MyData(f,11) = 100*MyParams(thisTrial,26); %1000
-                    MyData(f,12) = 1000*MyParams(thisTrial,27) + ...
-                        MyParams(thisTrial,28) - 121; % 1000*halt duration + halted odor location (w.r.t. center)
+                    MyData(f,12) = MyParams(thisTrial,28) - 121; % halted odor location (w.r.t. center)
                 else
                     % feedback pause perturbation
                     MyData(f,11) = 6; %FZoneHighLim

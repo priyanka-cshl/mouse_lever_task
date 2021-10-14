@@ -55,7 +55,7 @@ TrialOffsets = Trial.Offsets(:,1); % correct for the trial offset (sample drops 
 OdorOffsets = Trial.Offsets(:,2);
 
 %% Crunch data trial-by-trial
-for thisTrial = 1:size(MySettings,1)
+for thisTrial = 1:numel(TrialOn)
     % store original trial ID - some trials may get deleted later because of weird target zones
     TrialInfo.TrialID(thisTrial) = thisTrial;
     thisTrialOffset = TrialOffsets(thisTrial); % this will be zero if there were no digital-analog sample drops
@@ -161,7 +161,8 @@ for thisTrial = 1:size(MySettings,1)
         %% Calculate all stay times (in the target zone)
         thisTrialInZone = [find(diff([0;MyData(TrialOn(thisTrial):TrialOff(thisTrial), TZoneCol)])==1) ...
             find(diff([MyData(TrialOn(thisTrial):TrialOff(thisTrial), TZoneCol);0])==-1)]; % entry and exit indices w.r.t. Trial ON
-        thisTrialInZone = TrialInfo.Timestamps(thisTrial,1) + thisTrialInZone/SampleRate; % convert to seconds and offset w.r.t. trace start
+        %thisTrialInZone = TrialInfo.Timestamps(thisTrial,1) + thisTrialInZone/SampleRate; % convert to seconds and offset w.r.t. trace start
+        thisTrialInZone = thisTrialInZone/SampleRate; % convert to seconds
         if ~isempty(thisTrialInZone)
             TrialInfo.InZone(thisTrial) = { thisTrialInZone };
         else
@@ -173,77 +174,90 @@ for thisTrial = 1:size(MySettings,1)
         PerturbationValue = mode( MyData(TrialOn(thisTrial):TrialOff(thisTrial), PerturbationCol(2)) );
         
         if WhichPerturbation
-            if WhichPerturbation < 100 % Fake target zone
+            if WhichPerturbation < 5 % Fake target zone
+                TrialInfo.Perturbation{thisTrial,1} = 'FakeZone';
                 if isempty(find(TargetZones(:,2) == PerturbationValue))
-                    TrialInfo.Perturbation(thisTrial,:) = [2 PerturbationValue];
+                    TrialInfo.Perturbation{thisTrial,2} = PerturbationValue;
                 else
-                    TrialInfo.Perturbation(thisTrial,:) = [2 find(TargetZones(:,2) == PerturbationValue)];
-                end
+                    TrialInfo.Perturbation{thisTrial,2} = find(TargetZones(:,2) == PerturbationValue);
+                end  
             else
-                TrialInfo.Perturbation(thisTrial,:) = [WhichPerturbation/100 0];
                 switch WhichPerturbation
+                    case 6   % feedback halt (old style) or feedback pause
+                        if PerturbationValue == 5 % feedback halt (old style)
+                            TrialInfo.Perturbation{thisTrial,1} = 'Halt-I';
+                            if ~isempty(find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==-1))
+                                HaltStart = 1;
+                                HaltStop = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==-1);
+                                TrialInfo.Perturbation{thisTrial,2} = [HaltStart HaltStop];
+                            end
+                        end
+                        if PerturbationValue == 6 % feedback pause
+                            TrialInfo.Perturbation{thisTrial,1} = 'Halt-II';
+                            if ~isempty(find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==-1))
+                                HaltStart = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==1);
+                                HaltStop = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==-1);
+                                TrialInfo.Perturbation{thisTrial,2} = [HaltStart HaltStop];
+                            end
+                        end
                     case 300 % No Odor
+                        TrialInfo.Perturbation{thisTrial,1} = 'NoOdor';
                     case 400 % flip map
+                        TrialInfo.Perturbation{thisTrial,1} = 'FlipMap';
                     case 500 % location offset I
-                        TrialInfo.Perturbation(thisTrial,2) = PerturbationValue; % offset added
+                        TrialInfo.Perturbation{thisTrial,1} = 'Offset-I';
+                        TrialInfo.Perturbation{thisTrial,2} = PerturbationValue; % offset added
                     case {600, 700} % location offset II and III
+                        if WhichPerturbation == 600
+                            TrialInfo.Perturbation{thisTrial,1} = 'Offset-II';
+                        else
+                            TrialInfo.Perturbation{thisTrial,1} = 'Offset-III';
+                        end
                         TrialInfo.Perturbation(thisTrial,2) = PerturbationValue; % offset added
                         % get timestamps for offset start and feedback restart
                         % this is encoded in the InRewardZone Col - see GUI
                         if ~isempty(find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==1))
-                            TrialInfo.PerturbationStart(thisTrial) = ...
+                            OffsetStart = ...
                                 find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==1);
-                            TrialInfo.FeedbackStart(thisTrial) = ...
+                            FeedbackStart = ...
                                 find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==-1,1,'last');
                             % convert to seconds w.r.t. trial start
-                            TrialInfo.PerturbationStart(thisTrial) = TrialInfo.PerturbationStart(thisTrial)/SampleRate;
-                            TrialInfo.FeedbackStart(thisTrial) = TrialInfo.FeedbackStart(thisTrial)/SampleRate;
-                            % convert to seconds w.r.t. trace start
-                            % (account for startoffset)
-                            TrialInfo.PerturbationStart(thisTrial) = TrialInfo.PerturbationStart(thisTrial) + TrialInfo.Timestamps(thisTrial,1);
-                            TrialInfo.FeedbackStart(thisTrial) = TrialInfo.FeedbackStart(thisTrial) + TrialInfo.Timestamps(thisTrial,1);
-                            %                         % get targetzone stay times for this trial
-                            %                         tempstays = cell2mat(TrialInfo.StayTimeStart(thisTrial));
-                            %                         tempstaytimes = cell2mat(TrialInfo.StayTime(thisTrial));
-                            %                         % find tzone stays after odor offset
-                            %                         foo = find(tempstays>TrialInfo.PerturbationStart(thisTrial));
-                            %                         if ~isempty(foo)
-                            %                             TrialInfo.OffsetStays = {tempstaytimes(foo)};
-                            %                             tempstays(foo,:) = [];
-                            %                             tempstaytimes(foo,:) = [];
-                            %                             TrialInfo.StayTime(thisTrial) = {tempstays};
-                            %                             TrialInfo.StayTimeStart(thisTrial) = {tempstaytimes};
-                            %                         end
+                            OffsetStart = TrialInfo.PerturbationStart(thisTrial)/SampleRate;
+                            FeedbackStart = TrialInfo.FeedbackStart(thisTrial)/SampleRate;
+                            
+                            TrialInfo.Perturbation{thisTrial,2} = ...
+                                [PerturbationValue OffsetStart FeedbackStart]; % offset added, offset start, feedback start w.r.t. trial start
                         end
                     case 800 % gain change
-                        TrialInfo.Perturbation(thisTrial,2) = PerturbationValue; % new gain
-                    case 900 % halts (older version - halt at trial start)
-                        TrialInfo.Perturbation(thisTrial,2) = PerturbationValue; % halt duration?
+                        TrialInfo.Perturbation{thisTrial,1} = 'GainChange';
+                        TrialInfo.Perturbation{thisTrial,2} = PerturbationValue; % new gain
+                    case 1000 % halts (newer version - with location flip)
+                        TrialInfo.Perturbation{thisTrial,1} = 'Halt-Flip';
                         if ~isempty(find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==-1))
-                            TrialInfo.FeedbackStart(thisTrial) = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==-1);
-                            
+                            HaltStart = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==1);
+                            HaltStop = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==-1);
+                            % HaltLocation = PerturbationValue
+                            TrialInfo.Perturbation{thisTrial,2} = [HaltStart HaltStop PerturbationValue];
                         end
-                    case 1000 % halts (newer version - halt after lever crosses set threshold)
-                        TrialInfo.Perturbation(thisTrial,2) = PerturbationValue; % halt duration?
-                        if ~isempty(find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==-1))
-                            TrialInfo.PerturbationStart(thisTrial) = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==1);
-                            TrialInfo.FeedbackStart(thisTrial) = find( diff([ MyData(TrialOn(thisTrial):TrialOff(thisTrial), RZoneCol); 0] )==-1);
-                        end
-                        
                     case 1100 % block shift perturbations
-                        TrialInfo.Perturbation(thisTrial,2) = PerturbationValue; % shift amount?
-                        
+                        TrialInfo.Perturbation{thisTrial,1} = 'BlockShift';
+                        TrialInfo.Perturbation(thisTrial,2) = PerturbationValue; % shift amount
+                    case 1400
+                        TrialInfo.Perturbation{thisTrial,1} = 'RuleReversal';
+                        TrialInfo.Perturbation{thisTrial,2} = PerturbationValue - 1; %TFType during reversal
+                    case 1500 % open loop template
+                        TrialInfo.Perturbation{thisTrial,1} = 'OL-Template';
+                    case 1600 % replay trial
+                        TrialInfo.Perturbation{thisTrial,1} = 'OL-Replay';
                 end
             end
         else
-            TrialInfo.Perturbation(thisTrial,:) = [0 0];
+            TrialInfo.Perturbation{thisTrial,1} = [];
         end
     end
     
     LastTrialIdx = TrialOff(thisTrial); % current trial's end Idx
 end
-
-
 
 %% Extras: count trials of each target zone type
 for i = 1:size(TargetZones,1)
