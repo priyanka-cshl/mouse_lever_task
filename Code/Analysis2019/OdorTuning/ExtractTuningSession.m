@@ -12,7 +12,7 @@ end
 Temp = load(FileName,'session_data');
 MyTraces = Temp.session_data.trace;
 MyParams = Temp.session_data.params;
-MyTrials = Temp.session_data.TrialSequence;
+TrialSequence = Temp.session_data.TrialSequence;
 [nrows, ~] = size(MyTraces);
 
 if PIDflag
@@ -72,13 +72,15 @@ while TrialOn(end)>TrialOff(end)
     TrialOn(end,:) = [];
 end
 
-MyTrials = [MyTrials TrialOn TrialOff MyData(TrialOn,1) MyData(TrialOff,1)];
+MyTrials = [NaN*ones(length(TrialOn),2) TrialOn TrialOff MyData(TrialOn,1) MyData(TrialOff,1)];
 MyTrials(:,7) = MyTrials(:,6) - MyTrials(:,5); 
 
 %% Odor ON-OFF timestamps
 OdorColumn = MyData(:,8);
 OdorOn = find(diff(OdorColumn)>0);
 OdorOff =  find(diff(OdorColumn)<0)+1;
+
+MotorColumn = MyData(:,13);
 
 % Fill up the Trials Table with odor on-off timestamps
 for i = 1:size(MyTrials,1)
@@ -90,9 +92,37 @@ for i = 1:size(MyTrials,1)
         MyTrials(i,9) = OdorOff(intersect(find(OdorOff>MyTrials(i,3)),find(OdorOff<MyTrials(i,4))));
         MyTrials(i,11) = MyData(MyTrials(i,9),1); % timestamp
     end
+    % get the motor position
+    MyTrials(i,12) = mode(MotorColumn(MyTrials(i,3):MyTrials(i,4),1));
 end
 
-% looks like there is a mismatch in odor identities
-MyTrials(:,1:2) = circshift(MyTrials(:,1:2),1);
-MyTrials(1,2) = NaN;
+% Looks like if there were passive replays - spurious trials get inserted
+% the seem to have the wrong motor location
+TrialSequence(:,1:2) = circshift(TrialSequence(:,1:2),1); % bug in all sessions
+TrialSequence(1,2) = NaN;
+
+foo = find(TrialSequence(:,1)==999);
+if any(foo)
+    for i = 1:numel(foo)
+        Temp = MyTrials(:,12);
+        idx = foo(i) + [-1 2 3]';
+        delta = TrialSequence(idx,1)-Temp(idx,1);
+        if any(abs(delta)>5)
+            % try deleting the entry just after the replay
+            Temp(foo(i)+1,:) = [];
+            delta = TrialSequence(idx,1)-Temp(idx,1);
+            if ~any(abs(delta)>5)
+                MyTrials(foo(i)+1,:) = [];
+            end
+        end
+                
+    end
+    MyTrials(:,1:2) = TrialSequence;
+else
+    MyTrials(:,1:2) = TrialSequence;
+    if any(abs(TrialSequence(2:end,1) - MyTrials(2:end,1))>5)
+        disp('location mismatches in tuning file')
+    end
+end
+
 end

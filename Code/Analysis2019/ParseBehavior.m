@@ -29,8 +29,8 @@ do_spikes = params.Results.spikes;
 % do_photometry = params.Results.photometry;
 
 %% Add relevant repositories
-Paths = WhichComputer();
-
+% Paths = WhichComputer();
+% addpath(genpath(fullfile(Paths.Code,'open-ephys-analysis-tools')))
 
 %% globals
 % global MyFileName;
@@ -70,7 +70,7 @@ MyTuningTrials = [];
 [TuningFile] = WhereTuningFile(FilePaths,MyFileName);
 if ~isempty(TuningFile)
     [MyTuningData, MyTuningSettings, MyTuningTrials] = ExtractTuningSession(TuningFile);
-    disp(['Found Tuining File: ',TuningFile]);
+    disp(['Found Tuning File: ',TuningFile]);
 end
 
 %% Get info from the OEPS files if available
