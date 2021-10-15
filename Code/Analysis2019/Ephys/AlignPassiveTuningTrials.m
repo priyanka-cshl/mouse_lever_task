@@ -1,4 +1,4 @@
-function [EphysTuningTrials] = AlightPassiveTuningTrials(TuningTrials, TTLs, SkipTrials)
+function [EphysTuningTrials] = AlignPassiveTuningTrials(TuningTrials, TTLs, SkipTrials)
 
 if (size(TTLs.Trial,1) - SkipTrials) >= size(TuningTrials,1)
     EphysTuningTrials = TTLs.Trial(SkipTrials+1:end,:);

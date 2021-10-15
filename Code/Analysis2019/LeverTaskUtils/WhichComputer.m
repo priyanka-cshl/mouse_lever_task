@@ -25,7 +25,8 @@ switch computername
         Paths.Behavior = 'C:\Data\Behavior'; % location on rig computer
     case 'andaman'
         Paths.Behavior = '/mnt/data/Priyanka/behavior'; % location on rig computer
-        Paths.Ephys = '/mnt/data/Priyanka';
+        %Paths.Ephys = '/mnt/data/Priyanka';
+        Paths.Ephys = '/mnt/grid-hs/pgupta/EphysData'; % for PCX batch
         Paths.Code = '/opt';
     case 'Justine'
         Paths.Behavior = 'C:\Data\Behavior';

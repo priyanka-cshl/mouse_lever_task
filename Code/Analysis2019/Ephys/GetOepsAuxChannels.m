@@ -1,4 +1,4 @@
-function [AuxData,TTLs] = GetOepsAuxChannels(myKsDir, BehaviorTrials, varargin)
+function [TTLs,EphysTuningTrials,AuxData] = GetOepsAuxChannels(myKsDir, BehaviorTrials, TuningTrials, varargin)
 
 %% parse input arguments
 narginchk(1,inf)
@@ -13,9 +13,6 @@ GetAux = params.Results.ADC;
 %% defaults
 OepsSampleRate = 30000; % Open Ephys acquisition rate
 global SampleRate; % Behavior Acquisition rate
-
-%% Filepaths
-% myKsDir = '/mnt/analysis/N8/2019-01-26_19-24-28'; % directory with kilosort output
 
 %% Get Trial Timestamps from the OpenEphys Events file
 filename = fullfile(myKsDir,'all_channels.events');
@@ -55,6 +52,24 @@ if any(abs(BehaviorTrials(1:5,3)-TTLs.Trial(1:5,3))>=0.01)
     end
 end
 
+% Is it the right recording file?
+if size(TTLs.Trial,1)<size(BehaviorTrials,1)
+    TTLs = [];
+    EphysTuningTrials = [];
+    AuxData = [];
+    disp('behavior and ephys files do not match');
+    return
+end
+
+y = corrcoef(BehaviorTrials(2:20,3),TTLs.Trial(2:20,3));
+if y(2,1)<0.99
+    TTLs = [];
+    EphysTuningTrials = [];
+    AuxData = [];
+    disp('behavior and ephys files do not match');
+    return
+end
+
 %% find the odor ON time 
 for i = 1:size(TTLs.Trial,1) % every trial
      % find the last odor valve ON transition just before this trial start
@@ -79,6 +94,13 @@ for i = 1:size(TTLs.Trial,1) % every trial
      else
          TTLs.Trial(i,4:5) = [NaN 0];
      end
+end
+
+% Align Passive Tuning trials
+if ~isempty(TuningTrials)
+    EphysTuningTrials = AlignPassiveTuningTrials(TuningTrials, TTLs, size(BehaviorTrials,1));
+else
+    EphysTuningTrials = [];
 end
 
 AuxData = [];

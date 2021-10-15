@@ -11,23 +11,26 @@ params.CaseSensitive = false;
 params.addParameter('plotsession', false, @(x) islogical(x) || x==0 || x==1);
 params.addParameter('savesession', true, @(x) islogical(x) || x==0 || x==1);
 params.addParameter('respiration', false, @(x) islogical(x) || x==0 || x==1);
-params.addParameter('tuning', false, @(x) islogical(x) || x==0 || x==1);
-params.addParameter('replay', false, @(x) islogical(x) || x==0 || x==1);
+% params.addParameter('tuning', false, @(x) islogical(x) || x==0 || x==1);
+% params.addParameter('replay', false, @(x) islogical(x) || x==0 || x==1);
 params.addParameter('spikes', false, @(x) islogical(x) || x==0 || x==1);
-params.addParameter('photometry', false, @(x) islogical(x) || x==0 || x==1);
-params.addParameter('chunksession', false, @(x) islogical(x) || x==0 || x==1);
-
+% params.addParameter('photometry', false, @(x) islogical(x) || x==0 || x==1);
+% params.addParameter('chunksession', false, @(x) islogical(x) || x==0 || x==1);
 
 % extract values from the inputParser
 params.parse(varargin{:});
 ReplotSession = params.Results.plotsession;
 SaveSession = params.Results.savesession;
-ChunkSession = params.Results.chunksession;
-do_tuning = params.Results.tuning;
-do_replay = params.Results.replay;
+% ChunkSession = params.Results.chunksession;
+% do_tuning = params.Results.tuning;
+% do_replay = params.Results.replay;
 do_sniffs = params.Results.respiration;
 do_spikes = params.Results.spikes;
-do_photometry = params.Results.photometry;
+% do_photometry = params.Results.photometry;
+
+%% Add relevant repositories
+Paths = WhichComputer();
+
 
 %% globals
 % global MyFileName;
@@ -62,11 +65,49 @@ end
 [MyData, DataTags] = OdorLocationSanityCheck(MyData, DataTags);
 [Traces, TrialInfo, TargetZones] = ParseBehavior2Trials(MyData, MySettings, DataTags, Trials);
 
+%% Check if passive tuning was done
+MyTuningTrials = [];
+[TuningFile] = WhereTuningFile(FilePaths,MyFileName);
+if ~isempty(TuningFile)
+    [MyTuningData, MyTuningSettings, MyTuningTrials] = ExtractTuningSession(TuningFile);
+    disp(['Found Tuining File: ',TuningFile]);
+end
+
 %% Get info from the OEPS files if available
-[myephysdir] = WhereSpikeFile(MyFileName);
-% get all TTLs for the open ephys session
-if do_spikes || do_replay
-    [~,TTLs] = GetOepsAuxChannels(myephysdir, Trials.TimeStamps, 'ADC', 0);
+[myephysdir] = WhereSpikeFile(MyFileName,FilePaths);
+TTLs = [];
+if ~isempty(myephysdir)
+    if size(myephysdir,1) == 1
+        [TTLs,TuningTTLs,~] = GetOepsAuxChannels(myephysdir, Trials.TimeStamps, MyTuningTrials); % send 'ADC', 1 to also get analog aux data
+    else
+        TTLs = [];
+        while isempty(TTLs) && ~isempty(myephysdir)
+            [TTLs,TuningTTLs,~] = GetOepsAuxChannels(myephysdir(1,:), Trials.TimeStamps, MyTuningTrials);
+            if isempty(TTLs)
+                myephysdir(1,:) = [];
+            end
+        end
+    end
+end
+
+if isempty(TTLs)
+    disp('no matching recording file found');
+end
+
+%% Process replay trials
+% Align replay and close loop trials using openephys triggers
+if do_replay && any(diff(MySettings(:,32))== 2) && ~isempty(WhereSpikeFile(MyFileName))
+    % Split the long replay trial in the behavior file
+    % into individual trials using the Odor TTls in the Oeps file
+    if ~isempty(TTLs)
+    [Replay, TTLs] = ParseReplayTrials(MyData, MySettings, DataTags, TrialInfo, TTLs);
+    whichreplay = 1;
+    %PlotReplayTrials(Replay, TrialInfo, TargetZones, SingleUnits, TTLs);
+    [Behavior, Ephys] = ProcessReplayTrials(Replay, TrialInfo, TargetZones, SingleUnits, TTLs, 'plotfigures',1, 'whichunits', [13 17 18 19 20]);
+    else
+        disp('No Oeps File found: Cannot process replay sessions!');
+    end
+    
 end
 
 %% Get spikes - label spikes by trials
@@ -89,20 +130,7 @@ else
     SingleUnits = [];
 end
 
-%% Align replay and close loop trials using openephys triggers
-if do_replay && any(diff(MySettings(:,32))== 2) && ~isempty(WhereSpikeFile(MyFileName))
-    % Split the long replay trial in the behavior file
-    % into individual trials using the Odor TTls in the Oeps file
-    if ~isempty(TTLs)
-    [Replay, TTLs] = ParseReplayTrials(MyData, MySettings, DataTags, TrialInfo, TTLs);
-    whichreplay = 1;
-    %PlotReplayTrials(Replay, TrialInfo, TargetZones, SingleUnits, TTLs);
-    [Behavior, Ephys] = ProcessReplayTrials(Replay, TrialInfo, TargetZones, SingleUnits, TTLs, 'plotfigures',1, 'whichunits', [13 17 18 19 20]);
-    else
-        disp('No Oeps File found: Cannot process replay sessions!');
-    end
-    
-end
+
 
 if do_tuning
     [TuningFile] = WhereTuningFile(FilePaths,MyFileName);
@@ -115,12 +143,9 @@ if do_tuning
 end
 
 if do_spikes && do_tuning
-    %% get Spikes
-    MyTuningTrials(165:end,:) = [];
-    [EphysTuningTrials] = AlightPassiveTuningTrials(MyTuningTrials, TTLs, size(Trials.Indices,1));
-    
+    %% get Spikes    
     if ~isempty(EphysTuningTrials)
-        PlotPassiveTuning(SingleUnits, EphysTuningTrials, MyTuningTrials, 'rasters', 1, 'psth',1,'whichunits', AllUnits);
+        PlotPassiveTuning(SingleUnits, TuningTTLs, MyTuningTrials, 'rasters', 1, 'psth',1,'whichunits', AllUnits);
     end    
     
     %         savepath = fullfile(FilePaths,'processed',filesep,MyFileName);
