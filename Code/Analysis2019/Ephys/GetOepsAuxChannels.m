@@ -14,9 +14,6 @@ GetAux = params.Results.ADC;
 OepsSampleRate = 30000; % Open Ephys acquisition rate
 global SampleRate; % Behavior Acquisition rate
 
-%% Filepaths
-% myKsDir = '/mnt/analysis/N8/2019-01-26_19-24-28'; % directory with kilosort output
-
 %% Get Trial Timestamps from the OpenEphys Events file
 filename = fullfile(myKsDir,'all_channels.events');
 [data, timestamps, info] = load_open_ephys_data(filename); % data has channel IDs
@@ -42,7 +39,7 @@ for i = 1:numel(TTLTypes)
     TTLs.(char(Tags(i))) = temp;
 end
 
-%% mismatch between behavior and oeps trials
+%% mismatch between behavior and oeps trials on first trial 
 if any(abs(BehaviorTrials(1:5,3)-TTLs.Trial(1:5,3))>=0.01)
     % case 1 : behavior file has an extra trial
     if ~any(abs(BehaviorTrials(2:6,3)-TTLs.Trial(1:5,3))>=0.01)
