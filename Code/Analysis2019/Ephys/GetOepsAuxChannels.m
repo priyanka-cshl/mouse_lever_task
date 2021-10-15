@@ -39,7 +39,7 @@ for i = 1:numel(TTLTypes)
     TTLs.(char(Tags(i))) = temp;
 end
 
-%% mismatch between behavior and oeps trials
+%% mismatch between behavior and oeps trials on first trial 
 if any(abs(BehaviorTrials(1:5,3)-TTLs.Trial(1:5,3))>=0.01)
     % case 1 : behavior file has an extra trial
     if ~any(abs(BehaviorTrials(2:6,3)-TTLs.Trial(1:5,3))>=0.01)
