@@ -69,7 +69,7 @@ end
 MyTuningTrials = [];
 [TuningFile] = WhereTuningFile(FilePaths,MyFileName);
 if ~isempty(TuningFile)
-    [MyTuningData, MyTuningSettings, MyTuningTrials] = ExtractTuningSession(TuningFile);
+    [MyTuningTrials, TrialSequence, ReplayTraces] = ParseTuningSession(TuningFile);
     disp(['Found Tuning File: ',TuningFile]);
 end
 
@@ -78,11 +78,12 @@ end
 TTLs = [];
 if ~isempty(myephysdir)
     if size(myephysdir,1) == 1
-        [TTLs,TuningTTLs,~] = GetOepsAuxChannels(myephysdir, Trials.TimeStamps, MyTuningTrials); % send 'ADC', 1 to also get analog aux data
+        [TTLs,ReplayTTLs,TuningTTLs,PassiveReplayTTLs,~] = ...
+            GetOepsAuxChannels(myephysdir, Trials.TimeStamps, MyTuningTrials, TrialSequence); % send 'ADC', 1 to also get analog aux data
     else
-        TTLs = [];
         while isempty(TTLs) && ~isempty(myephysdir)
-            [TTLs,TuningTTLs,~] = GetOepsAuxChannels(myephysdir(1,:), Trials.TimeStamps, MyTuningTrials);
+            [TTLs,ReplayTTLs,TuningTTLs,PassiveReplayTTLs,~] = ...
+                GetOepsAuxChannels(myephysdir(1,:), Trials.TimeStamps, MyTuningTrials, TrialSequence);
             if isempty(TTLs)
                 myephysdir(1,:) = [];
             end
@@ -95,6 +96,10 @@ if isempty(TTLs)
 end
 
 %% Process replay trials
+if any(strcmp(TrialInfo.Perturbation,'OL-Template'))
+    ParseReplayTrials;
+end
+
 % Align replay and close loop trials using openephys triggers
 if do_replay && any(diff(MySettings(:,32))== 2) && ~isempty(WhereSpikeFile(MyFileName))
     % Split the long replay trial in the behavior file
@@ -129,8 +134,6 @@ if do_spikes
 else
     SingleUnits = [];
 end
-
-
 
 if do_tuning
     [TuningFile] = WhereTuningFile(FilePaths,MyFileName);

@@ -70,7 +70,9 @@ for thisTrial = 1:size(Trial.Indices,1)
         
         if ~isempty(Initiations)
             % Odor ON timestamp - find the first initiation period > trigger hold
-            TriggerHold = MySettings(thisTrial,13); % in msec
+            TriggerHold = MySettings(...
+                                find(MySettings(:,1)<=Trial.TimeStamps(thisTrial,1),1,'last') ...
+                                    ,13); % in msec
             TriggerHold = floor(TriggerHold*SampleRate/1000); % in samples
             OdorStart = find(diff(Initiations,1,2)>=(TriggerHold-1),1,'last');
             if isempty(OdorStart)
@@ -89,7 +91,6 @@ for thisTrial = 1:size(Trial.Indices,1)
             % Trial ON timestamp - find the first initiation period > trigger hold
             TrialStartOffsets(thisTrial,1) = Initiations(OdorStart,2) - numel(LeverSnippet);
             OdorStartOffsets(thisTrial,1) = Initiations(OdorStart,1) + TriggerHold - numel(LeverSnippet);
-            
         else
             TrialStartOffsets(thisTrial,1) = NaN;
             OdorStartOffsets(thisTrial,1) = NaN;

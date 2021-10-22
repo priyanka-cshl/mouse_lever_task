@@ -80,6 +80,9 @@ OdorColumn = MyData(:,8);
 OdorOn = find(diff(OdorColumn)>0);
 OdorOff =  find(diff(OdorColumn)<0)+1;
 
+OdorOff(OdorOff(:,1)<OdorOn(1),:) = []; % sanity checks
+OdorOn(OdorOn(:,1)>OdorOff(end),:) = []; % sanity checks
+
 MotorColumn = MyData(:,13);
 
 % Fill up the Trials Table with odor on-off timestamps
@@ -93,14 +96,16 @@ for i = 1:size(MyTrials,1)
         MyTrials(i,11) = MyData(MyTrials(i,9),1); % timestamp
     end
     % get the motor position
-    MyTrials(i,12) = mode(MotorColumn(MyTrials(i,3):MyTrials(i,4),1));
+    x2 = MyTrials(i,4);
+    x1 = max(MyTrials(i,3),MyTrials(i,4)-SampleRate*(MyParams(7)/1000));
+    MyTrials(i,12) = mode(MotorColumn(x1:x2,1));
 end
 
-% Looks like if there were passive replays - spurious trials get inserted
-% the seem to have the wrong motor location
 TrialSequence(:,1:2) = circshift(TrialSequence(:,1:2),1); % bug in all sessions
 TrialSequence(1,2) = NaN;
 
+% Looks like if there were passive replays - spurious trials get inserted
+% they seem to have the wrong motor location
 foo = find(TrialSequence(:,1)==999);
 if any(foo)
     for i = 1:numel(foo)

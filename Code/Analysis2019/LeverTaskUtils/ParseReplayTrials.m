@@ -1,22 +1,82 @@
-function [Replay, TTLs] = ParseReplayTrials(MyData, MySettings, DataTags, TrialInfo, TTLs)
-
+%function [Replay, TTLs] = ParseReplayTrials(Traces, TrialInfo, TTLs    MySettings, DataTags, TrialInfo, TTLs)
 %% globals
 global SampleRate; % = 500; % samples/second
 global startoffset; % = 1; % seconds
+traceOverlap = SampleRate*startoffset;
+AllTargets = [1:0.25:3.75]; % for assigning target zone values
+    
+% How many open loop templates are there?
+% typically only 1 - in rare cases there might be two
+TemplateTrials(:,1) = find(diff(strcmp(TrialInfo.Perturbation,'OL-Template'))== 1) + 1;
+TemplateTrials(:,2) = find(diff(strcmp(TrialInfo.Perturbation,'OL-Template'))==-1);
 
-%% Get Column IDs
+% for each template - get a concatenated trace for 
+% Lever, Motor, Resp, Licks, TrialON, Rewards, TargetZone, Timestamps (?)
+whichTraces = fieldnames(Traces);
+for i = 1:size(TemplateTrials,1) % no. of templates 
+    
+%% Open Loop Template 
 
-LeverCol = find(cellfun(@isempty,regexp(DataTags,'Lever'))==0);
-MotorCol = find(cellfun(@isempty,regexp(DataTags,'Motor'))==0);
-EncoderCol = find(cellfun(@isempty,regexp(DataTags,'Encoder'))==0);
-if ~isempty(find(cellfun(@isempty,regexp(DataTags,'thermistor'))==0))
-    RespCol = find(cellfun(@isempty,regexp(DataTags,'thermistor'))==0);
-else
-    RespCol = find(cellfun(@isempty,regexp(DataTags,'respiration'))==0);
+    whichTrials = TemplateTrials(i,1):TemplateTrials(i,2);
+    OpenLoop.TemplateTraces.TrialIDs = whichTrials;
+    for j = 1:size(whichTraces,1)
+        temp = cellfun(@(x) ...
+            x(1:end-traceOverlap), Traces.(whichTraces{j})(whichTrials), ...
+            'UniformOutput', false);
+        OpenLoop.TemplateTraces.(whichTraces{j})(i) = {cell2mat(temp(:))};
+    end
+% use the TrialON column 
+    % 1. to construct the targetzone trace - for plotting
+    % 2. to include OdorON periods (in -ve)
+    TrialTrace = cell2mat(OpenLoop.TemplateTraces.Trial(i));
+    % make sure any trial ON periods preceding trial1 start are ignored
+    TrialTrace(1:traceOverlap,1) = 0;
+    % get trial ON-OFF indices
+    Idx = [find(diff(TrialTrace>0)==1)+1 find(diff(TrialTrace>0)==-1)];
+    Idx(:,3:4) = cumsum(Idx);
+    % get OdorStart Times w.r.t. Trial start (from the behavior file)
+    Idx(:,5) = Idx(:,1) + ceil(SampleRate*TrialInfo.OdorStart(whichTrials,2));
+    if ~isempty(TTLs)
+        % OdorStart Times can also be extracted from OEPS TTLs
+        Idx(:,6) = Idx(:,1) - ceil(SampleRate*TTLs.Trial(whichTrials,4));
+        if any(abs(Idx(:,5)-Idx(:,6))>5)
+            disp('mismatch in OdorOn Timestamps between behavior and OEPS files');
+            keyboard;
+        end
+    end
+    temp = 0*TrialTrace;
+    x1 = 1;
+    for k = 1:size(Idx,1)
+        % TargetZone vector
+        x2 = Idx(k,4);
+        temp(x1:x2,1) = AllTargets(TrialInfo.TargetZoneType(whichTrials(k)));
+        x1 = x2 + 1;
+        
+        % OdorON + TrialON vector
+        TrialTrace(Idx(k,5):Idx(k,1)-1,1) = -TrialTrace(Idx(k,1));
+    end
+    OpenLoop.TemplateTraces.TargetZone(i) = {temp};
+    OpenLoop.TemplateTraces.Trial(i) = {TrialTrace};
+
+%% Replay traces
+    
+    whichTrials = find(strcmp(TrialInfo.Perturbation,'OL-Replay'));
+    whichTrials(whichTrials<TemplateTrials(i,2)) = []; % only relevant if there's more than one openloop template
+    if i < size(TemplateTrials,1) % more than one open loop template (no more than two though
+        whichTrials(whichTrials>TemplateTrials(i+1,2)) = [];
+    end
+    
+    for r = 1:numel(whichTrials)
+        
+    end
+    
 end
-LickCol = find(cellfun(@isempty,regexp(DataTags,'Licks'))==0);
-TrialCol = find(cellfun(@isempty,regexp(DataTags,'TrialON'))==0);
-RewardCol = find(cellfun(@isempty,regexp(DataTags,'Rewards'))==0);
+
+
+
+
+
+
 
 %% Mark Open Loop Replay trials (if any)
 % find the stretch of open loop recording trials
@@ -29,22 +89,11 @@ if ~isempty(Replay_Starts)
     alltargets = [1:0.25:3.75];
     disp([num2str(OL_Blocks), ' Replay sessions found']);
     
-    Replay.CloseLoopTraceTags    = {'TrialIdx'; ...
-        'Lever'; ...
-        'Motor'; ...
-        'Encoder'; ...
-        'Sniffs'; ...
-        'Licks'; ...
-        'TrialON'; ...
-        'Rewards'; ...
-        'TargetZone'; ...
-        'OdorON';...
-        'TimeStamps'};
+
     
     Replay.ReplayTraceTags       = {'PutativeTrialIdx'; ...
         'Lever'; ...
         'Motor'; ...
-        'Encoder'; ...
         'Sniffs'; ...
         'Licks'; ...
         'SampleNumber';...
@@ -54,56 +103,6 @@ if ~isempty(Replay_Starts)
     
     
     for thisBlock = 1:OL_Blocks
-        FirstTrial = find(TrialInfo.SessionTimestamps(:,1)>=OL_Starts(thisBlock),1,'first');
-        LastTrial = find(TrialInfo.SessionTimestamps(:,1)<OL_Stops(thisBlock),1,'last');
-        
-        MyTrials = [FirstTrial:LastTrial];
-        
-        % get long concatenated vectors for analysis later
-        % one sec (startoffset) before trial ON to one sec before next trial
-        MyTraces = [];
-        for i = 1:numel(MyTrials)
-            thisTrial = MyTrials(i);
-            % trace markers
-            start_idx = TrialInfo.SessionIndices(thisTrial,1) - startoffset*SampleRate; % w.r.t. trial ON
-            stop_idx  = TrialInfo.SessionIndices(thisTrial+1,1) - startoffset*SampleRate - 1;
-            % sanity check to make sure trace includes trial off -
-            % sometimes next trial is triggered too fast
-            off_idx = TrialInfo.SessionIndices(thisTrial,2);
-            if (i == numel(MyTrials)) && (off_idx > stop_idx)
-                stop_idx = off_idx;
-            end
-            offset    = TrialInfo.Offset(thisTrial);
-            
-            % get the OdorOn trace using the OdorON info from OEPS
-            OdorOnTrace = MyData(start_idx:stop_idx, TrialCol);
-            OdorOnTrace(OdorOnTrace>0) = 1;
-            % OnIdx = find(OdorOnTrace,1,'first'); % hack to ignore 1st element being 1 - from previous trial
-            OnIdx = find(diff(OdorOnTrace)==1,1,'first');
-            OdorOnIdx = OnIdx - round(TTLs.Trial(thisTrial,4)*SampleRate);
-            if OdorOnIdx < 0
-                OdorOnIdx = 1;
-            end
-            OdorOnTrace(OdorOnIdx:OnIdx,:) = 1;
-            OdorOnTrace(find(OdorOnTrace)) = TTLs.Trial(thisTrial,5);
-
-            MyTraces = [MyTraces; ...
-            i+0*MyData(offset + (start_idx:stop_idx), LeverCol) ...
-                MyData(offset + (start_idx:stop_idx), LeverCol) ...
-                MyData(offset + (start_idx:stop_idx), MotorCol) ...
-                MyData(offset + (start_idx:stop_idx), EncoderCol) ...
-                MyData(offset + (start_idx:stop_idx), RespCol) ...
-                MyData(start_idx:stop_idx, LickCol) ...
-                MyData(start_idx:stop_idx, TrialCol) ...
-                MyData(start_idx:stop_idx, RewardCol) ...
-                alltargets(TrialInfo.TargetZoneType(thisTrial))+0*MyData(start_idx:stop_idx, LeverCol) ...
-                OdorOnTrace ...
-                MyData(start_idx:stop_idx, 1) ...
-                ];
-        end
-        
-        Replay.CloseLoopTraces(thisBlock) = {MyTraces};
-        Replay.CloseLoopTrialIDs(thisBlock) = {MyTrials};
         
         % Get all replay trials belonging to this OL strectch
         if thisBlock<OL_Blocks
@@ -223,4 +222,4 @@ for i = 1:size(Replay.CloseLoopTrialIDs,2)
         plot(Replay.ReplayTraces{i,j}(:,3),'r');
     end
 end
-end
+%

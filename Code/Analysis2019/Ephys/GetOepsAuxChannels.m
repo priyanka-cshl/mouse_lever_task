@@ -1,4 +1,4 @@
-function [TTLs,EphysTuningTrials,AuxData] = GetOepsAuxChannels(myKsDir, BehaviorTrials, TuningTrials, varargin)
+function [TTLs,ReplayTTLs,EphysTuningTrials,PassiveReplayTrials,AuxData] = GetOepsAuxChannels(myKsDir, BehaviorTrials, TuningTrials, TrialSequence, varargin)
 
 %% parse input arguments
 narginchk(1,inf)
@@ -16,6 +16,17 @@ global SampleRate; % Behavior Acquisition rate
 
 %% Get Trial Timestamps from the OpenEphys Events file
 filename = fullfile(myKsDir,'all_channels.events');
+
+%% heck to avoid going through empty files
+temp = dir(filename);
+if ~temp.bytes
+    TTLs = [];
+    EphysTuningTrials = [];
+    AuxData = [];
+    disp('empty events file');
+    return
+end
+
 [data, timestamps, info] = load_open_ephys_data(filename); % data has channel IDs
 
 % adjust for clock offset between open ephys and kilosort
@@ -32,11 +43,27 @@ for i = 1:numel(TTLTypes)
     % delete the first off value, if it preceeds the On
     Off(Off<On(1)) = [];
     On(On>Off(end)) = [];
+    
+    if length(On)>length(Off)
+        keyboard;
+        foo = [On(1:end-1) Off]';
+        goo = foo(:);
+        On(find(diff(goo)<0,1,'first')/2,:) = [];
+    end
+        
     temp = [On Off Off-On];
     
     % ignore any transitions faster than 1 ms - behavior resolution is 2 ms
     temp(temp(:,3)<0.001,:) = [];
     TTLs.(char(Tags(i))) = temp;
+end
+
+if size(TTLs.Trial,1)<5
+    TTLs = [];
+    EphysTuningTrials = [];
+    AuxData = [];
+    disp('no valid oeps file found');
+    return
 end
 
 %% mismatch between behavior and oeps trials on first trial 
@@ -71,7 +98,10 @@ if y(2,1)<0.99
 end
 
 %% find the odor ON time 
+count = 0;
+ReplayTTLs = [];
 for i = 1:size(TTLs.Trial,1) % every trial
+    
      % find the last odor valve ON transition just before this trial start
      if i > 1
          t1 = TTLs.Trial(i-1,2);
@@ -88,19 +118,45 @@ for i = 1:size(TTLs.Trial,1) % every trial
          ValveEvents = vertcat(ValveEvents,...
              [myTimeStamps thisOdor*ones(numel(myEvents),1)]);
      end
-     if ~isempty(ValveEvents)
+     
+     if ~isempty(ValveEvents)         
          [t3,x] = max(ValveEvents(:,1));
          TTLs.Trial(i,4:5) = [t2-t3 ValveEvents(x,4)];
      else
          TTLs.Trial(i,4:5) = [NaN 0];
      end
+             
+    % for replay trials
+    if TTLs.Trial(i,3) > mode(BehaviorTrials(:,3))
+
+        count = count + 1;
+        tstart = TTLs.Trial(i,1);
+        tstop  = TTLs.Trial(i,2);
+        O1 = intersect(find(TTLs.Odor1(:,1)>tstart),find(TTLs.Odor1(:,1)<tstop));
+        O2 = intersect(find(TTLs.Odor2(:,1)>tstart),find(TTLs.Odor2(:,1)<tstop));
+        O3 = intersect(find(TTLs.Odor3(:,1)>tstart),find(TTLs.Odor3(:,1)<tstop));
+        
+        % keep the odor transition that happened just before trial start
+        ValveEvents = ValveEvents(x,:);        
+        for j = 1:3
+            temp = eval(['TTLs.Odor',num2str(j),'(O',num2str(j),',:);']);
+            ValveEvents = vertcat(ValveEvents,...
+                [temp j*ones(size(temp,1),1)]);
+        end
+        % reference odor transitions w.r.t. trial ON
+        ValveEvents(:,1:2) = ValveEvents(:,1:2) - t2 ;
+        [~,sortID] = sort(ValveEvents(:,1));
+        ReplayTTLs{count} =  ValveEvents(sortID,:);
+    end
+    
 end
 
 % Align Passive Tuning trials
 if ~isempty(TuningTrials)
-    EphysTuningTrials = AlignPassiveTuningTrials(TuningTrials, TTLs, size(BehaviorTrials,1));
+    [EphysTuningTrials, PassiveReplayTrials] = AlignPassiveTuningTrials(TuningTrials, TTLs, size(BehaviorTrials,1), TrialSequence);
 else
     EphysTuningTrials = [];
+    PassiveReplayTrials = [];
 end
 
 AuxData = [];
