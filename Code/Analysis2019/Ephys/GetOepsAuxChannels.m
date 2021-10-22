@@ -1,4 +1,4 @@
-function [TTLs,ReplayTTLs,EphysTuningTrials,PassiveReplayTrials,AuxData] = GetOepsAuxChannels(myKsDir, BehaviorTrials, TuningTrials, TrialSequence, varargin)
+function [TTLs,ReplayTTLs,EphysTuningTrials,AuxData] = GetOepsAuxChannels(myKsDir, BehaviorTrials, TuningTrials, TrialSequence, varargin)
 
 %% parse input arguments
 narginchk(1,inf)
@@ -146,17 +146,17 @@ for i = 1:size(TTLs.Trial,1) % every trial
         % reference odor transitions w.r.t. trial ON
         ValveEvents(:,1:2) = ValveEvents(:,1:2) - t2 ;
         [~,sortID] = sort(ValveEvents(:,1));
-        ReplayTTLs{count} =  ValveEvents(sortID,:);
+        ReplayTTLs.OdorValve{count} = ValveEvents(sortID,:);
+        ReplayTTLs.TrialID(count)   = i;
     end
     
 end
 
 % Align Passive Tuning trials
 if ~isempty(TuningTrials)
-    [EphysTuningTrials, PassiveReplayTrials] = AlignPassiveTuningTrials(TuningTrials, TTLs, size(BehaviorTrials,1), TrialSequence);
+    EphysTuningTrials = AlignPassiveTuningTrials(TuningTrials, TTLs, size(BehaviorTrials,1), TrialSequence);
 else
     EphysTuningTrials = [];
-    PassiveReplayTrials = [];
 end
 
 AuxData = [];

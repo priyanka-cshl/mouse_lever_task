@@ -78,11 +78,11 @@ end
 TTLs = [];
 if ~isempty(myephysdir)
     if size(myephysdir,1) == 1
-        [TTLs,ReplayTTLs,TuningTTLs,PassiveReplayTTLs,~] = ...
+        [TTLs,ReplayTTLs,TuningTTLs,~] = ...
             GetOepsAuxChannels(myephysdir, Trials.TimeStamps, MyTuningTrials, TrialSequence); % send 'ADC', 1 to also get analog aux data
     else
         while isempty(TTLs) && ~isempty(myephysdir)
-            [TTLs,ReplayTTLs,TuningTTLs,PassiveReplayTTLs,~] = ...
+            [TTLs,ReplayTTLs,TuningTTLs,~] = ...
                 GetOepsAuxChannels(myephysdir(1,:), Trials.TimeStamps, MyTuningTrials, TrialSequence);
             if isempty(TTLs)
                 myephysdir(1,:) = [];

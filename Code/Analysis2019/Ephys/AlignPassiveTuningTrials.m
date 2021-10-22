@@ -1,7 +1,4 @@
-function [EphysTuningTrials,PassiveReplays] = AlignPassiveTuningTrials(TuningTrials, TTLs, SkipTrials, TrialSequence)
-
-PassiveReplays = [];
-count = 0;
+function [EphysTuningTrials] = AlignPassiveTuningTrials(TuningTrials, TTLs, SkipTrials, TrialSequence)
 
 if (size(TTLs.Trial,1) - SkipTrials) >= size(TuningTrials,1)
     EphysTuningTrials = TTLs.Trial(SkipTrials+1:end,1:3); % [TS-TrialOn TS-TrialOff Duration]
@@ -29,15 +26,6 @@ if (size(TTLs.Trial,1) - SkipTrials) >= size(TuningTrials,1)
             EphysTuningTrials(i,[4 6]) = eval(['TTLs.Odor',num2str(x),'(O',num2str(x),',1:2);']);
         else
             EphysTuningTrials(i,5) = -1; % passive replay
-            count = count + 1;
-            Passive_Replay = [];
-            for j = 1:3
-                temp = eval(['TTLs.Odor',num2str(j),'(O',num2str(j),',:);']);
-                Passive_Replay = vertcat(Passive_Replay,...
-                    [j*ones(size(temp,1),1) temp]);
-            end
-            [~,sortID] = sort(Passive_Replay(:,2));
-            PassiveReplays(:,:,count) =  Passive_Replay(sortID,:);
         end
     end
     
