@@ -19,7 +19,7 @@ for i = 1:size(TemplateTrials,1) % no. of templates
     %% Open Loop Template
     
     whichTrials = TemplateTrials(i,1):TemplateTrials(i,2);
-    OpenLoop.TemplateTraces.TrialIDs = whichTrials;
+    OpenLoop.TemplateTraces.TrialIDs{i} = whichTrials;
     for j = 1:size(whichTraces,1)
         temp = cellfun(@(x) ...
             x(1:end-traceOverlap), Traces.(whichTraces{j})(whichTrials), ...
@@ -119,14 +119,14 @@ for i = 1:size(TemplateTrials,1) % no. of templates
                 snippet = vertcat(NaN*ones(abs(X(k,7)),1),temptrace(X(k,3):X(k,4)));
                 patchedtrace(X(k,1):X(k,2),1) = snippet;
             end
-            OpenLoop.ReplayTraces.(whichTraces{j})(:,r,i) = patchedtrace;
+            OpenLoop.ReplayTraces.(whichTraces{j}){i}(:,r) = patchedtrace;
         end
         
     end
     
     %% sanity checks
-    Residuals = OpenLoop.ReplayTraces.Motor(:,:,i) - ...
-        OpenLoop.TemplateTraces.Motor{i}(1:size(OpenLoop.ReplayTraces.Motor(:,:,i),1),1);
+    Residuals = OpenLoop.ReplayTraces.Motor{i} - ...
+        OpenLoop.TemplateTraces.Motor{i}(1:size(OpenLoop.ReplayTraces.Motor{i},1),1);
     % ignore residuals before first trial start
     Residuals(1:(SampleRate*startoffset),:) = 0;
     

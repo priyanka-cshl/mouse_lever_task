@@ -43,6 +43,7 @@ savereplayfigs = 0;
 global whichreplay;
 global errorflags; % [digital-analog sample drops, timestamp drops, RE voltage drift, motor slips]
 errorflags = [0 0 0 0];
+global TargetZones;
 
 %% core data extraction (and settings)
 [MyData, MySettings, DataTags] = ReadSessionData(MyFilePath);
@@ -98,7 +99,8 @@ end
 %% Process replay trials
 if any(strcmp(TrialInfo.Perturbation,'OL-Template'))
     [OpenLoop] = ParseReplayTrials(Traces, TrialInfo, TTLs, ReplayTTLs);
-    ParseReplayTrials;
+    ProcessOpenLoopTrials(OpenLoop, TrialInfo, [], TTLs, 'plotfigures',1);
+    %ProcessReplayTrials(Replay, TrialInfo, TargetZones, SingleUnits, TTLs, 'plotfigures',1, 'whichunits', [13 17 18 19 20]);
 end
 
 % Align replay and close loop trials using openephys triggers
