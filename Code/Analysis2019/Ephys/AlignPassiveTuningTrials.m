@@ -39,7 +39,7 @@ if (size(TTLs.Trial,1) - SkipTrials) >= size(TuningTrials,1)
         else
             % do odor identities in EphysTuningTrials and TrialSequence match
             if ~any([TrialSequence(:,2) - EphysTuningTrials(1:size(TrialSequence,1),5)])
-                disp('odor sequences match in ephys and behvaior files');
+                disp('odor sequences match in ephys and behavior files');
                 % delete any extra trials in the Ephys side
                 EphysTuningTrials(size(TrialSequence,1)+1:end,:) = [];
                 % copy over the motor locations from TrialSequence

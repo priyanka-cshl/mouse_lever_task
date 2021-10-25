@@ -97,6 +97,7 @@ end
 
 %% Process replay trials
 if any(strcmp(TrialInfo.Perturbation,'OL-Template'))
+    [OpenLoop] = ParseReplayTrials(Traces, TrialInfo, TTLs, ReplayTTLs);
     ParseReplayTrials;
 end
 

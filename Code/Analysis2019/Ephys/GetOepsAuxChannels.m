@@ -121,7 +121,7 @@ for i = 1:size(TTLs.Trial,1) % every trial
      
      if ~isempty(ValveEvents)         
          [t3,x] = max(ValveEvents(:,1));
-         TTLs.Trial(i,4:5) = [t2-t3 ValveEvents(x,4)];
+         TTLs.Trial(i,4:5) = [t3-t2 ValveEvents(x,4)];
      else
          TTLs.Trial(i,4:5) = [NaN 0];
      end
