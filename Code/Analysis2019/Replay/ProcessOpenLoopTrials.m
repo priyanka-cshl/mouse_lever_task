@@ -84,14 +84,22 @@ for x = 1:numel(allreplays) % for every unique replay stretch
             subplot(trials_per_replay+1,1,j);
             % PlotBehavior(timestamps,Lever(:,j),Sniffs(:,j),Licks(:,j),Rewards(:,j),Trial,TZ);
             PlotBehavior(timestamps,MyTraces(:,1,j),MyTraces(:,3,j),MyTraces(:,4,j),MyTraces(:,5,j),Trial,TZ);
-            set(gca,'YLim',[-0.4 8],'YTick',[0 5],'TickDir','out','XLim',[0 round(timestamps(end))]);
-            
+            if j > trials_per_replay
+                set(gca,'YLim',[-0.4 8],'YTick',[0 5],'TickDir','out','XLim',[0 round(timestamps(end))]);
+            else
+                set(gca,'YLim',[-0.4 8],'YTick',[0 5],'TickDir','out','XLim',[0 round(timestamps(end))],...
+                    'XTick',[]);
+            end
             figure(H2);
             subplot(trials_per_replay+1,1,j);
             %PlotBehavior(timestamps,(Motor(:,j)+100)/40,[],[],[],Trial,(MotorTZ+100)/40);
             PlotBehavior(timestamps,(MyTraces(:,2,j)+100)/40,[],[],[],Trial,(MotorTZ+100)/40);
-            set(gca,'YLim',[-0.4 5.4],'YTick',[0 5],'TickDir','out','XLim',[0 round(timestamps(end))]);
-            
+            if j > trials_per_replay
+                set(gca,'YLim',[-0.4 5.4],'YTick',[0 5],'TickDir','out','XLim',[0 round(timestamps(end))]);
+            else
+                set(gca,'YLim',[-0.4 5.4],'YTick',[0 5],'TickDir','out','XLim',[0 round(timestamps(end))],...
+                    'XTick',[]);
+            end
         end
         
         if savereplayfigs
@@ -145,7 +153,7 @@ for x = 1:numel(allreplays) % for every unique replay stretch
             MySpikeTimes = [];
             
             % first collate spikes for the original close loop stretch of replayed trials
-            MyTrials = Replay.CloseLoopTrialIDs{whichreplay};
+            MyTrials = Replay.TemplateTraces.TrialIDs{whichreplay};
             offset = 0;
             for thisTrial = 1:numel(MyTrials)
                 thisTrialSpikeTimes = allspikes(SingleUnits(MyUnit).trialtags == MyTrials(thisTrial));
