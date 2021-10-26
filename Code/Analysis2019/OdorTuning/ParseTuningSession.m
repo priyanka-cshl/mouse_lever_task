@@ -48,9 +48,13 @@ MotorColumn = MyData(:,find(ismember(DataTags,'Motor')));
 
 % Fill up the Trials Table with odor on-off timestamps
 for i = 1:size(MyTrials,1)
+    % add 4 more columns to MyTrials
+    % col 8,9 - odor valve ON and OFF idx, col 10,11 are the timestamps
     if ~isempty(intersect(find(OdorValve(:,1)>MyTrials(i,3)),find(OdorValve(:,1)<MyTrials(i,4))))
         MyTrials(i,8:9) = OdorValve(intersect(find(OdorValve(:,1)>MyTrials(i,3)),find(OdorValve(:,1)<MyTrials(i,4))),:);
         MyTrials(i,10:11) = MyData(MyTrials(i,8:9),1); % timestamp
+    else
+        MyTrials(i,8:11) = 0;
     end
     % get the motor position
     x2 = MyTrials(i,4);
