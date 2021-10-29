@@ -1,4 +1,4 @@
-function [myephysdir] = WhereSpikeFile(BehaviorFile,BehaviorFolder)
+function [myephysdir,mousename,datetoken] = WhereSpikeFile(BehaviorFile,BehaviorFolder)
 foo = strsplit(BehaviorFile,'_');
 mousename = char(foo(1));
 date = char(foo(2));

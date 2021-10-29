@@ -10,6 +10,17 @@ addpath(genpath([Paths.Code,filesep,'spikes']));
 addpath(genpath([Paths.Code,filesep,'npy-matlab']));
 addpath(genpath([Paths.Code,filesep,'MatlabUtils']));
 
+% sorted files may be in a different location that the raw ephys data
+if isfield(Paths,'Spikes')
+    if exist(Paths.Spikes)
+        % get the path string containing animal name/date ..
+        [~,temp] = regexp(myKsDir,fullfile(Paths.Ephys,filesep),'match','split');
+        foo = regexp(temp{end},filesep,'split');
+        % take the 1st (animal name) and 2nd entry (recording folder name)
+        myKsDir = fullfile(Paths.Spikes,foo{1},foo{2});
+    end
+end
+
 if nargin<2
     getwaveforms = 0;
     savefigs = 0;

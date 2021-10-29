@@ -25,7 +25,7 @@ if (size(TTLs.Trial,1) - SkipTrials) >= size(TuningTrials,1)
             EphysTuningTrials(i,5) = 1 + x;
             EphysTuningTrials(i,[4 6]) = eval(['TTLs.Odor',num2str(x),'(O',num2str(x),',1:2);']);
         else
-            EphysTuningTrials(i,5) = -1; % passive replay
+            EphysTuningTrials(i,5) = NaN; % passive replay
         end
     end
     
@@ -57,26 +57,37 @@ if (size(TTLs.Trial,1) - SkipTrials) >= size(TuningTrials,1)
             EphysTuningTrials(size(TuningTrials,1)+1:end,:) = [];
             % copy over the motor locations from TuningTrials
             EphysTuningTrials(:,7) = TuningTrials(:,1);
-            % delete spurious trials
-            % they seem to have trial duration < 100 ms
-            EphysTuningTrials(find(EphysTuningTrials(:,3)<0.1),:) = [];
-            % now check for odor identity mismatches
-            x = 1+find(TrialSequence(2:end,2)-EphysTuningTrials(2:size(TrialSequence,1),5));
-            % ignore any indices that corresond to replay trials
-            x(EphysTuningTrials(x,5)==-1,:) = [];
-            % ignore any mismatches that happen on trials just following
-            % replay trial
-            x(EphysTuningTrials(x-1,5)==-1,:) = [];
-            if ~any(x)
-                disp('odor sequences match in ephys and behvaior files');
-                % delete any extra trials in the Ephys side
-                EphysTuningTrials(size(TrialSequence,1)+1:end,:) = [];
-                % copy over the motor locations from TrialSequence
-                EphysTuningTrials(:,7) = TrialSequence(:,1);
-            else
-                disp('sequence mismatch in ephys and behavior tunig files');
-                keyboard;
+            % delete spurious trials - if any
+            % to ignore any replay trials and the one just after - convert
+            % odor identities in the behavior file to NaN
+            TrialSequence(:,3) = TrialSequence(:,2);
+            TrialSequence(TrialSequence(:,1)==999,3) = NaN;
+            TrialSequence(1+find(TrialSequence(:,1)==999),3) = NaN;
+            % look for odor identity mismatches that are not NaNs
+            Mismatches = TuningListMismatches(TrialSequence(:,3),EphysTuningTrials(:,5));
+            while ~isempty(Mismatches) 
+                % make sure there are extra trials in the ephys list that
+                % need to be deleted
+                if size(EphysTuningTrials,1)<size(TrialSequence,1)
+                    disp('sequence mismatch in ephys and behavior tunig files');
+                    keyboard;
+                end
+                % find the first problematic replay
+                f = find(isnan(EphysTuningTrials(:,5)));
+                x = f(find(f<Mismatches(1),1,'last'));
+                % try deleting the trial after the replay 
+                temp = EphysTuningTrials(:,5);
+                temp(x+1,:) = [];
+                if numel(TuningListMismatches(TrialSequence(:,3),temp))<numel(Mismatches)
+                    EphysTuningTrials(x+1,:) = [];
+                    Mismatches = TuningListMismatches(TrialSequence(:,3),EphysTuningTrials(:,5));
+                end
             end
+            disp('odor sequences match in ephys and behavior tuning files');
+            % delete any extra trials in the Ephys side
+            EphysTuningTrials(size(TrialSequence,1)+1:end,:) = [];
+            % copy over the motor locations from TrialSequence
+            EphysTuningTrials(:,7) = TrialSequence(:,1);
         else
             disp('ephys file has extra trials!');
             keyboard;

@@ -1,5 +1,5 @@
 
-function [Physiology] = ProcessOpenLoopTrials(Replay, TrialInfo, SingleUnits, TTLs, varargin)
+function [Physiology] = ProcessOpenLoopTrialsOld(Replay, TrialInfo, SingleUnits, TTLs, varargin)
 
 %% parse input arguments
 narginchk(1,inf)
@@ -30,8 +30,6 @@ if ~isempty(SingleUnits) && isempty(whichUnits)
     whichUnits = 1:size(SingleUnits,2);
 end
 
-PassiveReplays = Replay.TTLs.TrialID(Replay.TTLs.TrialID>TrialInfo.TrialID(end));
-
 for x = 1:numel(allreplays) % for every unique replay stretch
     whichreplay = allreplays(x);
     
@@ -40,25 +38,23 @@ for x = 1:numel(allreplays) % for every unique replay stretch
     % get trace length from the replay traces
     tracelength = size(Replay.ReplayTraces.Lever{whichreplay},1);
     
-    TraceNames = {'Lever' 'Motor' 'Sniffs' 'Licks' 'Rewards' 'Trial' 'TargetZone'}; 
+    TraceNames = {'Lever' 'Motor' 'Sniffs' 'Licks' 'Rewards'}; 
     for i = 1:numel(TraceNames)
-        temptrace = Replay.TemplateTraces.(TraceNames{i}){whichreplay};
-        temptrace = temptrace(~isnan(temptrace));
-        MyTraces(:,i,1) = temptrace(1:tracelength,1);
+        MyTraces(:,i,1) = Replay.TemplateTraces.(TraceNames{i}){whichreplay}(1:tracelength,1);
     end
     
     % common traces for both template and replays
     % Trial, TargetZone and Timestamps
     
-    Trial = MyTraces(:,6,1);
+    Trial = Replay.TemplateTraces.Trial{whichreplay}(1:tracelength,1);
     % Trial column has -ve values that indicate odorON periods
     % ignore them for plotting
     Trial(Trial<0) = 0;
     
-    TZ_Up   = MyTraces(:,7,1);
+    TZ_Up   = Replay.TemplateTraces.TargetZone{whichreplay}(1:tracelength,1);
     TZ_Low  = TZ_Up;
     % change TZ vector to TZ_lims
-    MyZones = flipud(unique(TZ_Up(TZ_Up~=0)));
+    MyZones = flipud(unique(TZ_Up));
     for i = 1:numel(MyZones)
         whichzone = MyZones(i);
         TZ_Up(TZ_Up==whichzone) = TargetZones(find(TargetZones(:,2)==whichzone),1);
@@ -74,7 +70,7 @@ for x = 1:numel(allreplays) % for every unique replay stretch
     trials_per_replay = size(Replay.ReplayTraces.TrialIDs{whichreplay},1);
         
     % data (specific to open loop)
-    for i = 1:numel(TraceNames)-2
+    for i = 1:numel(TraceNames)
         MyTraces(:,i,1+(1:trials_per_replay)) = Replay.ReplayTraces.(TraceNames{i}){whichreplay};
     end
         
@@ -87,6 +83,7 @@ for x = 1:numel(allreplays) % for every unique replay stretch
             
             figure(H1);
             subplot(trials_per_replay+1,1,j);
+            % PlotBehavior(timestamps,Lever(:,j),Sniffs(:,j),Licks(:,j),Rewards(:,j),Trial,TZ);
             PlotBehavior(timestamps,MyTraces(:,1,j),MyTraces(:,3,j),MyTraces(:,4,j),MyTraces(:,5,j),Trial,TZ);
             if j > trials_per_replay
                 set(gca,'YLim',[-0.4 8],'YTick',[0 5],'TickDir','out','XLim',[0 round(timestamps(end))]);
@@ -96,6 +93,7 @@ for x = 1:numel(allreplays) % for every unique replay stretch
             end
             figure(H2);
             subplot(trials_per_replay+1,1,j);
+            %PlotBehavior(timestamps,(Motor(:,j)+100)/40,[],[],[],Trial,(MotorTZ+100)/40);
             PlotBehavior(timestamps,(MyTraces(:,2,j)+100)/40,[],[],[],Trial,(MotorTZ+100)/40);
             if j > trials_per_replay
                 set(gca,'YLim',[-0.4 5.4],'YTick',[0 5],'TickDir','out','XLim',[0 round(timestamps(end))]);
@@ -124,12 +122,6 @@ for x = 1:numel(allreplays) % for every unique replay stretch
             figure;
         end
         
-        TemplateTrials = Replay.TemplateTraces.TrialIDs{whichreplay};
-        nSubTrials = numel(TemplateTrials);
-        ReplayTrialLength = size(Replay.ReplayTraces.Lever{whichreplay},1)/SampleRate; % in seconds
-        TemplateTrialLength = size(Replay.TemplateTraces.Lever{whichreplay},1)/SampleRate; % in seconds
-        ReplayOFF = find(diff(Trial)==-1,1,'last')/SampleRate; % in seconds w.r.t. trace start
-        
         for i = 1:numel(whichUnits) % for every cell
             MyUnit = whichUnits(i);
             
@@ -144,15 +136,14 @@ for x = 1:numel(allreplays) % for every unique replay stretch
                 subplot(units_per_fig,2,Rasterplot);
                 % plot the trial structure
                 PlotBehavior(timestamps,[],[],[],[],Trial,[]);
-                set(gca,'YLim',...
-                    [-0.4 numel(PassiveReplays)+trials_per_replay+1.4],...
-                    'YTick',[0 5],'TickDir','out','XLim',[0 round(timestamps(end))]);
+                set(gca,'YLim',[-0.4 5.4],'YTick',[0 5],'TickDir','out','XLim',[0 round(timestamps(end))]);
                 axis manual;
                 hold on;
                 
                 subplot(units_per_fig,2,FRplot);
                 % plot the trial structure
                 PlotBehavior(timestamps,[],[],[],[],Trial,[]);
+                %set(gca,'YLim',[-0.4 5.4],'YTick',[0 5],'TickDir','out','XLim',[0 round(timestamps(end))]);
                 set(gca,'YLim',[0 25],'YTick',[0 50 100],'TickDir','out','XLim',[0 round(timestamps(end))]);
                 axis manual;
                 hold on;
@@ -162,43 +153,28 @@ for x = 1:numel(allreplays) % for every unique replay stretch
             allspikes = SingleUnits(MyUnit).spikes;
             thisTrialSpikeTimes = [];
             
-            % first collate spikes for the original close loop stretch of
-            % template trials
-            thisTrialSpikeTimes = allspikes(ismember(SingleUnits(MyUnit).trialtags,TemplateTrials));
+            % first collate spikes for the original close loop stretch of replayed trials
+            MyTrials = Replay.TemplateTraces.TrialIDs{whichreplay};
+            nSubTrials = numel(MyTrials); % used later
+            ReplayTrialLength = size(Replay.TemplateTraces.Lever{x},1)/SampleRate;
+            
+            thisTrialSpikeTimes = allspikes(ismember(SingleUnits(MyUnit).trialtags,MyTrials));
             % append in the beginning the spikes in the startoffset preceeding trial 1
-            tstart = TTLs.Trial(TemplateTrials(1),1);
+            tstart = TTLs.Trial(MyTrials(1),1);
             thisTrialSpikeTimes = vertcat(allspikes((allspikes>=(tstart-startoffset))& (allspikes<tstart)),...
                 thisTrialSpikeTimes);
             thisTrialSpikeTimes = thisTrialSpikeTimes - tstart;
             
-            % modify spiketimes to account for the extra samples
-            thisTrialSpikes = thisTrialSpikeTimes + startoffset; % just to start from zero
-            NaNPeriods = [find(diff(isnan(Replay.TemplateTraces.Lever{whichreplay}))==1)+1 ...
-                find(diff(isnan(Replay.TemplateTraces.Lever{whichreplay}))==-1)];
-            % first flag out any spikes that would fall during these NaN
-            % periods
-            for k = 1:size(NaNPeriods)
-                t1 = (NaNPeriods(k,1)-1)/SampleRate;
-                t2 = NaNPeriods(k,2)/SampleRate;
-                thisTrialSpikes((thisTrialSpikes>t1)&(thisTrialSpikes<=t2)) = NaN;
-            end
-            % now adjust spiketimes to account for extra samples
-            for k = 1:size(NaNPeriods)
-                t2 = NaNPeriods(k,2)/SampleRate;
-                offset = (diff(NaNPeriods(k,:))+1)/SampleRate;
-                thisTrialSpikes(thisTrialSpikes>t2) = thisTrialSpikes(thisTrialSpikes>t2) - offset;
-            end
-            
-            myPSTH = MakePSTH(thisTrialSpikes',0,...
-                [0 1000*ceil(TemplateTrialLength)],'downsample',SampleRate);
+            myPSTH = MakePSTH(thisTrialSpikeTimes',0,...
+                -startoffset + [0 1000*ceil(ReplayTrialLength)],'downsample',SampleRate);
             PSTH(1,1:numel(myPSTH),i) = myPSTH;
             
             if plotreplayfigs || savereplayfigs
                 % plot raster
                 subplot(units_per_fig,2,Rasterplot);
                 row_idx = 1;
-                for eachspike = 1:numel(thisTrialSpikes) % plot raster line
-                    line([thisTrialSpikes(eachspike) thisTrialSpikes(eachspike)],...
+                for eachspike = 1:numel(thisTrialSpikeTimes) % plot raster line
+                    line([thisTrialSpikeTimes(eachspike) thisTrialSpikeTimes(eachspike)],...
                         [row_idx-1 row_idx],'Color','k');
                 end
                 
@@ -210,19 +186,41 @@ for x = 1:numel(allreplays) % for every unique replay stretch
             % plot the replay spike times
             MyTrials = Replay.ReplayTraces.TrialIDs{whichreplay};
             for thisTrial = 1:numel(MyTrials)
-                tstart = TTLs.Trial(MyTrials(thisTrial),1);
-                thisTrialSpikeTimes = allspikes(SingleUnits(MyUnit).trialtags == MyTrials(thisTrial));
+                tstart = TTLs.Trial(MyTrials(1),1);
+                OriginalSpikeTimes = allspikes(SingleUnits(MyUnit).trialtags == MyTrials(thisTrial));
                 % append spikes from the startoffset period
-                thisTrialSpikeTimes = vertcat(allspikes((allspikes>=(tstart-startoffset))& (allspikes<tstart)),...
-                                    thisTrialSpikeTimes);
-                tstop = TTLs.Trial(MyTrials(thisTrial),2);
-                thisTrialSpikeTimes = thisTrialSpikeTimes - tstop; % align to replay end
-                thisTrialSpikeTimes = thisTrialSpikeTimes + ReplayOFF; % realign to template's trial off
+                OriginalSpikeTimes = vertcat(allspikes((allspikes>=(tstart-startoffset))& (allspikes<tstart)),...
+                                    OriginalSpikeTimes);
+                OriginalSpikeTimes = OriginalSpikeTimes - tstart;
+                % these spike times are w.r.t. Trial start - startoffset
+                thisTrialSpikeTimes = NaN*OriginalSpikeTimes;
+                thisTrialSpikeTags = NaN*OriginalSpikeTimes;
+                
+                % Raster: split the stretch of original SpikeTimes into trials within the long replay trial
+                % get odor OFF time from the ReplayTTLs 
+                f = find(Replay.TTLs.TrialID==MyTrials(thisTrial));
+                SubTrialTimes = Replay.TTLs.OdorValve{f}(:,1:2);
+                if size(SubTrialTimes,1)>nSubTrials
+                    SubTrialTimes(1,:) = [];
+                end
+                SubTrialTimes(:,1) = [-startoffset; SubTrialTimes(1:end-1,2)]; 
+                for subtrial = 1:nSubTrials
+                    tstart = SubTrialTimes(subtrial,1);
+                    tstop  = SubTrialTimes(subtrial,2);
+                    thisTrialSpikeTimes(find(OriginalSpikeTimes>=tstart & OriginalSpikeTimes<tstop)) = ...
+                        OriginalSpikeTimes(find(OriginalSpikeTimes>=tstart & OriginalSpikeTimes<tstop)) ...
+                        - tstop + ...
+                        Replay.ReplayTraces.Chunks{whichreplay}(subtrial,2,thisTrial) - startoffset;
+                    thisTrialSpikeTags(find(OriginalSpikeTimes>=tstart & OriginalSpikeTimes<tstop)) = subtrial;
+                end
                 
                 % FR: Use the original spiketimes to get PSTH, split the PSTH 
-                myPSTH = MakePSTH(thisTrialSpikeTimes',0,...
-                    +[0 1000*ceil(ReplayTrialLength)],...
-                    'downsample',SampleRate);
+                tempPSTH = MakePSTH(OriginalSpikeTimes',0,...
+                    -startoffset +[0 1000*ceil(ReplayTrialLength)],'downsample',SampleRate);
+                % initialize a PSTH trace of the adequate length with the correct indexing
+                myPSTH = Replay.ReplayTraces.Lever{whichreplay}(:,thisTrial);
+                % fill in the vector 
+                myPSTH(~isnan(myPSTH)) = tempPSTH(~isnan(myPSTH));
                 
                 PSTH(1+thisTrial,1:numel(myPSTH),i) = myPSTH';
                 
@@ -234,77 +232,29 @@ for x = 1:numel(allreplays) % for every unique replay stretch
                         line([thisTrialSpikeTimes(eachspike) thisTrialSpikeTimes(eachspike)],...
                             [row_idx-1 row_idx],'Color',Plot_Colors('r'));
                     end
+                    
+                    % plot FR
+%                     subplot(units_per_fig,2,FRplot);
+%                     plot((1/SampleRate)*(1:numel(myPSTH)),myPSTH,'r');
                 end
             end
             
-            % plot avg. FR for the replay trials
             if plotreplayfigs || savereplayfigs
                 
+                % plot avg. FR for the replay trials
                 subplot(units_per_fig,2,FRplot);
-                plot((1/SampleRate)*(1:size(PSTH,2)),mean(squeeze(PSTH(2:(trials_per_replay+1),:,i)),1),'r');
+                plot((1/SampleRate)*(1:size(PSTH,2)),mean(squeeze(PSTH(:,:,i)),1),'r');
+            
+                title(['Unit# ',num2str(MyUnit)]);
                 
-                if isempty(PassiveReplays)
-                    title(['Unit# ',num2str(MyUnit)]);
-                    
-                    if mod(i,units_per_fig) == 0
-                        if savereplayfigs
-                            saveas(gcf,[MyFileName,'_MyUnits_',num2str(MyUnit/units_per_fig),'.fig']);
-                            close(gcf);
-                        end
-                        figure;
+                if mod(i,units_per_fig) == 0
+                    if savereplayfigs
+                        saveas(gcf,[MyFileName,'_MyUnits_',num2str(MyUnit/units_per_fig),'.fig']);
+                        close(gcf);
                     end
+                    figure;
                 end
             end
-            
-            % plot the passive replays as well
-            if ~isempty(PassiveReplays) && x==1
-                MyTrials = PassiveReplays;
-                for thisTrial = 1:numel(MyTrials)
-                    tstart = TTLs.Trial(MyTrials(thisTrial),1);
-                    thisTrialSpikeTimes = allspikes(SingleUnits(MyUnit).trialtags == -MyTrials(thisTrial));
-                    % append spikes from the startoffset period
-                    thisTrialSpikeTimes = vertcat(allspikes((allspikes>=(tstart-startoffset))& (allspikes<tstart)),...
-                        thisTrialSpikeTimes);
-                    tstop = TTLs.Trial(MyTrials(thisTrial),2);
-                    thisTrialSpikeTimes = thisTrialSpikeTimes - tstop; % align to replay end
-                    thisTrialSpikeTimes = thisTrialSpikeTimes + ReplayOFF; % realign to template's trial off
-                    
-                    % FR: Use the original spiketimes to get PSTH, split the PSTH
-                    myPSTH = MakePSTH(thisTrialSpikeTimes',0,...
-                        +[0 1000*ceil(ReplayTrialLength)],...
-                        'downsample',SampleRate);
-                    
-                    PSTH(1+trials_per_replay+thisTrial,1:numel(myPSTH),i) = myPSTH';
-                    
-                    if plotreplayfigs || savereplayfigs
-                        % plot raster
-                        subplot(units_per_fig,2,Rasterplot);
-                        row_idx = thisTrial+1+trials_per_replay;
-                        for eachspike = 1:numel(thisTrialSpikeTimes) % plot raster line
-                            line([thisTrialSpikeTimes(eachspike) thisTrialSpikeTimes(eachspike)],...
-                                [row_idx-1 row_idx],'Color',Plot_Colors('t'));
-                        end
-                    end
-                    
-                end
-                
-                % plot avg. FR for the passive replay trials
-                if plotreplayfigs || savereplayfigs
-                    
-                    subplot(units_per_fig,2,FRplot);
-                    plot((1/SampleRate)*(1:size(PSTH,2)),mean(squeeze(PSTH((trials_per_replay+2):end,:,i)),1),...
-                        'Color',Plot_Colors('t'));
-                    
-                    title(['Unit# ',num2str(MyUnit)]);
-                    if mod(i,units_per_fig) == 0
-                        if savereplayfigs
-                            saveas(gcf,[MyFileName,'_MyUnits_',num2str(MyUnit/units_per_fig),'.fig']);
-                            close(gcf);
-                        end
-                        figure;
-                    end
-                end
-                
         end
         
         if savereplayfigs

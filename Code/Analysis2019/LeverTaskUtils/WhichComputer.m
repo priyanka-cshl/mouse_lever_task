@@ -26,8 +26,9 @@ switch computername
     case 'andaman'
         Paths.Behavior = '/mnt/data/Priyanka/behavior'; % location on rig computer
         %Paths.Ephys = '/mnt/data/Priyanka';
-        Paths.Ephys = '/mnt/grid-hs/pgupta/EphysData'; % for PCX batch
-        %Paths.Ephys = '/mnt/grid-hs/mdussauz/ephysdata/lever_task/BatchO'; % for batch O
+        %Paths.Ephys = '/mnt/grid-hs/pgupta/EphysData'; % for PCX batch
+        Paths.Ephys = '/mnt/grid-hs/mdussauz/ephysdata/lever_task/BatchO'; % for batch O
+        Paths.Spikes = '/mnt/data/Sorted';
         Paths.Code = '/opt';
     case 'Justine'
         Paths.Behavior = 'C:\Data\Behavior';
