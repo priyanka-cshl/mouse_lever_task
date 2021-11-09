@@ -1,5 +1,5 @@
 % organize the session data into a cell array of trials
-function [Traces, TrialInfo, TargetZones] = ...
+function [Traces, TrialInfo] = ...
     ParseBehavior2Trials(MyData, MySettings, DataTags, Trial)
 
 % Extract traces starting from 1 sec before trial start to next trial start
@@ -11,6 +11,7 @@ function [Traces, TrialInfo, TargetZones] = ...
 global SampleRate; % = 500; % samples/second
 global startoffset; % = 1; % seconds
 global errorflags; % [digital-analog sample drops, timestamp drops, RE voltage drift, motor slips]
+global TargetZones;
 
 %% get list of target zones used
 TargetZones = unique(MySettings(:,18:20),'rows');
@@ -145,7 +146,7 @@ for thisTrial = 1:numel(TrialOn)
         TrialInfo.TransferFunctionLeft(thisTrial,1) = (MyData(TrialOn(thisTrial)-1, MotorCol)>0);
         
         %% Reward timestamps
-        thisTrialRewards = find(diff(MyData(start_idx:TrialOff(thisTrial)+10,RewardCol))==1); % indices w.r.t. to trace start
+        thisTrialRewards = find(diff(MyData(start_idx:stop_idx,RewardCol))==1); % indices w.r.t. to trace start
         thisTrialRewards = thisTrialRewards/SampleRate; % convert to seconds
         % force the reward time stamps that were before trial start to be -ve
         thisTrialRewards(thisTrialRewards < TrialInfo.Timestamps(thisTrial,1)) = ...

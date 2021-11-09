@@ -1,6 +1,3 @@
-% test script to extract behavior data and replot session
-% for animals trained on the fixed gain version of the task (post 08.2018)
-
 function [MyTrials, TrialSequence, ReplayTraces] = ParseTuningSession(FileName, PIDflag)
 if nargin<2
     PIDflag = 0;
@@ -11,7 +8,7 @@ global SampleRate; % = 500; % samples/second
 global startoffset; % = 1; % seconds
 global errorflags; % [digital-analog sample drops, timestamp drops, RE voltage drift, motor slips]
 
-[MyData, MyParams, DataTags, TrialSequence] = LoadSessionData(FileName, 1, PIDflag);
+[MyData, MyParams, DataTags, TrialSequence] = LoadSessionData(FileName, 1, PIDflag); %#ok<ASGLU>
 
 %% Get Trial ON-OFF timestamps
 TrialColumn = MyData(:,6);
@@ -65,10 +62,10 @@ end
 TrialSequence = vertcat([NaN NaN], TrialSequence(1:end-1,:));
 
 % if there are any passive replay trials - extract the traces
-if any(MyTrials(:,1)==999)
+if any(TrialSequence(:,1)==999)
     
     % which trials
-    x = find(MyTrials(:,1)==999);
+    x = find(MyTrials(:,7)>sum(MyParams(3:8))/1000); % these trials will be longer
     
     % get column IDs
     LeverCol = find(cellfun(@isempty,regexp(DataTags,'Lever'))==0);
@@ -95,14 +92,11 @@ if any(MyTrials(:,1)==999)
         ReplayTraces.Trial(i)     = { MyData(start_idx:stop_idx, TrialCol) };
         ReplayTraces.Rewards(i)   = { MyData(start_idx:stop_idx, RewardCol) };
         
-        % extract the timestamps if it can't be reconstructed from indices
-        if errorflags(2) % timestamps were dropped
-            ReplayTraces.Timestamps.Analog(i)  = { MyData(start_idx:stop_idx, 1) };
-            ReplayTraces.Timestamps.Digital(i) = { MyData(start_idx:stop_idx, 1) };
-        end
+        % extract the timestamps incase it can't be reconstructed from indices
+        ReplayTraces.Timestamps(i)  = { MyData(start_idx:stop_idx, 1) };
     end
 else
     ReplayTraces = [];
 end
-        
+
 end

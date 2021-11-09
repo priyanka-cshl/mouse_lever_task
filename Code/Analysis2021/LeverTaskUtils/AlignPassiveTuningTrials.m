@@ -45,7 +45,7 @@ if (size(TTLs.Trial,1) - SkipTrials) >= size(TuningTrials,1)
                 % copy over the motor locations from TrialSequence
                 EphysTuningTrials(:,7) = TrialSequence(:,1);
             else
-                disp('sequence mismatch in ephys and behavior tunig files');
+                disp('sequence mismatch in ephys and behavior tuning files');
                 keyboard;
             end
         end
@@ -93,6 +93,7 @@ if (size(TTLs.Trial,1) - SkipTrials) >= size(TuningTrials,1)
             keyboard;
         end
     end
+    EphysTuningTrials(:,5) = EphysTuningTrials(:,5) - 1; % make odor identities as 0-3 instead of 1-4
 else
     EphysTuningTrials = [];
 end

@@ -1,10 +1,9 @@
-function [SingleUnits] = Spikes2Trials(SingleUnits, BehaviorTTLs, ReplayTTLs, TuningTTLs)
+function [SingleUnits] = Spikes2Trials(SingleUnits, BehaviorTTLs, TuningTTLs)
 
 %% function to label spike times by trials
 % inputs: BehaviorTTLs - Trial On-Off times (offset corrected) in Oeps timebase
 
 %% defaults
-sampleRate = 30000; % Open Ephys acquisition rate
 global startoffset; % = 1; % seconds
 
 % for the first set of TTLs

@@ -1,7 +1,8 @@
 function [MyData, DataTags] = OdorLocationSanityCheck(MyData, DataTags)
+
 global errorflags; % [digital-analog sample drops, timestamp drops, RE voltage drift, motor slips]
 
-checkflags = [0 0];
+checkflags = [0 0 0];
 
 MotorCol = find(cellfun(@isempty,regexp(DataTags,'Motor'))==0);
 EncoderCol = find(cellfun(@isempty,regexp(DataTags,'Encoder'))==0);
@@ -10,6 +11,8 @@ EncoderCol = find(cellfun(@isempty,regexp(DataTags,'Encoder'))==0);
 [coeff,gof] = fit(MyData(:,MotorCol),MyData(:,EncoderCol),'poly1');
 checkflags(1) = (gof.rsquare > 0.98);
 
+% check if Motor Position values were ~0 whenever the Motor physically
+% crossed home - interrupted the photodiode
 HomeCol = find(cellfun(@isempty,regexp(DataTags,'HomeSensor'))==0);
 foo = MyData(:,MotorCol); 
 foo(find(MyData(:,HomeCol)==0)) = NaN;
@@ -21,6 +24,16 @@ checkflags(2) = ~any(abs(fooLims)>4);
 % hold on
 % scatter(foo,MyData(:,EncoderCol),'r')
 
+% check if Motor Position values were +/- 8 whenever the lever was supposed
+% to be in the TargetZone
+TZCol = find(cellfun(@isempty,regexp(DataTags,'InTargetZone'))==0);
+foo = MyData(:,MotorCol); 
+foo(find(MyData(:,TZCol)==0)) = NaN;
+fooLims = median(foo,'omitnan') + [std(foo,'omitnan') -std(foo,'omitnan')];
+checkflags(3) = ~any(abs(fooLims)>10);
+
+% scatter(foo,MyData(:,EncoderCol),'.k')
+
 if ~any(checkflags)
      disp('Warning: session failed sanity check');
 else
@@ -30,5 +43,5 @@ else
     DataTags([EncoderCol HomeCol],:) = [];
 end
 
-errorflags(3:4) = checkflags;
+errorflags(3:5) = checkflags;
 end

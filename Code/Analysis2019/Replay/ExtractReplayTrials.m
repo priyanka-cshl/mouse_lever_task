@@ -93,8 +93,12 @@ for i = 1:size(TemplateTrials,1) % no. of templates
             'UniformOutput', false);
         
         % add in the overlap for the very last trial if needed
+        % also make sure that there are atleast startoffset*SampleRate
+        % samples after TrialOFF
         OpenLoop.TemplateTraces.(whichTraces{j})(i) = {[cell2mat(temp(:)); ...
             Traces.(whichTraces{j}){whichTrials(end)}(end-traceOverlap+1:end,1)]};
+        
+        
     end
     % use the TrialON column
     % 1. to construct the targetzone trace - for plotting
@@ -167,13 +171,27 @@ for i = 1:size(TemplateTrials,1) % no. of templates
     end
     
     %% sanity checks
+    
     foo = OpenLoop.TemplateTraces.Motor{1};
     foo = foo(~isnan(foo));
+    % if replay traces are longer than the template traces after accounting
+    % for NaNs - delete the extra samples
+    
+    if length(OpenLoop.ReplayTraces.Motor{i})>length(foo)
+        samps_to_delete = length(OpenLoop.ReplayTraces.Motor{i})-length(foo) - 1;
+        for j = 1:size(whichTraces,1)
+            if isfield(OpenLoop.ReplayTraces,whichTraces{j})
+                OpenLoop.ReplayTraces.(whichTraces{j}){i}(end-samps_to_delete:end,:) = [];
+            end
+        end
+    end
+    
+    x = length(OpenLoop.ReplayTraces.Motor{i});
     Residuals = OpenLoop.ReplayTraces.Motor{i} - ...
-        foo(1:size(OpenLoop.ReplayTraces.Motor{i},1),1);
+        foo(1:x,1);
     % ignore residuals before first trial start and last trial end
-    Residuals(1:(SampleRate*startoffset),:) = 0;
-    Residuals(end-SampleRate*startoffset:end,:) = 0;
+    Residuals(1:(SampleRate*startoffset),:) = 0; % being generous about errors at the beginning
+    Residuals(X(end,4):end,:) = 0;
     
     ErrorDist = fitdist(Residuals(:),'normal');
     % check if mean is ~0 and if sigma is very small (<5)
@@ -183,6 +201,7 @@ for i = 1:size(TemplateTrials,1) % no. of templates
         disp('template and replay traces do not seem to align well');
         keyboard;
     end
+    
     
     OpenLoop.TTLs = ReplayTTLs;
     

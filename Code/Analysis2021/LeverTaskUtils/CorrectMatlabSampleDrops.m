@@ -12,7 +12,7 @@ function [Trial] = ...
 
 %% globals
 global SampleRate; % = 500; % samples/second
-global errorflags; % [digital-analog sample drops, timestamp drops, RE voltage drift, motor slips]
+global errorflags; % [digital-analog sample drops, timestamp drops, RE voltage drift, motor slips-home sensor, motor skips-TZ mismatch]
 
 %% Get Column IDs
 TrialCol = find(cellfun(@isempty,regexp(DataTags,'TrialON'))==0);

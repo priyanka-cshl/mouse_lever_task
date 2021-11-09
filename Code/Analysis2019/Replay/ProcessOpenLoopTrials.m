@@ -123,7 +123,7 @@ for x = 1:numel(allreplays) % for every unique replay stretch
             units_per_fig = 5;
             figure;
         end
-        
+
         TemplateTrials = Replay.TemplateTraces.TrialIDs{whichreplay};
         nSubTrials = numel(TemplateTrials);
         ReplayTrialLength = size(Replay.ReplayTraces.Lever{whichreplay},1)/SampleRate; % in seconds
@@ -132,6 +132,7 @@ for x = 1:numel(allreplays) % for every unique replay stretch
         
         for i = 1:numel(whichUnits) % for every cell
             MyUnit = whichUnits(i);
+            FRmax = 25; % for plotting
             
             if plotreplayfigs || savereplayfigs
                 if mod(i,units_per_fig)
@@ -146,14 +147,16 @@ for x = 1:numel(allreplays) % for every unique replay stretch
                 PlotBehavior(timestamps,[],[],[],[],Trial,[]);
                 set(gca,'YLim',...
                     [-0.4 numel(PassiveReplays)+trials_per_replay+1.4],...
-                    'YTick',[0 5],'TickDir','out','XLim',[0 round(timestamps(end))]);
+                    'YTick',[0 5],'TickDir','out','XLim',[0 round(timestamps(end))], ...
+                    'XTick', []);
                 axis manual;
                 hold on;
                 
                 subplot(units_per_fig,2,FRplot);
                 % plot the trial structure
                 PlotBehavior(timestamps,[],[],[],[],Trial,[]);
-                set(gca,'YLim',[0 25],'YTick',[0 50 100],'TickDir','out','XLim',[0 round(timestamps(end))]);
+                set(gca,'YLim',[0 FRmax],'YTick',[0 50 100],'TickDir','out','XLim',[0 round(timestamps(end))], ...
+                    'XTick', []);
                 axis manual;
                 hold on;
             end
@@ -173,8 +176,12 @@ for x = 1:numel(allreplays) % for every unique replay stretch
             
             % modify spiketimes to account for the extra samples
             thisTrialSpikes = thisTrialSpikeTimes + startoffset; % just to start from zero
-            NaNPeriods = [find(diff(isnan(Replay.TemplateTraces.Lever{whichreplay}))==1)+1 ...
-                find(diff(isnan(Replay.TemplateTraces.Lever{whichreplay}))==-1)];
+            NaNON = find(diff(isnan(Replay.TemplateTraces.Lever{whichreplay}))==1)+1;
+            NaNOFF = find(diff(isnan(Replay.TemplateTraces.Lever{whichreplay}))==-1);
+            if isnan(Replay.TemplateTraces.Lever{whichreplay}(1,1))
+                NaNOFF(1,:) = [];
+            end
+            NaNPeriods = [ NaNON NaNOFF];
             % first flag out any spikes that would fall during these NaN
             % periods
             for k = 1:size(NaNPeriods)
@@ -197,14 +204,13 @@ for x = 1:numel(allreplays) % for every unique replay stretch
                 % plot raster
                 subplot(units_per_fig,2,Rasterplot);
                 row_idx = 1;
-                for eachspike = 1:numel(thisTrialSpikes) % plot raster line
-                    line([thisTrialSpikes(eachspike) thisTrialSpikes(eachspike)],...
-                        [row_idx-1 row_idx],'Color','k');
-                end
+                PlotRaster(thisTrialSpikes,row_idx,'k');
                 
                 % plot FR
                 subplot(units_per_fig,2,FRplot);
                 plot((1/SampleRate)*(1:numel(myPSTH)),myPSTH,'k');
+                
+                FRmax = max(FRmax,max(myPSTH));
             end
             
             % plot the replay spike times
@@ -225,15 +231,13 @@ for x = 1:numel(allreplays) % for every unique replay stretch
                     'downsample',SampleRate);
                 
                 PSTH(1+thisTrial,1:numel(myPSTH),i) = myPSTH';
+                FRmax = max(FRmax,max(myPSTH));
                 
                 if plotreplayfigs || savereplayfigs
                     % plot raster
                     subplot(units_per_fig,2,Rasterplot);
                     row_idx = thisTrial+1;
-                    for eachspike = 1:numel(thisTrialSpikeTimes) % plot raster line
-                        line([thisTrialSpikeTimes(eachspike) thisTrialSpikeTimes(eachspike)],...
-                            [row_idx-1 row_idx],'Color',Plot_Colors('r'));
-                    end
+                    PlotRaster(thisTrialSpikeTimes,row_idx,Plot_Colors('r'));
                 end
             end
             
@@ -241,7 +245,12 @@ for x = 1:numel(allreplays) % for every unique replay stretch
             if plotreplayfigs || savereplayfigs
                 
                 subplot(units_per_fig,2,FRplot);
-                plot((1/SampleRate)*(1:size(PSTH,2)),mean(squeeze(PSTH(2:(trials_per_replay+1),:,i)),1),'r');
+                temp = squeeze(PSTH(2:(trials_per_replay+1),:,i));
+                meanFR = mean(temp);
+                semFR = std(temp)/sqrt(trials_per_replay);
+                MyShadedErrorBar((1/SampleRate)*(1:size(PSTH,2)),meanFR,semFR,Plot_Colors('r'),[],0.5);
+
+                %plot((1/SampleRate)*(1:size(PSTH,2)),mean(,1),'r');
                 
                 if isempty(PassiveReplays)
                     title(['Unit# ',num2str(MyUnit)]);
@@ -275,15 +284,13 @@ for x = 1:numel(allreplays) % for every unique replay stretch
                         'downsample',SampleRate);
                     
                     PSTH(1+trials_per_replay+thisTrial,1:numel(myPSTH),i) = myPSTH';
+                    FRmax = max(FRmax,max(myPSTH));
                     
                     if plotreplayfigs || savereplayfigs
                         % plot raster
                         subplot(units_per_fig,2,Rasterplot);
                         row_idx = thisTrial+1+trials_per_replay;
-                        for eachspike = 1:numel(thisTrialSpikeTimes) % plot raster line
-                            line([thisTrialSpikeTimes(eachspike) thisTrialSpikeTimes(eachspike)],...
-                                [row_idx-1 row_idx],'Color',Plot_Colors('t'));
-                        end
+                        PlotRaster(thisTrialSpikeTimes,row_idx,Plot_Colors('t'));
                     end
                     
                 end
@@ -292,10 +299,22 @@ for x = 1:numel(allreplays) % for every unique replay stretch
                 if plotreplayfigs || savereplayfigs
                     
                     subplot(units_per_fig,2,FRplot);
-                    plot((1/SampleRate)*(1:size(PSTH,2)),mean(squeeze(PSTH((trials_per_replay+2):end,:,i)),1),...
-                        'Color',Plot_Colors('t'));
                     
-                    title(['Unit# ',num2str(MyUnit)]);
+                    temp = squeeze(PSTH((trials_per_replay+2):end,:,i));
+                    meanFR = mean(temp);
+                    semFR = std(temp)/sqrt(numel(PassiveReplays));
+                    MyShadedErrorBar((1/SampleRate)*(1:size(PSTH,2)),meanFR,semFR,Plot_Colors('t'),[],0.5);
+                
+%                     plot((1/SampleRate)*(1:size(PSTH,2)),mean(squeeze(PSTH((trials_per_replay+2):end,:,i)),1),...
+%                         'Color',Plot_Colors('t'));
+                    
+                    % rescale plot if necessary
+                    if max(get(gca,'YLim'))<FRmax
+                       set(gca,'YLim', [0 5*ceil(FRmax/5)]); 
+                    end
+                    
+                    title(['Unit# ',num2str(MyUnit), '; Clust# ', num2str(SingleUnits(MyUnit).id),...
+                        '; tet# ',num2str(SingleUnits(MyUnit).tetrode)]);
                     if mod(i,units_per_fig) == 0
                         if savereplayfigs
                             saveas(gcf,[MyFileName,'_MyUnits_',num2str(MyUnit/units_per_fig),'.fig']);

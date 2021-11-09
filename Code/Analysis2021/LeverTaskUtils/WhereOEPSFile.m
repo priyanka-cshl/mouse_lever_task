@@ -1,11 +1,18 @@
-function [myephysdir,mousename,datetoken] = WhereSpikeFile(BehaviorFile,BehaviorFolder)
+function [myephysdir] = WhereOEPSFile(BehaviorFile,BehaviorFolder)
 foo = strsplit(BehaviorFile,'_');
 mousename = char(foo(1));
 date = char(foo(2));
 datetoken = [date(1:4),'-',date(5:6),'-',date(7:8)];
     
 [Paths] = WhichComputer();
-root = fullfile(Paths.Ephys,mousename);
+if exist(fullfile(Paths.Grid.Ephys{1},mousename),'dir')
+    root = fullfile(Paths.Grid.Ephys{1},mousename);
+elseif exist(fullfile([Paths.Grid.Ephys{2},mousename(1:end-1)],mousename))
+    root = fullfile([Paths.Grid.Ephys{2},mousename(1:end-1)],mousename);
+else
+    disp('Please specify the location of raw Ephys Data');
+    keyboard;
+end
 myfolders = dir ([root,'/',datetoken,'*']);
 
 if size(myfolders,1) == 0

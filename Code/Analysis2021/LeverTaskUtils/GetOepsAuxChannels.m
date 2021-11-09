@@ -127,7 +127,7 @@ for i = 1:size(TTLs.Trial,1) % every trial
      end
              
     % for replay trials
-    if TTLs.Trial(i,3) > mode(BehaviorTrials(:,3))
+    if TTLs.Trial(i,3) > 1 + mode(BehaviorTrials(:,3))
 
         count = count + 1;
         tstart = TTLs.Trial(i,1);
