@@ -2,6 +2,10 @@
 % three different trial plots - for different odor
 function [MyFig,MyHandle] = RecreateSession(MyData)
 
+if ~isempty(regexp(MyData,'.mat','match'))
+    [MyData] = ReadSessionData(MyData);
+end
+
 MyFig = figure('Name','Session','NumberTitle','off');
 
 %% initialize plots
