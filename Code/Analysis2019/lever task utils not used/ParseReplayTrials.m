@@ -74,7 +74,7 @@ for i = 1:size(TemplateTrials,1) % no. of templates
     OpenLoop.ReplayTraces.TrialIDs{i} = whichTrials;
     
     for r = 1:numel(whichTrials)
-        % the replay trace is laready concatenated - but needs to be split
+        % the replay trace is already concatenated - but needs to be split
         % into trials - because a few samples get missed during Arduino
         % updates at the end of every OL - template trial;
         X = [];
@@ -115,13 +115,14 @@ for i = 1:size(TemplateTrials,1) % no. of templates
         % 2. extract the actual replayed trace
         for j = 1:size(whichTraces,1)
             temptrace = Traces.(whichTraces{j}){whichTrials(r)};
-            for k = 1:size(X,1) % for every reward
+            for k = 1:size(X,1) % for every subtrial
                 snippet = vertcat(NaN*ones(abs(X(k,7)),1),temptrace(X(k,3):X(k,4)));
                 patchedtrace(X(k,1):X(k,2),1) = snippet;
             end
             OpenLoop.ReplayTraces.(whichTraces{j}){i}(:,r) = patchedtrace;
         end
         
+        OpenLoop.ReplayTraces.Chunks{i}(:,:,r) = X(:,1:2)/SampleRate;
     end
     
     %% sanity checks
@@ -138,5 +139,7 @@ for i = 1:size(TemplateTrials,1) % no. of templates
         disp('template and replay traces do not seem to align well');
         keyboard;
     end
+    
+    OpenLoop.TTLs = ReplayTTLs;
     
 end
