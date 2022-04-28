@@ -68,7 +68,7 @@
       </Expression>
       <Expression xsi:type="Equal">
         <Operand xsi:type="WorkflowProperty" TypeArguments="p2:Keys">
-          <Value>S</Value>
+          <Value>LButton RButton Cancel ShiftKey ControlKey Menu Pause A B C P Q R S Alt</Value>
         </Operand>
       </Expression>
       <Expression xsi:type="Combinator">
