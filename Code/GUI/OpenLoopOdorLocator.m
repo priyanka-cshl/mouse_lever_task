@@ -237,13 +237,16 @@ if get(handles.startAcquisition,'value')
         fid2 = fopen('C:\temp_data_files\settings_log.bin','w');
         
         % set up trial sequence
-        if ~handles.DoSequence.Value
+        handles.current_trial_block.Data(2) = 0;
+        if ~handles.DoSequence.Value % passive tuning
             [handles] = SetUpOpenLoopTrials(handles);
         else
             [handles] = SetUpSequenceTrials(handles);
         end
         %guidata(hObject,handles);
         mysettings.TrialSequence = handles.TrialSequence;
+        mysettings.LocationSequence = handles.LocationSequence;
+        
         % main settings - only change in the beginning of each session
         if ~handles.DoSequence.Value
             [mysettings.legends, mysettings.params] = OpenLoop_Settings(handles);
@@ -502,6 +505,7 @@ if usrans == 1
     session_data.trace = a(2:handles.NIchannels+1,:)';
     session_data.trace_legend = Connections_list();
     session_data.odor_buildup = handles.odor_build_up.Data;
+    session_data.locations = handles.LocationSequence;
     
 %     session_data.params = b';
 %     session_data.TF = c';

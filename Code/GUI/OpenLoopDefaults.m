@@ -36,6 +36,7 @@ handles.Zero_MFC.Value = 0;
 handles.which_stage.Value = 3; % training stage
 handles.TransferFunction.Data(2) = 100; % block size (1 = no blocks)'
 handles.DoSequence.Value = 0;
+handles.PseudoSequence.Value = 0;
         
 switch char(handles.computername)
     

@@ -12,8 +12,13 @@ num_repeats = h.SessionSettings.Data(1);
 % trials/repeat
 h.current_trial_block.Data(3) = numel(all_locations)*numel(all_odors);
 
-Trial_list = [repmat(all_locations',numel(all_odors),1) ...
-    reshape(repmat(all_odors,numel(all_locations),1), numel(all_locations)*numel(all_odors),1)];
+% make a list of trials 
+if ~h.PseudoSequence.Value % single pulses
+    Trial_list = [repmat(all_locations',numel(all_odors),1) ...
+        reshape(repmat(all_odors,numel(all_locations),1), numel(all_locations)*numel(all_odors),1)];
+else % Pseudorandom location sequence
+    Trial_list = [800*ones(numel(all_odors),1) all_odors'];
+end
 
 % append a passive replay trial
 if h.PassiveReplay.Value
@@ -26,6 +31,17 @@ for i = 1:num_repeats
     AllTrials = [AllTrials; Trial_list(randperm(size(Trial_list,1)),:)];
 end
 
+LocationSequence = [];
+if h.PseudoSequence.Value % pseudorandom sequence
+    for i = 1:size(AllTrials,1)
+        if AllTrials(i,1) == 800
+            LocationSequence(i,:) = all_locations(randperm(numel(all_locations)));
+        end
+    end
+    h.current_trial_block.Data(3) = numel(all_odors);
+end
+
 h.TrialSequence = AllTrials;
+h.LocationSequence = LocationSequence;
 h.current_trial_block.Data(1) = size(AllTrials,1);
 %guidata(h.hObject,h);
