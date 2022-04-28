@@ -36,7 +36,6 @@ end
 TrialCol = find(cellfun(@isempty,regexp(DataTags,'TrialON'))==0);
 LeverCol = find(cellfun(@isempty,regexp(DataTags,'Lever'))==0);
 MotorCol = find(cellfun(@isempty,regexp(DataTags,'Motor'))==0);
-EncoderCol = find(cellfun(@isempty,regexp(DataTags,'Encoder'))==0);
 LickCol = find(cellfun(@isempty,regexp(DataTags,'Licks'))==0);
 RewardCol = find(cellfun(@isempty,regexp(DataTags,'Rewards'))==0);
 TZoneCol = find(cellfun(@isempty,regexp(DataTags,'InTargetZone'))==0);
@@ -46,7 +45,6 @@ if ~isempty(find(cellfun(@isempty,regexp(DataTags,'thermistor'))==0))
 else
     RespCol = find(cellfun(@isempty,regexp(DataTags,'respiration'))==0);
 end
-HomeCol = find(cellfun(@isempty,regexp(DataTags,'HomeSensor'))==0);
 PerturbationCol(1) = find(cellfun(@isempty,regexp(DataTags,'WhichPerturbation'))==0);
 PerturbationCol(2) = find(cellfun(@isempty,regexp(DataTags,'PerturbationValue'))==0);
 
@@ -55,15 +53,13 @@ TrialOn  = Trial.Indices(:,1);
 TrialOff = Trial.Indices(:,2);
 TrialOffsets = Trial.Offsets(:,1); % correct for the trial offset (sample drops on digital channel)
 OdorOffsets = Trial.Offsets(:,2);
-% for trial On and Odor On detection
-LeverThresh = median(MySettings(:,11));
 
 %% Crunch data trial-by-trial
-for thisTrial = 1:length(TrialOn)
+for thisTrial = 1:size(MySettings,1)
     % store original trial ID - some trials may get deleted later because of weird target zones
     TrialInfo.TrialID(thisTrial) = thisTrial;
     trialflag = 0; % pull down all flags - default it to use all trials
-    thisTrialOffset = TrialOffsets(thisTrial);
+    thisTrialOffset = TrialOffsets(thisTrial); % this will be zero if there were no digital-analog sample drops
     
     if TrialOn(thisTrial) && ~isnan(thisTrialOffset)
         % extract continuous traces for lever, motor position, licks and sniffs
@@ -186,7 +182,7 @@ for thisTrial = 1:length(TrialOn)
         TrialInfo.TransferFunctionLeft(thisTrial,1) = (MyData(TrialOn(thisTrial)-1, MotorCol)>0);
         
         %% Reward timestamps
-        thisTrialRewards = find(diff(MyData(start_idx:stop_idx,RewardCol))==1); % indices w.r.t. to trace start
+        thisTrialRewards = find(diff(MyData(start_idx:TrialOff(thisTrial)+10,RewardCol))==1); % indices w.r.t. to trace start
         thisTrialRewards = thisTrialRewards/SampleRate; % convert to seconds
         % force the reward time stamps that were before trial start to be -ve
         thisTrialRewards(thisTrialRewards < TrialInfo.Timestamps(thisTrial,1)) = ...

@@ -21,7 +21,6 @@ params.addParameter('tuning', false, @(x) islogical(x) || x==0 || x==1);
 params.addParameter('replay', false, @(x) islogical(x) || x==0 || x==1);
 params.addParameter('spikes', false, @(x) islogical(x) || x==0 || x==1);
 params.addParameter('photometry', false, @(x) islogical(x) || x==0 || x==1);
-
 params.addParameter('chunksession', false, @(x) islogical(x) || x==0 || x==1);
 
 

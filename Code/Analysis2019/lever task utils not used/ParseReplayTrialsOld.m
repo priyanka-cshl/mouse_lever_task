@@ -1,4 +1,4 @@
-function [Replay, TTLs] = ParseReplayTrials(MyData, MySettings, DataTags, TrialInfo, TTLs)
+function [Replay, TTLs] = ParseReplayTrialsOld(MyData, MySettings, DataTags, TrialInfo, TTLs)
 
 %% globals
 global SampleRate; % = 500; % samples/second
