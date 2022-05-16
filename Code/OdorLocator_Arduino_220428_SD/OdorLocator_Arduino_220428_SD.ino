@@ -479,6 +479,7 @@ void loop()
     //send_odor_to_manifold();
     digitalWrite(trial_reporter_pin, ((trialstate[0] > 0) && (trialstate[0] < 5)) || trialstate[0] == 6); // active trial?
     digitalWrite(in_reward_zone_reporter_pin, ((trialstate[0] == 4) || (trialstate[0] == 6))); // is Odor valve ON?
+    digitalWrite(in_target_zone_reporter_pin, ((trialstate[0] == 0) || (trialstate[0] == 5))); // is trial OFF?
   }
   //----------------------------------------------------------------------------
 
