@@ -925,11 +925,6 @@ void loop()
             myUSB.writeUint16Array(sequence_array, num_of_params);
             UpdateSequenceParams(); // parse param array to variable names and update motor params
             break;
-          case 3: // update variables for pseudorandom sequence - 28.04.2022
-            pseudosequence_params = myUSB.readUint16(); // get number of params to be updated
-            myUSB.readUint16Array(pseudosequence_array, pseudosequence_params);
-            myUSB.writeUint16Array(pseudosequence_array, pseudosequence_params);
-            break;
         }
         break;
       case 30: // update transfer function or calibrate transfer function
@@ -1193,7 +1188,8 @@ void UpdateOpenLoopParams() // 23.01.2018
   if (PassiveTuning_param_array[1] == 800)
   {
     locationcount = 0;
-    for (i = 0; i < (num_of_params - 11); i++)
+    pseudosequence_params = num_of_params - 11;
+    for (i = 0; i < pseudosequence_params; i++)
     {
       pseudosequence_array[i] = PassiveTuning_param_array[11+i];
     }
