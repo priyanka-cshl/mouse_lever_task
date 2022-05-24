@@ -11,6 +11,7 @@ persistent last_data_value; % event.Data(end,:) from last call
 global TargetLevel;
 global IsRewardedTrial;
 global TimeSinceOL;
+global RecordStretch;
 
 fid1 = varargin{3}; % C:\temp_data_files\log.bin
 h = varargin{1}; % handles
@@ -225,7 +226,46 @@ if TotalTime(end)>=2
                     end
                 end
                 
+            case {'Recording Halt Flip'}
+                
+                % if first trial start after open loop recording
+                % - Zero the time and trials elapsed
+                if isnan(h.OpenLoopProgress.Data(1,1))
+                    h.OpenLoopProgress.Data(1,1:2) = 0;
+                    h.OpenLoopProgress.Data(2,1:2) = [1 0];
+                    TimeSinceOL = tic;
+                    
+                else % not the first trial
+                    h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
+                    h.OpenLoopProgress.Data(2,1) = h.OpenLoopProgress.Data(2,1) + 1;
+                    
+                    % check if time or trial criterion has passed already
+                    if h.OpenLoopProgress.Data(2,1) >= (diff(RecordStretch)+1) % Trial Mode
+                        h.OpenLoopSettings.Value = 5;
+                    end
+                end
+                
             case {'Open Loop Recorded'}
+                
+                if h.OpenLoopProgress.Data(1,2) == 0 % open loop recording has just finished
+                    h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
+                    h.OpenLoopProgress.Data(1:2,2) = h.OpenLoopProgress.Data(1:2,1);
+                    h.OpenLoopProgress.Data(1:2,1) = [0 0]'; % reset for Recovery period
+                    TimeSinceOL = tic; % reset clock
+                    h.PassiveRecorded.Value = 1;
+                else
+                    % update time and trials elapsed
+                    h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
+                    h.OpenLoopProgress.Data(2,1) = h.OpenLoopProgress.Data(2,1) + 1;
+                    
+                    % check if time or trial criterion has passed already
+                    if h.OpenLoopProgress.Data(1,1) >= h.OpenLoopParams.Data(2) 
+                        h.OpenLoopSettings.Value = 3; % trigger replay
+                    end
+                    
+                end
+                
+            case {'Halt Flip Recorded'}
                 
                 if h.OpenLoopProgress.Data(1,2) == 0 % open loop recording has just finished
                     h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
@@ -254,6 +294,10 @@ if TotalTime(end)>=2
         
         % increment 'trial number'
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1;
+        
+        if h.which_perturbation.Value == 10 && h.current_trial_block.Data(2) == RecordStretch(1)
+            h.OpenLoopSettings.Value = 4; % flag for halt flip recording
+        end
         
         % increment trials done in the progress report
         if h.current_trial_block.Data(3) ~= 1 % not a perturbed trial
@@ -322,6 +366,7 @@ if TotalTime(end)>=2
             end
         end
     end
+    
     
     %% LICKS
     %     if h.NIchannels >= h.Channels.lick_channel

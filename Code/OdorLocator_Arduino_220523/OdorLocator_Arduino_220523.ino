@@ -1161,7 +1161,7 @@ void UpdateAllParams()
         mySDFile = SD.open("openloop.txt", FILE_WRITE);
         replay_flag = 1; // this will update to 2 on next trial start and file writing will begin
         break;
-      case 11;
+      case 11:
         // append to existing open loop recording
         mySDFile = SD.open("openloop.txt", FILE_WRITE);
         // add a flag to the old file

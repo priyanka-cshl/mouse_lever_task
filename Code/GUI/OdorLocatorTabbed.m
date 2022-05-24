@@ -367,6 +367,7 @@ global samplenum;
 global TargetLevel;
 global IsRewardedTrial;
 global TrialsToPerturb;
+global RecordStretch;
 global TimeSinceOL;
 
 if get(handles.startAcquisition,'value')    
@@ -406,7 +407,7 @@ if get(handles.startAcquisition,'value')
         % set up perturbation trial order
         if handles.PerturbationSettings.Data(1)
             TrialsToPerturb = zeros(1,ceil(1/handles.PerturbationSettings.Data(1)));
-            TrialsToPerturb(1) = 1;
+            %TrialsToPerturb(1) = 1;
         end
         
         set(handles.startAcquisition,'String','Running');
@@ -442,6 +443,7 @@ if get(handles.startAcquisition,'value')
         handles.OpenLoopProgress.Data(:,1) = [NaN 0 0 0]';
         handles.OpenLoopProgress.Data(:,2) = [0 0 0 0];
         %OpenLoopSettings_Callback(hObject, eventdata, handles);
+        RecordStretch = [];
         
         % clear plots
         handles.trial_on.Vertices = [];
@@ -1310,7 +1312,7 @@ function PerturbationSettings_CellEditCallback(hObject, eventdata, handles)
 global TrialsToPerturb;
 if handles.PerturbationSettings.Data(1) > 0
     TrialsToPerturb = zeros(1,ceil(1/handles.PerturbationSettings.Data(1)));
-    TrialsToPerturb(1) = 1;
+    %TrialsToPerturb(1) = 1;
 end
 
 % --- Executes on button press in PseudoRandomZones.

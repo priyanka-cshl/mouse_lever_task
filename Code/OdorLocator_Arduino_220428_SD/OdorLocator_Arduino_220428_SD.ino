@@ -571,6 +571,11 @@ void loop()
               replay_flag = 2; // this will begin the writing to SD file
               current_session_mode = session_mode;
             }
+            if (replay_flag == 11)
+            {
+              replay_flag = 22; // this will begin the writing to SD file
+              current_session_mode = session_mode;
+            }
             if (replay_flag == 3)
             {
               replay_flag = 4; // this will begin the reading from SD file
@@ -1154,6 +1159,10 @@ void UpdateAllParams()
         replay_flag = 0;
         mySDFile.close();
         break;
+      case 22: // stop recording - halt flip - but don't close file
+        replay_flag = 0;
+        //mySDFile.close();
+        break;
       case 1:
         // start a new open loop recording
         // 1) delete old file and create new
@@ -1161,11 +1170,18 @@ void UpdateAllParams()
         mySDFile = SD.open("openloop.txt", FILE_WRITE);
         replay_flag = 1; // this will update to 2 on next trial start and file writing will begin
         break;
+      case 11:
+        // append to open loop recording
+        // SD.remove("openloop.txt");
+        mySDFile = SD.open("openloop.txt", FILE_WRITE);
+        replay_flag = 11; // this will update to 2 on next trial start and file writing will begin
+        break;
       case 2:
         // Replay from file
         mySDFile = SD.open("openloop.txt");
         replay_flag = 3; // this will update to 4 on next trial start and file reading will begin
         break;
+     
     }
   }
 
@@ -1281,6 +1297,16 @@ void MoveMotor()
         ReplayVal = 10000 * (current_reward_state + 1) + 1000 * (current_odor_state) + stimulus_state[1];
         mySDFile.write(highByte(ReplayVal));
         mySDFile.write(lowByte(ReplayVal));
+      }
+      if (replay_flag == 22)
+      {
+        // write to SD file
+        mySDFile.write(highByte(90000));
+        mySDFile.write(lowByte(90000));
+        ReplayVal = 10000 * (current_reward_state + 1) + 1000 * (current_odor_state) + stimulus_state[1];
+        mySDFile.write(highByte(ReplayVal));
+        mySDFile.write(lowByte(ReplayVal));
+        replay_flag = 2;
       }
     }
 

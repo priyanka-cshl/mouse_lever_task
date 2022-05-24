@@ -7,6 +7,7 @@ end
 
 global IsRewardedTrial;
 global TrialsToPerturb;
+global RecordStretch;
 
 disp(['---------- New Trial (#', num2str(h.current_trial_block.Data(2)),') ----------']);
 
@@ -156,8 +157,14 @@ h.current_trial_block.Data(6) = round(h.TriggerHold.Data(1)+x,0);
 
 % shuffle pertubation vector if needed
 if (h.which_perturbation.Value>1) && ~mod(h.current_trial_block.Data(2),numel(TrialsToPerturb)) && (h.which_perturbation.Value~=11)
-    TrialsToPerturb = TrialsToPerturb([randperm(floor(numel(TrialsToPerturb)/2)) ...
-            floor(numel(TrialsToPerturb)/2)+(1:floor(numel(TrialsToPerturb)/2))]);
+    halftrials = floor(numel(TrialsToPerturb)/2);
+    TrialsToPerturb = 0*TrialsToPerturb;
+    TrialsToPerturb(end) = 1;
+    TrialsToPerturb = TrialsToPerturb([(1:halftrials) halftrials + randperm(halftrials)]);
+    ffoo = randperm(round(halftrials/2));
+    RecordStretch(1) = find(TrialsToPerturb) - ffoo(1) + h.current_trial_block.Data(2);
+    RecordStretch(2) = RecordStretch(1) - 1 + halftrials;
+    disp(RecordStretch);
 end
 
 if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11) && (h.which_perturbation.Value~=14) 
