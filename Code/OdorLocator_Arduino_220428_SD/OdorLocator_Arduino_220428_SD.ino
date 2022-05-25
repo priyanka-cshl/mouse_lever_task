@@ -640,7 +640,7 @@ void loop()
               mySDFile.close();
               mySDFile = SD.open("openloop.txt");
               current_session_mode = 2;
-              session_mode = -1;
+              session_mode = 4;
               replay_flag = 4;
               digitalWrite(trial_reporter_pin, HIGH);
               which_odor = 0;
@@ -651,7 +651,7 @@ void loop()
             else if (PassiveTuning_location == 998)
             {
               current_session_mode = 2;
-              session_mode = -1;
+              session_mode = 4;
               replay_flag = 4;
               digitalWrite(trial_reporter_pin, HIGH);
               which_odor = 0;

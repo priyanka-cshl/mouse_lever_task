@@ -369,6 +369,7 @@ global IsRewardedTrial;
 global TrialsToPerturb;
 global RecordStretch;
 global TimeSinceOL;
+global sessionStart;
 
 if get(handles.startAcquisition,'value')    
     % checks whether last file was saved and enable quiting if not
@@ -545,6 +546,10 @@ if get(handles.startAcquisition,'value')
         handles.axes9.Position(4) = Height;
         handles.axes4.Position(2) = Y_position;
         handles.axes4.Position(4) = Height;
+        
+        sessionStart = tic;
+        handles.PauseSession.Value = 1;
+        
         NextTrial_Callback(handles);
         
         % update pointer to match motor location

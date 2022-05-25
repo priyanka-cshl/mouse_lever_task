@@ -12,6 +12,7 @@ global TargetLevel;
 global IsRewardedTrial;
 global TimeSinceOL;
 global RecordStretch;
+global sessionStart;
 
 fid1 = varargin{3}; % C:\temp_data_files\log.bin
 h = varargin{1}; % handles
@@ -494,5 +495,10 @@ end
 if UpdateOpenLoop
     %OdorLocatorTabbed('RewardControls_CellEditCallback',h.hObject,[],h); % cheat to update Arduino params
     %OdorLocatorTabbed('OpenLoopSettings_Callback',h.hObject,[],h);
+end
+if sessionStart && toc(sessionStart)>=h.StartDelay.Data(1)
+    sessionStart = 0;
+    h.PauseSession.Value = 0;
+    OdorLocatorTabbed('PauseSession_Callback',h.hObject,[],h);
 end
 
