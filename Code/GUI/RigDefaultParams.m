@@ -74,6 +74,8 @@ handles.holdtimes = [310 262 239 203 350];
 
 handles.UseBonsai = 0;
 handles.PassiveRecorded.Value = 0;
+handles.MyReplaySettings.Data = [0 0 0]';
+handles.replayflag.Value = 0;
 
 switch char(handles.computername)
     

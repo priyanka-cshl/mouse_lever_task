@@ -444,6 +444,8 @@ if get(handles.startAcquisition,'value')
         handles.OpenLoopProgress.Data(:,2) = [0 0 0 0];
         %OpenLoopSettings_Callback(hObject, eventdata, handles);
         RecordStretch = [];
+        handles.MyReplaySettings.Data = [0 0 0]';
+        handles.replayflag.Value = 0;
         
         % clear plots
         handles.trial_on.Vertices = [];
@@ -1605,3 +1607,12 @@ if get(hObject,'Value') == 14
     handles.adaptive_holds.Value = 0;
     handles.TargetHold.Data = [300 400 500]';
 end
+
+
+% --- Executes on button press in replayflag.
+function replayflag_Callback(hObject, eventdata, handles)
+% hObject    handle to replayflag (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of replayflag

@@ -32,9 +32,11 @@ for i = 1:num_repeats
 end
 
 % if doing Halt replay replace all but first replay index with 998 from 999
-f = find(AllTrials(:,1)==999);
-f(1) = [];
-AllTrials(f,1) = 998;
+if h.HaltReplay.Value
+    f = find(AllTrials(:,1)==999);
+    f(1) = [];
+    AllTrials(f,1) = 998;
+end
 
 LocationSequence = [];
 if h.PseudoSequence.Value % pseudorandom sequence

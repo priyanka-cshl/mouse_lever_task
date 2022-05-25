@@ -216,6 +216,9 @@ if TotalTime(end)>=2
                     h.OpenLoopProgress.Data(2,1:2) = [1 0];
                     TimeSinceOL = tic;
                     
+                    % store which TF type and odor it is
+                    h.MyReplaySettings.Data(1:2,1) = [h.current_trial_block.Data(4), ...
+                                                h.TargetDefinition.Data(2)];
                 else % not the first trial
                     h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
                     h.OpenLoopProgress.Data(2,1) = h.OpenLoopProgress.Data(2,1) + 1;
@@ -261,6 +264,9 @@ if TotalTime(end)>=2
                     % check if time or trial criterion has passed already
                     if h.OpenLoopProgress.Data(1,1) >= h.OpenLoopParams.Data(2) 
                         h.OpenLoopSettings.Value = 3; % trigger replay
+                        if ~h.replayflag.Value
+                            h.replayflag.Value = 1;
+                        end
                     end
                     
                 end
@@ -344,6 +350,9 @@ if TotalTime(end)>=2
                 h.OpenLoopSettings.Value = 3; % trigger replay again
                 if ~any(TotalData(end-num_new_samples:end,h.Channels.trial_channel)>0)
                     UpdateOpenLoop = 1;
+                    if ~h.replayflag.Value
+                        h.replayflag.Value = 1;
+                    end
                 end
             else
                 h.OpenLoopSettings.Value = 1;
@@ -363,6 +372,9 @@ if TotalTime(end)>=2
                 % force call arduino param update if in ITI mode
                 h.OpenLoopSettings.Value = 3; % trigger replay
                 UpdateOpenLoop = 1;
+                if ~h.replayflag.Value
+                    h.replayflag.Value = 1;
+                end
             end
         end
     end
@@ -480,7 +492,7 @@ if callreward
     OdorLocatorTabbed('reward_now_Callback',h.hObject,[],h);
 end
 if UpdateOpenLoop
-    OdorLocatorTabbed('RewardControls_CellEditCallback',h.hObject,[],h); % cheat to update Arduino params
+    %OdorLocatorTabbed('RewardControls_CellEditCallback',h.hObject,[],h); % cheat to update Arduino params
     %OdorLocatorTabbed('OpenLoopSettings_Callback',h.hObject,[],h);
 end
 

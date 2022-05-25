@@ -635,10 +635,37 @@ void loop()
         switch (trialstate[1])
         {
           case 0: // move motor to desired location and give it time to settle
-            stimulus_state[1] = PassiveTuning_location;
-            odor_valve_state = false; // keep odor valve closed (blank vial is Onand going to exhaust)
-            air_valve_state = false;
-            send_odor_to_manifold();
+            if (PassiveTuning_location == 999)
+            {
+              mySDFile.close();
+              mySDFile = SD.open("openloop.txt");
+              current_session_mode = 2;
+              session_mode = -1;
+              replay_flag = 4;
+              digitalWrite(trial_reporter_pin, HIGH);
+              which_odor = 0;
+              odor_valve_state = true; // blank vial on
+              air_valve_state = true;
+              send_odor_to_manifold();
+            }
+            else if (PassiveTuning_location == 998)
+            {
+              current_session_mode = 2;
+              session_mode = -1;
+              replay_flag = 4;
+              digitalWrite(trial_reporter_pin, HIGH);
+              which_odor = 0;
+              odor_valve_state = true; // blank vial on
+              air_valve_state = true;
+              send_odor_to_manifold();
+            }
+            else
+            {
+              stimulus_state[1] = PassiveTuning_location;
+              odor_valve_state = false; // keep odor valve closed (blank vial is Onand going to exhaust)
+              air_valve_state = false;
+              send_odor_to_manifold();
+            }
             break;
           case 1: // pre-odor, no-flow
             which_odor = 0;
@@ -1170,6 +1197,14 @@ void UpdateAllParams()
         mySDFile = SD.open("openloop.txt", FILE_WRITE);
         replay_flag = 1; // this will update to 2 on next trial start and file writing will begin
         break;
+      case 10:
+        // start a new halt flip recording
+        // 1) delete old file and create new
+        SD.remove("openloop.txt");
+        mySDFile = SD.open("openloop.txt", FILE_WRITE);
+        replay_flag = 1; // this will update to 2 on next trial start and file writing will begin
+        replay_state = 11;
+        break;
       case 11:
         // append to open loop recording
         // SD.remove("openloop.txt");
@@ -1191,18 +1226,14 @@ void UpdateAllParams()
 
 void UpdateOpenLoopParams() // 23.01.2018
 {
-  if (PassiveTuning_param_array[1] >= 998)
-  {
-    session_mode = -1;
-  }
-
   myUSB.writeUint16(98);
-  trialstate[0] = 5;
+  //trialstate[0] = 5;
   // parse param array to variable names
   //which_odor = PassiveTuning_param_array[0]; // odor vial number
   PassiveTuning_location = PassiveTuning_param_array[1]; // desired location
   if (PassiveTuning_param_array[1] == 800)
   {
+    trialstate[0] = 5;
     locationcount = 0;
     pseudosequence_params = num_of_params - 11;
     for (i = 0; i < pseudosequence_params; i++)
@@ -1212,34 +1243,15 @@ void UpdateOpenLoopParams() // 23.01.2018
     PassiveTuning_location = pseudosequence_array[locationcount];
     PassiveTuning_param_array[5] = 0; // hack to keep rolling back to odor state
   }
-  if (PassiveTuning_location == 999)
+  for (i = 0; i < 6; i++)
   {
-    mySDFile = SD.open("openloop.txt");
-    current_session_mode = 2;
-    replay_flag = 4;
-    //session_mode = 4;
-    digitalWrite(trial_reporter_pin, HIGH);
+    PassiveTuning_trial_timing[i] = PassiveTuning_param_array[2 + i]; // motor_settle, pre-odor, odor, post-odor, iti in ms
   }
-  else if (PassiveTuning_location == 998)
-  {
-    //mySDFile = SD.open("openloop.txt");
-    current_session_mode = 2;
-    replay_flag = 4;
-    //session_mode = 4;
-    digitalWrite(trial_reporter_pin, HIGH);
-  }
-  else
-  {
-    for (i = 0; i < 6; i++)
-    {
-      PassiveTuning_trial_timing[i] = PassiveTuning_param_array[2 + i]; // motor_settle, pre-odor, odor, post-odor, iti in ms
-    }
-    lever_rescale_params[0] = PassiveTuning_param_array[8]; // gain, offset
-    lever_rescale_params[1] = PassiveTuning_param_array[9];
-    //reward_params[1] = PassiveTuning_param_array[10];
-    // update trial state params
-    openlooptrialstates.UpdateOpenLoopTrialParams(PassiveTuning_trial_timing);
-  }
+  lever_rescale_params[0] = PassiveTuning_param_array[8]; // gain, offset
+  lever_rescale_params[1] = PassiveTuning_param_array[9];
+  //reward_params[1] = PassiveTuning_param_array[10];
+  // update trial state params
+  openlooptrialstates.UpdateOpenLoopTrialParams(PassiveTuning_trial_timing);
 
 }
 

@@ -144,7 +144,7 @@ legend(30) = {'FeedbackDelay'}; param(30) = 0;
 legend(31) = {'OpenLoop'}; param(31) = h.OpenLoopSettings.Value - 1;
 if h.OpenLoopSettings.Value>3 
     if strcmp(h.ReplayState.String,'Close loop')
-        param(31) = 1;
+        param(31) = 10;
     else
         param(31) = h.OpenLoopSettings.Value - 3 + 10;
     end

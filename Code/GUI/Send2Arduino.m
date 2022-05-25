@@ -112,7 +112,7 @@ if get(h.startAcquisition,'value') && (sent == 1)
     
     % Update Halt Flip recording flags
     % Halt Flip Recording is about to start on next trial - first time - Arduino makes a new file 
-    if h.OpenLoopSettings.Value==4 && strcmp(h.ReplayState.String,'Close loop') && params_returned(31) == 1
+    if h.OpenLoopSettings.Value==4 && strcmp(h.ReplayState.String,'Close loop') && params_returned(31) == 10
         h.ReplayState.String = 'Recording Halt Flip';
     end
     
@@ -126,7 +126,8 @@ if get(h.startAcquisition,'value') && (sent == 1)
         h.ReplayState.String = 'Halt Flip Recorded';
         h.OpenLoopProgress.Data(:,1) = [NaN 0 0 0]';
         h.OpenLoopProgress.Data(:,2) = [0 0 0 0];
-        h.PassiveRecorded.Value = 1;
+        h.PassiveRecorded.Value = 2;
+        h.MyReplaySettings.Data(3,1) = h.MyReplaySettings.Data(3,1) + 1;
     end
     
     % replace last three values in params1 to store Stay Time min and Stay

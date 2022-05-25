@@ -119,6 +119,18 @@ else
     end
 end
 
+% force odor and target zone to be the same as in the template Trial 1 if
+% doing open loop replay
+if h.replayflag.Value == 1
+    h.replayflag.Value = 2;
+end
+
+if h.replayflag.Value == 2
+    h.current_trial_block.Data(4) = h.MyReplaySettings.Data(1,1);
+    h.TargetDefinition.Data(2) = h.MyReplaySettings.Data(2,1);
+    h.replayflag.Value = 0;
+end
+
 %% update target hold time
 if ~h.preloaded_sequence.Value
     if h.adaptive_holds.Value

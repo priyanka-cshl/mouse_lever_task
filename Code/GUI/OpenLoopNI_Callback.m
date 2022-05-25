@@ -23,7 +23,7 @@ trial_just_ended = 0;
 TotalTime = [ TotalTime(num_new_samples+1:end); event.TimeStamps ];
 
 % multiply trial_channel by odor value
-if h.current_trial_block.Data(6)
+if h.current_trial_block.Data(6)>0
     odorID = h.current_trial_block.Data(6);
 else
     odorID = 4;
