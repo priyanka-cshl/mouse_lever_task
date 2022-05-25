@@ -544,6 +544,7 @@ void loop()
             send_odor_to_manifold();
             break;
           case 1:
+            UpdateTF();
             break;
           case 2:
             // reset long ITI
@@ -560,7 +561,7 @@ void loop()
             odor_valve_state = true;
             air_valve_state = true;
             send_odor_to_manifold();
-            UpdateTF();
+            //UpdateTF();
             break;
           case 4:
             time_in_target_zone = 0; // reset timespent value

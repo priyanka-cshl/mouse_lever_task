@@ -21,21 +21,42 @@ else % Pseudorandom location sequence
 end
 
 % append a passive replay trial
-if h.PassiveReplay.Value || h.HaltReplay.Value
+if h.PassiveReplay.Value
     Trial_list(end+1,:) = [999 0];
     h.current_trial_block.Data(3) = h.current_trial_block.Data(3) + 1;
 end
 
+if h.HaltReplay.Value && h.NumTemplates.Data(1)>0
+    replaysperrep = ceil(h.NumTemplates.Data(1)/num_repeats);
+    for i = 1:replaysperrep
+        Trial_list(end+1,:) = [999 0];
+        h.current_trial_block.Data(3) = h.current_trial_block.Data(3) + 1;
+    end
+end
+    
 AllTrials = [];
 for i = 1:num_repeats
     AllTrials = [AllTrials; Trial_list(randperm(size(Trial_list,1)),:)];
 end
 
-% if doing Halt replay replace all but first replay index with 998 from 999
+% first trial cannot be replay
+if AllTrials(1,1) > 900
+    foo = AllTrials(1,:);
+    f = find(AllTrials(:,1)<900,1,'first');
+    AllTrials(1,:) = AllTrials(f,:);
+    AllTrials(f,:) = foo;
+end
+
+% if doing Halt replay 
 if h.HaltReplay.Value
+    % replace all but first replay index with 998 from 999
     f = find(AllTrials(:,1)==999);
     f(1) = [];
     AllTrials(f,1) = 998;
+    % check there only as many replay trials as available
+    extrareplays = numel(f) + 1 - h.NumTemplates.Data(1);
+    f = find(AllTrials(:,1)==998,extrareplays,'last');
+    AllTrials(f,:) = [];
 end
 
 LocationSequence = [];

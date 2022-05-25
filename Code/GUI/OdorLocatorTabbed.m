@@ -1576,13 +1576,14 @@ function TuningCurves_Callback(hObject, eventdata, handles)
 AnimalName = char(handles.file_names.Data(1));
 %PassiveReplay = strcmp(handles.ReplayState.String,'Passive replay Recorded');
 PassiveReplay = handles.PassiveRecorded.Value;
+templatesdone = handles.MyReplaySettings.Data(3);
 % Save the current session
 if ~handles.was_last_file_saved
     SaveFile_Callback(hObject, eventdata, handles);
 end
 close_gui_Callback(hObject, eventdata, handles);
 delete (handles.mycam);
-OpenLoopOdorLocator(AnimalName, PassiveReplay);
+OpenLoopOdorLocator(AnimalName, PassiveReplay, templatesdone);
 
 
 % --- Executes when entered data in editable cell(s) in RollRateLims.

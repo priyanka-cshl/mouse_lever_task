@@ -66,13 +66,17 @@ handles.StopTime.Visible = 'off';
 handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
 handles.PassiveReplay.Value = 0;
 handles.HaltReplay.Value = 0;
-if size(varargin,2)>1
+handles.NumTemplates.Data = 0;
+if size(varargin,2)==2
     switch varargin{2}
         case 1
             handles.PassiveReplay.Value = 1;
         case 2
             handles.HaltReplay.Value = 1;
     end
+end
+if size(varargin,2)==3
+    handles.NumTemplates.Data = varargin{3};
 end
 
 % create the data directories if they don't already exist

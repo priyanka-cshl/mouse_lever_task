@@ -17,7 +17,7 @@ handles.DAQrates.Data = [500 20]';
 handles.TrialSettings.Data = [500 1000 1000 100 900 500]'; % motor-settle, pre-odor, odor, purge, post-odor, ITI
 handles.openloop = 1; % Run in open-loop mode
 handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
-handles.SessionSettings.Data = [5 90 15]'; % #repeats, max location, location step
+handles.SessionSettings.Data = [10 90 15]'; % #repeats, max location, location step
 
 % Transfer function
 handles.TFtype.Value = 1; % 1 = fix speed, 0 = fixed start
@@ -36,7 +36,7 @@ handles.Zero_MFC.Value = 0;
 handles.which_stage.Value = 3; % training stage
 handles.TransferFunction.Data(2) = 100; % block size (1 = no blocks)'
 handles.DoSequence.Value = 0;
-handles.PseudoSequence.Value = 0;
+handles.PseudoSequence.Value = 1;
         
 switch char(handles.computername)
     
