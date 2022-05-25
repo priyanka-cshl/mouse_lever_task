@@ -266,24 +266,24 @@ if TotalTime(end)>=2
                 end
                 
             case {'Halt Flip Recorded'}
-                
-                if h.OpenLoopProgress.Data(1,2) == 0 % open loop recording has just finished
-                    h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
-                    h.OpenLoopProgress.Data(1:2,2) = h.OpenLoopProgress.Data(1:2,1);
-                    h.OpenLoopProgress.Data(1:2,1) = [0 0]'; % reset for Recovery period
-                    TimeSinceOL = tic; % reset clock
-                    h.PassiveRecorded.Value = 1;
-                else
-                    % update time and trials elapsed
-                    h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
-                    h.OpenLoopProgress.Data(2,1) = h.OpenLoopProgress.Data(2,1) + 1;
-                    
-                    % check if time or trial criterion has passed already
-                    if h.OpenLoopProgress.Data(1,1) >= h.OpenLoopParams.Data(2) 
-                        h.OpenLoopSettings.Value = 3; % trigger replay
-                    end
-                    
-                end
+                h.OpenLoopProgress.Data(1,1) = NaN;
+%                 if h.OpenLoopProgress.Data(1,2) == 0 % open loop recording has just finished
+%                     h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
+%                     h.OpenLoopProgress.Data(1:2,2) = h.OpenLoopProgress.Data(1:2,1);
+%                     h.OpenLoopProgress.Data(1:2,1) = [0 0]'; % reset for Recovery period
+%                     TimeSinceOL = tic; % reset clock
+%                     h.PassiveRecorded.Value = 1;
+%                 else
+%                     % update time and trials elapsed
+%                     h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
+%                     h.OpenLoopProgress.Data(2,1) = h.OpenLoopProgress.Data(2,1) + 1;
+%                     
+%                     % check if time or trial criterion has passed already
+%                     if h.OpenLoopProgress.Data(1,1) >= h.OpenLoopParams.Data(2) 
+%                         h.OpenLoopSettings.Value = 3; % trigger replay
+%                     end
+%                     
+%                 end
                 
             case {'Replaying Open Loop'}
                     % only one trial per replay

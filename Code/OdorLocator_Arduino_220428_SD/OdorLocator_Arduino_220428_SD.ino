@@ -654,7 +654,7 @@ void loop()
             break;
           case 6: // buffer state - move odor to next location
             locationcount = locationcount + 1;
-            if (locationcount<pseudosequence_params)
+            if (locationcount < pseudosequence_params)
             {
               stimulus_state[1] = pseudosequence_array[locationcount];
             }
@@ -1159,7 +1159,7 @@ void UpdateAllParams()
         replay_flag = 0;
         mySDFile.close();
         break;
-      case 22: // stop recording - halt flip - but don't close file
+      case 12: // stop recording - halt flip - but don't close file
         replay_flag = 0;
         //mySDFile.close();
         break;
@@ -1173,7 +1173,7 @@ void UpdateAllParams()
       case 11:
         // append to open loop recording
         // SD.remove("openloop.txt");
-        mySDFile = SD.open("openloop.txt", FILE_WRITE);
+        // mySDFile = SD.open("openloop.txt", FILE_WRITE);
         replay_flag = 11; // this will update to 2 on next trial start and file writing will begin
         break;
       case 2:
@@ -1181,7 +1181,7 @@ void UpdateAllParams()
         mySDFile = SD.open("openloop.txt");
         replay_flag = 3; // this will update to 4 on next trial start and file reading will begin
         break;
-     
+
     }
   }
 
@@ -1191,7 +1191,7 @@ void UpdateAllParams()
 
 void UpdateOpenLoopParams() // 23.01.2018
 {
-  if (PassiveTuning_param_array[1] == 999)
+  if (PassiveTuning_param_array[1] >= 998)
   {
     session_mode = -1;
   }
@@ -1207,7 +1207,7 @@ void UpdateOpenLoopParams() // 23.01.2018
     pseudosequence_params = num_of_params - 11;
     for (i = 0; i < pseudosequence_params; i++)
     {
-      pseudosequence_array[i] = PassiveTuning_param_array[11+i];
+      pseudosequence_array[i] = PassiveTuning_param_array[11 + i];
     }
     PassiveTuning_location = pseudosequence_array[locationcount];
     PassiveTuning_param_array[5] = 0; // hack to keep rolling back to odor state
@@ -1217,6 +1217,16 @@ void UpdateOpenLoopParams() // 23.01.2018
     mySDFile = SD.open("openloop.txt");
     current_session_mode = 2;
     replay_flag = 4;
+    //session_mode = 4;
+    digitalWrite(trial_reporter_pin, HIGH);
+  }
+  else if (PassiveTuning_location == 998)
+  {
+    //mySDFile = SD.open("openloop.txt");
+    current_session_mode = 2;
+    replay_flag = 4;
+    //session_mode = 4;
+    digitalWrite(trial_reporter_pin, HIGH);
   }
   else
   {
@@ -1264,22 +1274,32 @@ void MoveMotor()
         byteHIGH = mySDFile.read();
         byteLOW = mySDFile.read();
         ReplayVal = byteHIGH * 256 + byteLOW;
-
-        replay_reward_valve_state[1] = (ReplayVal >= 20000);
-        ReplayVal = ReplayVal - 10000 * (1 + replay_reward_valve_state[1]);
-        stimulus_state[1] = ReplayVal % 1000;
-        ReplayVal = (ReplayVal - stimulus_state[1]) / 1000;
-        if (ReplayVal >= 5)
+        if (ReplayVal == 65000)
         {
-          replay_air_valve_state[1] = true;
-          replay_odor_valve_state[1] = ReplayVal - 4;
+          replay_flag = 5;
+          session_mode = current_session_mode;
+          digitalWrite(trial_reporter_pin, LOW);
+          trialstate[0] = 5; trialstate[1] = 5;
+          trial_timestamp = micros();
         }
         else
         {
-          replay_air_valve_state[1] = false;
-        }
+          replay_reward_valve_state[1] = (ReplayVal >= 20000);
+          ReplayVal = ReplayVal - 10000 * (1 + replay_reward_valve_state[1]);
+          stimulus_state[1] = ReplayVal % 1000;
+          ReplayVal = (ReplayVal - stimulus_state[1]) / 1000;
+          if (ReplayVal >= 5)
+          {
+            replay_air_valve_state[1] = true;
+            replay_odor_valve_state[1] = ReplayVal - 4;
+          }
+          else
+          {
+            replay_air_valve_state[1] = false;
+          }
 
-        I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
+          I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
+        }
       }
       else
       {
@@ -1301,8 +1321,8 @@ void MoveMotor()
       if (replay_flag == 22)
       {
         // write to SD file
-        mySDFile.write(highByte(90000));
-        mySDFile.write(lowByte(90000));
+        mySDFile.write(highByte(65000));
+        mySDFile.write(lowByte(65000));
         ReplayVal = 10000 * (current_reward_state + 1) + 1000 * (current_odor_state) + stimulus_state[1];
         mySDFile.write(highByte(ReplayVal));
         mySDFile.write(lowByte(ReplayVal));

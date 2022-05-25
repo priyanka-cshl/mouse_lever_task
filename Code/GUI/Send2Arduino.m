@@ -122,7 +122,7 @@ if get(h.startAcquisition,'value') && (sent == 1)
     end
     
     % Halt Flip Recording is about to stop on next trial
-    if h.OpenLoopSettings.Value == 5 && strcmp(h.ReplayState.String,'Recording Halt Flip') && params_returned(31) == 22
+    if h.OpenLoopSettings.Value == 5 && strcmp(h.ReplayState.String,'Recording Halt Flip') && params_returned(31) == 12
         h.ReplayState.String = 'Halt Flip Recorded';
         h.OpenLoopProgress.Data(:,1) = [NaN 0 0 0]';
         h.OpenLoopProgress.Data(:,2) = [0 0 0 0];

@@ -21,7 +21,7 @@ else % Pseudorandom location sequence
 end
 
 % append a passive replay trial
-if h.PassiveReplay.Value
+if h.PassiveReplay.Value || h.HaltReplay.Value
     Trial_list(end+1,:) = [999 0];
     h.current_trial_block.Data(3) = h.current_trial_block.Data(3) + 1;
 end
@@ -30,6 +30,11 @@ AllTrials = [];
 for i = 1:num_repeats
     AllTrials = [AllTrials; Trial_list(randperm(size(Trial_list,1)),:)];
 end
+
+% if doing Halt replay replace all but first replay index with 998 from 999
+f = find(AllTrials(:,1)==999);
+f(1) = [];
+AllTrials(f,1) = 998;
 
 LocationSequence = [];
 if h.PseudoSequence.Value % pseudorandom sequence

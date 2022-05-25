@@ -23,7 +23,7 @@ function varargout = OpenLoopOdorLocator(varargin)
 
 % Edit the above text to modify the response to help OpenLoopOdorLocator
 
-% Last Modified by GUIDE v2.5 05-May-2021 10:25:15
+% Last Modified by GUIDE v2.5 25-May-2022 09:30:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -64,7 +64,17 @@ handles.StopTime.Visible = 'off';
 
 % load mouse specific settings
 handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
-handles.PassiveReplay.Value = varargin{2};
+handles.PassiveReplay.Value = 0;
+handles.HaltReplay.Value = 0;
+if size(varargin,2)>1
+    switch varargin{2}
+        case 1
+            handles.PassiveReplay.Value = 1;
+        case 2
+            handles.HaltReplay.Value = 1;
+    end
+end
+
 % create the data directories if they don't already exist
 animal_name = char(handles.file_names.Data(1));
 foldername_local = char(handles.file_names.Data(2));
@@ -430,6 +440,9 @@ else
    elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==9
        disp('arduino: Motor Timer Stopped');
    end
+   
+   handles.CleaningRoutine.Value = 1;
+   handles.CleaningRoutine.Enable = 'on';
 
 end
 
@@ -969,3 +982,12 @@ function DoSequence_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of DoSequence
+
+
+% --- Executes on button press in HaltReplay.
+function HaltReplay_Callback(hObject, eventdata, handles)
+% hObject    handle to HaltReplay (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of HaltReplay

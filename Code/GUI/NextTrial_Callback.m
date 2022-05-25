@@ -156,13 +156,24 @@ h.current_trial_block.Data(6) = round(h.TriggerHold.Data(1)+x,0);
 %% feedback perturbation settings
 
 % shuffle pertubation vector if needed
-if (h.which_perturbation.Value>1) && ~mod(h.current_trial_block.Data(2),numel(TrialsToPerturb)) && (h.which_perturbation.Value~=11)
+if (h.which_perturbation.Value>1) && ~mod(h.current_trial_block.Data(2),numel(TrialsToPerturb)) ...
+        && (h.which_perturbation.Value~=11)
+    
     halftrials = floor(numel(TrialsToPerturb)/2);
     TrialsToPerturb = 0*TrialsToPerturb;
     TrialsToPerturb(end) = 1;
     TrialsToPerturb = TrialsToPerturb([(1:halftrials) halftrials + randperm(halftrials)]);
     ffoo = randperm(round(halftrials/2));
     RecordStretch(1) = find(TrialsToPerturb) - ffoo(1) + h.current_trial_block.Data(2);
+    if numel(RecordStretch)>1 % not the first time
+        if RecordStretch(2) > RecordStretch(1)
+            % there is overlap
+            RecordStretch(1) = RecordStretch(2) + 2;
+            if find(TrialsToPerturb)<=2
+                TrialsToPerturb = circshift(TrialsToPerturb,2);
+            end
+        end
+    end
     RecordStretch(2) = RecordStretch(1) - 1 + halftrials;
     disp(RecordStretch);
 end
