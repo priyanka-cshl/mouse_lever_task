@@ -14,7 +14,7 @@ handles.file_names.Data(3) = {'\\grid-hs\albeanu_nlsas_norepl_data\pgupta\Behavi
 handles.DAQrates.Data = [500 20]';
 
 % default params
-handles.TrialSettings.Data = [4.8 0.2 200 100 5000 500]'; % trial highlim, trial lowlim, ~ , trialmin, trialmax, ITI
+handles.TrialSettings.Data = [4.8 0.2 200 100 5000 1000]'; % trial highlim, trial lowlim, ~ , trialmin, trialmax, ITI
 handles.adaptive_holds.Value = 1;
 handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
 handles.odor_priors.Value = 0;
@@ -23,7 +23,7 @@ handles.which_perturbation.Value = 1; % no perturbations
 handles.openloop = 0; % Run in close-loop mode
 handles.AdaptiveTrigger.Value = 1;
 handles.AdaptiveTrigger.Enable = 'off';
-handles.OdorSequence.Value = 1;
+handles.OdorSequence.Value = 0;
 handles.OdorSequence.Enable = 'off';
 handles.OpenLoopSettings.Value = 1; % normal close loop mode
 handles.TuningCurves.String = '<html>Tuning<br />Curves</html>';
@@ -116,7 +116,7 @@ switch char(handles.computername)
         
         % Plots
         handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.1 NaN NaN]; % gains
-        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 3 7.0 NaN NaN]; % offsets
+        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 5 7.0 NaN NaN]; % offsets
         handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
         
         % Rewards
@@ -146,7 +146,7 @@ switch char(handles.computername)
         
         % Plots
         handles.PlotSettings.Data(:,1) = [NaN 1 0.5 1 0.1 NaN NaN]; % gains
-        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 4 7.0 NaN NaN]; % gains
+        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 6 7.0 NaN NaN]; % gains
         handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
         
         % Rewards
