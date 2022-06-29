@@ -906,6 +906,9 @@ void loop()
             myUSB.writeUint16(7);
             timer_override = false;
             motor_override = true;
+            air_valve_state = false;
+            odor_valve_state = false;
+            send_odor_to_manifold();
             break;
           case 8: //unpause
             myUSB.writeUint16(8);
