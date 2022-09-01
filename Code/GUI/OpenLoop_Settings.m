@@ -8,6 +8,9 @@ else
     param(2) = h.current_trial_block.Data(7) + h.MotorLocationArduinoMax + 1; % get rid of negative values
 end
 param(3:8) = h.TrialSettings.Data(1:6);
+if h.ITIAirState.Value
+    param(8) = -param(8);
+end
 legend(9:10) = {'DACgain' 'DACdc'};
 param(9) = round(10000*h.DAC_settings.Data(1),4,'significant');
 param(10) = h.DAC_settings.Data(2);

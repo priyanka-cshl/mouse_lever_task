@@ -23,7 +23,7 @@ function varargout = OpenLoopOdorLocator(varargin)
 
 % Edit the above text to modify the response to help OpenLoopOdorLocator
 
-% Last Modified by GUIDE v2.5 25-May-2022 09:30:12
+% Last Modified by GUIDE v2.5 01-Sep-2022 14:41:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -995,3 +995,12 @@ function HaltReplay_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of HaltReplay
+
+
+% --- Executes on button press in ITIAirState.
+function ITIAirState_Callback(hObject, eventdata, handles)
+% hObject    handle to ITIAirState (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of ITIAirState

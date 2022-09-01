@@ -132,6 +132,7 @@ int replay_odor_valve_state[2] = {0, 0};
 int PassiveTuning_trial_timing[] = {500, 500, 500, 50, 500, 500}; //motor_settle, pre-odor, odor, purge, post-odor, iti in ms
 int PassiveTuning_location = 0;
 unsigned short PassiveTuning_param_array[6] = {0}; // ArCOM aray needs unsigned shorts, trial timing, odor and location
+bool ITIAirState = false;
 
 //variables : general
 int i = 0;
@@ -654,8 +655,8 @@ void loop()
             send_odor_to_manifold();
             break;
           case 5: // iti - no flow, clean air to exhaust
-            odor_valve_state = false; // keep odor valve closed (blank vial is Onand going to exhaust)
-            air_valve_state = false;
+            odor_valve_state = ITIAirState; //false; // keep odor valve closed (blank vial is Onand going to exhaust)
+            air_valve_state = ITIAirState; //false;
             send_odor_to_manifold();
             break;
         }
@@ -1172,9 +1173,10 @@ void UpdateOpenLoopParams() // 23.01.2018
   }
   else
   {
+    ITIAirState = (PassiveTuning_param_array[7]<0); // ITI is negative if Air should be kept on during ITI
     for (i = 0; i < 6; i++)
     {
-      PassiveTuning_trial_timing[i] = PassiveTuning_param_array[2 + i]; // motor_settle, pre-odor, odor, post-odor, iti in ms
+      PassiveTuning_trial_timing[i] = abs(PassiveTuning_param_array[2 + i]); // motor_settle, pre-odor, odor, post-odor, iti in ms
     }
     lever_rescale_params[0] = PassiveTuning_param_array[8]; // gain, offset
     lever_rescale_params[1] = PassiveTuning_param_array[9];
