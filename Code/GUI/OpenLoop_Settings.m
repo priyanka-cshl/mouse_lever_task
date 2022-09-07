@@ -8,9 +8,7 @@ else
     param(2) = h.current_trial_block.Data(7) + h.MotorLocationArduinoMax + 1; % get rid of negative values
 end
 param(3:8) = h.TrialSettings.Data(1:6);
-if h.ITIAirState.Value
-    param(8) = -param(8);
-end
+
 legend(9:10) = {'DACgain' 'DACdc'};
 param(9) = round(10000*h.DAC_settings.Data(1),4,'significant');
 param(10) = h.DAC_settings.Data(2);
@@ -21,6 +19,9 @@ param(param>2^16-1) = 2^16-1;
 
 legend(11) = {'water time'};
 param(11) = h.reward_time.Data(1);
+
+legend(12) = {'ITIAirState'};
+param(12) = h.ITIAirState.Value;
 
 locs = [];
 if h.PseudoSequence.Value && h.current_trial_block.Data(2)
