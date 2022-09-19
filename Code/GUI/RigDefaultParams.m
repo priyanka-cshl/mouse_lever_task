@@ -142,7 +142,7 @@ switch char(handles.computername)
         handles.UseBonsai = 1;
         
         % sensors and scaling
-        handles.DAC_settings.Data = [2.0 2.15]'; %[2.08 2.1]';
+        handles.DAC_settings.Data = [2.0 2.05]'; %[2.08 2.1]';
         
         % Plots
         handles.PlotSettings.Data(:,1) = [NaN 1 0.5 1 0.1 NaN NaN]; % gains

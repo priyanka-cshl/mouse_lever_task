@@ -1122,7 +1122,7 @@ else
     
     % turn on all the odor vials, and shut off airflow to manifold
     handles.Odor_list.Value = [2 3 4];
-    handles.odor_vial.Value = 0;
+    handles.odor_vial.Value = 1;
     handles.odor_to_manifold.Value = 0;
     handles.air_to_manifold.Value = 0;
     guidata(hObject,handles);
@@ -1196,6 +1196,9 @@ handles.mycam.Exposure = hObject.Data;
 
 % --- Executes on button press in close_gui.
 function close_gui_Callback(hObject, eventdata, handles)
+if handles.UseBonsai
+    [~,~] = system('Taskkill/IM cmd.exe'); % to close bonsai
+end
 % close valves and MFCs
 if ~isempty(handles.MFC)
     outputSingleScan(handles.MFC,0*handles.MFC_table.Data');
