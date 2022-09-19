@@ -15,7 +15,7 @@ slowby = 5;
 %% Read the Data File
 [MyData, MySettings, TargetZones, ~] = ExtractSessionDataFixedGain(DataFile);
 [~, TrialInfo, TargetZones] = ChunkToTrials(MyData, TargetZones);
-[AllTFs] = GetAllTransferFunctions(MySettings, TargetZones,'fixedgain');
+[AllTFs] = GetAllTransferFunctions; %(MySettings, TargetZones,'fixedgain');
 AllTFs = -AllTFs;
 MaxMotorLocation = 100;
 
