@@ -25,7 +25,8 @@ if ~mod(h.current_trial_block.Data(2)-1,10)
     h.RollingRateTable.Data(myidx+1,1) = myidx;
     x1 = max(1,h.current_trial_block.Data(2)-10);
     x2 = h.current_trial_block.Data(2)-1;
-    rollrate = sum(h.hold_times.Data(x1:x2,2))/10;
+    %rollrate = sum(h.hold_times.Data(x1:x2,2))/10;
+    rollrate = nanmean(h.hold_times.Data(x1:x2,2));
     if (rollrate>=0) && (rollrate<=1)
         h.RollingRateTable.Data(myidx+1,2) = rollrate;
     end
