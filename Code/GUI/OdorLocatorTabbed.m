@@ -285,11 +285,14 @@ if ~isempty(webcamlist)
             handles.exposure_value.Enable = 'on';
             handles.camera_available = 1;
             handles.focus_mode.Value = 2;
-            handles.mycam.ExposureMode = 'auto';
-            handles.exposure_mode.Value = 1;                                                                      
-            handles.mycam.Focus = 250;
+            handles.mycam.ExposureMode = 'manual';
+            handles.mycam.Exposure = -8;
+            handles.exposure_mode.Value = 2;                                                                      
+            handles.mycam.Focus = 180;
             handles.exposure_value.Data = handles.mycam.Exposure;
+            handles.focus_value.Data = handles.mycam.Focus;
             handles.mycam.Zoom = 175;
+            
        case {'PRIYANKA-HP'}
             handles.mycam = webcam(1);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
@@ -1584,6 +1587,7 @@ templatesdone = handles.MyReplaySettings.Data(3);
 if ~handles.was_last_file_saved
     SaveFile_Callback(hObject, eventdata, handles);
 end
+handles.UseBonsai = 0; % don't close the bonsai routine
 close_gui_Callback(hObject, eventdata, handles);
 delete (handles.mycam);
 OpenLoopOdorLocator(AnimalName, PassiveReplay, templatesdone);
