@@ -243,9 +243,11 @@ if TotalTime(end)>=2
                     h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
                     h.OpenLoopProgress.Data(2,1) = h.OpenLoopProgress.Data(2,1) + 1;
                     
-                    % check if time or trial criterion has passed already
-                    if h.OpenLoopProgress.Data(2,1) >= (diff(RecordStretch)+1) % Trial Mode
-                        h.OpenLoopSettings.Value = 5;
+                    if ~isempty(RecordStretch)
+                        % check if time or trial criterion has passed already
+                        if h.OpenLoopProgress.Data(2,1) >= (diff(RecordStretch)+1) % Trial Mode
+                            h.OpenLoopSettings.Value = 5;
+                        end
                     end
                 end
                 
@@ -301,12 +303,12 @@ if TotalTime(end)>=2
         
         % increment 'trial number'
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1;
-        
-        if (h.which_perturbation.Value == 10 || h.which_perturbation.Value == 6) ...
-                && h.current_trial_block.Data(2) == RecordStretch(1)
-            h.OpenLoopSettings.Value = 4; % flag for halt flip recording
+        if ~isempty(RecordStretch)
+            if (h.which_perturbation.Value == 10 || h.which_perturbation.Value == 6) ...
+                    && h.current_trial_block.Data(2) == RecordStretch(1)
+                h.OpenLoopSettings.Value = 4; % flag for halt flip recording
+            end
         end
-        
         % increment trials done in the progress report
         if h.current_trial_block.Data(3) ~= 1 % not a perturbed trial
             if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.PerturbationSettings.Data(2)),2)
@@ -426,7 +428,7 @@ set(h.camerasync2_plot,'XData',TotalTime(indices_to_plot),'YData',...
     7.2 + 0.5*TotalData(indices_to_plot,h.Channels.camerasync_channel+1));
 
 % trial_on
-[h] = PlotToPatch_Trial(h, TotalData(:,h.Channels.trial_channel), TotalTime, [0 5]);
+[h] = PlotToPatch_Trial_GUI(h, TotalData(:,h.Channels.trial_channel), TotalTime, [0 5]);
 [h.targetzone] = PlotToPatch_TargetZone(h.targetzone, TargetLevel, TotalTime);
 
 % in_target_zone, in_reward_zone
