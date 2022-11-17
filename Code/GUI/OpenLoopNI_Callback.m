@@ -96,7 +96,7 @@ set(h.camerasync2_plot,'XData',TotalTime(indices_to_plot),'YData',...
     7.2 + 0.5*TotalData(indices_to_plot,h.Channels.camerasync_channel+1));
 
 % trial_on
-[h] = PlotToPatch_Trial(h, TotalData(:,h.Channels.trial_channel), TotalTime, [0 5]);
+[h] = PlotToPatch_Trial_GUI(h, TotalData(:,h.Channels.trial_channel), TotalTime, [0 5]);
 
 % odor valve ON
 [h.in_reward_zone_plot] = PlotToPatch(h.in_reward_zone_plot, TotalData(:,h.Channels.trial_channel+2), TotalTime, [-1 -0.2]);
