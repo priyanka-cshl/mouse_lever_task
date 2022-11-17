@@ -245,6 +245,7 @@ if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11) && (h.whic
                     end
                 else
                     h.TargetDefinition.Data(2) = h.OffsetParams.Data(2);
+                    h.current_trial_block.Data(4) = h.FeedbackHaltParams.Data(4); % specific odor
                 end
                     
 %                 % so force current zone to TZ of choice and odor
