@@ -386,7 +386,7 @@ void loop()
     {
       if ((perturbation_offset != 0) && (!use_offset_perturbation))
       {
-        if ((micros() - reward_zone_timestamp) > 900 * reward_params[0])
+        if ( ((micros() - reward_zone_timestamp) > 900 * reward_params[0]) || ((time_in_target_zone + (micros() - reward_zone_timestamp)) > 900 * reward_params[2]) )
         {
           reward_state = 1; // reset reward state
           time_in_target_zone = 0; // reset timespent value
@@ -400,6 +400,7 @@ void loop()
             trial_timestamp = micros() - (1000 * trial_trigger_timing[1]); // reset trial timestamp to give extra time for the trial
           }
         }
+        
       }
 
       if ((micros() - reward_zone_timestamp) > 1000 * reward_params[0])

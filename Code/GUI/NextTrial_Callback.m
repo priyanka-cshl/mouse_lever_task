@@ -270,9 +270,20 @@ if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11) && (h.whic
                     end
                 end
                 
-                % only for offset III
-                if rand(1)<0.5 && h.which_perturbation.Value == 7
-                    h.OffsetParams.Data(3) = h.OffsetParams.Data(3) + round(h.OffsetParams.Data(3)/2);
+%                 % only for offset III
+%                 if rand(1)<0.5 && h.which_perturbation.Value == 7
+%                     h.OffsetParams.Data(3) = h.OffsetParams.Data(3) + round(h.OffsetParams.Data(3)/2);
+%                 end
+                % changing offset III to do both smaller and larger offsets 
+                if h.which_perturbation.Value == 7
+                    switch floor(rand(1)/0.33) 
+                        case 0
+                            h.OffsetParams.Data(3) = h.OffsetParams.Data(3) + round(h.OffsetParams.Data(3)/2);
+                        case 1
+                            h.OffsetParams.Data(3) = h.OffsetParams.Data(3) - round(h.OffsetParams.Data(3)/2);
+                        case 2
+                        otherwise
+                    end
                 end
                 
             case 8 % gain change
