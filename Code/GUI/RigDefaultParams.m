@@ -28,6 +28,9 @@ handles.OdorSequence.Enable = 'off';
 handles.OpenLoopSettings.Value = 1; % normal close loop mode
 handles.TuningCurves.String = '<html>Tuning<br />Curves</html>';
 
+% PCO camera trigger
+handles.PCO = 0;
+
 % start by default in normal close loop mode
 handles.OpenLoopSettings.Value = 1;
 handles.ReplayState.String = 'Close loop';
@@ -165,5 +168,8 @@ switch char(handles.computername)
         % Photometry 
         handles.Photometry.Value = 0;
         handles.PhotometryParams.Data = [5000 211 531 0.6 0.6];
+        
+        % PCO
+        handles.PCO = 1;
 end
 end
