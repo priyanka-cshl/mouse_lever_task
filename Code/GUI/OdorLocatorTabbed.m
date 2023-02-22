@@ -116,6 +116,8 @@ handles.startAcquisition.Enable = 'off';
 %handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
 handles.computername = getenv('COMPUTERNAME');
 handles.useserver = 1;
+handles.PCO = 0;
+
 [handles] = RigDefaultParams(handles);
 
 % load mouse specific settings

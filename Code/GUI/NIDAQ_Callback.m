@@ -100,7 +100,7 @@ for i = 1:h.NIchannels
         case {h.Channels.camerasync_channel + 1}
             % don't gate the second camera sync channel - hacking it to get
             % frame triggers from PCO
-            if ~handles.PCO
+            if ~h.PCO
                 samples_new = h.trigger_ext_camera.Value * samples_new;
             end
     end
