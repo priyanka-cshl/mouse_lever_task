@@ -108,6 +108,12 @@ for i = 1:h.NIchannels
     TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];
 end
 
+if ~h.triggersent
+    if TotalTime(end)>=1
+        PCOTrigger_Callback(h);
+        h.triggersent = true;
+    end
+end
 %% detect significant events - trial transitions and rewards
 if TotalTime(end)>=2
     %% REWARDS
