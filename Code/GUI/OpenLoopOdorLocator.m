@@ -55,6 +55,7 @@ handles.startAcquisition.Enable = 'off';
 % rig specific settings
 handles.computername = getenv('COMPUTERNAME');
 [handles] = OpenLoopDefaults(handles);
+handles.triggersent = false;
 
 % clear indicators
 handles.current_trial_block.Data(1:7,1) = zeros(7,1);
@@ -242,6 +243,8 @@ if get(handles.startAcquisition,'value')
         usrans = menu('warning -- last file did not save','quit','continue');
     end
     
+    handles.triggersent = false;
+    
     if (handles.was_last_file_saved == 1)||(usrans ~= 1)
         handles.was_last_file_saved = 0;
         if ~exist('C:\temp_data_files\','dir')
@@ -413,6 +416,10 @@ if get(handles.startAcquisition,'value')
         guidata(hObject,handles);
     end
 else
+    
+   % stop the recording trigger
+   handles.Arduino.write(40,'uint16');
+   
    if handles.Photometry.Value
        handles.PhotometrySession.stop;
        release(handles.PhotometrySession);

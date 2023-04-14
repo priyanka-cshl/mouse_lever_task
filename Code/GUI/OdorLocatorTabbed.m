@@ -117,6 +117,7 @@ handles.startAcquisition.Enable = 'off';
 handles.computername = getenv('COMPUTERNAME');
 handles.useserver = 1;
 handles.PCO = 0;
+handles.triggersent = false;
 
 [handles] = RigDefaultParams(handles);
 
@@ -382,6 +383,8 @@ if get(handles.startAcquisition,'value')
         usrans = menu('warning -- last file did not save','quit','continue');
     end
     
+    handles.triggersent = false;
+
     if (handles.was_last_file_saved == 1)||(usrans ~= 1)
         handles.was_last_file_saved = 0;
         if ~exist('C:\temp_data_files\','dir')
@@ -583,6 +586,10 @@ else
        handles.PhotometrySession.stop;
        release(handles.PhotometrySession);
    end
+   
+   % stop the recording trigger
+   handles.Arduino.write(40,'uint16');
+   
    handles.NI.stop;
    release(handles.NI);
    fclose('all');
