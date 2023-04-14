@@ -47,13 +47,23 @@ for i = 1:h.NIchannels
             if h.fliphome
                 samples_new = 1 - samples_new;
             end
-        case {h.Channels.camerasync_channel,h.Channels.camerasync_channel + 1}
-            %samples_new = h.trigger_ext_camera.Value * samples_new;
-            samples_new = 1 * samples_new;
+        case {h.Channels.camerasync_channel}
+            samples_new = h.trigger_ext_camera.Value * samples_new;
+        case {h.Channels.camerasync_channel + 1}
+            if ~h.PCO
+                samples_new = h.trigger_ext_camera.Value * samples_new;
+            end
     end
     TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];
 end
-             
+
+if ~h.triggersent
+    if TotalTime(end)>=1
+        PCOTrigger_Callback(h);
+        h.triggersent = true;
+    end
+end
+
 if TotalTime(end)>2 
     
     % register if the trial was turned ON or OFF
