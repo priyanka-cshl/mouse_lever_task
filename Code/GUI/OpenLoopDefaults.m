@@ -19,6 +19,9 @@ handles.openloop = 1; % Run in open-loop mode
 handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
 handles.SessionSettings.Data = [5 90 10]'; % #repeats, max location, location step
 
+% PCO camera trigger
+handles.PCO = 0;
+
 % Transfer function
 handles.TFtype.Value = 1; % 1 = fix speed, 0 = fixed start
 handles.TFtype.Enable = 'off';
@@ -95,6 +98,9 @@ switch char(handles.computername)
         % Photometry 
         handles.Photometry.Value = 0;
         handles.PhotometryParams.Data = [5000 211 531 0.6 0.6];
+        
+        % PCO
+        handles.PCO = 1;
         
     case {'PRIYANKA-HP'}
         handles.useserver = 1; % change to zero if there's a network issue

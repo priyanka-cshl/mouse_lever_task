@@ -171,5 +171,6 @@ switch char(handles.computername)
         
         % PCO
         handles.PCO = 1;
+        handles.StartDelay.Data(1) = 1;
 end
 end
