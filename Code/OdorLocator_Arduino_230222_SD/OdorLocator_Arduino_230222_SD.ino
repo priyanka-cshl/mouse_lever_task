@@ -403,7 +403,7 @@ void loop()
             trial_timestamp = micros() - (1000 * trial_trigger_timing[1]); // reset trial timestamp to give extra time for the trial
           }
         }
-        
+
       }
 
       if ((micros() - reward_zone_timestamp) > 1000 * reward_params[0])
@@ -843,7 +843,7 @@ void loop()
             timer_override = true;
             camera_on = 0;
             camera = 0;
-            digitalWrite(recording_trigger, HIGH); // send sync signal to PCO camera to start acquiring
+            digitalWrite(recording_trigger, LOW); // send sync signal to PCO camera to start acquiring
             break;
           case 2: // Acquisition stop handshake
             mySDFile.close(); // close open loop file on SD card
@@ -995,7 +995,18 @@ void loop()
         myUSB.writeUint16(83);
         transfer_function_pointer = 0;
         break;
-      case 40: // toggle MFCs or odor valves
+//      case 40: // toggle MFCs or odor valves
+//        break;
+      case 40: // send recording trigger
+        switch (FSMheader - 40)
+        {
+          case 0:
+            digitalWrite(recording_trigger, LOW); // send sync signal to PCO camera to start acquiring
+            break;
+          case 1:
+            digitalWrite(recording_trigger, HIGH); // send sync signal to PCO camera to start acquiring
+            break;
+        }
         break;
       case 50: // open odor vials
         if (FSMheader > 55)
@@ -1133,7 +1144,7 @@ void UpdateAllParams()
   // target zone limits - in terms of motor location
   rewarded_locations[0] = param_array[21] - param_array[20];
   rewarded_locations[1] = param_array[21] + param_array[20];
-  
+
   normal_iti = param_array[23];
   long_iti = param_array[23];
   flip_lever_trial = (param_array[24] == 4);
