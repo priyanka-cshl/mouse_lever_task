@@ -84,31 +84,37 @@ switch char(handles.computername)
     
     case {'PRIYANKA-HP'} % Rig1
         
-        handles.useserver = 1; % change to zero if there's a network issue
+        handles.useserver = 0; % change to zero if there's a network issue
+        handles.UseBonsai = 0;
         
         % sensors and scaling
-        handles.DAC_settings.Data = [2.0 2.5]'; % Lever scaling
+        handles.DAC_settings.Data = [2.0 2.05]'; %[2.08 2.1]';
         
         % Plots
-        handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.2 NaN NaN]; % gains
-        handles.PlotSettings.Data(:,2) = [NaN 0 6.0 6 5 NaN NaN]; % offsets
-        handles.PlotToggles.Data(:,1) = logical([0 1 1 1 1 1 1]);
+        handles.PlotSettings.Data(:,1) = [NaN 1 0.5 1 0.1 NaN NaN]; % gains
+        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 6 7.0 NaN NaN]; % gains
+        handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
         
         % Rewards
-        handles.watercoeffs = [0.001738 0.04964 1.275]; % water per drop [0.0006286 0.09254 0.918];
-        handles.RewardControls.Data = [35 5 50 100 100]'; % reward: time-I, time-II, IRI, hold-II, trial-off-lag
+        handles.watercoeffs = [0.0006071 0.0747 0.6009]; %[0.001357 0.08917 0.4286]; % water per drop
+        handles.RewardControls.Data = [35 5 50 100 200]'; % reward: time-I, time-II, IRI, hold-II, trial-off-lag
         handles.MultiRewards.Value = 1;
         
         % HomeSensor type
-        handles.fliphome = 0;
+        handles.fliphome = 1;
         
         % visual trials
-        handles.VisualAirTrials.Value = 0;
-        handles.VisualOnlyTrials.Value = 0;
+        handles.VisualVersion.Value = 0;
+        handles.VisualAirTrials.Visible = 'off';
+        handles.VisualOnlyTrials.Visible = 'off';
         
         % Photometry 
         handles.Photometry.Value = 0;
         handles.PhotometryParams.Data = [5000 211 531 0.6 0.6];
+        
+        % PCO
+        handles.PCO = 1;
+        handles.StartDelay.Data(1) = 1;
         
     case {'JUSTINE'} % Rig2
         

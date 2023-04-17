@@ -8,7 +8,7 @@
 #include "sequencetrialstates.h"
 #include <SD.h> // for open loop
 // ----------------------------------------------------------------------------
-
+//
 // set up variables using the SD utility library functions:
 const int SDSelect = 53; // SS pin for the SD card
 File mySDFile;
@@ -42,10 +42,10 @@ bool motor_pin_state = false;
 int dac_spi_pin = 22;
 const byte SDA_pin = 20;
 const byte SCL_pin = 21;
-int motor1_i2c_address = 7; //0x13;
+int motor1_i2c_address = 7;
 
 //variables : lever related
-long lever_position = 0L;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+long lever_position = 0L;
 long lever_rescaled = 0L;
 long lever_rescale_params[] = {25000, 13380}; // {gain, offset}
 //int target_params[] = {30000, 25000, 20000}; // {upper bound, target, lower bound}
@@ -245,7 +245,7 @@ void setup()
   // first call to set up params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
   trialstates.UpdateITI(normal_iti);
-  openlooptrialstates.UpdateOpenLoopTrialParams(PID_trial_timing); // 13.02.18
+  openlooptrialstates.UpdateOpenLoopTrialParams(PassiveTuning_trial_timing); // 13.02.18
 }
 
 
@@ -612,7 +612,7 @@ void loop()
     }
 
     // extra step needed to turn off purging in case of long ITI
-    if (trialstate[1] == 5 && trialstate[0] == 5 && odor_valve_state && close_loop_mode && (micros() - trial_timestamp) > 1000 * normal_iti)
+    if (trialstate[1] == 5 && trialstate[0] == 5 && odor_valve_state && (micros() - trial_timestamp) > 1000 * normal_iti)
     {
       //odor_valve_state = true;
       air_valve_state = false;
@@ -625,7 +625,7 @@ void loop()
     }
 
     if (trialstate[1] == 4 && feedback_halt == 0 && feedback_pause_trial == 1 && lever_position < feedback_halt_lever_position)
-    { 
+    {
       feedback_halt = 1;
       feedback_halt_timestamp = micros();
     }
@@ -637,7 +637,7 @@ void loop()
       feedback_halt_timestamp = micros();
     }
 
-  }  
+  }
 
   if (session_mode == 2)
   {
@@ -794,7 +794,7 @@ void loop()
       digitalWrite(reward_reporter_pin, replay_reward_valve_state[1]);
       replay_reward_valve_state[0] = replay_reward_valve_state[1];
     }
-    // air 
+    // air
     if (replay_air_valve_state[1] != replay_air_valve_state[0])
     {
       digitalWrite(air_valve, replay_air_valve_state[1]);
@@ -805,12 +805,12 @@ void loop()
     {
       for (i = 1; i < 5; i++)
       {
-        digitalWrite(odor_valves_3way[i-1], (i == replay_odor_valve_state[1]));
+        digitalWrite(odor_valves_3way[i - 1], (i == replay_odor_valve_state[1]));
       }
       replay_odor_valve_state[0] = replay_odor_valve_state[1];
     }
   }
-  
+
   //----------------------------------------------------------------------------
   // 8) Serial handshakes to check for parameter updates etc
   //----------------------------------------------------------------------------
@@ -881,7 +881,7 @@ void loop()
             camera_on = 1;
             Timer5.stop();
             break;
-          case 5: // passive tuning start
+          case 5: // open loop start
             // check if a file can be opened on the SD card
             mySDFile = SD.open("openloop.txt", FILE_READ);
             if (mySDFile)
@@ -905,7 +905,7 @@ void loop()
             camera_on = 0;
             camera = 0;
             break;
-          case 6: // passive tuning stop
+          case 6: // open loop stop
             mySDFile.close(); // close open loop file on SD card
             myUSB.writeUint16(9);
             session_mode = -1;
@@ -1047,8 +1047,8 @@ void loop()
           case 2: // move to specific location
             my_location = myUSB.readUint16(); // location to move to
             // for visual stimulus latency
-            motor_pin_state = !motor_pin_state;
-            digitalWrite(motor_pin,my_location==121);
+//            motor_pin_state = !motor_pin_state;
+//            digitalWrite(motor_pin,my_location==121);
             I2Cwriter(motor1_i2c_address, my_location + 10); // home request
             break;
         }
@@ -1089,7 +1089,7 @@ void loop()
           case 5: // PID_reward
             digitalWrite(reward_valve_pin, HIGH);
             digitalWrite(reward_reporter_pin, HIGH);
-            delay(PID_param_array[10]);
+            delay(PassiveTuning_param_array[10]);
             digitalWrite(reward_valve_pin, LOW);
             digitalWrite(reward_reporter_pin, LOW);
             break;
@@ -1253,7 +1253,7 @@ void UpdateAllParams()
 
     }
   }
-  
+
   // update trial state params
   trialstates.UpdateTrialParams(trial_trigger_level, trial_trigger_timing);
 }
