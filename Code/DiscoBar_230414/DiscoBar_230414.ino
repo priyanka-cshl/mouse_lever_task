@@ -1353,7 +1353,8 @@ void MoveMotor()
     }
     else
     {
-      I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
+      //I2Cwriter(motor1_i2c_address, 10 + stimulus_state[1]);
+      I2Cwriter(motor1_i2c_address, ((which_odor!=0)*(10 + stimulus_state[1]) +  !air_valve_state) ); // for the visual version
       if (replay_flag == 2)
       {
         // write to SD file
