@@ -556,7 +556,7 @@ void loop()
             send_odor_to_manifold();
             break;
           case 1:
-            UpdateTF();
+            //UpdateTF();
             break;
           case 2:
             // reset long ITI
@@ -984,10 +984,10 @@ void loop()
             num_of_locations = myUSB.readUint16(); // get number of params to be updated
             min_time_since_last_motor_call = min_time_since_last_motor_call_default;
             session_mode = 1;
-            if (session_just_started)
-            {
+//            if (session_just_started)
+//            {
               UpdateTF();
-            }
+//            }
             break;
           case 1: // open loop
             num_of_locations = myUSB.readUint16();

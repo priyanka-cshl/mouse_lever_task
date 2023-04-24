@@ -139,6 +139,16 @@ end
 if ~exist(fullfile(foldername_local,animal_name),'dir')
     mkdir(fullfile(foldername_local,animal_name));
     disp('making local data directory');
+    if handles.UseBonsai
+        switch char(handles.computername)
+        case {'PRIYANKA-HP'}
+            mkdir(fullfile('C:\Users\pgupta\Desktop\MouseImages',animal_name));
+            copyfile('C:\Users\pgupta\Desktop\MouseImages\test\test_camA.png',...
+                fullfile('C:\Users\pgupta\Desktop\MouseImages',animal_name,[animal_name,'_camA.png']));
+            copyfile('C:\Users\pgupta\Desktop\MouseImages\test\test_camB.png',...
+                fullfile('C:\Users\pgupta\Desktop\MouseImages',animal_name,[animal_name,'_camB.png']));
+        end
+    end
 end
 
 
@@ -146,10 +156,19 @@ end
 [handles] = MouseDefaults(handles);
 
 if handles.UseBonsai
-    mybonsaiscript = ['C:\Users\Rig\Desktop\Code\mouse_lever_task\Code\Bonsai\MousePositioner_',animal_name, '_licks.bonsai'];
-    if exist(mybonsaiscript,'file')
-        mycommand = ['C:\Users\Rig\AppData\Local\Bonsai\Bonsai.EXE ',mybonsaiscript,' --start &'];
-        system(mycommand);
+    switch char(handles.computername)
+        case {'PRIYANKA-HP'}
+            bonsaipath = 'C:\Users\pgupta\AppData\Local\Bonsai\Bonsai.EXE';
+            mybonsaiscript = 'C:\Users\pgupta\Desktop\Git_Local\mouse_lever_task\Code\Bonsai_DiscoBar\MousePositioner_DiscoBar.bonsai';
+            imagepath = ['"',fullfile('C:\Users\pgupta\Desktop\MouseImages',animal_name),'"'];
+            mycommand = [bonsaipath,' ',mybonsaiscript,' -p:InputPath=',imagepath,' --start &'];
+            system(mycommand);
+        otherwise
+            mybonsaiscript = ['C:\Users\Rig\Desktop\Code\mouse_lever_task\Code\Bonsai\MousePositioner_',animal_name, '_licks.bonsai'];
+            if exist(mybonsaiscript,'file')
+                mycommand = ['C:\Users\Rig\AppData\Local\Bonsai\Bonsai.EXE ',mybonsaiscript,' --start &'];
+                system(mycommand);
+            end
     end
 end
 % update targets accordingly

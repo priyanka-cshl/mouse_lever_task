@@ -84,8 +84,8 @@ switch char(handles.computername)
     
     case {'PRIYANKA-HP'} % Rig1
         
-        handles.useserver = 0; % change to zero if there's a network issue
-        handles.UseBonsai = 0;
+        handles.useserver = 1; % change to zero if there's a network issue
+        handles.UseBonsai = 1;
         
         % sensors and scaling
         handles.DAC_settings.Data = [2.0 2.05]'; %[2.08 2.1]';
