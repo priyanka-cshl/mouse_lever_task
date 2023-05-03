@@ -93,7 +93,7 @@ switch char(handles.computername)
         % Plots
         handles.PlotSettings.Data(:,1) = [NaN 1 0.5 1 0.1 NaN NaN]; % gains
         handles.PlotSettings.Data(:,2) = [NaN 0 6.5 6 7.0 NaN NaN]; % gains
-        handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
+        handles.PlotToggles.Data(:,1) = logical([0 1 0 0 1 1 0]);
         
         % Rewards
         handles.watercoeffs = [0.0006071 0.0747 0.6009]; %[0.001357 0.08917 0.4286]; % water per drop

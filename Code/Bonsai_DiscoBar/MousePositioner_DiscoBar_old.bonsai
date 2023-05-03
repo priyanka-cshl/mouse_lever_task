@@ -191,7 +191,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p2:LoadImage">
-                <p2:FileName>C:\Users\pgupta\Desktop\MouseImages\AC3\AC3_camB.png</p2:FileName>
+                <p2:FileName>C:\Users\pgupta\Desktop\MouseImages\AC1\AC1_camB.png</p2:FileName>
                 <p2:Mode>Grayscale</p2:Mode>
               </Combinator>
             </Expression>
@@ -312,7 +312,7 @@
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="p4:KeyDown">
-          <p4:Filter>S</p4:Filter>
+          <p4:Filter>LButton RButton Cancel MButton XButton1 XButton2 A B C D E F G Control</p4:Filter>
         </Combinator>
       </Expression>
       <Expression xsi:type="Equal">
@@ -544,7 +544,7 @@
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="StringProperty">
-          <Value>C:\Users\pgupta\Desktop\MouseImages\AC3</Value>
+          <Value>C:\Users\pgupta\Desktop\MouseImages\AC1</Value>
         </Combinator>
       </Expression>
       <Expression xsi:type="p7:PythonTransform">
@@ -576,6 +576,11 @@ def process(value):
       <Expression xsi:type="rx:ReplaySubject">
         <Name>VideoPath</Name>
         <rx:BufferSize xsi:nil="true" />
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="p4:KeyUp">
+          <p4:Filter>None</p4:Filter>
+        </Combinator>
       </Expression>
     </Nodes>
     <Edges>

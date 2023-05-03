@@ -298,7 +298,7 @@ handles.camera_available = 0;
 if ~isempty(webcamlist)
     
     switch char(handles.computername)
-       case {'JUSTINE','BALTHAZAR','PRIYANKA-HP'}
+       case {'JUSTINE','BALTHAZAR'} %,'PRIYANKA-HP'}
             handles.mycam = webcam(1);% {'logitech'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
             handles.camera_available = 1;
@@ -315,13 +315,14 @@ if ~isempty(webcamlist)
             handles.focus_value.Data = handles.mycam.Focus;
             handles.mycam.Zoom = 175;
             
-%        case {'PRIYANKA-HP'}
-%             handles.mycam = webcam(1);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
-%             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
-%             handles.camera_available = 1;
-%             handles.focus_mode.Enable = 'off';
-%             handles.exposure_mode.Enable = 'off';
-%             handles.exposure_value.Enable = 'off';
+       case {'PRIYANKA-HP'}
+            handles.mycam = webcam(1);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
+            handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
+            handles.camera_available = 1;
+            handles.focus_mode.Enable = 'off';
+            handles.exposure_mode.Enable = 'off';
+            handles.exposure_value.Enable = 'off';
+            
         case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
             handles.mycam = webcam(2);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};

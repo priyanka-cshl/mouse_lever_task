@@ -7,8 +7,8 @@ for i = 1:4 % three odors
     f = find(trial_in(:,1)==i);
     data_in = zeros(length(trial_in),1);
     data_in(f,1) = 1;
-    on_indices = timestamp_in( find(diff([0; data_in])==1) +1 +1 );
-    off_indices = timestamp_in( find(diff([data_in; 0])==-1) +1 -1);
+    on_indices = timestamp_in( find(diff([0; data_in])==1) );
+    off_indices = timestamp_in( find(diff([data_in; 0])==-1) );
     while numel(off_indices)>numel(on_indices)
         %on_indices = [1; on_indices];
         off_indices(1,:) = [];
