@@ -116,6 +116,9 @@ handles.startAcquisition.Enable = 'off';
 %handles.computername = textread(fullfile(fileparts(mfilename('fullpath')),'hostname.txt'),'%s');
 handles.computername = getenv('COMPUTERNAME');
 handles.useserver = 1;
+handles.PCO = 0;
+handles.triggersent = false;
+
 [handles] = RigDefaultParams(handles);
 
 % load mouse specific settings
@@ -136,6 +139,16 @@ end
 if ~exist(fullfile(foldername_local,animal_name),'dir')
     mkdir(fullfile(foldername_local,animal_name));
     disp('making local data directory');
+    if handles.UseBonsai
+        switch char(handles.computername)
+        case {'PRIYANKA-HP'}
+            mkdir(fullfile('C:\Users\pgupta\Desktop\MouseImages',animal_name));
+            copyfile('C:\Users\pgupta\Desktop\MouseImages\test\test_camA.png',...
+                fullfile('C:\Users\pgupta\Desktop\MouseImages',animal_name,[animal_name,'_camA.png']));
+            copyfile('C:\Users\pgupta\Desktop\MouseImages\test\test_camB.png',...
+                fullfile('C:\Users\pgupta\Desktop\MouseImages',animal_name,[animal_name,'_camB.png']));
+        end
+    end
 end
 
 
@@ -143,10 +156,19 @@ end
 [handles] = MouseDefaults(handles);
 
 if handles.UseBonsai
-    mybonsaiscript = ['C:\Users\Rig\Desktop\Code\mouse_lever_task\Code\Bonsai\MousePositioner_',animal_name, '_licks.bonsai'];
-    if exist(mybonsaiscript,'file')
-        mycommand = ['C:\Users\Rig\AppData\Local\Bonsai\Bonsai.EXE ',mybonsaiscript,' --start &'];
-        system(mycommand);
+    switch char(handles.computername)
+        case {'PRIYANKA-HP'}
+            bonsaipath = 'C:\Users\pgupta\AppData\Local\Bonsai\Bonsai.EXE';
+            mybonsaiscript = 'C:\Users\pgupta\Desktop\Git_Local\mouse_lever_task\Code\Bonsai_DiscoBar\MousePositioner_DiscoBar.bonsai';
+            imagepath = ['"',fullfile('C:\Users\pgupta\Desktop\MouseImages',animal_name),'"'];
+            mycommand = [bonsaipath,' ',mybonsaiscript,' -p:InputPath=',imagepath,' --start &'];
+            system(mycommand);
+        otherwise
+            mybonsaiscript = ['C:\Users\Rig\Desktop\Code\mouse_lever_task\Code\Bonsai\MousePositioner_',animal_name, '_licks.bonsai'];
+            if exist(mybonsaiscript,'file')
+                mycommand = ['C:\Users\Rig\AppData\Local\Bonsai\Bonsai.EXE ',mybonsaiscript,' --start &'];
+                system(mycommand);
+            end
     end
 end
 % update targets accordingly
@@ -276,7 +298,7 @@ handles.camera_available = 0;
 if ~isempty(webcamlist)
     
     switch char(handles.computername)
-       case {'JUSTINE','BALTHAZAR'}
+       case {'JUSTINE','BALTHAZAR'} %,'PRIYANKA-HP'}
             handles.mycam = webcam(1);% {'logitech'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
             handles.camera_available = 1;
@@ -285,11 +307,14 @@ if ~isempty(webcamlist)
             handles.exposure_value.Enable = 'on';
             handles.camera_available = 1;
             handles.focus_mode.Value = 2;
-            handles.mycam.ExposureMode = 'auto';
-            handles.exposure_mode.Value = 1;                                                                      
-            handles.mycam.Focus = 250;
+            handles.mycam.ExposureMode = 'manual';
+            handles.mycam.Exposure = -8;
+            handles.exposure_mode.Value = 2;                                                                      
+            handles.mycam.Focus = 180;
             handles.exposure_value.Data = handles.mycam.Exposure;
+            handles.focus_value.Data = handles.mycam.Focus;
             handles.mycam.Zoom = 175;
+            
        case {'PRIYANKA-HP'}
             handles.mycam = webcam(1);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
@@ -297,6 +322,7 @@ if ~isempty(webcamlist)
             handles.focus_mode.Enable = 'off';
             handles.exposure_mode.Enable = 'off';
             handles.exposure_value.Enable = 'off';
+            
         case {'PRIYANKA-PC','DESKTOP-05QAM9D'}
             handles.mycam = webcam(2);% {'USB}2.0 PC CAMERA', 'USB Video Device'}
             handles.mycam.Resolution = handles.mycam.AvailableResolutions{1};
@@ -367,7 +393,9 @@ global samplenum;
 global TargetLevel;
 global IsRewardedTrial;
 global TrialsToPerturb;
+global RecordStretch;
 global TimeSinceOL;
+global sessionStart;
 
 if get(handles.startAcquisition,'value')    
     % checks whether last file was saved and enable quiting if not
@@ -375,6 +403,8 @@ if get(handles.startAcquisition,'value')
         usrans = menu('warning -- last file did not save','quit','continue');
     end
     
+    handles.triggersent = false;
+
     if (handles.was_last_file_saved == 1)||(usrans ~= 1)
         handles.was_last_file_saved = 0;
         if ~exist('C:\temp_data_files\','dir')
@@ -406,7 +436,7 @@ if get(handles.startAcquisition,'value')
         % set up perturbation trial order
         if handles.PerturbationSettings.Data(1)
             TrialsToPerturb = zeros(1,ceil(1/handles.PerturbationSettings.Data(1)));
-            TrialsToPerturb(1) = 1;
+            %TrialsToPerturb(1) = 1;
         end
         
         set(handles.startAcquisition,'String','Running');
@@ -442,6 +472,9 @@ if get(handles.startAcquisition,'value')
         handles.OpenLoopProgress.Data(:,1) = [NaN 0 0 0]';
         handles.OpenLoopProgress.Data(:,2) = [0 0 0 0];
         %OpenLoopSettings_Callback(hObject, eventdata, handles);
+        RecordStretch = [];
+        handles.MyReplaySettings.Data = [0 0 0]';
+        handles.replayflag.Value = 0;
         
         % clear plots
         handles.trial_on.Vertices = [];
@@ -541,6 +574,10 @@ if get(handles.startAcquisition,'value')
         handles.axes9.Position(4) = Height;
         handles.axes4.Position(2) = Y_position;
         handles.axes4.Position(4) = Height;
+        
+        sessionStart = tic;
+        handles.PauseSession.Value = 1;
+        
         NextTrial_Callback(handles);
         
         % update pointer to match motor location
@@ -569,6 +606,10 @@ else
        handles.PhotometrySession.stop;
        release(handles.PhotometrySession);
    end
+   
+   % stop the recording trigger
+   handles.Arduino.write(40,'uint16');
+   
    handles.NI.stop;
    release(handles.NI);
    fclose('all');
@@ -1113,7 +1154,7 @@ else
     
     % turn on all the odor vials, and shut off airflow to manifold
     handles.Odor_list.Value = [2 3 4];
-    handles.odor_vial.Value = 0;
+    handles.odor_vial.Value = 1;
     handles.odor_to_manifold.Value = 0;
     handles.air_to_manifold.Value = 0;
     guidata(hObject,handles);
@@ -1187,6 +1228,9 @@ handles.mycam.Exposure = hObject.Data;
 
 % --- Executes on button press in close_gui.
 function close_gui_Callback(hObject, eventdata, handles)
+if handles.UseBonsai
+    [~,~] = system('Taskkill/IM cmd.exe'); % to close bonsai
+end
 % close valves and MFCs
 if ~isempty(handles.MFC)
     outputSingleScan(handles.MFC,0*handles.MFC_table.Data');
@@ -1310,7 +1354,7 @@ function PerturbationSettings_CellEditCallback(hObject, eventdata, handles)
 global TrialsToPerturb;
 if handles.PerturbationSettings.Data(1) > 0
     TrialsToPerturb = zeros(1,ceil(1/handles.PerturbationSettings.Data(1)));
-    TrialsToPerturb(1) = 1;
+    %TrialsToPerturb(1) = 1;
 end
 
 % --- Executes on button press in PseudoRandomZones.
@@ -1567,13 +1611,15 @@ function TuningCurves_Callback(hObject, eventdata, handles)
 AnimalName = char(handles.file_names.Data(1));
 %PassiveReplay = strcmp(handles.ReplayState.String,'Passive replay Recorded');
 PassiveReplay = handles.PassiveRecorded.Value;
+templatesdone = handles.MyReplaySettings.Data(3);
 % Save the current session
 if ~handles.was_last_file_saved
     SaveFile_Callback(hObject, eventdata, handles);
 end
+handles.UseBonsai = 0; % don't close the bonsai routine
 close_gui_Callback(hObject, eventdata, handles);
 delete (handles.mycam);
-OpenLoopOdorLocator(AnimalName, PassiveReplay);
+OpenLoopOdorLocator(AnimalName, PassiveReplay, templatesdone);
 
 
 % --- Executes when entered data in editable cell(s) in RollRateLims.
@@ -1603,3 +1649,12 @@ if get(hObject,'Value') == 14
     handles.adaptive_holds.Value = 0;
     handles.TargetHold.Data = [300 400 500]';
 end
+
+
+% --- Executes on button press in replayflag.
+function replayflag_Callback(hObject, eventdata, handles)
+% hObject    handle to replayflag (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of replayflag

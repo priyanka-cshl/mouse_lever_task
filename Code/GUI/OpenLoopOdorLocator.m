@@ -23,7 +23,7 @@ function varargout = OpenLoopOdorLocator(varargin)
 
 % Edit the above text to modify the response to help OpenLoopOdorLocator
 
-% Last Modified by GUIDE v2.5 05-May-2021 10:25:15
+% Last Modified by GUIDE v2.5 25-May-2022 09:30:12
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,6 +55,7 @@ handles.startAcquisition.Enable = 'off';
 % rig specific settings
 handles.computername = getenv('COMPUTERNAME');
 [handles] = OpenLoopDefaults(handles);
+handles.triggersent = false;
 
 % clear indicators
 handles.current_trial_block.Data(1:7,1) = zeros(7,1);
@@ -64,7 +65,21 @@ handles.StopTime.Visible = 'off';
 
 % load mouse specific settings
 handles.file_names.Data(1) = {varargin{1}}; %#ok<CCAT1>
-handles.PassiveReplay.Value = varargin{2};
+handles.PassiveReplay.Value = 0;
+handles.HaltReplay.Value = 0;
+handles.NumTemplates.Data = 0;
+if size(varargin,2)>1
+    switch varargin{2}
+        case 1
+            handles.PassiveReplay.Value = 1;
+        case 2
+            handles.HaltReplay.Value = 1;
+    end
+end
+if size(varargin,2)==3
+    handles.NumTemplates.Data = varargin{3};
+end
+
 % create the data directories if they don't already exist
 animal_name = char(handles.file_names.Data(1));
 foldername_local = char(handles.file_names.Data(2));
@@ -228,6 +243,8 @@ if get(handles.startAcquisition,'value')
         usrans = menu('warning -- last file did not save','quit','continue');
     end
     
+    handles.triggersent = false;
+    
     if (handles.was_last_file_saved == 1)||(usrans ~= 1)
         handles.was_last_file_saved = 0;
         if ~exist('C:\temp_data_files\','dir')
@@ -237,13 +254,16 @@ if get(handles.startAcquisition,'value')
         fid2 = fopen('C:\temp_data_files\settings_log.bin','w');
         
         % set up trial sequence
-        if ~handles.DoSequence.Value
+        handles.current_trial_block.Data(2) = 0;
+        if ~handles.DoSequence.Value % passive tuning
             [handles] = SetUpOpenLoopTrials(handles);
         else
             [handles] = SetUpSequenceTrials(handles);
         end
         %guidata(hObject,handles);
         mysettings.TrialSequence = handles.TrialSequence;
+        mysettings.LocationSequence = handles.LocationSequence;
+        
         % main settings - only change in the beginning of each session
         if ~handles.DoSequence.Value
             [mysettings.legends, mysettings.params] = OpenLoop_Settings(handles);
@@ -396,6 +416,10 @@ if get(handles.startAcquisition,'value')
         guidata(hObject,handles);
     end
 else
+    
+   % stop the recording trigger
+   handles.Arduino.write(40,'uint16');
+   
    if handles.Photometry.Value
        handles.PhotometrySession.stop;
        release(handles.PhotometrySession);
@@ -427,6 +451,9 @@ else
    elseif handles.Arduino.read(handles.Arduino.Port.BytesAvailable/2, 'uint16')==9
        disp('arduino: Motor Timer Stopped');
    end
+   
+   handles.CleaningRoutine.Value = 1;
+   handles.CleaningRoutine.Enable = 'on';
 
 end
 
@@ -502,6 +529,7 @@ if usrans == 1
     session_data.trace = a(2:handles.NIchannels+1,:)';
     session_data.trace_legend = Connections_list();
     session_data.odor_buildup = handles.odor_build_up.Data;
+    session_data.locations = handles.LocationSequence;
     
 %     session_data.params = b';
 %     session_data.TF = c';
@@ -965,3 +993,12 @@ function DoSequence_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of DoSequence
+
+
+% --- Executes on button press in HaltReplay.
+function HaltReplay_Callback(hObject, eventdata, handles)
+% hObject    handle to HaltReplay (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of HaltReplay

@@ -23,7 +23,7 @@ trial_just_ended = 0;
 TotalTime = [ TotalTime(num_new_samples+1:end); event.TimeStamps ];
 
 % multiply trial_channel by odor value
-if h.current_trial_block.Data(6)
+if h.current_trial_block.Data(6)>0
     odorID = h.current_trial_block.Data(6);
 else
     odorID = 4;
@@ -47,13 +47,23 @@ for i = 1:h.NIchannels
             if h.fliphome
                 samples_new = 1 - samples_new;
             end
-        case {h.Channels.camerasync_channel,h.Channels.camerasync_channel + 1}
-            %samples_new = h.trigger_ext_camera.Value * samples_new;
-            samples_new = 1 * samples_new;
+        case {h.Channels.camerasync_channel}
+            samples_new = h.trigger_ext_camera.Value * samples_new;
+        case {h.Channels.camerasync_channel + 1}
+            if ~h.PCO
+                samples_new = h.trigger_ext_camera.Value * samples_new;
+            end
     end
     TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];
 end
-             
+
+if ~h.triggersent
+    if TotalTime(end)>=1
+        PCOTrigger_Callback(h);
+        h.triggersent = true;
+    end
+end
+
 if TotalTime(end)>2 
     
     % register if the trial was turned ON or OFF
@@ -96,7 +106,7 @@ set(h.camerasync2_plot,'XData',TotalTime(indices_to_plot),'YData',...
     7.2 + 0.5*TotalData(indices_to_plot,h.Channels.camerasync_channel+1));
 
 % trial_on
-[h] = PlotToPatch_Trial(h, TotalData(:,h.Channels.trial_channel), TotalTime, [0 5]);
+[h] = PlotToPatch_Trial_GUI(h, TotalData(:,h.Channels.trial_channel), TotalTime, [0 5]);
 
 % odor valve ON
 [h.in_reward_zone_plot] = PlotToPatch(h.in_reward_zone_plot, TotalData(:,h.Channels.trial_channel+2), TotalTime, [-1 -0.2]);

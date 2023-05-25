@@ -11,6 +11,8 @@ persistent last_data_value; % event.Data(end,:) from last call
 global TargetLevel;
 global IsRewardedTrial;
 global TimeSinceOL;
+global RecordStretch;
+global sessionStart;
 
 fid1 = varargin{3}; % C:\temp_data_files\log.bin
 h = varargin{1}; % handles
@@ -93,13 +95,25 @@ for i = 1:h.NIchannels
             if h.fliphome
                 samples_new = 1 - samples_new;
             end
-        case {h.Channels.camerasync_channel,h.Channels.camerasync_channel + 1}
+        case {h.Channels.camerasync_channel}
             samples_new = h.trigger_ext_camera.Value * samples_new;
+        case {h.Channels.camerasync_channel + 1}
+            % don't gate the second camera sync channel - hacking it to get
+            % frame triggers from PCO
+            if ~h.PCO
+                samples_new = h.trigger_ext_camera.Value * samples_new;
+            end
     end
     
     TotalData(:,i) = [ TotalData(num_new_samples+1:end,i); samples_new ];
 end
 
+if ~h.triggersent
+    if TotalTime(end)>=1
+        PCOTrigger_Callback(h);
+        h.triggersent = true;
+    end
+end
 %% detect significant events - trial transitions and rewards
 if TotalTime(end)>=2
     %% REWARDS
@@ -215,6 +229,9 @@ if TotalTime(end)>=2
                     h.OpenLoopProgress.Data(2,1:2) = [1 0];
                     TimeSinceOL = tic;
                     
+                    % store which TF type and odor it is
+                    h.MyReplaySettings.Data(1:2,1) = [h.current_trial_block.Data(4), ...
+                                                h.TargetDefinition.Data(2)];
                 else % not the first trial
                     h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
                     h.OpenLoopProgress.Data(2,1) = h.OpenLoopProgress.Data(2,1) + 1;
@@ -222,6 +239,27 @@ if TotalTime(end)>=2
                     % check if time or trial criterion has passed already
                     if h.OpenLoopProgress.Data(2,1) >= h.OpenLoopParams.Data(1) % Trial Mode
                         h.OpenLoopSettings.Value = 1;
+                    end
+                end
+                
+            case {'Recording Halt Flip'}
+                
+                % if first trial start after open loop recording
+                % - Zero the time and trials elapsed
+                if isnan(h.OpenLoopProgress.Data(1,1))
+                    h.OpenLoopProgress.Data(1,1:2) = 0;
+                    h.OpenLoopProgress.Data(2,1:2) = [1 0];
+                    TimeSinceOL = tic;
+                    
+                else % not the first trial
+                    h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
+                    h.OpenLoopProgress.Data(2,1) = h.OpenLoopProgress.Data(2,1) + 1;
+                    
+                    if ~isempty(RecordStretch)
+                        % check if time or trial criterion has passed already
+                        if h.OpenLoopProgress.Data(2,1) >= (diff(RecordStretch)+1) % Trial Mode
+                            h.OpenLoopSettings.Value = 5;
+                        end
                     end
                 end
                 
@@ -241,9 +279,32 @@ if TotalTime(end)>=2
                     % check if time or trial criterion has passed already
                     if h.OpenLoopProgress.Data(1,1) >= h.OpenLoopParams.Data(2) 
                         h.OpenLoopSettings.Value = 3; % trigger replay
+                        if ~h.replayflag.Value
+                            h.replayflag.Value = 1;
+                        end
                     end
                     
                 end
+                
+            case {'Halt Flip Recorded'}
+                h.OpenLoopProgress.Data(1,1) = NaN;
+%                 if h.OpenLoopProgress.Data(1,2) == 0 % open loop recording has just finished
+%                     h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
+%                     h.OpenLoopProgress.Data(1:2,2) = h.OpenLoopProgress.Data(1:2,1);
+%                     h.OpenLoopProgress.Data(1:2,1) = [0 0]'; % reset for Recovery period
+%                     TimeSinceOL = tic; % reset clock
+%                     h.PassiveRecorded.Value = 1;
+%                 else
+%                     % update time and trials elapsed
+%                     h.OpenLoopProgress.Data(1,1) = toc(TimeSinceOL);
+%                     h.OpenLoopProgress.Data(2,1) = h.OpenLoopProgress.Data(2,1) + 1;
+%                     
+%                     % check if time or trial criterion has passed already
+%                     if h.OpenLoopProgress.Data(1,1) >= h.OpenLoopParams.Data(2) 
+%                         h.OpenLoopSettings.Value = 3; % trigger replay
+%                     end
+%                     
+%                 end
                 
             case {'Replaying Open Loop'}
                     % only one trial per replay
@@ -254,7 +315,12 @@ if TotalTime(end)>=2
         
         % increment 'trial number'
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1;
-        
+        if ~isempty(RecordStretch)
+            if (h.which_perturbation.Value == 10 || h.which_perturbation.Value == 6 || h.which_perturbation.Value == 7) ...
+                    && h.current_trial_block.Data(2) == RecordStretch(1)
+                h.OpenLoopSettings.Value = 4; % flag for halt flip recording
+            end
+        end
         % increment trials done in the progress report
         if h.current_trial_block.Data(3) ~= 1 % not a perturbed trial
             if h.which_perturbation.Value == 11 && mod(floor(h.current_trial_block.Data(2)/h.PerturbationSettings.Data(2)),2)
@@ -300,6 +366,9 @@ if TotalTime(end)>=2
                 h.OpenLoopSettings.Value = 3; % trigger replay again
                 if ~any(TotalData(end-num_new_samples:end,h.Channels.trial_channel)>0)
                     UpdateOpenLoop = 1;
+                    if ~h.replayflag.Value
+                        h.replayflag.Value = 1;
+                    end
                 end
             else
                 h.OpenLoopSettings.Value = 1;
@@ -319,9 +388,13 @@ if TotalTime(end)>=2
                 % force call arduino param update if in ITI mode
                 h.OpenLoopSettings.Value = 3; % trigger replay
                 UpdateOpenLoop = 1;
+                if ~h.replayflag.Value
+                    h.replayflag.Value = 1;
+                end
             end
         end
     end
+    
     
     %% LICKS
     %     if h.NIchannels >= h.Channels.lick_channel
@@ -367,7 +440,7 @@ set(h.camerasync2_plot,'XData',TotalTime(indices_to_plot),'YData',...
     7.2 + 0.5*TotalData(indices_to_plot,h.Channels.camerasync_channel+1));
 
 % trial_on
-[h] = PlotToPatch_Trial(h, TotalData(:,h.Channels.trial_channel), TotalTime, [0 5]);
+[h] = PlotToPatch_Trial_GUI(h, TotalData(:,h.Channels.trial_channel), TotalTime, [0 5]);
 [h.targetzone] = PlotToPatch_TargetZone(h.targetzone, TargetLevel, TotalTime);
 
 % in_target_zone, in_reward_zone
@@ -435,7 +508,12 @@ if callreward
     OdorLocatorTabbed('reward_now_Callback',h.hObject,[],h);
 end
 if UpdateOpenLoop
-    OdorLocatorTabbed('RewardControls_CellEditCallback',h.hObject,[],h); % cheat to update Arduino params
+    %OdorLocatorTabbed('RewardControls_CellEditCallback',h.hObject,[],h); % cheat to update Arduino params
     %OdorLocatorTabbed('OpenLoopSettings_Callback',h.hObject,[],h);
+end
+if sessionStart && toc(sessionStart)>=h.StartDelay.Data(1)
+    sessionStart = 0;
+    h.PauseSession.Value = 0;
+    OdorLocatorTabbed('PauseSession_Callback',h.hObject,[],h);
 end
 

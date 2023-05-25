@@ -2,11 +2,11 @@
 <WorkflowBuilder Version="2.6.0"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xmlns:p1="clr-namespace:Bonsai.PointGrey;assembly=Bonsai.PointGrey"
-                 xmlns:cv="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision"
-                 xmlns:wie="clr-namespace:Bonsai.Windows.Input;assembly=Bonsai.Windows.Input"
-                 xmlns:p2="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"
+                 xmlns:p2="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision"
+                 xmlns:p3="clr-namespace:Bonsai.Windows.Input;assembly=Bonsai.Windows.Input"
+                 xmlns:p4="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"
                  xmlns:rx="clr-namespace:Bonsai.Reactive;assembly=Bonsai.Core"
-                 xmlns:dsp="clr-namespace:Bonsai.Dsp;assembly=Bonsai.Dsp"
+                 xmlns:p5="clr-namespace:Bonsai.Dsp;assembly=Bonsai.Dsp"
                  xmlns:sys="clr-namespace:System;assembly=mscorlib"
                  xmlns="https://bonsai-rx.org/2018/workflow">
   <Workflow>
@@ -21,16 +21,16 @@
         <Selector>Image</Selector>
       </Expression>
       <Expression xsi:type="Combinator">
-        <Combinator xsi:type="cv:Resize">
-          <cv:Size>
-            <cv:Width>664</cv:Width>
-            <cv:Height>524</cv:Height>
-          </cv:Size>
-          <cv:Interpolation>Linear</cv:Interpolation>
+        <Combinator xsi:type="p2:Resize">
+          <p2:Size>
+            <p2:Width>664</p2:Width>
+            <p2:Height>524</p2:Height>
+          </p2:Size>
+          <p2:Interpolation>Linear</p2:Interpolation>
         </Combinator>
       </Expression>
       <Expression xsi:type="Combinator">
-        <Combinator xsi:type="cv:Grayscale" />
+        <Combinator xsi:type="p2:Grayscale" />
       </Expression>
       <Expression xsi:type="SubscribeSubject">
         <Name>FilePath</Name>
@@ -45,28 +45,27 @@
         <Selector>Image</Selector>
       </Expression>
       <Expression xsi:type="Combinator">
-        <Combinator xsi:type="cv:Resize">
-          <cv:Size>
-            <cv:Width>664</cv:Width>
-            <cv:Height>524</cv:Height>
-          </cv:Size>
-          <cv:Interpolation>Linear</cv:Interpolation>
+        <Combinator xsi:type="p2:Resize">
+          <p2:Size>
+            <p2:Width>664</p2:Width>
+            <p2:Height>524</p2:Height>
+          </p2:Size>
+          <p2:Interpolation>Linear</p2:Interpolation>
         </Combinator>
       </Expression>
       <Expression xsi:type="Combinator">
-        <Combinator xsi:type="cv:Grayscale" />
+        <Combinator xsi:type="p2:Grayscale" />
       </Expression>
       <Expression xsi:type="SubscribeSubject">
         <Name>FilePath</Name>
       </Expression>
       <Expression xsi:type="Combinator">
-        <Combinator xsi:type="wie:KeyDown">
-          <wie:Filter>LButton RButton Cancel ShiftKey ControlKey Menu Pause A B C P Q R S Alt</wie:Filter>
-          <wie:SuppressRepetitions>false</wie:SuppressRepetitions>
+        <Combinator xsi:type="p3:KeyDown">
+          <p3:Filter>LButton RButton Cancel ShiftKey ControlKey Menu Pause A B C P Q R S Alt</p3:Filter>
         </Combinator>
       </Expression>
       <Expression xsi:type="Equal">
-        <Operand xsi:type="WorkflowProperty" TypeArguments="p2:Keys">
+        <Operand xsi:type="WorkflowProperty" TypeArguments="p4:Keys">
           <Value>S</Value>
         </Operand>
       </Expression>
@@ -97,22 +96,22 @@
               </PropertyMappings>
             </Expression>
             <Expression xsi:type="Combinator">
-              <Combinator xsi:type="cv:LoadImage">
-                <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camA.png</cv:FileName>
-                <cv:Mode>Grayscale</cv:Mode>
+              <Combinator xsi:type="p2:LoadImage">
+                <p2:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camA.png</p2:FileName>
+                <p2:Mode>Grayscale</p2:Mode>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
-              <Combinator xsi:type="cv:Resize">
-                <cv:Size>
-                  <cv:Width>664</cv:Width>
-                  <cv:Height>524</cv:Height>
-                </cv:Size>
-                <cv:Interpolation>Linear</cv:Interpolation>
+              <Combinator xsi:type="p2:Resize">
+                <p2:Size>
+                  <p2:Width>664</p2:Width>
+                  <p2:Height>524</p2:Height>
+                </p2:Size>
+                <p2:Interpolation>Linear</p2:Interpolation>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
-              <Combinator xsi:type="cv:Grayscale" />
+              <Combinator xsi:type="p2:Grayscale" />
             </Expression>
             <Expression xsi:type="WorkflowOutput" />
           </Nodes>
@@ -129,10 +128,10 @@
         <Combinator xsi:type="rx:CombineLatest" />
       </Expression>
       <Expression xsi:type="Combinator">
-        <Combinator xsi:type="dsp:AbsoluteDifference" />
+        <Combinator xsi:type="p5:AbsoluteDifference" />
       </Expression>
       <Expression xsi:type="Combinator">
-        <Combinator xsi:type="cv:Normalize" />
+        <Combinator xsi:type="p2:Normalize" />
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="rx:CombineLatest" />
@@ -158,9 +157,9 @@
         <Selector>Item1</Selector>
       </Expression>
       <Expression xsi:type="Combinator">
-        <Combinator xsi:type="cv:SaveImage">
-          <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camA.png</cv:FileName>
-          <cv:Suffix>None</cv:Suffix>
+        <Combinator xsi:type="p2:SaveImage">
+          <p2:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camA.png</p2:FileName>
+          <p2:Suffix>None</p2:Suffix>
         </Combinator>
       </Expression>
       <Expression xsi:type="Combinator">
@@ -190,22 +189,22 @@
               </PropertyMappings>
             </Expression>
             <Expression xsi:type="Combinator">
-              <Combinator xsi:type="cv:LoadImage">
-                <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camB.png</cv:FileName>
-                <cv:Mode>Grayscale</cv:Mode>
+              <Combinator xsi:type="p2:LoadImage">
+                <p2:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camB.png</p2:FileName>
+                <p2:Mode>Grayscale</p2:Mode>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
-              <Combinator xsi:type="cv:Resize">
-                <cv:Size>
-                  <cv:Width>664</cv:Width>
-                  <cv:Height>524</cv:Height>
-                </cv:Size>
-                <cv:Interpolation>Linear</cv:Interpolation>
+              <Combinator xsi:type="p2:Resize">
+                <p2:Size>
+                  <p2:Width>664</p2:Width>
+                  <p2:Height>524</p2:Height>
+                </p2:Size>
+                <p2:Interpolation>Linear</p2:Interpolation>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
-              <Combinator xsi:type="cv:Grayscale" />
+              <Combinator xsi:type="p2:Grayscale" />
             </Expression>
             <Expression xsi:type="WorkflowOutput" />
           </Nodes>
@@ -222,10 +221,10 @@
         <Combinator xsi:type="rx:CombineLatest" />
       </Expression>
       <Expression xsi:type="Combinator">
-        <Combinator xsi:type="dsp:AbsoluteDifference" />
+        <Combinator xsi:type="p5:AbsoluteDifference" />
       </Expression>
       <Expression xsi:type="Combinator">
-        <Combinator xsi:type="cv:Normalize" />
+        <Combinator xsi:type="p2:Normalize" />
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="rx:CombineLatest" />
@@ -251,9 +250,9 @@
         <Selector>Item1</Selector>
       </Expression>
       <Expression xsi:type="Combinator">
-        <Combinator xsi:type="cv:SaveImage">
-          <cv:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camB.png</cv:FileName>
-          <cv:Suffix>None</cv:Suffix>
+        <Combinator xsi:type="p2:SaveImage">
+          <p2:FileName>C:\Users\Rig\Desktop\MouseImages\PCX3\PCX3_camB.png</p2:FileName>
+          <p2:Suffix>None</p2:Suffix>
         </Combinator>
       </Expression>
       <Expression xsi:type="Disable">
@@ -306,18 +305,18 @@
                 </PropertyMappings>
               </Expression>
               <Expression xsi:type="Combinator">
-                <Combinator xsi:type="cv:VideoWriter">
-                  <cv:FileName>C:\Users\Rig\Desktop\MouseVideos\PCX2\20210318\PCX2_camB.avi</cv:FileName>
-                  <cv:Suffix>FileCount</cv:Suffix>
-                  <cv:Buffered>true</cv:Buffered>
-                  <cv:Overwrite>false</cv:Overwrite>
-                  <cv:FourCC>FMP4</cv:FourCC>
-                  <cv:FrameRate>30</cv:FrameRate>
-                  <cv:FrameSize>
-                    <cv:Width>0</cv:Width>
-                    <cv:Height>0</cv:Height>
-                  </cv:FrameSize>
-                  <cv:ResizeInterpolation>NearestNeighbor</cv:ResizeInterpolation>
+                <Combinator xsi:type="p2:VideoWriter">
+                  <p2:FileName>C:\Users\Rig\Desktop\MouseVideos\PCX2\20210318\PCX2_camB.avi</p2:FileName>
+                  <p2:Suffix>FileCount</p2:Suffix>
+                  <p2:Buffered>true</p2:Buffered>
+                  <p2:Overwrite>false</p2:Overwrite>
+                  <p2:FourCC>FMP4</p2:FourCC>
+                  <p2:FrameRate>30</p2:FrameRate>
+                  <p2:FrameSize>
+                    <p2:Width>0</p2:Width>
+                    <p2:Height>0</p2:Height>
+                  </p2:FrameSize>
+                  <p2:ResizeInterpolation>NearestNeighbor</p2:ResizeInterpolation>
                 </Combinator>
               </Expression>
               <Expression xsi:type="WorkflowOutput" />
@@ -367,18 +366,18 @@
                 </PropertyMappings>
               </Expression>
               <Expression xsi:type="Combinator">
-                <Combinator xsi:type="cv:VideoWriter">
-                  <cv:FileName>C:\Users\Rig\Desktop\MouseVideos\PCX2\20210318\PCX2_camA.avi</cv:FileName>
-                  <cv:Suffix>FileCount</cv:Suffix>
-                  <cv:Buffered>true</cv:Buffered>
-                  <cv:Overwrite>false</cv:Overwrite>
-                  <cv:FourCC>FMP4</cv:FourCC>
-                  <cv:FrameRate>30</cv:FrameRate>
-                  <cv:FrameSize>
-                    <cv:Width>0</cv:Width>
-                    <cv:Height>0</cv:Height>
-                  </cv:FrameSize>
-                  <cv:ResizeInterpolation>NearestNeighbor</cv:ResizeInterpolation>
+                <Combinator xsi:type="p2:VideoWriter">
+                  <p2:FileName>C:\Users\Rig\Desktop\MouseVideos\PCX2\20210318\PCX2_camA.avi</p2:FileName>
+                  <p2:Suffix>FileCount</p2:Suffix>
+                  <p2:Buffered>true</p2:Buffered>
+                  <p2:Overwrite>false</p2:Overwrite>
+                  <p2:FourCC>FMP4</p2:FourCC>
+                  <p2:FrameRate>30</p2:FrameRate>
+                  <p2:FrameSize>
+                    <p2:Width>0</p2:Width>
+                    <p2:Height>0</p2:Height>
+                  </p2:FrameSize>
+                  <p2:ResizeInterpolation>NearestNeighbor</p2:ResizeInterpolation>
                 </Combinator>
               </Expression>
               <Expression xsi:type="WorkflowOutput" />
@@ -400,7 +399,7 @@
           <Nodes>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="StringProperty">
-                <Value>C:\Users\Rig\Desktop\MouseImages</Value>
+                <Value>C:\Users\pgupta\Desktop\MouseImages</Value>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
@@ -430,7 +429,7 @@
             <Expression xsi:type="Add" />
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="StringProperty">
-                <Value>C:\Users\Rig\Desktop\MouseVideos</Value>
+                <Value>C:\Users\pgupta\Desktop\MouseVideos</Value>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">

@@ -3,7 +3,7 @@ function [h] = UpdateTransferFunction(h)
 [TF, h] = GetTransferFunction(h);
 TF_4_plot = TF; % use later for colormap update
  
-TF = TF'+ h.MotorLocationArduinoMax + 1; % get rid of negative values % transform to a column vector
+TF = TF'+ h.MotorLocationArduinoMax + 1; % get rid of negative values % transform to a column vector, h.MotorLocationArduinoMax = 120
 sent = 0;
 sending_attempts = 0;
 

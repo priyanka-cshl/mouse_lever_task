@@ -1,13 +1,13 @@
 function [TF, h] = GetTransferFunction(h)
 
-TF_bins = h.TransferFunction.Data(1);
+TF_bins = h.TransferFunction.Data(1); % 100
 TF = zeros(1,TF_bins);
 
-lever_max = h.TrialSettings.Data(1); %triggerUpLim
-lever_min = h.TrialSettings.Data(2); %triggerLowLim
-target = h.TargetDefinition.Data(2);
-zone_width = h.ZoneLimitSettings.Data(1);
-gain = h.TFgain.Data;
+lever_max = h.TrialSettings.Data(1); %triggerUpLim 4.8
+lever_min = h.TrialSettings.Data(2); %triggerLowLim 0.2
+target = h.TargetDefinition.Data(2); % 1 - 3.75
+zone_width = h.ZoneLimitSettings.Data(1); % 0.3
+gain = h.TFgain.Data; % 1
 
 switch h.TFtype.Value
     case 0 % variable gain
@@ -33,12 +33,12 @@ switch h.TFtype.Value
 
     case 1 % fix speed
         
-        total_motor_locations = h.MotorLocationsFixSpeed;
+        total_motor_locations = h.MotorLocationsFixSpeed; % 100
         
         % calculate stepsize - lever displacement corresponding to one location
-        stepsize = (lever_max - h.minimumtarget)/(total_motor_locations + 0.5);
+        stepsize = (lever_max - h.minimumtarget)/(total_motor_locations + 0.5); % 0.0378
         % compute number of locations to be allocated to the target zone
-        h.locations_per_zone.Data(1) = round(zone_width/stepsize);
+        h.locations_per_zone.Data(1) = round(zone_width/stepsize); % 8
         
         % rescale stepsize if needed for gain perturbation trials
         stepsize = stepsize*gain;
@@ -51,9 +51,10 @@ end
 
 % update zones outside the target zone
 % note: h.locations_per_zone.Data(2) is always 0 - locations to be skipped
-h.locations_per_zone.Data(3) = h.MotorLocations - sum(h.locations_per_zone.Data(1:2));
+h.locations_per_zone.Data(3) = h.MotorLocations - sum(h.locations_per_zone.Data(1:2)); % [8 0 107]
         
 % safetychecks
+%h.MotorLocations = 115
 TF = round(TF);
 TF(TF>h.MotorLocations) = h.MotorLocations;
 TF(TF<-h.MotorLocations) = -h.MotorLocations;

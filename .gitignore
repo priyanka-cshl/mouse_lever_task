@@ -1,4 +1,9 @@
 *.asv
 Code/GUI/hostname.txt
+<<<<<<< HEAD
+Code/Bonsai/MousePositioner_O8_licks.bonsai
+Code/Bonsai/MousePositioner_O8_licks.bonsai.layout
+=======
 Code/Bonsai/
 Code/I2C_Slave_Bar - Copy/
+>>>>>>> c41989aac2388dee69a0b7377db29ba073768a6c

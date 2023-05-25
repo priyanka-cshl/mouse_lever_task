@@ -7,6 +7,7 @@ end
 
 global IsRewardedTrial;
 global TrialsToPerturb;
+global RecordStretch;
 
 disp(['---------- New Trial (#', num2str(h.current_trial_block.Data(2)),') ----------']);
 
@@ -24,7 +25,8 @@ if ~mod(h.current_trial_block.Data(2)-1,10)
     h.RollingRateTable.Data(myidx+1,1) = myidx;
     x1 = max(1,h.current_trial_block.Data(2)-10);
     x2 = h.current_trial_block.Data(2)-1;
-    rollrate = sum(h.hold_times.Data(x1:x2,2))/10;
+    %rollrate = sum(h.hold_times.Data(x1:x2,2))/10;
+    rollrate = nanmean(h.hold_times.Data(x1:x2,2));
     if (rollrate>=0) && (rollrate<=1)
         h.RollingRateTable.Data(myidx+1,2) = rollrate;
     end
@@ -118,6 +120,18 @@ else
     end
 end
 
+% force odor and target zone to be the same as in the template Trial 1 if
+% doing open loop replay
+if h.replayflag.Value == 1
+    h.replayflag.Value = 2;
+end
+
+if h.replayflag.Value == 2
+    h.current_trial_block.Data(4) = h.MyReplaySettings.Data(1,1);
+    h.TargetDefinition.Data(2) = h.MyReplaySettings.Data(2,1);
+    h.replayflag.Value = 0;
+end
+
 %% update target hold time
 if ~h.preloaded_sequence.Value
     if h.adaptive_holds.Value
@@ -155,9 +169,26 @@ h.current_trial_block.Data(6) = round(h.TriggerHold.Data(1)+x,0);
 %% feedback perturbation settings
 
 % shuffle pertubation vector if needed
-if (h.which_perturbation.Value>1) && ~mod(h.current_trial_block.Data(2),numel(TrialsToPerturb)) && (h.which_perturbation.Value~=11)
-    TrialsToPerturb = TrialsToPerturb([randperm(floor(numel(TrialsToPerturb)/2)) ...
-            floor(numel(TrialsToPerturb)/2)+(1:floor(numel(TrialsToPerturb)/2))]);
+if (h.which_perturbation.Value>1) && ~mod(h.current_trial_block.Data(2),numel(TrialsToPerturb)) ...
+        && (h.which_perturbation.Value~=11)
+    
+    halftrials = floor(numel(TrialsToPerturb)/2);
+    TrialsToPerturb = 0*TrialsToPerturb;
+    TrialsToPerturb(end) = 1;
+    TrialsToPerturb = TrialsToPerturb([(1:halftrials) halftrials + randperm(halftrials)]);
+    ffoo = randperm(round(halftrials/2));
+    RecordStretch(1) = find(TrialsToPerturb) - ffoo(1) + h.current_trial_block.Data(2);
+    if numel(RecordStretch)>1 % not the first time
+        if RecordStretch(2) > RecordStretch(1)
+            % there is overlap
+            RecordStretch(1) = RecordStretch(2) + 2;
+            if find(TrialsToPerturb)<=2
+                TrialsToPerturb = circshift(TrialsToPerturb,2);
+            end
+        end
+    end
+    RecordStretch(2) = RecordStretch(1) - 1 + halftrials;
+    disp(RecordStretch);
 end
 
 if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11) && (h.which_perturbation.Value~=14) 
@@ -214,6 +245,7 @@ if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11) && (h.whic
                     end
                 else
                     h.TargetDefinition.Data(2) = h.OffsetParams.Data(2);
+                    h.current_trial_block.Data(4) = h.FeedbackHaltParams.Data(4); % specific odor
                 end
                     
 %                 % so force current zone to TZ of choice and odor
@@ -240,8 +272,19 @@ if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11) && (h.whic
                 
                 % only for offset III
                 if rand(1)<0.5 && h.which_perturbation.Value == 7
-                    h.OffsetParams.Data(3) = h.OffsetParams.Data(3) + round(h.OffsetParams.Data(3)/2);
+                    h.OffsetParams.Data(3) = h.OffsetParams.Data(3) - round(h.OffsetParams.Data(3)/2);
                 end
+                % changing offset III to do both smaller and larger offsets 
+%                 if h.which_perturbation.Value == 7
+%                     switch floor(rand(1)/0.33) 
+%                         case 0
+%                             h.OffsetParams.Data(3) = h.OffsetParams.Data(3) + round(h.OffsetParams.Data(3)/2);
+%                         case 1
+%                             h.OffsetParams.Data(3) = h.OffsetParams.Data(3) - round(h.OffsetParams.Data(3)/2);
+%                         case 2
+%                         otherwise
+%                     end
+%                 end
                 
             case 8 % gain change
                 if rand(1)<0.5

@@ -14,7 +14,7 @@ handles.file_names.Data(3) = {'\\grid-hs\albeanu_nlsas_norepl_data\pgupta\Behavi
 handles.DAQrates.Data = [500 20]';
 
 % default params
-handles.TrialSettings.Data = [4.8 0.2 200 100 5000 500]'; % trial highlim, trial lowlim, ~ , trialmin, trialmax, ITI
+handles.TrialSettings.Data = [4.8 0.2 200 100 5000 1000]'; % trial highlim, trial lowlim, ~ , trialmin, trialmax, ITI
 handles.adaptive_holds.Value = 1;
 handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
 handles.odor_priors.Value = 0;
@@ -23,10 +23,13 @@ handles.which_perturbation.Value = 1; % no perturbations
 handles.openloop = 0; % Run in close-loop mode
 handles.AdaptiveTrigger.Value = 1;
 handles.AdaptiveTrigger.Enable = 'off';
-handles.OdorSequence.Value = 1;
+handles.OdorSequence.Value = 0;
 handles.OdorSequence.Enable = 'off';
 handles.OpenLoopSettings.Value = 1; % normal close loop mode
 handles.TuningCurves.String = '<html>Tuning<br />Curves</html>';
+
+% PCO camera trigger
+handles.PCO = 0;
 
 % start by default in normal close loop mode
 handles.OpenLoopSettings.Value = 1;
@@ -74,36 +77,44 @@ handles.holdtimes = [310 262 239 203 350];
 
 handles.UseBonsai = 0;
 handles.PassiveRecorded.Value = 0;
+handles.MyReplaySettings.Data = [0 0 0]';
+handles.replayflag.Value = 0;
 
 switch char(handles.computername)
     
     case {'PRIYANKA-HP'} % Rig1
         
         handles.useserver = 1; % change to zero if there's a network issue
+        handles.UseBonsai = 1;
         
         % sensors and scaling
-        handles.DAC_settings.Data = [2.0 2.5]'; % Lever scaling
+        handles.DAC_settings.Data = [2.0 2.05]'; %[2.08 2.1]';
         
         % Plots
-        handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.2 NaN NaN]; % gains
-        handles.PlotSettings.Data(:,2) = [NaN 0 6.0 6 5 NaN NaN]; % offsets
-        handles.PlotToggles.Data(:,1) = logical([0 1 1 1 1 1 1]);
+        handles.PlotSettings.Data(:,1) = [NaN 1 0.5 1 0.1 NaN NaN]; % gains
+        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 6 7.0 NaN NaN]; % gains
+        handles.PlotToggles.Data(:,1) = logical([0 1 0 0 1 1 0]);
         
         % Rewards
-        handles.watercoeffs = [0.001738 0.04964 1.275]; % water per drop [0.0006286 0.09254 0.918];
-        handles.RewardControls.Data = [35 5 50 100 100]'; % reward: time-I, time-II, IRI, hold-II, trial-off-lag
+        handles.watercoeffs = [0.0006071 0.0747 0.6009]; %[0.001357 0.08917 0.4286]; % water per drop
+        handles.RewardControls.Data = [35 5 50 100 200]'; % reward: time-I, time-II, IRI, hold-II, trial-off-lag
         handles.MultiRewards.Value = 1;
         
         % HomeSensor type
-        handles.fliphome = 0;
+        handles.fliphome = 1;
         
         % visual trials
-        handles.VisualAirTrials.Value = 0;
-        handles.VisualOnlyTrials.Value = 0;
+        handles.VisualVersion.Value = 0;
+        handles.VisualAirTrials.Visible = 'off';
+        handles.VisualOnlyTrials.Visible = 'off';
         
         % Photometry 
         handles.Photometry.Value = 0;
         handles.PhotometryParams.Data = [5000 211 531 0.6 0.6];
+        
+        % PCO
+        handles.PCO = 1;
+        handles.StartDelay.Data(1) = 1;
         
     case {'JUSTINE'} % Rig2
         
@@ -114,7 +125,7 @@ switch char(handles.computername)
         
         % Plots
         handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.1 NaN NaN]; % gains
-        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 3 7.0 NaN NaN]; % offsets
+        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 5 7.0 NaN NaN]; % offsets
         handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
         
         % Rewards
@@ -140,11 +151,11 @@ switch char(handles.computername)
         handles.UseBonsai = 1;
         
         % sensors and scaling
-        handles.DAC_settings.Data = [2.0 2.15]'; %[2.08 2.1]';
+        handles.DAC_settings.Data = [2.0 2.05]'; %[2.08 2.1]';
         
         % Plots
         handles.PlotSettings.Data(:,1) = [NaN 1 0.5 1 0.1 NaN NaN]; % gains
-        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 4 7.0 NaN NaN]; % gains
+        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 6 7.0 NaN NaN]; % gains
         handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
         
         % Rewards
@@ -163,5 +174,9 @@ switch char(handles.computername)
         % Photometry 
         handles.Photometry.Value = 0;
         handles.PhotometryParams.Data = [5000 211 531 0.6 0.6];
+        
+        % PCO
+        handles.PCO = 1;
+        handles.StartDelay.Data(1) = 1;
 end
 end

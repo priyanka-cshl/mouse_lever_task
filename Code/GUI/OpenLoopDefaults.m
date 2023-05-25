@@ -17,7 +17,10 @@ handles.DAQrates.Data = [500 20]';
 handles.TrialSettings.Data = [500 1000 1000 100 900 500]'; % motor-settle, pre-odor, odor, purge, post-odor, ITI
 handles.openloop = 1; % Run in open-loop mode
 handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
-handles.SessionSettings.Data = [5 90 15]'; % #repeats, max location, location step
+handles.SessionSettings.Data = [5 90 10]'; % #repeats, max location, location step
+
+% PCO camera trigger
+handles.PCO = 0;
 
 % Transfer function
 handles.TFtype.Value = 1; % 1 = fix speed, 0 = fixed start
@@ -36,6 +39,8 @@ handles.Zero_MFC.Value = 0;
 handles.which_stage.Value = 3; % training stage
 handles.TransferFunction.Data(2) = 100; % block size (1 = no blocks)'
 handles.DoSequence.Value = 0;
+handles.PseudoSequence.Value = 1;
+handles.ITIAirState.Value = 1;
         
 switch char(handles.computername)
     
@@ -47,7 +52,7 @@ switch char(handles.computername)
         
         % Plots
         handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.2 NaN NaN]; % gains
-        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 3 7.0 NaN NaN]; % offsets
+        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 5 7.0 NaN NaN]; % offsets
         handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
         
         % Rewards
@@ -76,7 +81,7 @@ switch char(handles.computername)
         
         % Plots
         handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.2 NaN NaN]; % gains
-        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 3 7.0 NaN NaN]; % offsets
+        handles.PlotSettings.Data(:,2) = [NaN 0 6.5 6 7.0 NaN NaN]; % offsets
         handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
         
         % Rewards
@@ -93,6 +98,9 @@ switch char(handles.computername)
         % Photometry 
         handles.Photometry.Value = 0;
         handles.PhotometryParams.Data = [5000 211 531 0.6 0.6];
+        
+        % PCO
+        handles.PCO = 1;
         
     case {'PRIYANKA-HP'}
         handles.useserver = 1; % change to zero if there's a network issue

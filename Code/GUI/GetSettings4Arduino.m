@@ -14,7 +14,7 @@ legend(7) = {'SummedHold'};
 % if (h.which_perturbation.Value >= 4 && h.current_trial_block.Data(3) == 1)
 %     param(7) = h.TrialSettings.Data(5); % hack - if perturbation trial - the summed hold is not valid
 % else
-param(7) = h.TargetHold.Data(3)*h.summedholdfactor.Data(1);
+param(7) = h.TargetHold.Data(2)*h.summedholdfactor.Data(1); % h.TargetHold.Data(3)*h.summedholdfactor.Data(1); %Pg: 230322 - it was using the max and the not the actual target hold - which seems wrong
 % end        
 legend(8) = {'RewardDuration-I'}; param(8) = h.RewardControls.Data(1);
 legend(9) = {'RewardDuration-II'}; param(9) = h.MultiRewards.Value*h.RewardControls.Data(2);
@@ -142,6 +142,13 @@ legend(30) = {'FeedbackDelay'}; param(30) = 0;
 
 %legend(31) = {'Stage'}; param(31) = h.which_stage.Value;
 legend(31) = {'OpenLoop'}; param(31) = h.OpenLoopSettings.Value - 1;
+if h.OpenLoopSettings.Value>3 
+    if strcmp(h.ReplayState.String,'Close loop')
+        param(31) = 10;
+    else
+        param(31) = h.OpenLoopSettings.Value - 3 + 10;
+    end
+end
 
 % 32 and 33 are for sending numbers back from Arduino
 legend(34:35) = {'SampleRate' 'RefreshRate'}; param(34:35) = h.DAQrates.Data;
