@@ -47,14 +47,15 @@
       </Expression>
       <Expression xsi:type="scr:PythonTransform">
         <scr:Script>from System import Tuple
-@returns(Tuple[float, float, float])
+@returns(Tuple[float, float, float,float])
 def process(value):
-  if value == 0:
-    return Tuple.Create(0.0,0.0,0.0)
+# First number: Extent X (width); second number: Location X; third number: colorA (transparancy); fourth number: colorA (for photodiode)
+  if value == 0: # ITI. background changed to black. originally colorA = 0.22
+    return Tuple.Create(3.5,0.0,0.0,0.0)
   elif value &lt; 10:
-    return Tuple.Create(0.0,0.0,0.0)
-  else:
-    return Tuple.Create(0.1,3.0*(value-131)/255,0.75+(value-131)/500)</scr:Script>
+    return Tuple.Create(0.0,0.0,0.0,0.0)
+  else: # within trial. Needs bar to be black but background grey. change width 0.1 to 0.2
+    return Tuple.Create(0.15,3*(value-131)/255,0.0,0.5+(value-131)/255)</scr:Script>
       </Expression>
       <Expression xsi:type="MemberSelector">
         <Selector>Item1</Selector>
@@ -77,24 +78,46 @@ def process(value):
           <Property Name="LocationX" />
         </PropertyMappings>
       </Expression>
+      <Expression xsi:type="MemberSelector">
+        <Selector>Item3</Selector>
+      </Expression>
+      <Expression xsi:type="Multiply">
+        <Operand xsi:type="DoubleProperty">
+          <Value>1</Value>
+        </Operand>
+      </Expression>
+      <Expression xsi:type="PropertyMapping">
+        <PropertyMappings>
+          <Property Name="ColorA" />
+        </PropertyMappings>
+      </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="gl:RenderFrame" />
       </Expression>
       <Expression xsi:type="IncludeWorkflow" Path="BonVision:Environment.NormalizedView.bonsai" />
       <Expression xsi:type="IncludeWorkflow" Path="BonVision:Primitives.DrawQuad.bonsai">
-        <ExtentX>1</ExtentX>
-        <ExtentY>1.91</ExtentY>
+        <ExtentX>0.15</ExtentX>
+        <ExtentY>-0.5</ExtentY>
         <LocationX>0</LocationX>
-        <LocationY>0.04</LocationY>
+        <LocationY>0.9</LocationY>
         <Layer>1</Layer>
         <Angle>0</Angle>
-        <ColorR>1</ColorR>
-        <ColorG>1</ColorG>
-        <ColorB>1</ColorB>
-        <ColorA>1</ColorA>
+        <ColorR>0</ColorR>
+        <ColorG>0</ColorG>
+        <ColorB>0</ColorB>
+        <ColorA>0</ColorA>
       </Expression>
-      <Expression xsi:type="MemberSelector">
-        <Selector>Item3</Selector>
+      <Expression xsi:type="IncludeWorkflow" Path="BonVision:Primitives.DrawQuad.bonsai">
+        <ExtentX>0.15</ExtentX>
+        <ExtentY>0.5</ExtentY>
+        <LocationX>0</LocationX>
+        <LocationY>-0.9</LocationY>
+        <Layer>0.9</Layer>
+        <Angle>0</Angle>
+        <ColorR>0</ColorR>
+        <ColorG>0</ColorG>
+        <ColorB>0</ColorB>
+        <ColorA>0</ColorA>
       </Expression>
       <Expression xsi:type="PropertyMapping">
         <PropertyMappings>
@@ -102,8 +125,28 @@ def process(value):
         </PropertyMappings>
       </Expression>
       <Expression xsi:type="IncludeWorkflow" Path="BonVision:Primitives.DrawQuad.bonsai">
-        <ExtentX>0.1</ExtentX>
-        <ExtentY>0.1</ExtentY>
+        <ExtentX>3.5</ExtentX>
+        <ExtentY>1.8</ExtentY>
+        <LocationX>0</LocationX>
+        <LocationY>0</LocationY>
+        <Layer>1</Layer>
+        <Angle>0</Angle>
+        <ColorR>0</ColorR>
+        <ColorG>0</ColorG>
+        <ColorB>0</ColorB>
+        <ColorA>0</ColorA>
+      </Expression>
+      <Expression xsi:type="MemberSelector">
+        <Selector>Item4</Selector>
+      </Expression>
+      <Expression xsi:type="PropertyMapping">
+        <PropertyMappings>
+          <Property Name="ColorA" />
+        </PropertyMappings>
+      </Expression>
+      <Expression xsi:type="IncludeWorkflow" Path="BonVision:Primitives.DrawQuad.bonsai">
+        <ExtentX>0.08</ExtentX>
+        <ExtentY>0.09</ExtentY>
         <LocationX>0</LocationX>
         <LocationY>-0.97</LocationY>
         <Layer>1</Layer>
@@ -112,6 +155,49 @@ def process(value):
         <ColorG>1</ColorG>
         <ColorB>1</ColorB>
         <ColorA>0</ColorA>
+      </Expression>
+      <Expression xsi:type="scr:PythonTransform">
+        <scr:Script>from System import Tuple
+@returns(Tuple[float, float])
+# This python transform decides the parameters for the background
+def process(value):
+# First number: Extent X (width); second number: colorA (transparancy).
+  if value == 0: # ITI. background should be black. Full screen
+    return Tuple.Create(0.0,0.0)
+  elif value &lt; 10:
+    return Tuple.Create(0.0,0.0)
+  else: # within trial, background should be grey
+    return Tuple.Create(3.7,0.233)</scr:Script>
+      </Expression>
+      <Expression xsi:type="MemberSelector">
+        <Selector>Item2</Selector>
+      </Expression>
+      <Expression xsi:type="PropertyMapping">
+        <PropertyMappings>
+          <Property Name="ColorR" />
+          <Property Name="ColorG" />
+          <Property Name="ColorB" />
+        </PropertyMappings>
+      </Expression>
+      <Expression xsi:type="MemberSelector">
+        <Selector>Item1</Selector>
+      </Expression>
+      <Expression xsi:type="PropertyMapping">
+        <PropertyMappings>
+          <Property Name="ExtentX" />
+        </PropertyMappings>
+      </Expression>
+      <Expression xsi:type="IncludeWorkflow" Path="BonVision:Primitives.DrawQuad.bonsai">
+        <ExtentX>0</ExtentX>
+        <ExtentY>2</ExtentY>
+        <LocationX>0</LocationX>
+        <LocationY>0</LocationY>
+        <Layer>0.1</Layer>
+        <Angle>0</Angle>
+        <ColorR>0</ColorR>
+        <ColorG>0</ColorG>
+        <ColorB>0</ColorB>
+        <ColorA>1</ColorA>
       </Expression>
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="gl:CreateWindow">
@@ -160,21 +246,38 @@ def process(value):
       <Edge From="2" To="3" Label="Source1" />
       <Edge From="3" To="4" Label="Source1" />
       <Edge From="4" To="5" Label="Source1" />
+      <Edge From="4" To="23" Label="Source1" />
       <Edge From="5" To="6" Label="Source1" />
       <Edge From="5" To="9" Label="Source1" />
-      <Edge From="5" To="14" Label="Source1" />
+      <Edge From="5" To="11" Label="Source1" />
+      <Edge From="5" To="20" Label="Source1" />
       <Edge From="6" To="7" Label="Source1" />
       <Edge From="7" To="8" Label="Source1" />
-      <Edge From="8" To="13" Label="Source1" />
+      <Edge From="8" To="19" Label="Source1" />
       <Edge From="9" To="10" Label="Source1" />
-      <Edge From="10" To="13" Label="Source2" />
+      <Edge From="10" To="19" Label="Source2" />
       <Edge From="11" To="12" Label="Source1" />
-      <Edge From="12" To="13" Label="Source3" />
-      <Edge From="12" To="16" Label="Source1" />
+      <Edge From="11" To="18" Label="Source1" />
+      <Edge From="12" To="13" Label="Source1" />
+      <Edge From="13" To="16" Label="Source2" />
+      <Edge From="13" To="17" Label="Source2" />
       <Edge From="14" To="15" Label="Source1" />
-      <Edge From="15" To="16" Label="Source2" />
-      <Edge From="17" To="18" Label="Source1" />
-      <Edge From="18" To="19" Label="Source1" />
+      <Edge From="15" To="19" Label="Source3" />
+      <Edge From="15" To="22" Label="Source1" />
+      <Edge From="15" To="16" Label="Source1" />
+      <Edge From="15" To="28" Label="Source3" />
+      <Edge From="15" To="17" Label="Source1" />
+      <Edge From="18" To="19" Label="Source4" />
+      <Edge From="20" To="21" Label="Source1" />
+      <Edge From="21" To="22" Label="Source2" />
+      <Edge From="23" To="24" Label="Source1" />
+      <Edge From="23" To="26" Label="Source1" />
+      <Edge From="24" To="25" Label="Source1" />
+      <Edge From="25" To="28" Label="Source2" />
+      <Edge From="26" To="27" Label="Source1" />
+      <Edge From="27" To="28" Label="Source1" />
+      <Edge From="29" To="30" Label="Source1" />
+      <Edge From="30" To="31" Label="Source1" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>
