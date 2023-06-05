@@ -272,7 +272,6 @@ void loop()
   lever_rescaled = (lever_rescale_params[0] * 0.0001) * (lever_position - lever_rescale_params[1]);
   // constrain position values between 0 and 65534
   lever_position = constrain(lever_rescaled, 0, 65534);
-
   // write lever position to DAC
   if (session_mode > 0)
   {

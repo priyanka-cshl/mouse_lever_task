@@ -110,12 +110,15 @@ switch char(handles.computername)
     case {'JUSTINE'} % Rig2
         
         handles.useserver = 1; % change to zero if there's a network issue
+        handles.UseBonsai = 1;
+        
+        handles.TrialSettings.Data = [4.8 0.2 200 100 5000 1500]'; % trial highlim, trial lowlim, ~ , trialmin, trialmax, ITI
         
         % sensors and scaling
-        handles.DAC_settings.Data = [2.0 2.15]';
+        handles.DAC_settings.Data = [2.0 2.05]';
         
         % Plots
-        handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.1 NaN NaN]; % gains
+        handles.PlotSettings.Data(:,1) = [NaN 1 0.5 1 0.1 NaN NaN]; % gains
         handles.PlotSettings.Data(:,2) = [NaN 0 6.5 5 7.0 NaN NaN]; % offsets
         handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
         

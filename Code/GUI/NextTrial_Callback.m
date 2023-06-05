@@ -244,6 +244,7 @@ if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11) && (h.whic
                     end
                 else
                     h.TargetDefinition.Data(2) = h.OffsetParams.Data(2);
+                    h.current_trial_block.Data(4) = h.FeedbackHaltParams.Data(4); % only for one particular odor
                 end
                     
 %                 % so force current zone to TZ of choice and odor
@@ -270,7 +271,7 @@ if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11) && (h.whic
                 
                 % only for offset III
                 if rand(1)<0.5 && h.which_perturbation.Value == 7
-                    h.OffsetParams.Data(3) = h.OffsetParams.Data(3) + round(h.OffsetParams.Data(3)/2);
+                    h.OffsetParams.Data(3) = h.OffsetParams.Data(3) - round(h.OffsetParams.Data(3)/2); % 2nd offset is smaller (e.g. 15) than main offset (e.g 30)
                 end
                 
             case 8 % gain change

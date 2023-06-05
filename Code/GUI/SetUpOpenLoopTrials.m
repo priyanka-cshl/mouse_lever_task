@@ -64,6 +64,8 @@ if h.PseudoSequence.Value % pseudorandom sequence
     for i = 1:size(AllTrials,1)
         if AllTrials(i,1) == 800
             LocationSequence(i,:) = all_locations(randperm(numel(all_locations)));
+        else
+            LocationSequence(i,:) = 0*all_locations; % PG: 23/03/16
         end
     end
     h.current_trial_block.Data(3) = numel(all_odors);
