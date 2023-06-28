@@ -239,7 +239,7 @@
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="cv:RangeThreshold">
           <cv:Lower>
-            <cv:Val0>0.5</cv:Val0>
+            <cv:Val0>0.2</cv:Val0>
             <cv:Val1>0</cv:Val1>
             <cv:Val2>0</cv:Val2>
             <cv:Val3>0</cv:Val3>
@@ -280,7 +280,7 @@
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="cv:RoiActivityDetected">
           <cv:Index xsi:nil="true" />
-          <cv:Threshold>10000</cv:Threshold>
+          <cv:Threshold>3000</cv:Threshold>
         </Combinator>
       </Expression>
       <Expression xsi:type="Combinator">

@@ -310,7 +310,7 @@ if (h.which_perturbation.Value>1) && (h.which_perturbation.Value~=11) && (h.whic
                 % one of three target zones
                 % 3, 2, 1
                 h.TargetDefinition.Data(2) = randperm(3,1);
-                h.current_trial_block.Data(4) = h.FeedbackHaltParams.Data(4);
+                h.current_trial_block.Data(4) = h.FeedbackHaltParams.Data(4); % for one odor
 %                 switch floor(h.TargetDefinition.Data(2))
 %                     case 1
 %                         h.current_trial_block.Data(4) = 1;
