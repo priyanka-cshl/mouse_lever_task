@@ -302,7 +302,7 @@ if TotalTime(end)>=2
         % increment 'trial number'
         h.current_trial_block.Data(2) = h.current_trial_block.Data(2) + 1;
         
-        if (h.which_perturbation.Value == 10 || h.which_perturbation.Value == 6) ...
+        if (h.which_perturbation.Value == 10 || h.which_perturbation.Value == 6|| h.which_perturbation.Value == 7) ...
                 && h.current_trial_block.Data(2) == RecordStretch(1)
             h.OpenLoopSettings.Value = 4; % flag for halt flip recording
         end
