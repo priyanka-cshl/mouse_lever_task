@@ -17,7 +17,7 @@ handles.DAQrates.Data = [500 20]';
 handles.TrialSettings.Data = [500 1000 1000 100 900 500]'; % motor-settle, pre-odor, odor, purge, post-odor, ITI
 handles.openloop = 1; % Run in open-loop mode
 handles.Odor_list.Value = 1 + [0 1 2 3]'; % active odors
-handles.SessionSettings.Data = [10 90 15]'; % #repeats, max location, location step
+handles.SessionSettings.Data = [5 90 10]'; % #repeats, max location, location step
 
 % Transfer function
 handles.TFtype.Value = 1; % 1 = fix speed, 0 = fixed start
@@ -47,7 +47,7 @@ switch char(handles.computername)
         handles.DAC_settings.Data = [2.0 2.15]';
         
         % Plots
-        handles.PlotSettings.Data(:,1) = [NaN 1 0.5 2 0.2 NaN NaN]; % gains
+        handles.PlotSettings.Data(:,1) = [NaN 1 0.5 1 0.2 NaN NaN]; % gains
         handles.PlotSettings.Data(:,2) = [NaN 0 6.5 5 7.0 NaN NaN]; % offsets
         handles.PlotToggles.Data(:,1) = logical([0 1 0 1 1 1 0]);
         

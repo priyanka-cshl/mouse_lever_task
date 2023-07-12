@@ -1584,6 +1584,7 @@ templatesdone = handles.MyReplaySettings.Data(3);
 if ~handles.was_last_file_saved
     SaveFile_Callback(hObject, eventdata, handles);
 end
+handles.UseBonsai = 0; % don't close the bonsai routine
 close_gui_Callback(hObject, eventdata, handles);
 delete (handles.mycam);
 OpenLoopOdorLocator(AnimalName, PassiveReplay, templatesdone);
