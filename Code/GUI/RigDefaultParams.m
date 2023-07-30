@@ -109,7 +109,7 @@ switch char(handles.computername)
         
     case {'JUSTINE'} % Rig2
         
-        handles.useserver = 1; % change to zero if there's a network issue
+        handles.useserver = 0; % change to zero if there's a network issue
         handles.UseBonsai = 1;
         
         handles.TrialSettings.Data = [4.8 0.2 200 100 5000 1500]'; % trial highlim, trial lowlim, ~ , trialmin, trialmax, ITI
